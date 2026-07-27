@@ -1,0 +1,95 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Structural validator
+        run: python3 test/validate.py
+
+      - name: Auditor functional tests
+        run: python3 test/test_page_audit.py
+
+      - name: Negative self-test (version drift must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/corrupt-copy
+          sed -i 's/"version": "[0-9.]*"/"version": "0.0.0-corrupt"/' \
+            /tmp/corrupt-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json
+          if python3 /tmp/corrupt-copy/test/validate.py; then
+            echo "ERROR: validator passed on a corrupted copy — it cannot fail"
+            exit 1
+          else
+            echo "OK: validator correctly FAILs on version drift"
+          fi
+
+      - name: Negative self-test (missing reference must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/noref-copy
+          rm -f /tmp/noref-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/myths.md
+          if python3 /tmp/noref-copy/test/validate.py; then
+            echo "ERROR: validator passed with a contract file missing"
+            exit 1
+          else
+            echo "OK: validator requires the reference contracts"
+          fi
+
+      - name: Negative self-test (stray SKILL.md must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/stray-copy
+          cp /tmp/stray-copy/templates/audit-report.template.md /tmp/stray-copy/templates/SKILL.md
+          if python3 /tmp/stray-copy/test/validate.py; then
+            echo "ERROR: validator passed with a stray SKILL.md outside plugins/*/skills/*/"
+            exit 1
+          else
+            echo "OK: validator rejects stray SKILL.md"
+          fi
+
+      - name: Negative self-test (auditor tests must be able to fail)
+        run: |
+          set -eu
+          cp -R . /tmp/badscript-copy
+          sed -i 's/if r\["noindex"\]:/if False:/' \
+            /tmp/badscript-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py
+          if python3 /tmp/badscript-copy/test/test_page_audit.py; then
+            echo "ERROR: auditor tests passed with the noindex check disabled"
+            exit 1
+          else
+            echo "OK: auditor tests catch a broken check"
+          fi
+
+      - name: install.sh syntax check
+        run: bash -n install.sh
+
+      - name: npm installer CLI check
+        run: node --check bin/seo-aeo-audit.js
+
+      - name: npm installer functional test (fresh / rerun-skip / --force)
+        run: |
+          set -eu
+          export HOME=/tmp/fakehome
+          mkdir -p "$HOME"
+          node bin/seo-aeo-audit.js
+          test -f "$HOME/.claude/skills/seo-aeo-audit/SKILL.md"
+          test -f "$HOME/.claude/skills/seo-aeo-audit/references/myths.md"
+          test -f "$HOME/.claude/skills/seo-aeo-audit/scripts/page_audit.py"
+          test -f "$HOME/.claude/commands/seo-aeo-audit.md"
+          node bin/seo-aeo-audit.js | grep -q '^skip:'
+          node bin/seo-aeo-audit.js --force | grep -q '^Installed'
+          if node bin/seo-aeo-audit.js --wat; then
+            echo "ERROR: unknown arg accepted"; exit 1
+          fi
+          echo "OK: npm installer behaves"
+
+      - name: Workflow YAML parses
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 -c "import yaml; yaml.safe_load(open('.github/workflows/validate.yml')); print('workflow parses OK')"

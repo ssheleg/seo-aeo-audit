@@ -1,0 +1,79 @@
+---
+description: Evidence-first SEO/AEO audit discipline — how to diagnose search and answer-engine visibility in this project and what never to recommend
+alwaysApply: false
+---
+
+# SEO / AEO audit discipline
+
+When asked to audit search visibility, diagnose a traffic drop, or plan SEO
+changes, work in this order and keep the evidence rules.
+
+## Non-negotiables
+
+- Every finding carries: the observation, where it was observed (URL, file:line,
+  report), the value, and the date. No finding you did not verify on this site.
+- Tag every recommendation with an evidence tier: CONFIRMED (engine-documented or
+  reproduced here) · STUDY (published multi-site data) · FIELD (single case) ·
+  HYPOTHESIS. Weights for prioritisation: 1.0 / 0.7 / 0.4 / 0.2.
+- Diagnose the cause before prescribing a fix. "Add schema" is not a diagnosis.
+- Never ship a FIELD or HYPOTHESIS change sitewide — run it as a controlled test
+  (one variable, matched cohorts, 50+ URLs per group, 4+ weeks, control group,
+  discard tests that overlap a core update).
+- Never recommend deceptive tactics (cloaking, fabricated consensus, review
+  manipulation, takedown abuse, click spoofing).
+
+## Order of work
+
+1. **Blockers**: manual action; `noindex` in the pre-render source (it wins even
+   when the rendered DOM is clean, and a `meta refresh` + `noindex` combination
+   has no defined precedence — use a server-side 301); robots-blocked render
+   resources; deindexation events (check for anomalous click *spikes*, not only
+   drops, and verify every GSC property variant including www/non-www).
+2. **Canonicalization**: self-referencing canonical everywhere; a canonical link
+   carrying `media`, `type`, `hreflang` or `lang` is silently discarded by Google
+   (framework `data-*` attributes are harmless); edge-rendered HTML must match
+   the client version.
+3. **Indexation economics**: "Discovered – not indexed" is a crawl-priority
+   problem (internal links from most-crawled pages, priority sitemap, clean
+   server signals); "Crawled – not indexed" is a quality rejection and discovery
+   signals will not fix it. Robots wildcards match substrings — `Disallow: /*?`
+   takes out every parameterised URL behind it.
+4. **Architecture**: money pages within 1–2 clicks; kill equity leaks (tag
+   archives, calendars, author bios, internal search); descriptive internal
+   anchors; find orphans by diffing a crawl against the sitemap.
+5. **Intent and cannibalization**: match the page type the top-10 rewards; >70%
+   SERP overlap between two of your pages means one intent cluster — merge with a
+   301, not a canonical.
+6. **Content value**: does the page offer something, complete the task on-site,
+   carry proprietary data, hold a tight focus? Original quantitative data is the
+   one lever that moves information gain.
+7. **Extractability / AEO**: answer in the first 100 words, one claim per
+   sentence, facts in plain HTML (a JS-gated price makes engines cite an
+   aggregator instead), 4–10 H2–H4 subheads, factual `alt` text, and keep
+   navigation out of the top of the *source order* — an answer engine's first
+   read is roughly 5,700 characters and every link marker spends it.
+8. **Entity consensus**: the homepage H1 is the reference; align every
+   third-party profile to it; brand as the grammatical subject of extractable
+   insights; `Organization` schema with `sameAs`.
+9. **Experience**: LCP triage order is TTFB → clear the LCP path →
+   `fetchpriority="high"` → defer JS; image formats last. Native `<dialog>`
+   instead of scroll-lock + blur overlays for INP.
+10. **Measurement**: per engine, per persona; mentions and recommendations, not
+    citations alone; cross-check GSC against analytics, logs and an independent
+    tracker before calling anything an algorithmic hit.
+
+## Never put these in a plan
+
+`llms.txt` as a ranking or citation lever · Markdown mirrors of HTML pages ·
+"chunk your content" · rewriting text "for AI" · schema volume as an AI-citation
+lever · FAQPage markup for rich results (retired) · AMP for ranking advantage ·
+date bumps as freshness · "publish more pages" · disavowing on a third-party
+toxicity score · a single AI-visibility score as a KPI · self-promotional "best
+[category]" listicles · scaled AI content.
+
+## Deliverables
+
+`docs/seo/audit-<date>.md` (Issue · Impact · Evidence · Cause · Fix · Effort ·
+Tier · Verification) and `docs/seo/plan-<date>.md` (exact target, change, why,
+expected effect and horizon, verification, rollback). Group the plan into
+Blockers → Leaks → Gains → Experiments and end with one next action.

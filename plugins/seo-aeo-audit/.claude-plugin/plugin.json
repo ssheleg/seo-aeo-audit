@@ -1,0 +1,10 @@
+{
+  "name": "seo-aeo-audit",
+  "description": "Evidence-first website audit for search and answer engines: ten tracks from crawl access to AI citation mechanics, a triage model, and a prioritized change plan with verification steps and honest horizons.",
+  "version": "0.1.0",
+  "author": { "name": "ssheleg" },
+  "homepage": "https://github.com/ssheleg/seo-aeo-audit",
+  "repository": "https://github.com/ssheleg/seo-aeo-audit",
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "geo", "audit", "technical-seo", "ai-search", "llm-citations", "claude-code", "cursor"]
+}
