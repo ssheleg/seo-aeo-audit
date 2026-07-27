@@ -6,8 +6,17 @@ that every recommendation can be traced back to its source and re-checked when
 the surfaces move.
 
 
-Sources: Telegram channels `@notjohnmu` ("noindex, nofollow", 175 posts) and
-`@MikeBlazerX` ("Mike Blazer", 217 posts), 27.04.2026–27.07.2026.
+Sources:
+- Telegram channels `@notjohnmu` ("noindex, nofollow", 175 posts) and
+  `@MikeBlazerX` ("Mike Blazer", 217 posts), 27.04.2026–27.07.2026.
+- Search Engine Journal, *Google Algorithm Updates & Changes: A Complete History*
+  — <https://www.searchenginejournal.com/google-algorithm-history/> (fetched
+  2026-07-28; feeds `references/algorithm-updates.md`).
+- Search Engine Journal, *SEO Trends 2026* ebook (Nov 2025 / 2026 edition, 34pp;
+  Katie Morton ed., contributors Shelley Walsh, Matt Southern, Roger Montti, Dan
+  Taylor, Patrick Reinhart, Grzegorz Czapik, Sam Page) — distilled into
+  `intent-and-content.md` (E2b), `entity-and-brand.md` (G3b), `measurement.md`
+  (J3b), `growth-plays.md` (G16–G18), `myths.md` and `benchmarks.md`.
 
 ## PART A — "noindex, nofollow" (industry news, RU/global)
 
@@ -1006,3 +1015,77 @@ discovery doesn't suffer. **Source-order matters more than visual position.**
   a confirmed web-search factor.
 - Reddit answer influence can be near-real-time: a comment recommending a client
   was quoted by ChatGPT 1h45m after posting. Track brand mentions without links.
+
+
+## PART C — SEJ *SEO Trends 2026* (practitioner panel)
+
+- **Zero-click is a misnomer** (Montti): the ten-blue-links baseline ended with
+  featured snippets (2014), Knowledge Graph (2012), video results (2007). The
+  real break is keyword-scaffolded, made-for-search-engines content; Google still
+  links out, across more surfaces and for more complex queries.
+- **User-expectation test**: decide what a user expects on this page type
+  (e-commerce = images, specs, reviews, measurements, comparisons — not an essay)
+  and ship that. "Because Google wants to see it" is the marker of a wrong
+  decision. Remove friction between the user and the task.
+- **Find what AI cannot cannibalize** (Walsh): target queries where no AI Overview
+  appears and a click is still required; recorded opinion/interview video and
+  first-hand testing are the formats models cannot replicate. One client kept
+  strong MQLs straight from Google SERPs on that selection alone.
+- **Super-serve a niche, don't chase scale** (Southern): diversify formats
+  (newsletter, video, podcast) for the same audience; depth beats breadth; build
+  something people would miss.
+- **Owned vs rented** (Southern): email lists, Discord/Slack, Substack are owned —
+  you keep the data, the relationships and the distribution; subreddits, Facebook
+  groups, TikTok accounts are rented and can change or vanish. Cycle: participate
+  on rented platforms to learn and build awareness, migrate engaged people to
+  owned ones. Owned communities compound (early members onboard later ones).
+- **Brand narrative control across platforms** (Walsh, Czapik): a new visibility
+  layer across LLMs is eating TOFU informational search; discovery happens in
+  forums, social, YouTube and trusted publications, which both humans and models
+  read to judge credibility. Consistent brand messaging plus machine-accessible
+  content is "the new basic level of SEO". Younger users trust Google SERPs less
+  after sock-puppet review content.
+- **Discovery surfaces named** (Taylor): TikTok, Meta AI in Facebook/WhatsApp,
+  Gemini, Google Lens, ChatGPT, Perplexity, plus agentic layers and personal
+  bots that filter content on the user's behalf. Gen Z is Google's
+  fastest-growing Search demographic; ~1 in 10 of their searches starts with
+  Lens, ~1 in 5 of those commercial. CRM data shows first contact via ChatGPT or
+  social, return via direct or branded search.
+- **Measurement shift** (Taylor, Czapik): move past last-click; track branded
+  search volume, brand presence in AI answers, and the volume and tone of
+  third-party UGC; measure presence and value at every funnel stage, and treat
+  Search as an input to commercial decisions rather than an output measured in
+  rankings.
+- **Consistency wins** (Reinhart): the successful accounts publish consistently,
+  monitor and automate QA, and educate the wider organization; the ones chasing
+  the shiny object of the quarter do not sustain results.
+- **Fundamentals over hype** (Southern, Walsh): quality content for a real
+  audience, trust built over time, showing up consistently; separate fundamental
+  shifts from temporary noise; the brands winning now built authority before the
+  panic.
+- **Counter-signal on AI adoption** (Southern, citing Kevin Indig): 80% of users
+  still click through to traditional results to verify even when an AI Overview
+  is present — source evaluation still matters to people.
+- **Market context** (Morton): Google's search market share dipped below 90%;
+  Web Guide (AI Labs) still underwhelming in testing; ChatGPT Atlas browser
+  launched Oct 2025 (macOS); expect more SERP experiments and volatility.
+- **Cross-functional** (Page): SEO now spans social, video, content, affiliate,
+  field marketing, paid search and data; strategy extends to YouTube, Reddit and
+  Quora, not just backlinks and on-site content.
+
+## PART D — Google update timeline (SEJ algorithm history, fetched 2026-07-28)
+
+| Update | Start | Complete |
+|---|---|---|
+| June 2026 spam update | 2026-06-24 | 2026-06-26 |
+| May 2026 core update | 2026-05-21 | 2026-06-02 |
+| March 2026 core update | 2026-03-27 | 2026-04-08 |
+| March 2026 spam update | 2026-03-24 | 2026-03-25 |
+| Discover core update | 2026-02-05 | ~2 weeks, then global |
+| December 2025 core update | 2025-12-11 | 2025-12-29 |
+| August 2025 spam update | 2025-08-26 | 2025-09-21 |
+| June 2025 core update | 2025-06-30 | 2025-07-17 |
+| March 2025 core update | 2025-03-13 | 2025-03-27 |
+
+Older eras (2024 → 2003) remain on the source page; pull them when a decline
+predates this window.

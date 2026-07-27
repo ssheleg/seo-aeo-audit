@@ -58,7 +58,16 @@ changes, work in this order and keep the evidence rules.
 9. **Experience**: LCP triage order is TTFB → clear the LCP path →
    `fetchpriority="high"` → defer JS; image formats last. Native `<dialog>`
    instead of scroll-lock + blur overlays for INP.
-10. **Measurement**: per engine, per persona; mentions and recommendations, not
+10. **Decline attribution**: date-align the curve against the Google update
+    timeline before naming a cause (2026: Jun spam 24–26 Jun · May core 21 May–2
+    Jun · Mar core 27 Mar–8 Apr · Mar spam 24–25 Mar · Discover core from 5 Feb;
+    2025: Dec core 11–29 Dec · Aug spam 26 Aug–21 Sep · Jun core 30 Jun–17 Jul ·
+    Mar core 13–27 Mar). Ranking shifts often precede the announcement by 7–10
+    days and continue after "complete"; spam-filter losses do not recover at the
+    next core update; half of documented GSC outages coincided with rollouts.
+    Source: searchenginejournal.com/google-algorithm-history/ and
+    status.search.google.com.
+11. **Measurement**: per engine, per persona; mentions and recommendations, not
     citations alone; cross-check GSC against analytics, logs and an independent
     tracker before calling anything an algorithmic hit.
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.2.0
+
+Update awareness — the skill now carries the Google update history and knows how
+to refresh it.
+
+- **New reference `algorithm-updates.md`**: dated timeline of every core, spam
+  and Discover update from March 2025 through June 2026 (start date, completion
+  date, type, audit implication), plus a table of platform and policy changes
+  that retired old tactics (FAQ rich results, AMP cache, Preferred sources in AI
+  surfaces, GSC AI reporting and opt-out, Bing AI Performance, the spam policy
+  covering generative-AI manipulation, I/O 2026, commerce protocols).
+- **Update-response protocol** — exact dates → before/after export by page,
+  query, country, device → segment by template and intent → competitor set →
+  classify winner/loser/unchanged → only then hypothesize. Wired into SKILL.md as
+  a mandatory step before any decline diagnosis, and into the play list as `P5`.
+- **Refresh routine** with named sources (SEJ algorithm history, Search Status
+  Dashboard, Search Central and Bing blogs) so every release folds in what
+  shipped since — including re-checking whether a change retires a myth or
+  invalidates a benchmark.
+- **Distilled SEJ's *SEO Trends 2026*** into the existing contracts: the
+  user-expectation and "because Google wants it" tests (`intent-and-content.md`),
+  discovery fragmentation and owned-vs-rented surfaces (`entity-and-brand.md`),
+  the shifted KPI set — branded search volume, AI mention share, UGC tone,
+  owned-audience growth, assisted conversions (`measurement.md`), three new
+  growth plays (owned audience, UGC-platform presence, format diversification),
+  two new myths, and four dated benchmarks (Google below 90% share, Gen Z Lens
+  entry points, 80% still click to verify under an AI Overview).
+
 ## v0.1.1
 
 Review pass — defects found by re-auditing the skill against its own rules.

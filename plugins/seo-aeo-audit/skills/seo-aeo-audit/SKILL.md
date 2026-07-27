@@ -1,6 +1,6 @@
 ---
 name: seo-aeo-audit
-description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, or planning what to change and why - "SEO audit", "technical SEO audit", "AEO audit", "GEO audit", "AI visibility audit", "why did my traffic drop", "why am I not ranking", "why doesn't ChatGPT cite us", "crawl budget", "indexing issues", "cannibalization", "сделай SEO-аудит", "технический аудит сайта", "аудит по SEO и AEO", "почему упал трафик", "почему нет позиций", "почему нас не цитирует ChatGPT", "проверь индексацию", "план правок по SEO". Runs ten evidence-based audit tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience signals, risk, measurement) and outputs a findings report plus a prioritized change plan with verification steps.
+description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, or planning what to change and why - "SEO audit", "technical SEO audit", "AEO audit", "GEO audit", "AI visibility audit", "why did my traffic drop", "why am I not ranking", "why doesn't ChatGPT cite us", "crawl budget", "indexing issues", "cannibalization", "сделай SEO-аудит", "технический аудит сайта", "аудит по SEO и AEO", "почему упал трафик", "почему нет позиций", "почему нас не цитирует ChatGPT", "проверь индексацию", "план правок по SEO", "апдейт гугла", "google core update". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience, risk, measurement), carries a dated Google update timeline, and outputs a findings report plus a prioritized change plan with verification steps.
 ---
 
 # seo-aeo-audit — audit search + answer-engine visibility, then ship a plan
@@ -68,7 +68,10 @@ Record, with dates, so every later claim can be measured against it:
   [references/aeo-geo.md](references/aeo-geo.md) against each engine you can
   reach, and record answers verbatim;
 - which AI crawlers actually fetch the site (server logs; forward-confirmed
-  reverse DNS to filter spoofers) and which AI referrers appear in analytics.
+  reverse DNS to filter spoofers) and which AI referrers appear in analytics;
+- the **update timeline**: date-align every change in the curve against
+  [references/algorithm-updates.md](references/algorithm-updates.md) before
+  forming any hypothesis about a cause.
 
 If the site claims a traffic drop, **first separate reporting failure from
 ranking failure**: a frozen GSC report pins clicks at one date while a real hit
@@ -92,6 +95,11 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | H | Experience & satisfaction | Do users complete the task here, or bounce back to the SERP? | [experience-signals.md](references/experience-signals.md) |
 | I | Risk & threats | Penalties, hijacks, injections, adversaries, legal takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
 | J | Measurement | Will anyone be able to tell whether the plan worked? | [measurement.md](references/measurement.md) |
+
+**Before any decline diagnosis**, run the date-alignment and update-response
+protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —
+"a core update hit us" is not a finding, and half the documented GSC outages
+coincided with rollouts.
 
 **Order matters.** A track-A blocker (site not fetchable, noindex in the
 pre-render source, manual action) makes every other finding moot — a manual
@@ -204,4 +212,5 @@ the nearest thing that does work, and move on.
 - [references/evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.
 - [references/myths.md](references/myths.md) — the refuted list, with sources.
 - [references/benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
+- [references/algorithm-updates.md](references/algorithm-updates.md) — dated Google update timeline, platform changes, the update-response protocol, and how to keep the file current.
 - [references/deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.

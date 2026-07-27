@@ -22,6 +22,8 @@ Say this plainly when asked, offer the nearest thing that works, move on.
 | "Blocked-but-indexed URLs are diluting my site" | Google indexes the URL string without processing content — those pages cannot trigger duplicate filters or dilute quality | Leave the block in place; only act if they steal impressions from a canonical page |
 | "A crawler hit means the model learned us" | Crawled → archived → extracted → filtered → deduplicated → mixed → trained. Content drops out at every stage, and deployed weights are frozen until retraining | Measure retrieval and citation, not crawler logs, for AI knowledge |
 | "Optimize for `unicornClicks`" | It marks child accounts (COPPA/GDPR-K isolation), not premium users | Ignore it |
+| "Google wants to see it there" | If the only justification for an element is what an engine supposedly wants, it is the wrong decision — pages that hold up are built from user expectation, and made-for-search-engines content is exactly what the helpful-content systems demote | Write down what a user expects on this page type, ship that, then check crawlability |
+| "This quarter's framework is the thing to chase" | The industry produces a new buzzword every quarter; the brands winning in 2026 built authority before the panic and executed one strategy for years | Separate a fundamental shift from temporary noise — not every new tactic deserves a strategy overhaul |
 | "SEO can fix AEO on its own" | The work spans brand, PR, product and review platforms; models pick names from memory and then look for support | Split the ownership explicitly in the plan |
 
 ## How to say it

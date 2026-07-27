@@ -61,7 +61,24 @@ cross-check.
   out at any stage, and a deployed model's parametric memory is frozen until the
   next training cycle. Never correlate a GPTBot hit with a knowledge change.
 
-## J4. The reporting cadence
+## J3b. The KPI set has moved
+
+Rankings, sessions, impressions and conversions still matter, but they no longer
+describe how a brand is discovered. Add, and report alongside them:
+
+| Metric | Where it comes from | Why |
+|---|---|---|
+| Branded search volume and trend | GSC branded queries, Ahrefs/Yandex volume | Whether people look for you at all — the clearest signal that discovery elsewhere is working |
+| Brand presence in AI answers (mention → recommendation) | the prompt set, per engine | What the buyer actually hears |
+| Volume and tone of third-party UGC about the brand | social listening, Reddit/Quora/Trustpilot | The sources models cite for verdicts |
+| Direct and returning traffic | analytics | The owned-audience moat, immune to SERP composition |
+| Newsletter/community signups | your own systems | The channel nobody can re-rank |
+| Assisted and later-touch conversions | analytics, CRM | AI search has no attribution model; conversion often arrives weeks later via brand or direct |
+
+Two consequences for the report: stop treating last-click as the definition of
+success, and stop treating any single channel's ranking as the definition of
+visibility. A brand can be present at every step of the funnel and still show a
+flat "position" chart.
 
 Weekly (operational):
 - Index status deltas per template; new crawl errors; 404/410 volume.

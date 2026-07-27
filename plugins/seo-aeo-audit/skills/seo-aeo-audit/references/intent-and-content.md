@@ -111,6 +111,27 @@ length on original measurements, internal analytics, and the questions everyone
 skipped. This is also the AEO play — models synthesise consensus for free and
 then look for what a single source can add on top.
 
+## E2b. What users expect to see on the page
+
+Practitioner counterweight to keyword-first thinking (SEJ, *SEO Trends 2026*):
+the ten-blue-links baseline died long before AI — featured snippets (2014),
+Knowledge Graph (2012), video results (2007) — so "zero-click" understates a
+longer shift and ignores Discover, video and multi-intent complex queries
+entirely. What actually broke is **keyword-scaffolded content**: pages built on a
+keyword list a tool produced, rather than on what a user came to do.
+
+Two tests worth running on every key template:
+
+1. **Expectation test.** Write down what a user expects to see on this page. On
+   an e-commerce page: product images, specs, reviews, measurements, comparisons
+   — not a five-paragraph essay above them. Then compare with what ships.
+2. **Justification test.** If the reason for an element is "because Google wants
+   to see it", it is the wrong decision. Remove it or justify it from user need.
+
+Friction removal is the deliverable: list what stops a user from doing what they
+came to do, and delete those obstacles. Depth where the user needs depth; brevity
+where they do not.
+
 ## E3. Zero-click defensibility
 
 Rank each content type by how much of its value AI can reproduce:
@@ -126,6 +147,13 @@ Rank each content type by how much of its value AI can reproduce:
   transparent criteria).
 
 The formula across all of them: **proprietary + task completion + niche focus**.
+
+Selection rule from the 2026 practitioner panel: **find the queries AI does not
+cannibalize**. Where Google surfaces no AI Overview and the answer still requires
+a click, classic content converts — one agency reports strong MQLs directly from
+those SERPs. Formats that resist replication: recorded opinion and interview
+video, first-hand testing, and anything requiring a named person's judgment.
+Depth over breadth: super-serve a niche audience instead of chasing scale.
 Effort does not correlate with traffic; depth does.
 
 Reality check from a four-year study of 100 six-figure blogs: the median lost

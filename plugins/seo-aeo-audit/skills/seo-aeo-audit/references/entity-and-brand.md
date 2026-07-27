@@ -77,6 +77,35 @@ spend.
   one presented analysis, while schema alone gave no lift: the moat is the linked
   data layer, not the markup volume.
 
+## G3b. Discovery is fragmented — audit where the audience actually is
+
+Buyers now form an opinion before any query reaches your site: on TikTok, Reddit,
+Quora, YouTube, Substack, Discord, in Meta AI inside WhatsApp/Facebook, in
+Gemini, Google Lens, ChatGPT and Perplexity. Both humans and models read those
+spaces to decide who you are and whether you can be trusted.
+
+Audit questions, answered with evidence, not assumption:
+
+- Which platforms does this audience use to research this category? (ask them,
+  read support tickets, check referral and branded-search patterns)
+- What do those spaces currently say about the brand — and who is saying it?
+- Is the brand narrative consistent there, or is it being written by others?
+- Which of those surfaces are **owned** (email list, Discord/Slack community,
+  Substack) versus **rented** (subreddit, Facebook group, TikTok account)? Rented
+  platforms can change the rules or disappear overnight; owned surfaces compound
+  and survive algorithm changes on both search and social.
+
+The practical cycle: participate on rented platforms to learn the audience and
+build awareness, then move engaged people onto a surface you own. For B2B,
+community management on UGC platforms doubles as LLM-training input — a thread
+with multiple independent perspectives teaches a model more than a
+brand-controlled page.
+
+Gen Z is Google's fastest-growing Search demographic and roughly 1 in 10 of their
+searches starts with Google Lens, of which about 1 in 5 carries commercial
+intent — visual and multimodal entry points belong in the audit for consumer
+brands.
+
 ## G4. Reputation is now a retrieval input
 
 Analysis of 5M ChatGPT conversations: once "review" enters the fan-out (hidden

@@ -44,6 +44,14 @@ verification steps, honest horizons and rollbacks.
   freshness, disavowing on a third-party toxicity score, self-promotional "best
   [category]" listicles, scaled AI content — all refused, with the evidence and
   the working alternative.
+- **Update-aware.** Ships a dated Google update timeline (core, spam, Discover —
+  through June 2026), the platform changes that retired old tactics, an
+  update-response protocol, and a refresh routine so each skill release folds in
+  what shipped since. Source of truth:
+  [SEJ's algorithm history](https://www.searchenginejournal.com/google-algorithm-history/)
+  plus the Search Status Dashboard.
+- **Growth plays, tiered.** ~45 plays with trigger, mechanism, observed effect
+  and evidence tier — not a checklist of best practices.
 - **Defense, not offense.** Adversarial techniques (prompt injection, canonical
   hijacks, fake DMCA waves, behavioral poisoning, fabricated consensus) appear
   only as things to detect and withstand.
@@ -117,7 +125,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            14 contract files (shipped on every channel,
+      ├── references/*.md            15 contract files (shipped on every channel,
       │                                incl. the deliverable skeletons)
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)

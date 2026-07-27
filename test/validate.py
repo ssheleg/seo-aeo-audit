@@ -28,6 +28,7 @@ REQUIRED_REFERENCES = (
     "myths.md",
     "benchmarks.md",
     "deliverable-templates.md",
+    "algorithm-updates.md",
 )
 errors = []
 
