@@ -27,6 +27,7 @@ REQUIRED_REFERENCES = (
     "evidence-tiers.md",
     "myths.md",
     "benchmarks.md",
+    "deliverable-templates.md",
 )
 errors = []
 
@@ -205,9 +206,19 @@ tpl_dir = os.path.join(ROOT, "templates")
 if not os.path.isdir(tpl_dir):
     fail("missing templates/ directory")
 else:
+    # The skills CLI ships only the skill's own directory, so the deliverable
+    # skeletons must also live inside it — and the two copies must not drift.
+    embed_path = os.path.join(ROOT, SKILL_DIR, "references", "deliverable-templates.md")
+    embedded = open(embed_path, encoding="utf-8").read() if os.path.isfile(embed_path) else ""
     for t in REQUIRED_TEMPLATES:
-        if not os.path.isfile(os.path.join(tpl_dir, t)):
+        tp = os.path.join(tpl_dir, t)
+        if not os.path.isfile(tp):
             fail(f"missing template: templates/{t}")
+            continue
+        body = open(tp, encoding="utf-8").read().rstrip("\n")
+        if embedded and body not in embedded:
+            fail(f"templates/{t} has drifted from references/deliverable-templates.md "
+                 f"(the copy the skills CLI ships) — regenerate the embedded copy")
 
 # HARD RULE: a SKILL.md may exist ONLY inside plugins/<plugin>/skills/<skill>/.
 for dirpath, dirnames, filenames in os.walk(ROOT):

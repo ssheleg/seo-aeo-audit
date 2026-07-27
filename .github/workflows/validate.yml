@@ -66,6 +66,18 @@ jobs:
             echo "OK: auditor tests catch a broken check"
           fi
 
+      - name: Negative self-test (template drift must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/drift-copy
+          printf '\n## injected drift\n' >> /tmp/drift-copy/templates/audit-report.template.md
+          if python3 /tmp/drift-copy/test/validate.py; then
+            echo "ERROR: validator passed with the root template drifted from the shipped copy"
+            exit 1
+          else
+            echo "OK: validator catches template drift"
+          fi
+
       - name: install.sh syntax check
         run: bash -n install.sh
 
@@ -80,6 +92,7 @@ jobs:
           node bin/seo-aeo-audit.js
           test -f "$HOME/.claude/skills/seo-aeo-audit/SKILL.md"
           test -f "$HOME/.claude/skills/seo-aeo-audit/references/myths.md"
+          test -f "$HOME/.claude/skills/seo-aeo-audit/references/deliverable-templates.md"
           test -f "$HOME/.claude/skills/seo-aeo-audit/scripts/page_audit.py"
           test -f "$HOME/.claude/commands/seo-aeo-audit.md"
           node bin/seo-aeo-audit.js | grep -q '^skip:'

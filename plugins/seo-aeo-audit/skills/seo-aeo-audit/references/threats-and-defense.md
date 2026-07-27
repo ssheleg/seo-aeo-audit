@@ -1,4 +1,4 @@
-# Track I — risk, adversaries, defence
+# Track I — risk, adversaries, defense
 
 Everything here is defensive. The tactics are described so you can **detect and
 withstand** them; none of them belongs in a client plan.
@@ -39,7 +39,7 @@ withstand** them; none of them belongs in a client plan.
 - **Staging exposure.** Search operators still surface dev/staging hosts
   (`site:dev.*`, `site:staging.*` patterns and custom search engines). Check your
   own before a competitor does; block with auth, not with `robots.txt`.
-- **Hosting neighbourhood.** Controlled tests report a ranking ceiling for
+- **Hosting neighborhood.** Controlled tests report a ranking ceiling for
   domains sharing an IP with hundreds of low-quality sites. Treat as a hypothesis
   worth checking (who else is on this IP?) rather than a law.
 
@@ -57,34 +57,34 @@ and agents cite UGC in roughly a quarter of citations.
 Audit five surfaces:
 
 1. **Rendered DOM** — hidden blocks, widget injections, JS-inserted content.
-2. **UGC and reviews** — user-submitted text that an AI summariser will read.
+2. **UGC and reviews** — user-submitted text that an AI summarizer will read.
 3. **Programmatic pages** — imported feeds, partner data, scraped or generated
    text.
 4. **AI-visibility tactics your own team may have shipped** — the highest-risk
    category for self-inflicted policy violations.
-5. **Bot behaviour analytics** — anomalous crawling of hidden content or infinite
+5. **Bot behavior analytics** — anomalous crawling of hidden content or infinite
    URL spaces.
 
 New rule: read the source, render the DOM, look for injected instructions, and
 assume an AI agent reads everything you leave in there. Google's spam policy now
 explicitly covers **manipulating generative AI answers**, and sanctions are
-synchronised between classic search and AI surfaces.
+synchronized between classic search and AI surfaces.
 
 ## I4. Adversarial patterns to detect
 
-| Pattern | How it shows up | Defence |
+| Pattern | How it shows up | Defense |
 |---|---|---|
-| Fake DMCA / bogus government takedowns | A target URL vanishes for ~2 weeks per complaint; intraday rank collapse (top-1 → top-10 in 20 minutes) rather than a gradual update pattern; repeat filings keep pages out of the index | Document everything (screenshots, timestamps, removal notices, restoration records, attack patterns), file counter-notices immediately, escalate through the transparency report; note that filing abusive complaints is itself heavily penalised |
-| Canonical hijack / cloud stacking | A clone of your HTML hosted elsewhere, canonicalised to a "master clone", flipping with you in the SERP; sometimes with your Buy buttons replaced by affiliate links back to you | Monitor for duplicated markup and cross-domain canonical claims; watch for keyword-specific losses that do not show as a sitewide drop in GSC |
+| Fake DMCA / bogus government takedowns | A target URL vanishes for ~2 weeks per complaint; intraday rank collapse (top-1 → top-10 in 20 minutes) rather than a gradual update pattern; repeat filings keep pages out of the index | Document everything (screenshots, timestamps, removal notices, restoration records, attack patterns), file counter-notices immediately, escalate through the transparency report; note that filing abusive complaints is itself heavily penalized |
+| Canonical hijack / cloud stacking | A clone of your HTML hosted elsewhere, canonicalized to a "master clone", flipping with you in the SERP; sometimes with your Buy buttons replaced by affiliate links back to you | Monitor for duplicated markup and cross-domain canonical claims; watch for keyword-specific losses that do not show as a sitewide drop in GSC |
 | Fabricated consensus networks | Dozens of thin exact-match domains, isolated hosting, Googlebot blocked while AI crawlers are allowed, tuned to the citation volume a model uses for a target prompt | Review *who* the models cite for your category; report spam patterns; strengthen your own corroboration rather than matching the tactic |
-| Behavioural poisoning | A low, steady drip of direct traffic with deliberately bad engagement across many pages, staying under alarm thresholds | Segment traffic by source and engagement, alert on anomalous zero-dwell direct traffic, keep a control benchmark |
+| Behavioral poisoning | A low, steady drip of direct traffic with deliberately bad engagement across many pages, staying under alarm thresholds | Segment traffic by source and engagement, alert on anomalous zero-dwell direct traffic, keep a control benchmark |
 | Crawl-budget attacks | Bulk fabricated URLs on your domain with junk backlinks pointing at them; Googlebot spends its allowance on your 404s | Watch log status-code distribution over time; serve fast 410s; keep a per-day 404 baseline |
-| Weaponised spam reports | Manual actions arriving in competitive niches shortly after a public complaint wave | Keep your own site defensibly clean; document compliance decisions |
+| Weaponized spam reports | Manual actions arriving in competitive niches shortly after a public complaint wave | Keep your own site defensibly clean; document compliance decisions |
 | Fake search-volume sites | A guest-post seller "ranking" for an invented brand; tool traffic estimates in the millions from a handful of keywords | Always open the keyword tab: 70 variants of one brand name and nothing else is fabricated demand |
 | Parasite hosting on your terms | Competitors renting third-party authority (high-DR publishing platforms, social long-form, embed pages) to outrank you on brand and category queries | Track brand-SERP composition monthly; respond with your own owned/earned placements and platform policy reports where rules are broken |
 | Historic-URL resurrection | A dead URL path of yours recreated on someone else's domain, inheriting algorithmic memory | Keep valuable retired URLs redirected and monitored rather than simply deleted |
 
-## I5. Brand-SERP defence
+## I5. Brand-SERP defense
 
 - Track what occupies page one for the brand query, including UGC threads.
 - Platform policies are the leverage on harmful threads: Reddit's content rules

@@ -22,7 +22,7 @@ still SEO; treat that as one interested party's opinion and verify per engine.
    trust. Leaked system prompts show retrieval-first instructions ("use the web
    result as the source of truth even if it contradicts what you remember") and
    source-quality filters that demote affiliate roundups, aggregator listings and
-   obviously SEO-shaped content in favour of original publishers.
+   obviously SEO-shaped content in favor of original publishers.
 
 Implication: align with the consensus the model already holds, corroborate it
 across several retrievable quality sources, and state claims declaratively.
@@ -98,13 +98,13 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
 |---|---|---|
 | Google AIO / AI Mode | Google index + fan-out; sanctions synced with classic search | Classic ranking is the prerequisite; a Google penalty removes you from AI surfaces too |
 | ChatGPT (search) | Bing partnership + own cache/index; `resultsource` values observed: `serp`, licensed publisher whitelist, third-party scrapers | Bing rankings are a first-class path: a site invisible in Google (past page 7) earned 90k+ ChatGPT citations purely from Bing |
-| ChatGPT Deep Research | Bing snippets, three commands, no clicks, ~5,700-char read window, `OAI-SearchBot` | Optimise source order and literal terms; unblock the right user agent |
-| Claude | ~86.7% overlap with Brave's organic results; Brave is a listed subprocessor | Brave's Web Discovery Project scores **behaviour** (query correlation, active time, copy events, scroll, internal-link clicks) and ignores backlinks, social signals, domain age and schema; pages failing its `validDoubleFetch` (missing title, noindex, canonical mismatch, big authenticated/anonymous HTML delta) emit zero signal |
-| Perplexity | Own crawl + retrieval; leaves ~76% of retrieved pages uncited | Track retrieval separately from citation; localisation index is low (~9%) |
+| ChatGPT Deep Research | Bing snippets, three commands, no clicks, ~5,700-char read window, `OAI-SearchBot` | Optimize source order and literal terms; unblock the right user agent |
+| Claude | ~86.7% overlap with Brave's organic results; Brave is a listed subprocessor | Brave's Web Discovery Project scores **behavior** (query correlation, active time, copy events, scroll, internal-link clicks) and ignores backlinks, social signals, domain age and schema; pages failing its `validDoubleFetch` (missing title, noindex, canonical mismatch, big authenticated/anonymous HTML delta) emit zero signal |
+| Perplexity | Own crawl + retrieval; leaves ~76% of retrieved pages uncited | Track retrieval separately from citation; localization index is low (~9%) |
 | Copilot / Bing | Bing index; publishes the most actionable guidance and AI analytics | Use Bing Webmaster AI Performance for citation share, intents and topics |
 | Алиса AI (Yandex) | Yandex index; ~1 in 3 queries answered; ~10% product-related; Yandex Commerce Protocol places products inside answers with in-chat checkout | For RU commerce, YCP integration is a distribution decision, not an SEO one |
 
-Personalisation is now a factor: Google's Personal Intelligence (Gmail, Photos,
+Personalization is now a factor: Google's Personal Intelligence (Gmail, Photos,
 Calendar) measurably shifts AI Mode recommendations — in a controlled test,
 email-seeded brands went from 23.9% to 66.8% appearance on a connected account
 (control unchanged). Personal context gets a brand into the pool; the open web
@@ -167,9 +167,9 @@ Seven controlled GEO experiments across 100M sites:
   significantly (+3.33 recommendation positions, +10pp brand citation). Schema is
   a retrieval/entity aid on some surfaces, not a ranking lever.
 - Press-release distribution produced citations within days; **YouTube is the #2
-  cited social source** (cadence matters more than engagement); localisation
-  varies wildly by platform (Copilot ~77% localisation index, ChatGPT ~58%,
-  Perplexity ~9%) — localise *prompts*, not only pages.
+  cited social source** (cadence matters more than engagement); localization
+  varies wildly by platform (Copilot ~77% localization index, ChatGPT ~58%,
+  Perplexity ~9%) — localize *prompts*, not only pages.
 
 Regression across 29,562 domains / 145 verticals / 105k ChatGPT prompts: classic
 SEO signals correlate with LLM visibility but explain only **15–20% of the

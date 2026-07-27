@@ -98,11 +98,18 @@ pre-render source, manual action) makes every other finding moot — a manual
 action is a binary multiplier: nothing you improve counts until it is lifted.
 Work A → B → C before spending time on F/G.
 
-Tooling: `scripts/page_audit.py` (stdlib-only, no network required in
-`--file` mode) collects the per-page mechanical evidence for tracks A, B, C and
-F — canonical traps, robots directives, heading and schema inventory, and the
-answer-engine **read-budget estimate**. Run it on a representative URL per
-template, not on one page.
+**Tooling ladder** — use what is actually connected, in this order: a crawl
+export or crawler MCP (Screaming Frog v24+ ships one) → GSC / Bing / analytics
+MCP or exports → server logs → the bundled script → manual fetches. State in the
+report which rung you reached. A public-only audit with no property access is
+valid work, but its indexation and query findings are inferences, not
+observations, and get tiered accordingly.
+
+`scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)
+collects the per-page mechanical evidence for tracks A, B, C and F — canonical
+traps, robots directives, heading and schema inventory, and the answer-engine
+**read-budget estimate**. Paths below are relative to this skill's own directory;
+run it on a representative URL per template, not on a single page.
 
 ```bash
 python3 scripts/page_audit.py --url https://example.com/pricing --format markdown
@@ -137,8 +144,10 @@ Group the output into four buckets, in this order:
 
 ## Step 4 — Deliverables
 
-Write two files (seed them from the templates in this repo; never overwrite an
-existing file without `--force`-style confirmation):
+Write two files, seeded from the skeletons in
+[references/deliverable-templates.md](references/deliverable-templates.md).
+Never overwrite an existing audit or plan silently — write a new dated file, or
+ask first:
 
 - `docs/seo/audit-<YYYY-MM-DD>.md` — findings. Per finding: **Issue · Impact ·
   Evidence · Cause · Fix · Effort · Evidence tier · Verification**.
@@ -195,3 +204,4 @@ the nearest thing that does work, and move on.
 - [references/evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.
 - [references/myths.md](references/myths.md) — the refuted list, with sources.
 - [references/benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
+- [references/deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.

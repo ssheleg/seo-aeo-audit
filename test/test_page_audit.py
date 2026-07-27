@@ -62,6 +62,12 @@ check(
     "bad-page: navigation-heavy source order must produce a read-budget finding",
 )
 check(bad["links_total"] == 24, f"bad-page: expected 24 links, got {bad['links_total']}")
+check(bad["word_count"] == 6, f"bad-page: prose words must exclude nav labels, got {bad['word_count']}")
+check(bad["link_text_words"] == 28, f"bad-page: link-text words wrong: {bad['link_text_words']}")
+check(
+    "Twenty" not in bad["first_100_words"],
+    "bad-page: first_100_words must be prose only, not navigation labels",
+)
 check(
     any(f["severity"] == "blocker" for f in bad["findings"]),
     "bad-page: must produce at least one blocker",
@@ -95,6 +101,26 @@ check(
     f"good-page: unexpected blocker: {[f['code'] for f in good['findings']]}",
 )
 
+edge = run("edge-page.html", "https://example.com/guide")
+ecodes = {f["code"] for f in edge["findings"]}
+
+check(
+    edge["noindex"] is False,
+    "edge-page: 'nonexistent'/'noneffective' in body must not be read as a noindex directive",
+)
+check("noindex" not in ecodes, "edge-page: no noindex finding expected")
+check(edge["nosnippet"] is True, "edge-page: nosnippet directive must be detected")
+check("nosnippet" in ecodes, "edge-page: nosnippet must be reported — it gates AI quoting")
+check(
+    edge["canonical_extra_attrs"] == [],
+    f"edge-page: id/class on a canonical are harmless, got {edge['canonical_extra_attrs']}",
+)
+check(edge["jsonld_types"] == ["Article"], f"edge-page: JSON-LD types wrong: {edge['jsonld_types']}")
+check(
+    not any(f["severity"] == "blocker" for f in edge["findings"]),
+    f"edge-page: unexpected blocker: {[f['code'] for f in edge['findings']]}",
+)
+
 # markdown mode must render without crashing and carry the findings table
 md = subprocess.run(
     [sys.executable, SCRIPT, "--file", os.path.join(FIXTURES, "bad-page.html"),
@@ -113,8 +139,8 @@ check(missing.returncode == 1, "missing file must exit 1")
 check("Traceback" not in missing.stderr, "missing file must not traceback")
 
 if failures:
-    print("FAIL: page_audit behaviour")
+    print("FAIL: page_audit behavior")
     for f in failures:
         print(" - " + f)
     sys.exit(1)
-print("PASS: page_audit behaviour (2 fixtures, markdown + json + error path)")
+print("PASS: page_audit behavior (3 fixtures, markdown + json + error path)")

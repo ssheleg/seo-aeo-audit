@@ -21,7 +21,7 @@ are allowed to do with it.
 3. **Downgrade on conflict.** When two credible studies disagree (as they do on
    serving Markdown to AI crawlers), the claim drops to HYPOTHESIS and moves to
    the experiment list — you do not pick the flattering one.
-4. **Engine statements are evidence about intent, not always about behaviour.**
+4. **Engine statements are evidence about intent, not always about behavior.**
    Public guidance from a search company is a party with an interest; where a
    patent, a leak, or your own logs disagree, record both and mark the gap.
    Bing publishes more mechanical detail than Google does; use it, verify it.

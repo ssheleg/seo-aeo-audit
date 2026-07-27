@@ -22,8 +22,7 @@ anything older than ~18 months before it enters a plan.
 | Zero-click Google searches (US, desktop+mobile) | 68% (was 60.45% in 2024); UK highest | Jan–Apr 2026 |
 | Click-through on a link inside an AI summary | ~1% of sessions | 2025 study |
 | First organic result when an AI Overview is present | −58% clicks | 2026 |
-| Share of AI-answer links coming from the organic top-10 | 38% (was 76% mid-2025) | 2026 |
-| Google AI citations sourced from the organic top-10 | 38% | 2026 |
+| Share of AI-answer links coming from the organic top-10 | 38%, down from 76% in mid-2025 (Semrush); Ahrefs reports the same 38% for Google AI citations specifically | 2026 |
 
 ## AI citation mechanics
 
@@ -65,7 +64,7 @@ anything older than ~18 months before it enters a plan.
 | Information-gain median in the top-3 | 52/100 (identical across positions 1–3); 25% below 40 | 150 pages / 50 keywords / 10 verticals |
 | Unique data points | 15+ → 62/100; 0–1 → 40/100; median top-3 page has 4 | same |
 | SERPs with an unanswered common question in the entire top-3 | 90% | same |
-| Median on-page optimisation score | 33/100 (46.8% below 25) against an ~80 practical threshold | 10,937 pages |
+| Median on-page optimization score | 33/100 (46.8% below 25) against an ~80 practical threshold | 10,937 pages |
 | Pages missing schema | 99% (45% none at all) | same |
 | Four-year blog traffic outcome | median −85%; 12 of 100 to zero; 21 grew | 100 six-figure blogs, 2022→2026 |
 
@@ -76,7 +75,7 @@ anything older than ~18 months before it enters a plan.
 | TTFB | <200ms optimal, <500ms acceptable |
 | Server error rate | <0.5% |
 | Duplicate-group persistence after a fix | up to 2 weeks |
-| Out-of-stock crawl deprioritisation | 100+ days after the directive is removed |
+| Out-of-stock crawl deprioritization | 100+ days after the directive is removed |
 | "Discovered – not indexed" push success | 70–80% indexed within 72h with the full protocol |
 | Migration traffic loss | ~30% average; ~8% with a disciplined protocol; 67% in the documented failure |
 | Recovery after mass accidental `noindex` | 6–12 weeks, staged |
@@ -89,5 +88,5 @@ anything older than ~18 months before it enters a plan.
   forecasts. Never present them as a promise.
 - Vendor-published AI-visibility studies measure their own instrumentation; where
   two disagree, both drop to HYPOTHESIS.
-- Regional variance is large: CWV outcomes, AI-surface availability, localisation
+- Regional variance is large: CWV outcomes, AI-surface availability, localization
   depth and commerce protocols differ per market. State the market you measured.

@@ -77,8 +77,8 @@ relative links).
 3. **An explicit myth list.** The largest observed waste in this domain is
    spending on tactics with published negative evidence. The skill refuses them
    by name and offers the working alternative.
-4. **Defence-only treatment of adversarial material.** Prompt injection,
-   canonical hijacking, takedown abuse and behavioural poisoning are audited for,
+4. **Defense-only treatment of adversarial material.** Prompt injection,
+   canonical hijacking, takedown abuse and behavioral poisoning are audited for,
    never recommended.
 5. **One bundled script, not a tool suite.** The mechanical checks that are cheap
    to automate and easy to get wrong by eye (canonical attribute trap, `content`
@@ -94,7 +94,7 @@ relative links).
   engines *is* classic indexation and ranking; splitting would duplicate tracks
   A–C and let each half give partial advice.
 - **A scoring/grading product** (a single "SEO score"): scores hide the cause and
-  invite optimisation of the score. The deliverable is a plan, not a number.
+  invite optimization of the score. The deliverable is a plan, not a number.
 
 ## Definition of done
 

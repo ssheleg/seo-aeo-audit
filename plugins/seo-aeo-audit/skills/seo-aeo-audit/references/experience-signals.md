@@ -11,7 +11,7 @@ of these signals.
 Two structural details change how you audit:
 
 - `patternLevel` shows the signals aggregate at **URL, directory and subdomain**
-  level → "topical neighbourhoods". A weak section drags its neighbours; a strong
+  level → "topical neighborhoods". A weak section drags its neighbors; a strong
   section lifts them. Architecture concentrates or dilutes satisfaction.
 - `onsiteProminence` uses high-satisfaction pages as seeds in a traffic-flow
   simulation of internal authority → pages that satisfy users become internal
@@ -28,7 +28,7 @@ depending on query, position, device and document age — **there is no universa
 CTR benchmark**. Build a site-specific CTR curve from your own GSC data instead.
 
 Two caveats an honest audit states: `unicornClicks` is a **child-account** marker
-(COPPA/GDPR-K isolation), not a premium-user signal — nothing to optimise there;
+(COPPA/GDPR-K isolation), not a premium-user signal — nothing to optimize there;
 and Brave's Web Discovery Project (which feeds Claude) gates every engagement
 event behind >1s of active time and throttles to one increment per second, so
 synthetic click activity does not inflate it.
@@ -49,7 +49,7 @@ Seven page types that resolve the session instead of sending the user back:
 Nine page-level tactics: answer the main question above the fold; pre-empt the
 next step; delete unsupported claims; place the CTA at the point of task
 completion; cut load time (drop-off spikes around 4s); map the title tag hard to
-the content (over-promising is the biggest `badClick` risk); optimise mobile
+the content (over-promising is the biggest `badClick` risk); optimize mobile
 scroll depth; use FAQ/HowTo markup to pre-qualify the click in the SERP; keep it
 evergreen (stale pages dilute the 13-month window).
 
@@ -115,7 +115,7 @@ with, before presenting anything.
 
 Regional reality check: identical technical work produced 25% → 97% good URLs in
 one country and zero movement in another, because CDN proximity, server location
-and device quality cap what optimisation can achieve. Do not promise uniform CWV
+and device quality cap what optimization can achieve. Do not promise uniform CWV
 targets across markets, and never let CWV work outrank an indexing fix.
 
 ## Evidence to capture for track H
@@ -123,6 +123,6 @@ targets across markets, and never let CWV work outrank an indexing fix.
 - Per template: CrUX field values (LCP/INP/CLS) by form factor, lab trace of the
   LCP path, TTFB.
 - GSC query-level CTR versus your own site curve (not an industry table).
-- Behavioural metrics per template (bounce, dwell, pages/session, scroll depth),
+- Behavioral metrics per template (bounce, dwell, pages/session, scroll depth),
   and the return-to-SERP rate if you can approximate it.
 - Before/after for any CRO change, with the 60–90 day ranking window stated.

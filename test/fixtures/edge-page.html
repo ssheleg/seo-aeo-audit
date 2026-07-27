@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Field guide to noneffective directives — Example</title>
+  <meta name="description" content="A page whose robots directives look like blockers but are not.">
+  <meta name="robots" content="max-image-preview:large, nosnippet">
+  <link rel="canonical" href="https://example.com/guide" id="canonical" class="seo">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Field guide"}</script>
+</head>
+<body>
+  <main>
+    <h1>Field guide</h1>
+    <p>Nonexistent directives and noneffective settings are not the same as a noindex tag. This paragraph deliberately contains the words nonexistent and noneffective so a substring match would misfire.</p>
+    <h2>Why it matters</h2>
+    <p>An auditor that matches directives by substring reports a blocker that is not there, and the team spends a day chasing it.</p>
+    <h2>What to check</h2>
+    <p>Read the parsed directive list, not the raw string. The list here is max-image-preview and nosnippet.</p>
+    <h3>Snippet control</h3>
+    <p>Nosnippet gates what an answer engine may quote from this page, which is a real finding worth reporting.</p>
+    <img src="/diagram.png" alt="Diagram of robots directive parsing" width="640" height="480">
+  </main>
+</body>
+</html>

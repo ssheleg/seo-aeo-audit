@@ -11,6 +11,7 @@ stdlib only. Works offline with --file so it can be tested without network.
 Usage:
   page_audit.py --url https://example.com/pricing [--format markdown|json]
   page_audit.py --file saved.html --base-url https://example.com/pricing
+  (--base-url applies to --file only; with --url the fetched URL is used)
   page_audit.py --url-list urls.txt --format json > audit.json
 
 Exit codes: 0 = ran (findings may exist), 1 = usage/fetch error.
@@ -181,10 +182,18 @@ class Parser(HTMLParser):
 # --- analysis --------------------------------------------------------------
 
 
-def _visible_text(doc: Doc) -> str:
+def _visible_text(doc: Doc, include_links: bool = True) -> str:
+    """Extractable text in source order.
+
+    include_links=False gives prose only, so navigation labels do not inflate the
+    word count or hide whether the page answers in its opening words.
+    """
     parts = []
     for kind, payload in doc.stream:
-        parts.append(payload if kind == "text" else payload.split("†")[0].lstrip("【"))
+        if kind == "text":
+            parts.append(payload)
+        elif include_links:
+            parts.append(payload.split("†")[0].lstrip("【"))
     return " ".join(" ".join(parts).split())
 
 
@@ -253,7 +262,9 @@ def analyse(html: str, url: str, headers: dict | None = None) -> dict:
     headers = {k.lower(): v for k, v in (headers or {}).items()}
 
     text = _visible_text(doc)
-    words = len(text.split())
+    prose = _visible_text(doc, include_links=False)
+    words = len(prose.split())
+    link_words = len(text.split()) - words
     types, jsonld_errors = _jsonld_types(doc)
 
     host = urlparse(url).netloc.lower() if url else ""
@@ -272,8 +283,10 @@ def analyse(html: str, url: str, headers: dict | None = None) -> dict:
 
     robots_values = " ".join(doc.meta_robots).lower()
     x_robots = headers.get("x-robots-tag", "").lower()
-    noindex = "noindex" in robots_values or "none" in robots_values or "noindex" in x_robots
-    nosnippet = "nosnippet" in robots_values or "nosnippet" in x_robots
+    directives = robots_values + " " + x_robots
+    # word boundaries: `none` is a directive, `nonexistent` is not
+    noindex = bool(re.search(r"\bnoindex\b|\bnone\b", directives))
+    nosnippet = bool(re.search(r"\bnosnippet\b", directives))
 
     canonical_href = doc.canonicals[0]["href"] if doc.canonicals else None
     canonical_abs = urljoin(url or "", canonical_href) if canonical_href else None
@@ -284,7 +297,7 @@ def analyse(html: str, url: str, headers: dict | None = None) -> dict:
     imgs_no_alt = sum(1 for i in doc.images if i["alt"] is None)
     imgs_empty_alt = sum(1 for i in doc.images if i["alt"] == "")
 
-    first_100 = " ".join(text.split()[:100])
+    first_100 = " ".join(prose.split()[:100])
     result = {
         "url": url,
         "title": doc.title,
@@ -303,6 +316,7 @@ def analyse(html: str, url: str, headers: dict | None = None) -> dict:
         "h1": h1s[0] if h1s else None,
         "subheads_h2_h4": subheads,
         "word_count": words,
+        "link_text_words": link_words,
         "first_100_words": first_100,
         "currency_in_text": bool(CURRENCY_RE.search(text)),
         "currency_in_source_only": bool(CURRENCY_RE.search(html)) and not bool(CURRENCY_RE.search(text)),
@@ -339,25 +353,25 @@ def findings(r: dict) -> list[dict]:
         add("blocker", "refresh-noindex",
             "meta refresh combined with noindex has no defined precedence: the page drops out "
             "and the canonical never passes equity — replace with a server-side 301",
-            "technical-checks.md#b-canonicalisation-and-duplication")
+            "technical-checks.md#b-canonicalization-and-duplication")
     if r["canonical_extra_attrs"]:
         add("high", "canonical-attrs",
             "canonical link carries extra attributes "
             f"({', '.join(r['canonical_extra_attrs'])}); Google discards the declaration — "
             "emit rel and href only",
-            "technical-checks.md#b-canonicalisation-and-duplication")
+            "technical-checks.md#b-canonicalization-and-duplication")
     if r["canonical_count"] == 0:
         add("medium", "canonical-missing",
             "no rel=canonical; a self-referencing canonical is the documented recommendation",
-            "technical-checks.md#b-canonicalisation-and-duplication")
+            "technical-checks.md#b-canonicalization-and-duplication")
     elif r["canonical_count"] > 1:
         add("high", "canonical-multiple",
             f"{r['canonical_count']} canonical declarations on one page — the engine may ignore all of them",
-            "technical-checks.md#b-canonicalisation-and-duplication")
+            "technical-checks.md#b-canonicalization-and-duplication")
     elif not r["canonical_self_referential"]:
         add("info", "canonical-cross",
             f"canonical points elsewhere ({r['canonical']}) — confirm that is intended",
-            "technical-checks.md#b-canonicalisation-and-duplication")
+            "technical-checks.md#b-canonicalization-and-duplication")
     if r["nosnippet"]:
         add("high", "nosnippet",
             "nosnippet / data-nosnippet gates what answer engines may quote from this page",
@@ -372,7 +386,9 @@ def findings(r: dict) -> list[dict]:
             "(33.2% vs 28% for 1–3)",
             "aeo-geo.md#f2-what-correlates-with-being-cited-ranked-evidence")
     if r["word_count"] < 300:
-        add("medium", "thin", f"{r['word_count']} words of extractable text",
+        add("medium", "thin",
+            f"{r['word_count']} words of prose (link labels excluded; "
+            f"{r['link_text_words']} more words sit in link text)",
             "intent-and-content.md#e2-information-gain")
     if r["title_len"] == 0:
         add("high", "title-missing", "no <title>", "technical-checks.md")
@@ -443,7 +459,8 @@ def to_markdown(results: list[dict]) -> str:
         rb = r["read_budget"]
         lines.append(
             f"- title ({r['title_len']} chars): {r['title'] or '—'}\n"
-            f"- H1: {r['h1'] or '—'} · subheads H2–H4: {r['subheads_h2_h4']} · words: {r['word_count']}\n"
+            f"- H1: {r['h1'] or '—'} · subheads H2–H4: {r['subheads_h2_h4']} · prose words: "
+            f"{r['word_count']} (+{r['link_text_words']} in link text)\n"
             f"- canonical: {r['canonical'] or '—'}"
             f"{' (extra attrs: ' + ', '.join(r['canonical_extra_attrs']) + ')' if r['canonical_extra_attrs'] else ''}\n"
             f"- robots: {', '.join(r['meta_robots']) or '—'}"
@@ -456,7 +473,7 @@ def to_markdown(results: list[dict]) -> str:
             f"- answer-engine first read: {rb['content_pct']}% content / {rb['link_marker_pct']}% link markers"
         )
         lines.append("")
-        lines.append(f"> first 100 words: {r['first_100_words'][:400] or '—'}")
+        lines.append(f"> first 100 prose words: {r['first_100_words'][:400] or '—'}")
         lines.append("")
         if r["findings"]:
             lines.append("| severity | check | finding | reference |")

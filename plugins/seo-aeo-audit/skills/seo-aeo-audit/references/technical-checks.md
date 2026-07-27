@@ -3,7 +3,9 @@
 Everything here is a check you run and record, not advice you repeat. Capture the
 observed value and the date for each.
 
-## A0. Blockers first (stop the audit if any is true)
+## A0. Blockers first
+
+If any of these is true, stop and fix it before auditing anything else.
 
 | Check | How | Blocker if |
 |---|---|---|
@@ -26,7 +28,7 @@ can precede the manual action by 24h+.
   Test, DevTools request-blocking, or a robots-aware rendering proxy — **not**
   your browser.
 - **Wildcards match substrings, not paths.** `Disallow: /*?` blocks every
-  parameterised URL behind it (one store lost ~40% of product pages from the
+  parameterized URL behind it (one store lost ~40% of product pages from the
   index; a retailer lost 45% of traffic and needed six weeks just to diagnose).
   `Disallow: /*print` also blocks `/blueprints/`, `/footprint/`, `/imprint/`;
   `Disallow: /account/` also catches `/account-settings/`.
@@ -86,7 +88,7 @@ are low, it should not be in the index.
 1. Faceted navigation and parameter explosion (one category × filters = thousands
    of crawlable URLs).
 2. Pagination explosion (`?page=847`) — cap it, consolidate with View-All where
-   sensible, canonicalise empty pages.
+   sensible, canonicalize empty pages.
 3. Duplicate variants: session IDs, tracking params, print versions, HTTP/HTTPS,
    www/non-www.
 4. Mass low-quality pages — audit for: zero organic in 12 months, no inbound
@@ -111,10 +113,10 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
 
 **Faceted navigation, done properly:**
 
-- **Facets** carry independent search demand (brand, colour, material, audience)
+- **Facets** carry independent search demand (brand, color, material, audience)
   → clean crawlable URLs with self-referencing canonicals.
 - **Filters** are convenience (price range, sort order, availability) → no URL
-  change, or parameter URLs that are canonicalised/noindexed.
+  change, or parameter URLs that are canonicalized/noindexed.
 - `robots.txt` blocks crawling, not indexing: a blocked filter URL with any
   external link gets indexed on anchor text alone and can then never see your
   `noindex`. Match the tool to the problem — non-linkable markup blocks
@@ -125,11 +127,11 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
   301 → `/shoes/red/`) only after demand shows up in internal search logs or GSC.
 
 **Out-of-stock trap:** applying `noindex`/301/canonical while a product is out of
-stock makes the crawl scheduler deprioritise that URL for 100+ days *after* the
+stock makes the crawl scheduler deprioritize that URL for 100+ days *after* the
 directive is removed. Sitemap resubmission and manual GSC submissions do not
 break it; Atom/RSS feeds jump the fast-discovery queue, and dynamic internal
 links from high-crawl-frequency nodes help. Rendering an out-of-stock page with
-no directives can trigger a soft 404 and the same deprioritisation.
+no directives can trigger a soft 404 and the same deprioritization.
 
 **Sitemaps** are a discovery and diagnostic tool, not a ranking factor. Include
 only indexable, valuable, canonical URLs plus anything published in the last 24h;
@@ -137,7 +139,7 @@ exclude pagination, filters, redirects, noindexed and duplicate URLs. Compare
 sitemap count to GSC indexed count and to a full crawl — the three-way diff finds
 orphans and phantom URLs.
 
-## B. Canonicalisation and duplication
+## B. Canonicalization and duplication
 
 - **Self-referencing canonicals are the documented recommendation.** Every
   indexable page should declare itself.
@@ -154,7 +156,7 @@ orphans and phantom URLs.
   the page drops out and the canonical never passes equity. Replace with a
   server-side 301.
 - **GSC's duplicate-content grouping keys mainly on slug, title and H1** — not
-  body text. It is a serving-layer filter preventing SERP cannibalisation, not a
+  body text. It is a serving-layer filter preventing SERP cannibalization, not a
   crawl-time demotion.
 - **Recovery is slow by design:** pages can stay in a duplicate group for up to
   two weeks after the fix, and they split faster only when the difference is

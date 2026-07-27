@@ -13,7 +13,7 @@ If nobody can tell whether the plan worked, the plan is a wish list.
 | Bing Webmaster Tools — AI Performance | Intents, topics, citation counts and **citation share**, grounding query intents/topics | The most actionable AI reporting available; Bing also feeds ChatGPT |
 | Microsoft Clarity | AI-visibility reporting from Copilot and Bing | AI referral traffic is only countable when the platform passes a referrer |
 | Yandex Webmaster | Query monitoring (hours-level delay), vertical inclusion/exclusion, verification via YTM or GTM | Yandex now presents Direct as a useful signal for search — ads and organic are no longer described as independent |
-| Server logs | Which bots fetch what, when, with which status | The only place AI-crawler behaviour is ground truth; use forward-confirmed reverse DNS to filter spoofed agents |
+| Server logs | Which bots fetch what, when, with which status | The only place AI-crawler behavior is ground truth; use forward-confirmed reverse DNS to filter spoofed agents |
 | Analytics (GA4 etc.) | Sessions, engagement, conversions by landing page and source | AI referrals appear only when the platform passes a referrer; assisted conversions arrive later via brand/direct |
 
 Field-data sources worth wiring in: CrUX (`cruxvis.withgoogle.com`) for real
@@ -54,7 +54,7 @@ cross-check.
   ChatGPT cited 61%. If you can see retrieval (logs), report it separately.
 - **Inbound truth beats vendor dashboards.** Which AI crawlers fetched which
   URLs, and which AI referrers produced sessions, are things you own. Vendor
-  visibility scores are directional at best; several are demonstrably modelled,
+  visibility scores are directional at best; several are demonstrably modeled,
   not observed.
 - **A crawler hit is not a training receipt.** Crawled → archived → text
   extracted → filtered → deduplicated → mixed → trained → surfaced. Content drops

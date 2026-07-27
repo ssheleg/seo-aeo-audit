@@ -16,7 +16,7 @@ for you: they average the descriptions or take the loudest attribute, and
 citation visibility suffers regardless of link authority.
 
 Audit output: a table of surface → current description → matches reference?
-→ owner → fix. Then re-check quarterly; manual synchronisation of a dozen
+→ owner → fix. Then re-check quarterly; manual synchronization of a dozen
 profiles does not survive contact with reality, so put it on a schedule.
 
 ## G2. Ghost citations — cited but not recommended

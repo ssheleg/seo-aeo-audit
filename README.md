@@ -44,8 +44,8 @@ verification steps, honest horizons and rollbacks.
   freshness, disavowing on a third-party toxicity score, self-promotional "best
   [category]" listicles, scaled AI content — all refused, with the evidence and
   the working alternative.
-- **Defence, not offence.** Adversarial techniques (prompt injection, canonical
-  hijacks, fake DMCA waves, behavioural poisoning, fabricated consensus) appear
+- **Defense, not offense.** Adversarial techniques (prompt injection, canonical
+  hijacks, fake DMCA waves, behavioral poisoning, fabricated consensus) appear
   only as things to detect and withstand.
 
 ### The bundled auditor
@@ -117,10 +117,12 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            13 contract files (shipped on every channel)
+      ├── references/*.md            14 contract files (shipped on every channel,
+      │                                incl. the deliverable skeletons)
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
-templates/*.template.md              audit report + action plan skeletons
+templates/*.template.md              same skeletons for non-agent use (validator
+                                     checks they match the embedded copy)
 test/validate.py                     structural validator
 test/test_page_audit.py              functional tests (offline fixtures)
 ```
@@ -129,7 +131,7 @@ test/test_page_audit.py              functional tests (offline fixtures)
 
 ```bash
 python3 test/validate.py        # structure, version sync, references, links
-python3 test/test_page_audit.py # auditor behaviour against offline fixtures
+python3 test/test_page_audit.py # auditor behavior against offline fixtures
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```

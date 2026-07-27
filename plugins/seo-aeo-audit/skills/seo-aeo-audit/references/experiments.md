@@ -33,11 +33,11 @@ attribution is weaker.
 - **Titles.** Adding the current year to titles: control +2.3%, test +34.7%
   organic at 98.5% significance, rolled to 1,500 pages for +28% sitewide. Test it
   — do not assume it.
-- **Title capitalisation.** Across five years of controlled tests, 50% of
-  meta-title capitalisation tests were positive and **zero** negative — the most
+- **Title capitalization.** Across five years of controlled tests, 50% of
+  meta-title capitalization tests were positive and **zero** negative — the most
   consistently winning test type in that dataset. The mechanism appears to be
-  indexing-side (capitalisation as an emphasis/NER signal), not CTR: all-caps
-  titles rarely even render in the SERP. Prefer targeted capitalisation of key
+  indexing-side (capitalization as an emphasis/NER signal), not CTR: all-caps
+  titles rarely even render in the SERP. Prefer targeted capitalization of key
   terms over full all-caps.
 - **Meta-description promos.** "Save 30%" produced +21.2% organic sessions in one
   market and exactly nothing in another. Market-specific; always test locally.
