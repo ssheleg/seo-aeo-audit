@@ -192,6 +192,7 @@ templates/*.template.md              deliverable skeletons for non-agent use
 bin/seo-aeo-audit.js                 npx installer (zero dependencies)
 install.sh                           POSIX installer for a local clone
 package.json                         npm manifest for the installer CLI
+CONTRIBUTING.md                      evidence discipline, checks, where things go
 SECURITY.md                          what runs, what it touches, how to verify
 test/validate.py                     structural validator
 test/test_page_audit.py              functional tests (offline fixtures)
@@ -247,6 +248,15 @@ to do first.
   confidence.
 - **The output is a prioritized change plan** with verification steps and honest
   horizons, not a score out of 100.
+
+## Contributing
+
+Issues and pull requests are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md). The short version: every claim carries an
+evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
+`python3 test/validate.py` plus `python3 test/test_page_audit.py` must pass.
+Everyone taking part is expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Author
 

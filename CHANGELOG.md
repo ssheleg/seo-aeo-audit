@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.6.1 — 2026-07-28
+
+Open-source hygiene pass — the repo is public, so the files a first-time
+contributor looks for now exist.
+
+### Added
+- `CONTRIBUTING.md` — the evidence-tier rule stated as the first thing a
+  contributor reads: no claim without a tier, `benchmarks.md` owns the numbers,
+  dated facts stay dated, conflicting sources are both named and the claim is
+  demoted rather than decided, and manipulative tactics are declined.
+- `CODE_OF_CONDUCT.md`, issue forms and a pull-request template.
+- README gained a Contributing section and lists the new files in the repo map.
+
 ## v0.6.0 — 2026-07-28
 
 Release-readiness pass: a full read of every file in the repo looking for claims
