@@ -31,7 +31,7 @@ Sources:
 - Zero-click: 68% of Google searches end without a click (Similarweb/SparkToro,
   Jan–Apr 2026, US, desktop+mobile) vs 60.45% in 2024. UK highest zero-click.
 - Google search volume at all-time high (Q1'26, Pichai); Bing 1B MAU.
-- Yandex: every 3rd query gets an "Алиса AI" answer; 48.3M MAU on quick answers;
+- Yandex: every 3rd query gets an "Alice AI" (Алиса) answer; 48.3M MAU on quick answers;
   ~10% of Alisa queries are product/selection; RU search share 73.34%.
 - Bots overtook humans in web traffic for the first time (Cloudflare, Jun 2026).
 - Only ~2.4% of URLs are cited by ChatGPT + Perplexity + Google AIO
@@ -115,7 +115,7 @@ is useless**.
   only countable when the platform passes a referrer (ChatGPT, Claude, Gemini,
   Perplexity).
 - Yandex: query monitoring with hours-level delay; verification via Yandex Tag
-  Manager or GTM; exclusion from vertical search (Услуги/Квартиры) while staying
+  Manager or GTM; exclusion from vertical search (Yandex Uslugi / Kvartiry — services and real estate) while staying
   in regular results; Direct is now declared a useful signal for search (ads and
   organic are no longer positioned as independent).
 - Screaming Frog v24 ships an **MCP server** — agent-driven crawl/export.
@@ -169,7 +169,7 @@ recommended.
   input; the helpful-content system evaluates whether the page lets the user
   complete a task (comparison modules, tables, interactive layouts), not only
   text.
-- AI-text fingerprints: "не просто X, а Y" up 4× in corporate comms; Substack
+- AI-text fingerprints: "не просто X, а Y" ("not merely X, but Y") up 4× in corporate comms; Substack
   ships a Pangram detector; Habr bans AI-generated posts. Detectability is now a
   reputational risk of scaled AI content.
 

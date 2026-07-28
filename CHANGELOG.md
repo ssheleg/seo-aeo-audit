@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.0 — 2026-07-28
+
+### Changed
+- Description restructured English-first — every Russian trigger paired with its
+  English equivalent — and `"SEO change plan" / "план правок по SEO"` added as a
+  missing pair.
+- Yandex's assistant is now written **Alice AI** in English throughout, with
+  `Алиса` kept once as the native name, across the references, the changelog and
+  the research distillation.
+- README is English-only, with a plain statement of what the audit gives you and
+  an author/links block.
+
 ## v0.4.1
 
 Security hardening of the bundled auditor, plus an explicit statement of what the
@@ -43,7 +55,7 @@ its own track was still missing:
 - **F AEO/GEO**: Google's own AIO chain description; the retrieval budget stack;
   per-engine rows rebuilt (Gemini arbitration, ChatGPT `resultsource` buckets,
   Deep Research re-read behavior, Brave/Claude gating, Perplexity localization,
-  Алиса AI with RU figures); slots you do not control; the KDD benchmark with its
+  Alice AI / Алиса with RU figures); slots you do not control; the KDD benchmark with its
   omissions stated.
 - **G entity/brand**: Wikidata quantified and bounded; the mention-manipulation
   guardrail; cross-platform rating divergence as an attack signature; mention

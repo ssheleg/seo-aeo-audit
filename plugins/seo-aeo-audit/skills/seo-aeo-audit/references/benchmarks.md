@@ -16,7 +16,7 @@ anything older than ~18 months before it enters a plan.
 | Google global traffic YoY | −0.89% — first recorded decline | Jun 2026 (same study) |
 | RU referral value by model | Alisa AI sends ~5× more site referrals than ChatGPT, which leads on awareness and usage | Jun 2026 (same study) |
 | Bing | 1B MAU | May 2026 |
-| Yandex "Алиса AI" | ~1 in 3 queries answered; 48.3M MAU on quick answers; ~10% of queries product-related | Q1–Q2 2026 |
+| Yandex "Alice AI" (Алиса) | ~1 in 3 queries answered; 48.3M MAU on quick answers; ~10% of queries product-related | Q1–Q2 2026 |
 | Bot vs human web traffic | Bots overtook humans for the first time | Jun 2026 |
 | Google share of the search market | dipped below 90% | 2026 (SEJ) |
 | Gen Z searches starting with Google Lens | ~1 in 10; ~1 in 5 of those commercial | 2026 (SEJ) |

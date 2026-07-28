@@ -13,7 +13,7 @@ Most SEO audits hand over a checklist and a health score. This one produces a
 diagnosis: what is wrong, where you can see it, why it happens, what to change,
 what it is worth, when to expect movement, and how you will know it worked —
 across Google, Yandex and Bing, and across AI Overviews / AI Mode, ChatGPT,
-Perplexity, Claude, Copilot, Gemini and Алиса AI.
+Perplexity, Claude, Copilot, Gemini and Yandex Alice AI.
 
 ---
 
@@ -217,82 +217,39 @@ npx sshlg-skills install
 npx sshlg-skills update
 ```
 
----
+## What this gives you
 
-## По-русски
+Vibe-coded sites ship fast and land invisible: rendered entirely client-side, no
+canonical story, a sitemap nobody ever submitted, and nothing an answer engine
+can quote. Then the advice you get is a 200-row checklist that never says what
+to do first.
 
-**`seo-aeo-audit` — скил-аудитор сайта под поиск и AI-ответы.** На выходе не
-чек-лист, а диагноз плюс приоритизированный план правок: что менять, где именно,
-почему (механизм + уровень доказательности), сколько это стоит, когда ждать
-эффекта и как проверить результат. Часть семейства
-[sshlg-skills](https://github.com/ssheleg/sshlg-skills).
+- **Blockers first.** If the site cannot be crawled, rendered or indexed,
+  nothing else matters — the audit says so and stops, instead of burying it on
+  row 140.
+- **Answer engines, not only Google.** What ChatGPT, Perplexity, Copilot and AI
+  Overviews can actually extract from your pages, and why they cite a competitor
+  instead of you.
+- **Evidence or silence.** Every finding carries an observation, a location and
+  a date; every recommendation carries an evidence tier, so you can tell proven
+  from worth-testing at a glance.
+- **A myth guard.** 29 popular tactics with published counter-evidence are
+  refused outright — the ones an agent will otherwise recommend with total
+  confidence.
+- **The output is a prioritized change plan** with verification steps and honest
+  horizons, not a score out of 100.
 
-### Установка
+## Author
 
-```
-/plugin marketplace add ssheleg/seo-aeo-audit
-/plugin install seo-aeo-audit@seo-aeo-audit
-```
+Built by ssheleg — [svlab.online](https://svlab.online)
 
-Для остальных агентов (Cursor, Codex, Zed и ещё 70+):
+- X / Twitter — [@fuck_this_year](https://x.com/fuck_this_year)
+- Telegram — [@sshlg](https://t.me/sshlg)
+
+Part of the [ssheleg skill family](https://github.com/ssheleg/sshlg-skills):
+`super-ux`, `task-pipeline`, `make-skill`, `sheleg-design`, `seo-aeo-audit`.
+One command installs all five for every agent you use:
 
 ```bash
-npx skills add ssheleg/seo-aeo-audit
+npx sshlg-skills install
 ```
-
-### Обновление
-
-```bash
-npx skills update seo-aeo-audit --global --yes
-npx sshlg-skills update                  # обновить всё семейство
-```
-
-Правило: **один канал на агента** — не держать plain-копию в `~/.claude/skills/`
-рядом с плагином. После обновления перезапустить Claude Code.
-
-### Запуск
-
-```
-/seo-aeo-audit example.com
-/seo-aeo-audit упал трафик в мае, только /blog
-/seo-aeo-audit почему ChatGPT нас не цитирует по "сверка счетов"
-```
-
-### Десять треков аудита
-
-доступность и экономика индексации · каноникализация и дубли · архитектура и
-распределение веса · интент и каннибализация · ценность контента ·
-извлекаемость и AEO/GEO · сущности и консенсус о бренде · поведенческие сигналы,
-конверсия и атрибуция · риски и угрозы · измеримость.
-
-У каждого трека две половины: диагностика (что и почему сломано) и механическая
-проверка на полноту. Приоритет считается как
-`(влияние × уверенность) / трудозатраты`, где уверенность — это уровень
-доказательности; находки группируются: **блокеры → утечки → точки роста →
-эксперименты**.
-
-### Что внутри как знание
-
-Девятнадцать справочных контрактов едут вместе со скилом на любого агента:
-модель ранжирования (системы против сигналов, чем на самом деле является
-E-E-A-T), техничка и экономика индексации, архитектура и read-budget ответных
-движков, интент и информационная ценность контента, механика AEO/GEO по каждому
-движку с готовым набором промптов для замера бренда, сущности и «призрачные
-цитаты», опыт—конверсия—атрибуция (звонки, офлайн, AI-рефералы), риски и защита,
-датированный таймлайн апдейтов Google, 59 приёмов роста с уровнем
-доказательности, бенчмарки с датами и выборками, плюс метод: уровни
-доказательности, дизайн экспериментов, гард мифов, роутинг инструментов и
-шаблоны отчёта.
-
-**Актуальность.** Данные выверены на 2026-07-28; таймлайн апдейтов — с марта
-2025 по июнь 2026; у каждой цифры своя дата и выборка. В скил зашит регламент
-обновления: перепроверить источники апдейтов, дописать новые строки, проверить —
-не отменил ли новый релиз миф и не устарел ли бенчмарк, понизить уровень любому
-утверждению старше ~18 месяцев без подтверждения. Где доказательства
-конфликтуют, утверждение понижается до гипотезы и уходит в эксперименты, а не
-выдаётся за факт.
-
-**Жёсткие правила.** Каждый вывод — с наблюдением, местом и датой; каждая
-рекомендация — с уровнем доказательности; сначала причина, потом лечение; мифы в
-план не попадают; чернуха — только как то, что нужно детектить и от чего
-защищаться.
