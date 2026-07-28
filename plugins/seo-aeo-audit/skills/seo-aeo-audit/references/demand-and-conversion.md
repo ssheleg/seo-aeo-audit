@@ -4,9 +4,15 @@ Rankings that do not convert are a reporting artifact. This section audits what
 happens after the impression: whether the page converts, whether the conversion
 is measured, and whether paid and organic pull in the same direction.
 
-Survey context: 60.4% of practitioners say qualified leads and sales are the
-metric they report on, yet only 33.7% plan to invest in conversion-focused SEO
-(State of SEO 2026). That gap is where most audits leave money.
+Survey context (`STUDY`, practitioner survey — opinion, not effect data): 60.4%
+of practitioners say qualified leads and sales are the metric they report on, yet
+only 33.7% plan to invest in conversion-focused SEO. That gap is where most
+audits leave money.
+
+Tiering for this section: platform mechanics (what is or is not tracked) are
+`CONFIRMED` once observed on the account; the vendor and agency case numbers
+below are `FIELD` — quote them as illustrations of a mechanism, never as a
+forecast.
 
 ## H+1. Does the page convert
 

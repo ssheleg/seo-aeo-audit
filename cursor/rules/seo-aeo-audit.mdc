@@ -24,6 +24,10 @@ changes, work in this order and keep the evidence rules.
 
 ## Order of work
 
+These twelve steps are the working order, not the ten audit tracks — several
+steps serve the same track, and the point is the sequence: blockers before
+optimisation, cause before prescription.
+
 1. **Blockers**: manual action; `noindex` in the pre-render source (it wins even
    when the rendered DOM is clean, and a `meta refresh` + `noindex` combination
    has no defined precedence — use a server-side 301); robots-blocked render

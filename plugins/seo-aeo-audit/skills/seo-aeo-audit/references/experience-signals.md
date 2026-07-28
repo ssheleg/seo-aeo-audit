@@ -64,7 +64,7 @@ Measured across 47 pages over 90 days: bounce −31%, dwell +187%, average posit
 
 | Change | Effect |
 |---|---|
-| Load 4.2s → 1.3s | bounce 67% → 41%, CVR +93%, +8 positions after 6 weeks |
+| Load 4.2s → 1.3s | bounce 67% → 41%, CVR +93%, +8 positions after 6 weeks (FIELD — speed here moved satisfaction signals too; page experience on its own is a tiebreaker between near-equivalent candidates, see ranking-model.md) |
 | Mobile UX rework (tap targets, form simplification, thumb zone) | mobile CVR ×2 |
 | Layout restructure (scannable blocks, multiple CTAs above the fold) | CVR +127%, scroll depth +45%, bounce −23% |
 | Contextual internal links to related content/cases/FAQ | pages per session 1.4 → 3.2 |

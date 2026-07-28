@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.3.1
+
+Consistency pass across the whole flow, plus a rewritten README.
+
+- **One evidence ladder.** SKILL.md described the tooling order by convenience
+  while `tooling.md` ordered it by evidence strength — the two now share a single
+  ordering (logs → Search Console → crawl → field data → third-party → manual),
+  and the rung a finding rests on caps its evidence tier.
+- **One stance on structured data.** The schema position was stated three
+  different ways across `myths.md`, `aeo-geo.md` and `onpage-checks.md`; the
+  canonical stance now lives in `myths.md` (an eligibility and entity aid on
+  specific surfaces, never a ranking or citation lever) and the others point at
+  it.
+- **Page-experience claim reconciled.** The speed case study in
+  `experience-signals.md` and play `G8` are now labelled as bundling satisfaction
+  signals, so they no longer read as a contradiction of the tiebreaker framing in
+  `ranking-model.md`.
+- **Keywords reconciled.** `ranking-model.md` now says explicitly that the
+  failure mode is scaffolding a page on a keyword list, not using keywords —
+  matching `intent-and-content.md` E2b.
+- **Tier discipline in the four new contracts**: each states what it licenses
+  (`ranking-model` = vocabulary and mechanism; `onpage-checks` = existence
+  confirmed, impact tiered separately; `demand-and-conversion` = platform
+  mechanics confirmed, vendor case numbers FIELD; `tooling` = the rung caps the
+  tier).
+- **Flow documented**: the mechanical sweeps are now named in Step 2 of the audit
+  procedure, and the read-budget and attribution numbers have a single canonical
+  home with cross-references instead of parallel copies.
+- Spelling normalised again after the new files (one standard across references,
+  Cursor rule and scripts).
+- **README rewritten**: what the skill is, install and update commands up front,
+  the audit flow, what knowledge ships inside and what each area is worth, data
+  freshness and the refresh policy, and the link to the umbrella repo for the
+  whole skill family.
+
 ## v0.3.0
 
 Completeness pass — every audit track now carries both the judgement work and the
@@ -81,7 +116,7 @@ Review pass — defects found by re-auditing the skill against its own rules.
   slug. Heading shortened, anchor resolves.
 - **One spelling standard.** British/American forms were mixed across the
   references (canonicalisation/canonicalization, defence/defense,
-  behaviour/behavior, optimisation/optimization…), which also broke one anchor.
+  behavior/behavior, optimisation/optimization…), which also broke one anchor.
   Unified to American everywhere, including the anchors the script emits.
 - **`page_audit.py` — prose vs link text.** `word_count` counted navigation
   labels, so a nav-heavy page looked substantial and `first_100_words` returned

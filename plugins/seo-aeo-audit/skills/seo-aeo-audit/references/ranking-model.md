@@ -3,6 +3,11 @@
 Read this before writing any recommendation that starts with "Google wants…".
 It sets the vocabulary the rest of the tracks use.
 
+Tiering: everything here is either engine-documented or a documented industry
+consensus — treat it as `CONFIRMED` for vocabulary and mechanism, and `STUDY` or
+lower for any number attached to it. It never licenses a claim about *your* site
+without an observation from *your* site.
+
 ## Systems, signals, factors — and why the argument is a trap
 
 - **Systems** are the machine-learning layers applied to refine results
@@ -10,7 +15,7 @@ It sets the vocabulary the rest of the tracks use.
 - **Signals** feed those systems (keywords on the page, links, page experience,
   location, device).
 - Google's own line: "the main difference is just language." Documentation moves
-  items between the two lists without changing behaviour — when page experience
+  items between the two lists without changing behavior — when page experience
   was removed from the *systems* page, Google clarified it was still a signal used
   by other systems.
 
@@ -35,9 +40,10 @@ So: "is X a ranking factor" is the wrong question. The useful question is "for
 1. **Content quality and relevance.** Ranking starts by understanding the query,
    then matching it to page content. Keywords are not obsolete — they are the
    cornerstone the ML layers sit on; a page must state unambiguously what it is
-   about. Entities extend this: engines resolve topics, synonyms and misspellings
+   about. The failure mode is not using keywords, it is *scaffolding* a page on a
+   keyword list instead of on a user's task (intent-and-content.md E2b). Entities extend this: engines resolve topics, synonyms and misspellings
    through the entity graph, not string matching.
-   - Helpful-content behaviour (2022 onwards): stay on your main topic,
+   - Helpful-content behavior (2022 onwards): stay on your main topic,
      demonstrate first-hand experience, do not staple unrelated topics onto one
      site. Content that leaves visitors satisfied is rewarded; content that misses
      the visitor's expectation is not.

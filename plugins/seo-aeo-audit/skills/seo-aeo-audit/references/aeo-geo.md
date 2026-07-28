@@ -81,7 +81,7 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
   inside an image it gives up and cites an aggregator (G2) instead. A JS pricing
   table does not just rank badly — it hands your own numbers to a comparison
   site.
-- **Respect the read budget** (see architecture-and-equity.md): ~5,700 characters
+- **Respect the read budget** (canonical numbers in architecture-and-equity.md): ~5,700 characters
   for the first read, navigation competes with content, source order beats visual
   order, `alt` text is the only thing read from images, and literal term presence
   triggers a second read.
@@ -160,7 +160,9 @@ Seven controlled GEO experiments across 100M sites:
   AIO gains from serving structured Markdown — treat serving Markdown as an
   experiment to measure in your own logs, never as a default recommendation, and
   watch for duplicate-content ambiguity.)
-- Schema lifted Google AIO visibility (reported 1500%) and AI Mode (377%) but
+- Schema is an eligibility and entity aid on specific surfaces, not a lever (the
+  canonical stance in myths.md): it lifted Google AIO visibility (reported 1500%)
+  and AI Mode (377%) but
   *reduced* citations in ChatGPT, Gemini and Copilot. A 10-week controlled test
   of LocalBusiness schema on 29 domains found **no** ranking or visibility gain in
   Google, Bing or Yahoo (and Maps went the wrong way), while ChatGPT improved

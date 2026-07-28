@@ -92,7 +92,7 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | E | Content value | Is there a reason to rank this page that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
 | F | Extractability & AEO/GEO | Can an answer engine retrieve, read and quote the answer? | [aeo-geo.md](references/aeo-geo.md) |
 | G | Entity & brand consensus | Do the models know what this brand is, consistently, and name it? | [entity-and-brand.md](references/entity-and-brand.md) |
-| H | Experience & satisfaction | Do users complete the task here, or bounce back to the SERP? Does it convert, and is the conversion measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
+| H | Experience, conversion & attribution | Do users complete the task here or bounce back to the SERP? Does it convert, and is the conversion measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
 | I | Risk & threats | Penalties, hijacks, injections, adversaries, legal takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
 | J | Measurement | Will anyone be able to tell whether the plan worked? | [measurement.md](references/measurement.md) |
 
@@ -101,16 +101,25 @@ protocol in [references/algorithm-updates.md](references/algorithm-updates.md) �
 "a core update hit us" is not a finding, and half the documented GSC outages
 coincided with rollouts.
 
+Each track has two halves: the **diagnostic** work (what is wrong and why) and a
+**mechanical sweep** for completeness —
+[technical-checks.md](references/technical-checks.md) §A7 for tracks A/B and
+[onpage-checks.md](references/onpage-checks.md) for D/E. Run the diagnosis first;
+the sweep afterwards catches the boring failures, and only sweep items with an
+observable impact get promoted into the findings table.
+
 **Order matters.** A track-A blocker (site not fetchable, noindex in the
 pre-render source, manual action) makes every other finding moot — a manual
 action is a binary multiplier: nothing you improve counts until it is lifted.
 Work A → B → C before spending time on F/G.
 
-**Tooling ladder** — use what is actually connected, in this order: a crawl
-export or crawler MCP (Screaming Frog v24+ ships one) → GSC / Bing / analytics
-MCP or exports → server logs → the bundled script → manual fetches. State in the
-report which rung you reached. A public-only audit with no property access is
-valid work, but its indexation and query findings are inferences, not
+**Evidence ladder** — the full routing lives in
+[references/tooling.md](references/tooling.md); it is ordered by **evidence
+strength**, not convenience: server logs → Search Console / Bing / Yandex →
+full crawl → field performance data → third-party indices → manual fetch and
+DevTools. Use the highest rung you can actually reach for each check, and state
+in the report which rung a finding rests on. A public-only audit with no property
+access is valid work, but its indexation and query findings are inferences, not
 observations, and get tiered accordingly.
 
 `scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)

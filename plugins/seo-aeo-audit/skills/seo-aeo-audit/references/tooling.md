@@ -4,7 +4,7 @@ The audit is an analysis exercise, not a tool run. Tools flag candidates; the
 auditor decides what is real. Two rules before anything else:
 
 1. **A flag is not a finding.** Many tool "issues" are irrelevant on a given
-   site; confirm each one against behaviour (index status, traffic, revenue).
+   site; confirm each one against behavior (index status, traffic, revenue).
 2. **When two tools disagree, dig until you know why.** Do not average them and
    do not pick the one that supports the story.
 
@@ -12,14 +12,17 @@ auditor decides what is real. Two rules before anything else:
 
 | Rung | Source | Gives you |
 |---|---|---|
-| 1 | Server logs | Ground truth on what bots fetched, when, with which status. The only place AI-crawler behaviour is observable. |
+| 1 | Server logs | Ground truth on what bots fetched, when, with which status. The only place AI-crawler behavior is observable. |
 | 2 | Search Console / Bing Webmaster / Yandex Webmaster | First-party index status, queries, AI-surface reporting, manual actions |
 | 3 | Full crawl (Screaming Frog, Sitebulb, Oncrawl, Botify) | Site-wide structure, directives, duplication, depth, internal links |
 | 4 | Field performance (CrUX, `cruxvis.withgoogle.com`, RUM) | Real-user CWV by form factor, competitor comparison |
 | 5 | Third-party indices (Ahrefs, Semrush) | Links, keyword estimates, competitor context — estimates, never ground truth |
 | 6 | Manual fetch + browser DevTools | The specific page, the specific header, the specific render |
 
-State in the report which rung each finding rests on.
+State in the report which rung each finding rests on. The rung caps the evidence
+tier: a log line or a Search Console screenshot can support `CONFIRMED`; a
+third-party index estimate cannot rise above `STUDY`, and an inference from
+public data alone stays `HYPOTHESIS` until something first-party confirms it.
 
 ## Check → tool routing
 
@@ -57,7 +60,7 @@ State in the report which rung each finding rests on.
 - **JS errors**: Console filtered to errors; a code error can block content from
   rendering, an "SEO error" is invisible to users but breaks crawling.
 - **Emulation**: device toolbar for mobile rendering, location override for
-  geo-specific behaviour, and network throttling for slow-connection reality.
+  geo-specific behavior, and network throttling for slow-connection reality.
 - **Security panel**: certificate validity and mixed-content resources.
 - **Copy selector / XPath** from the Elements panel straight into a crawler's
   custom extraction.

@@ -6,6 +6,11 @@ failure, and feed the results into the findings table.
 
 `scripts/page_audit.py` automates the starred (★) items for a sample URL.
 
+Tiering: a failed check here is an observation on this site, so it enters the
+report as `CONFIRMED` for *existence*. The claimed *impact* of fixing it keeps
+whatever tier the underlying mechanism has (see evidence-tiers.md) — "the H1 is
+missing" is confirmed; "fixing the H1 will add traffic" is not.
+
 ## D1. Can crawlers understand what the page is about
 
 | Check | Fail looks like | Where |
@@ -19,6 +24,10 @@ failure, and feed the results into the findings table.
 | Image file names descriptive | `IMG_2043.jpg` on product pages | crawl |
 | Image `alt` present and factual ★ | missing alt on informative images; keyword-stuffed alt; decorative images with text alt | crawl + page_audit |
 | Structured data valid and matched to visible content ★ | validation errors; markup claiming ratings/prices the page does not show | Rich Results Test + page_audit |
+
+On schema, hold the canonical stance from myths.md: mark up what is real and
+required for the features you actually want (products, jobs, events,
+breadcrumbs) — validity is hygiene, volume is not a lever.
 
 ## D2. Duplication and consolidation
 

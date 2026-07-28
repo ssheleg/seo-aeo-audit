@@ -63,6 +63,9 @@ cross-check.
 
 ## J3b. The KPI set has moved
 
+(The attribution gaps behind these metrics — calls, offline conversions, AI
+referrals, cross-device — are audited in demand-and-conversion.md §H+3.)
+
 Rankings, sessions, impressions and conversions still matter, but they no longer
 describe how a brand is discovered. Add, and report alongside them:
 
