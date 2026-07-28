@@ -15,6 +15,9 @@ SCRIPT = os.path.join(
 FIXTURES = os.path.join(ROOT, "test", "fixtures")
 failures: list[str] = []
 
+# Import without leaving a __pycache__ behind: both installers copy the skill
+# directory verbatim, so anything this test drops in there ships to users.
+sys.dont_write_bytecode = True
 _spec = importlib.util.spec_from_file_location("page_audit", SCRIPT)
 page_audit = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(page_audit)
