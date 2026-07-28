@@ -69,7 +69,7 @@ sees one source.
 
 Two recurring self-inflicted causes: publishing new content before fixing an
 existing overlap, and year-suffixed URLs ("best tools 2024" alongside "…2025")
-that cannibalise each other and the evergreen page. Use one evergreen URL and
+that cannibalize each other and the evergreen page. Use one evergreen URL and
 update it.
 
 ## E1. What actually makes a page worth ranking in 2026
@@ -134,7 +134,7 @@ Study of 150 top-3 pages across 50 keywords and 10 verticals:
 
 Editorial consequence: cover the consensus baseline briefly, then spend the
 length on original measurements, internal analytics, and the questions everyone
-skipped. This is also the AEO play — models synthesise consensus for free and
+skipped. This is also the AEO play — models synthesize consensus for free and
 then look for what a single source can add on top.
 
 Read the study for what it is (STUDY, published 2026-07-27): it describes the

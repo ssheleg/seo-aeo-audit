@@ -78,10 +78,12 @@ can precede the manual action by 24h+.
   the method.
 - **You cannot block Google's AI use without blocking Google Search.** Googlebot
   is not split by purpose, and Cloudflare's Content Signals initiative (launched
-  2025) had little uptake as of Jul 2026. Sites that lost Google visibility lost
-  ChatGPT visibility roughly in proportion, because that pipeline reads Google's
-  index (`STUDY`; see aeo-geo.md). Price the trade-off before a block ships, not
-  after.
+  2025) had little uptake as of Jul 2026 — that part is documented (`CONFIRMED`).
+  Sites that lost Google visibility were observed losing ChatGPT visibility
+  roughly in proportion (`FIELD`, single case); a Bing-only counter-case points
+  the other way, so the *index dependency* itself is `HYPOTHESIS` — aeo-geo.md F4
+  owns both observations and the reading rule. Neither reading makes a Googlebot
+  block safe: price the trade-off before it ships, not after.
 
 ## A2. Indexation economics
 

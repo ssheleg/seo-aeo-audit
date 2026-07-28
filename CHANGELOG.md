@@ -1,5 +1,68 @@
 # Changelog
 
+## v0.6.0 — 2026-07-28
+
+Release-readiness pass: a full read of every file in the repo looking for claims
+that contradict each other, claims that contradict the code, and half-finished
+work. Everything found is fixed here.
+
+### Fixed — contradictions
+
+- **One tier for the ChatGPT-versus-Google-index claim.** `technical-checks.md`
+  A1 carried it as `STUDY`, while `aeo-geo.md` F4, `myths.md` and
+  `benchmarks.md` all record it as a single FIELD case whose *dependency* reading
+  is HYPOTHESIS because a Bing-only counter-case points the other way. A1 now
+  matches them and points at the file that owns the conflict; what stays
+  `CONFIRMED` there is the part that is documented — Googlebot cannot be split by
+  purpose.
+- **Alice AI naming, actually swept.** v0.5.0 announced the rename and left
+  `Alisa AI` / `Алиса AI` in six places (SKILL.md, `aeo-geo.md`,
+  `benchmarks.md`, `algorithm-updates.md`, `measurement.md`, `growth-plays.md`)
+  plus the research notes. English text now reads **Alice AI** everywhere, with
+  `Алиса` kept as the native name in parentheses on first mention per file.
+- **The myth guard says how much of itself it is showing.** SKILL.md and the
+  Cursor rule each list thirteen refused tactics while the README advertises 29;
+  both now say they are the short list and where the other sixteen live.
+- **"No install script" removed from the README.** The repo ships two installers
+  (`install.sh`, `bin/seo-aeo-audit.js`); what is actually true — and what the
+  sentence was reaching for — is that there are no npm lifecycle scripts and
+  nothing runs unless you run it.
+- **Play list re-ordered.** `G15` sat after `G28` and `P4` after `P5`; the 59
+  plays now read in order.
+- **Research notes re-dated.** They were labelled "working notes behind v0.1.0"
+  while carrying the v0.3.0 and v0.4.0 source passes.
+- Every changelog entry carries its release date.
+
+### Fixed — the bundled auditor
+
+- **Repeated `X-Robots-Tag` headers no longer collapse.** `dict(headers)` kept
+  only the last one, so a response sending `noindex` on one line and `nosnippet`
+  on the next lost a blocker. Headers are now merged, and a regression test
+  covers both directives surviving.
+- **A gzip body truncated by `--max-bytes` is salvaged** instead of failing the
+  whole URL with `EOFError`; if nothing decodes, the error says to raise the cap.
+- **Non-HTML responses are refused.** Auditing a PDF or an image as HTML produced
+  confident nonsense; the fetch now stops on the declared content type.
+- `--url-list` skips indented comment lines and trims each URL.
+- `--base-url` outside `--file` mode warns instead of being silently ignored.
+
+### Fixed — rendering and structure
+
+- The plan skeleton in `deliverable-templates.md` nested a fenced block inside a
+  fenced block, which broke the rendering of everything after "Sequencing".
+  Outer fences widened; the copies the validator compares are unchanged.
+- README repo layout now lists the installers, the manifest, the fixtures and CI.
+
+### Added — guardrails, so these classes of defect cannot come back
+
+- The validator resolves **every reference anchor the auditor emits** against the
+  real headings in the reference files. This is the defect class that produced
+  the v0.1.1 broken cross-reference; nothing was checking it. CI proves the check
+  can fail by renaming a heading.
+- Relative markdown links are now checked **anchor and all**, not just the file.
+- CI runs with `permissions: contents: read` and cancels superseded runs.
+- `.gitignore` covers Python bytecode.
+
 ## v0.5.0 — 2026-07-28
 
 ### Changed
@@ -12,7 +75,7 @@
 - README is English-only, with a plain statement of what the audit gives you and
   an author/links block.
 
-## v0.4.1
+## v0.4.1 — 2026-07-28
 
 Security hardening of the bundled auditor, plus an explicit statement of what the
 skill does at runtime.
@@ -30,7 +93,7 @@ skill does at runtime.
   material, and a three-command recipe to verify the whole attack surface
   yourself. Shipped in the npm tarball and summarized in the README.
 
-## v0.4.0
+## v0.4.0 — 2026-07-28
 
 Deep extraction pass over the full source corpus, section by section, followed by
 a reconciliation pass over the whole set. +1,725 lines across all 19 contracts.
@@ -101,7 +164,7 @@ its own track was still missing:
 - Spelling drift swept again; SKILL.md flow and the Cursor rule re-verified
   against the reference set.
 
-## v0.3.1
+## v0.3.1 — 2026-07-28
 
 Consistency pass across the whole flow, plus a rewritten README.
 
@@ -136,7 +199,7 @@ Consistency pass across the whole flow, plus a rewritten README.
   freshness and the refresh policy, and the link to the umbrella repo for the
   whole skill family.
 
-## v0.3.0
+## v0.3.0 — 2026-07-28
 
 Completeness pass — every audit track now carries both the judgement work and the
 mechanical sweep, and the post-click half of the funnel is in scope.
@@ -175,7 +238,7 @@ mechanical sweep, and the post-click half of the funnel is in scope.
   Generation*, *PPC Trends 2026*, *PPC Experts Tips*, and the CallRail × SEJ
   lead report.
 
-## v0.2.0
+## v0.2.0 — 2026-07-28
 
 Update awareness — the skill now carries the Google update history and knows how
 to refresh it.
@@ -203,7 +266,7 @@ to refresh it.
   two new myths, and four dated benchmarks (Google below 90% share, Gen Z Lens
   entry points, 80% still click to verify under an AI Overview).
 
-## v0.1.1
+## v0.1.1 — 2026-07-28
 
 Review pass — defects found by re-auditing the skill against its own rules.
 
@@ -236,7 +299,7 @@ Review pass — defects found by re-auditing the skill against its own rules.
   public-only audits: those findings are inferences and get tiered as such.
 - `--base-url` documented as `--file`-only.
 
-## v0.1.0
+## v0.1.0 — 2026-07-28
 
 First release.
 

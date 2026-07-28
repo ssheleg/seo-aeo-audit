@@ -23,8 +23,10 @@ the paths above.
   no requests at all, which is how the test suite runs.
 - No cookies, no credentials, no auth headers; a plain User-Agent that identifies
   the tool.
-- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB).
-- Read-only: results go to stdout. The script never writes a file.
+- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB). A declared
+  content type that is not HTML/XHTML/XML is refused rather than parsed.
+- Read-only: results go to stdout. The script never writes a file. The only files
+  it ever **reads** are the two you name yourself (`--file`, `--url-list`).
 
 ## What the skill will not tell an agent to do
 
@@ -48,10 +50,14 @@ arranged.
 
 ```bash
 git clone https://github.com/ssheleg/seo-aeo-audit && cd seo-aeo-audit
-python3 test/validate.py         # structure, version sync, references, links
+python3 test/validate.py         # structure, version sync, references, links, anchors
 python3 test/test_page_audit.py  # auditor behavior, offline fixtures + scheme guard
-grep -rn "urlopen\|subprocess\|os.system\|eval(" plugins/   # the whole attack surface
+grep -rnE "urlopen|build_opener|opener\.open|socket|subprocess|os\.system|\beval\(|\bexec\(|\bopen\(" \
+  plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py
 ```
 
-The last command returns the single network call in `page_audit.py` and nothing
-else.
+The last command prints the auditor's entire I/O surface — six lines: the
+`urllib.request` import, one comment, the opener that carries the scheme guard,
+the one `opener.open(...)` call, and the two `open()` calls that read the file
+paths you pass on the command line. No `subprocess`, no `os.system`, no `eval`,
+no `exec`, no raw sockets. Everything else in `plugins/` is markdown.

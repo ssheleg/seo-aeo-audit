@@ -14,7 +14,7 @@ anything older than ~18 months before it enters a plan.
 | AI-tool share trend | Classic search still grows faster than AI tools in absolute terms; Gemini second and growing; ChatGPT flat-to-down since its Sep 2025 peak | Q1 2026 (same panel) |
 | Yandex share of the RU search market | 73.34%; classic-search growth effectively stalled | Jun 2026 (impulse.guru: 72.4M AI-service referral clicks analyzed) |
 | Google global traffic YoY | −0.89% — first recorded decline | Jun 2026 (same study) |
-| RU referral value by model | Alisa AI sends ~5× more site referrals than ChatGPT, which leads on awareness and usage | Jun 2026 (same study) |
+| RU referral value by model | Alice AI sends ~5× more site referrals than ChatGPT, which leads on awareness and usage | Jun 2026 (same study) |
 | Bing | 1B MAU | May 2026 |
 | Yandex "Alice AI" (Алиса) | ~1 in 3 queries answered; 48.3M MAU on quick answers; ~10% of queries product-related | Q1–Q2 2026 |
 | Bot vs human web traffic | Bots overtook humans for the first time | Jun 2026 |

@@ -121,7 +121,7 @@ Four more artifacts that read as findings and are not:
   never compare a signed-in capture with a control. STUDY (small sample — see
   benchmarks.md).
 - **Popularity of a model is not its value as a channel.** In the RU market
-  ChatGPT leads on awareness and use while Alisa AI sends roughly 5× more
+  ChatGPT leads on awareness and use while Alice AI sends roughly 5× more
   referred sessions. Rank engines by referred sessions and conversions in your
   market, never by headline MAU.
 - **Mention volume without sentiment and stage is a trap.** One brand took a

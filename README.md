@@ -116,7 +116,7 @@ agent, not just Claude Code. This is the substance:
 
 | Area | What it holds | Why it is worth having |
 |---|---|---|
-| **Ranking model** | Systems vs signals vs "factors", the three that actually carry weight, what E-E-A-T really is, query-dependent weighting, personalisation and locality | Stops audits built on documentation reshuffles and listicle "factor" claims |
+| **Ranking model** | Systems vs signals vs "factors", the three that actually carry weight, what E-E-A-T really is, query-dependent weighting, personalization and locality | Stops audits built on documentation reshuffles and listicle "factor" claims |
 | **Technical & indexation** | Crawl access, rendering traps, robots wildcard failures, index tiering, crawl-budget killers, soft-404 collapse patterns, canonical traps, migration protocol, plus a full mechanical sweep | The failure modes that silently cost the most traffic, each with its exact observable |
 | **Architecture & equity** | Equity distribution, hub-and-cluster, orphans, depth, anchor practice, and the answer-engine **read budget** | Explains why money pages starve while the homepage hoards authority — and why navigation now costs twice |
 | **Intent & content value** | The four intents and the page types they reward, cannibalization mechanics, information-gain findings, the content types that survive zero-click, and the AI-content patterns that now hurt | Turns "write better content" into a specific, testable page-level decision |
@@ -165,10 +165,12 @@ a ~5,700-character first read your navigation eats before the answer.
 
 Text plus one stdlib Python script, and nothing else runs. `page_audit.py` makes
 plain http(s) GETs to the URLs you hand it — any other scheme is refused before a
-request is made, redirects off http(s) are refused, no cookies or credentials are
-sent, responses are bounded by `--timeout`/`--max-bytes`, and it writes nothing.
-No dependencies, no install script, no telemetry. Full statement in
-[SECURITY.md](SECURITY.md).
+request is made, redirects off http(s) are refused, non-HTML responses are
+refused, no cookies or credentials are sent, responses are bounded by
+`--timeout`/`--max-bytes`, and it writes nothing. No dependencies, no npm
+lifecycle scripts, no telemetry. The installers (`install.sh`,
+`bin/seo-aeo-audit.js`) only copy files into `~/.claude/` and only when you run
+them. Full statement in [SECURITY.md](SECURITY.md).
 
 Marketplace scanners rate skills that ship executable code above documentation-only
 skills by default; that rating is about the *category*, not a finding — the audit
@@ -187,24 +189,31 @@ plugins/seo-aeo-audit/
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
+bin/seo-aeo-audit.js                 npx installer (zero dependencies)
+install.sh                           POSIX installer for a local clone
+package.json                         npm manifest for the installer CLI
 SECURITY.md                          what runs, what it touches, how to verify
 test/validate.py                     structural validator
 test/test_page_audit.py              functional tests (offline fixtures)
+test/fixtures/*.html                 pages the auditor is tested against
+.github/workflows/validate.yml       CI, including negative self-tests
 docs/research/                       provenance behind every claim in the references
 ```
 
 ## Development
 
 ```bash
-python3 test/validate.py        # structure, version sync, references, links, drift
+python3 test/validate.py        # structure, version sync, references, links, anchors, drift
 python3 test/test_page_audit.py # auditor behavior against offline fixtures
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```
 
 Version sync is a hard rule: `marketplace.json`, `plugin.json`, `package.json`
-and the top `CHANGELOG.md` entry carry the same semver, and CI proves the
-validator can fail.
+and the top `CHANGELOG.md` entry carry the same semver. Every finding the auditor
+emits points at a reference section, and the validator resolves those anchors
+against the real headings — a renamed heading fails the build. CI proves each
+check can fail by corrupting a copy of the repo and requiring a non-zero exit.
 
 ## Part of a family
 

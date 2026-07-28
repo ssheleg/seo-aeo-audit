@@ -9,7 +9,7 @@ ask before replacing.
 
 ## docs/seo/audit-<YYYY-MM-DD>.md
 
-```markdown
+````markdown
 # SEO / AEO audit — {{SITE}}
 
 - **Date:** {{YYYY-MM-DD}}
@@ -74,11 +74,11 @@ Repeat this block per finding, most severe first.
 | H experience signals | | |
 | I risk & threats | | |
 | J measurement | | |
-```
+````
 
 ## docs/seo/plan-<YYYY-MM-DD>.md
 
-```markdown
+````markdown
 # SEO / AEO change plan — {{SITE}}
 
 - **Date:** {{YYYY-MM-DD}} · **From audit:** {{link}}
@@ -131,4 +131,4 @@ Month 2  {{...}}
 ## Human steps (only what genuinely needs a person)
 
 - {{credentials, approvals, business decisions, third-party account access}}
-```
+````

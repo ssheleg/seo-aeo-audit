@@ -4,6 +4,13 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -64,6 +71,19 @@ jobs:
             exit 1
           else
             echo "OK: auditor tests catch a broken check"
+          fi
+
+      - name: Negative self-test (renamed heading must break the auditor's anchors)
+        run: |
+          set -eu
+          cp -R . /tmp/anchor-copy
+          sed -i 's/^## Read-budget: navigation now costs you twice$/## Read budget/' \
+            /tmp/anchor-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/architecture-and-equity.md
+          if python3 /tmp/anchor-copy/test/validate.py; then
+            echo "ERROR: validator passed while page_audit.py points at a renamed heading"
+            exit 1
+          else
+            echo "OK: validator catches a dangling finding anchor"
           fi
 
       - name: Negative self-test (template drift must fail)

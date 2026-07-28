@@ -41,6 +41,34 @@ def fail(m):
     errors.append(m)
 
 
+def slugify(heading: str) -> str:
+    """GitHub's heading-anchor rule: strip code ticks and punctuation, space -> '-'."""
+    text = heading.replace("`", "").strip().lower()
+    text = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE)
+    return text.replace(" ", "-")
+
+
+def heading_slugs(path: str) -> set:
+    """Anchors a markdown file actually offers, ignoring headings inside code fences."""
+    slugs = set()
+    fence = 0
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if m:
+            marker = len(m.group(1))
+            if fence and marker >= fence:
+                fence = 0
+            elif not fence:
+                fence = marker
+            continue
+        if fence:
+            continue
+        h = re.match(r"^#{1,6}\s+(.*?)\s*$", line)
+        if h:
+            slugs.add(slugify(h.group(1)))
+    return slugs
+
+
 def load_json(rel):
     p = os.path.join(ROOT, rel)
     if not os.path.isfile(p):
@@ -171,6 +199,19 @@ else:
         fail(f"{script_rel}: missing 'from __future__ import annotations' (python 3.9 support)")
     if re.search(r"\bimport requests\b|\bimport bs4\b", src):
         fail(f"{script_rel}: third-party import — the script must stay stdlib-only")
+    # Every finding the auditor emits points a reader at a reference section. Those
+    # pointers are plain strings, so nothing else catches a heading rename.
+    ref_dir = os.path.join(ROOT, SKILL_DIR, "references")
+    slug_cache: dict = {}
+    for ref_file, anchor in sorted(set(re.findall(r"\b([a-z0-9-]+\.md)#([\w-]+)", src))):
+        ref_path = os.path.join(ref_dir, ref_file)
+        if not os.path.isfile(ref_path):
+            fail(f"{script_rel}: finding points at missing reference {ref_file}")
+            continue
+        if ref_file not in slug_cache:
+            slug_cache[ref_file] = heading_slugs(ref_path)
+        if anchor not in slug_cache[ref_file]:
+            fail(f"{script_rel}: finding anchor {ref_file}#{anchor} matches no heading in {ref_file}")
 
 # npm package: bin resolves, files whitelist ships the sources
 if pkg:
@@ -240,7 +281,7 @@ for r in ("README.md", "LICENSE", "install.sh"):
     if not os.path.isfile(os.path.join(ROOT, r)):
         fail(f"missing root file: {r}")
 
-# every relative markdown link in repo docs must resolve
+# every relative markdown link in repo docs must resolve — file *and* anchor
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 for dirpath, dirnames, filenames in os.walk(ROOT):
     dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules")]
@@ -248,15 +289,19 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
         if not fn.endswith(".md"):
             continue
         fp = os.path.join(dirpath, fn)
+        rel = os.path.relpath(fp, ROOT)
         for target in LINK_RE.findall(open(fp, encoding="utf-8").read()):
-            if target.startswith(("http://", "https://", "mailto:", "#")):
+            if target.startswith(("http://", "https://", "mailto:")):
                 continue
             if "{{" in target:  # template placeholder
                 continue
-            tpath = os.path.normpath(os.path.join(dirpath, target.split("#")[0]))
+            path_part, _, anchor = target.partition("#")
+            tpath = fp if not path_part else os.path.normpath(os.path.join(dirpath, path_part))
             if not os.path.exists(tpath):
-                rel = os.path.relpath(fp, ROOT)
                 fail(f"broken relative link in {rel}: {target}")
+                continue
+            if anchor and tpath.endswith(".md") and anchor not in heading_slugs(tpath):
+                fail(f"broken anchor in {rel}: {target} — no heading with that slug")
 
 if errors:
     print(f"FAIL: {NAME} structure invalid")

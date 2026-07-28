@@ -103,7 +103,7 @@ Landing-page specifics with field evidence:
   rendering is the one indexed (CONFIRMED — documented), so test every money
   template on a real device profile rather than a narrowed desktop window (FIELD
   — recurring agency-audit finding, 2026-06).
-- Video above the fold cannibalises attention: session benchmark is 30–60s while
+- Video above the fold cannibalizes attention: session benchmark is 30–60s while
   the average explainer view is ~16s. Move it below the fold or behind a "See how
   it works" secondary button, use a static screenshot with a play button, no
   autoplay, always show the duration.

@@ -15,8 +15,8 @@ Usage:
   page_audit.py --url-list urls.txt --format json > audit.json
 
 Network behavior: plain GETs to the URLs you pass, http(s) only, no cookies or
-credentials, redirects off http(s) refused, response capped by --max-bytes. It
-writes nothing and phones nothing home.
+credentials, redirects off http(s) refused, non-HTML content types refused,
+response capped by --max-bytes. It writes nothing and phones nothing home.
 
 Exit codes: 0 = ran (findings may exist), 1 = usage/fetch error.
 """
@@ -27,6 +27,7 @@ import gzip
 import json
 import re
 import sys
+import zlib
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -259,12 +260,12 @@ def _jsonld_types(doc: Doc) -> tuple[list[str], list[str]]:
     return sorted(set(types)), errors
 
 
-def analyse(html: str, url: str, headers: dict | None = None) -> dict:
+def analyze(html: str, url: str, headers: dict | None = None) -> dict:
     parser = Parser()
     parser.feed(html)
     parser.close()
     doc = parser.doc
-    headers = {k.lower(): v for k, v in (headers or {}).items()}
+    headers = collapse_headers((headers or {}).items())
 
     text = _visible_text(doc)
     prose = _visible_text(doc, include_links=False)
@@ -437,6 +438,9 @@ def findings(r: dict) -> list[dict]:
 
 
 ALLOWED_SCHEMES = ("http", "https")
+# Analyzing a PDF or an image as HTML produces confident nonsense; refuse it
+# instead. A response with no Content-Type at all is still parsed.
+HTML_CONTENT_TYPES = ("text/html", "application/xhtml+xml", "application/xml", "text/xml")
 
 
 class _SchemeGuardRedirectHandler(HTTPRedirectHandler):
@@ -446,6 +450,36 @@ class _SchemeGuardRedirectHandler(HTTPRedirectHandler):
         if urlparse(newurl).scheme.lower() not in ALLOWED_SCHEMES:
             raise ValueError(f"refusing redirect to non-http(s) URL: {newurl}")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def collapse_headers(items) -> dict:
+    """Lower-case header map that keeps repeated headers instead of dropping them.
+
+    `X-Robots-Tag` is legitimately sent more than once (`noindex` on one line,
+    `nosnippet` on the next); a plain dict() would keep only the last and hide a
+    blocker.
+    """
+    out: dict[str, str] = {}
+    for key, value in items:
+        key = key.lower()
+        out[key] = f"{out[key]}, {value}" if key in out else value
+    return out
+
+
+def _gunzip(raw: bytes) -> bytes:
+    """Decompress a gzip body, tolerating a stream cut short by --max-bytes."""
+    try:
+        return gzip.decompress(raw)
+    except Exception:  # noqa: BLE001 - truncated stream: salvage what decoded
+        try:
+            salvaged = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw)
+        except zlib.error:
+            salvaged = b""
+        if not salvaged:
+            raise ValueError(
+                "gzip response could not be decompressed (raise --max-bytes if the page is larger)"
+            ) from None
+        return salvaged
 
 
 def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[str, dict]:
@@ -463,10 +497,13 @@ def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[st
     opener = build_opener(_SchemeGuardRedirectHandler)
     req = Request(url, headers={"User-Agent": user_agent, "Accept-Encoding": "gzip"})
     with opener.open(req, timeout=timeout) as resp:
+        declared = resp.headers.get("Content-Type")
+        if declared and declared.split(";")[0].strip().lower() not in HTML_CONTENT_TYPES:
+            raise ValueError(f"not an HTML document (Content-Type: {declared.strip()})")
         raw = resp.read(max_bytes)
-        headers = dict(resp.headers.items())
-        if (headers.get("Content-Encoding") or "").lower() == "gzip":
-            raw = gzip.decompress(raw)
+        headers = collapse_headers(resp.headers.items())
+        if (headers.get("content-encoding") or "").lower() == "gzip":
+            raw = _gunzip(raw)
         charset = resp.headers.get_content_charset() or "utf-8"
     return raw.decode(charset, errors="replace"), headers
 
@@ -528,6 +565,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--max-bytes", type=int, default=5_000_000)
     args = ap.parse_args(argv)
 
+    if args.base_url and not args.file:
+        print("warning: --base-url applies to --file only; ignoring it", file=sys.stderr)
+
     results: list[dict] = []
     if args.file:
         try:
@@ -536,13 +576,16 @@ def main(argv: list[str]) -> int:
         except OSError as exc:
             print(f"error: cannot read {args.file}: {exc}", file=sys.stderr)
             return 1
-        results.append(analyse(html, args.base_url))
+        results.append(analyze(html, args.base_url))
     else:
         urls = [args.url] if args.url else []
         if args.url_list:
             try:
                 with open(args.url_list, encoding="utf-8") as fh:
-                    urls = [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
+                    urls = [
+                        line for line in (ln.strip() for ln in fh)
+                        if line and not line.startswith("#")
+                    ]
             except OSError as exc:
                 print(f"error: cannot read {args.url_list}: {exc}", file=sys.stderr)
                 return 1
@@ -552,7 +595,7 @@ def main(argv: list[str]) -> int:
         for url in urls:
             try:
                 html, headers = fetch(url, args.timeout, args.user_agent, args.max_bytes)
-                results.append(analyse(html, url, headers))
+                results.append(analyze(html, url, headers))
             except Exception as exc:  # noqa: BLE001 - one bad URL must not kill the run
                 results.append({"url": url, "error": f"{type(exc).__name__}: {exc}", "findings": []})
 

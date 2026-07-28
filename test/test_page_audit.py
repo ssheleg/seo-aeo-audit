@@ -2,6 +2,7 @@
 """Functional tests for scripts/page_audit.py. Offline, stdlib only. Exit 0 = pass."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -13,6 +14,10 @@ SCRIPT = os.path.join(
 )
 FIXTURES = os.path.join(ROOT, "test", "fixtures")
 failures: list[str] = []
+
+_spec = importlib.util.spec_from_file_location("page_audit", SCRIPT)
+page_audit = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(page_audit)
 
 
 def check(cond: bool, msg: str) -> None:
@@ -151,9 +156,52 @@ missing = subprocess.run(
 check(missing.returncode == 1, "missing file must exit 1")
 check("Traceback" not in missing.stderr, "missing file must not traceback")
 
+# --base-url outside --file mode must warn rather than be silently ignored
+warned = subprocess.run(
+    [sys.executable, SCRIPT, "--url", "ftp://example.com/x", "--base-url", "https://example.com",
+     "--format", "json"],
+    capture_output=True, text=True, check=True,
+)
+check("--base-url applies to --file only" in warned.stderr,
+      f"--base-url outside --file must warn, stderr was {warned.stderr!r}")
+
+# a URL list must tolerate indentation and commented lines
+list_path = os.path.join(FIXTURES, "urls.txt")
+with open(list_path, "w", encoding="utf-8") as fh:
+    fh.write("  # a commented, indented line\n\n  ftp://example.com/one  \n")
+try:
+    listed = json.loads(subprocess.run(
+        [sys.executable, SCRIPT, "--url-list", list_path, "--format", "json"],
+        capture_output=True, text=True, check=True,
+    ).stdout)
+finally:
+    os.remove(list_path)
+check(len(listed) == 1, f"url-list: comment and blank lines must be skipped, got {len(listed)} record(s)")
+check(listed[0]["url"] == "ftp://example.com/one", f"url-list: line not trimmed: {listed[0]['url']!r}")
+
+# repeated X-Robots-Tag headers must both survive — a plain dict() would hide one
+with open(os.path.join(FIXTURES, "good-page.html"), encoding="utf-8") as fh:
+    good_html = fh.read()
+multi = page_audit.analyze(
+    good_html,
+    "https://example.com/pricing",
+    page_audit.collapse_headers([("X-Robots-Tag", "noindex"), ("x-robots-tag", "nosnippet")]),
+)
+check(multi["noindex"] is True, "repeated X-Robots-Tag: noindex on the first line must be read")
+check(multi["nosnippet"] is True, "repeated X-Robots-Tag: nosnippet on the second line must be read")
+
+# a gzip body truncated by --max-bytes must still yield the text it decoded
+import gzip as _gzip  # noqa: E402 - local to this check
+
+blob = ("<html><head><title>t</title></head><body><p>" + "word " * 4000 + "</p></body></html>").encode()
+truncated = _gzip.compress(blob)[: len(_gzip.compress(blob)) // 2]
+check(len(page_audit._gunzip(truncated)) > 0, "truncated gzip body must be salvaged, not dropped")
+check(page_audit._gunzip(_gzip.compress(blob)) == blob, "intact gzip body must round-trip")
+
 if failures:
     print("FAIL: page_audit behavior")
     for f in failures:
         print(" - " + f)
     sys.exit(1)
-print("PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + error path)")
+print("PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + headers, "
+      "gzip, url-list and error paths)")

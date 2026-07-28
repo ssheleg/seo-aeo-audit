@@ -1,9 +1,10 @@
 # Source distillation — where the audit tracks come from
 
-Working notes behind v0.1.0: the 2026 industry corpus distilled into the claims
-used by the reference files. Kept in the repo (not shipped to agents or npm) so
-that every recommendation can be traced back to its source and re-checked when
-the surfaces move.
+Working notes behind the reference set (started at v0.1.0, extended through the
+v0.3.0 completeness pass and the v0.4.0 deep-extraction pass): the 2026 industry
+corpus distilled into the claims the reference files make. Kept in the repo (not
+shipped to agents or npm) so that every recommendation can be traced back to its
+source and re-checked when the surfaces move.
 
 
 Sources:
@@ -32,7 +33,7 @@ Sources:
   Jan–Apr 2026, US, desktop+mobile) vs 60.45% in 2024. UK highest zero-click.
 - Google search volume at all-time high (Q1'26, Pichai); Bing 1B MAU.
 - Yandex: every 3rd query gets an "Alice AI" (Алиса) answer; 48.3M MAU on quick answers;
-  ~10% of Alisa queries are product/selection; RU search share 73.34%.
+  ~10% of Alice AI queries are product/selection; RU search share 73.34%.
 - Bots overtook humans in web traffic for the first time (Cloudflare, Jun 2026).
 - Only ~2.4% of URLs are cited by ChatGPT + Perplexity + Google AIO
   simultaneously (Kevin Indig) → **no single "AI visibility" metric; measure per
@@ -133,7 +134,7 @@ is useless**.
   cards in 13+ languages, merged multi-publisher cards; falling CTR; goal is to
   be the lead item in the card, not merely a source.
 - Commerce protocols: **Yandex Commerce Protocol (YCP)** out of beta (products
-  inside Alisa AI answers + in-chat checkout; 1.6k merchants applied, 200+
+  inside Alice AI answers + in-chat checkout; 1.6k merchants applied, 200+
   integrating); Google **UCP** appearing in regular SERP with a Buy button.
 
 ### A7. Content-quality patterns that now hurt (Lily Ray)

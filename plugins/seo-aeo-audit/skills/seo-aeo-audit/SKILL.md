@@ -8,7 +8,7 @@ description: Use when auditing a website for search and answer-engine visibility
 One job: **look at a real site, prove what is wrong with evidence, and hand back
 a prioritized plan of changes** that covers classic search (Google, Yandex, Bing)
 and answer engines (AI Overviews / AI Mode, ChatGPT, Perplexity, Claude, Copilot,
-Gemini, Алиса AI).
+Gemini, Alice AI).
 
 Not this skill's job: writing the content, building the pages, buying links. It
 ends at a verified diagnosis and an executable plan.
@@ -191,8 +191,10 @@ technically literate non-specialist; expand jargon on first use.
 
 ## Myth guard — do not put these in a plan
 
-Each one is refuted by 2026 evidence; details and sources in
-[references/myths.md](references/myths.md).
+The thirteen most-requested of the **29** refuted claims. Each is refuted by 2026
+evidence; the full list, with the counter-evidence and the working alternative
+for each, is in [references/myths.md](references/myths.md) — read it before
+answering a tactic question that is not on this short list.
 
 - `llms.txt` as a ranking or citation lever · Markdown mirrors of HTML pages as
   a GEO tactic · "chunk your content for the retriever" · rewriting text
