@@ -2,7 +2,7 @@
 
 **Verified as of: 2026-07-28.** Primary source, re-fetch it on every refresh:
 <https://www.searchenginejournal.com/google-algorithm-history/> (Search Engine
-Journal, full history back to 2003; the page is organised by year, newest first).
+Journal, full history back to 2003; the page is organized by year, newest first).
 
 Secondary sources for the same refresh:
 - Google Search Status Dashboard — <https://status.search.google.com/> (official
@@ -32,11 +32,18 @@ Older eras (2024 and back — HCU, site reputation abuse, product reviews, Panda
 Penguin, Florida…) are on the same SEJ page; pull them only when auditing a site
 whose decline predates the window above.
 
+**Reported effects inside these windows** (add them as observations, never as the
+diagnosis): after the May 2026 core update and the June 2026 spam update, Google
+was observed demoting mass auto-translated content on Reddit, and AI Overviews
+moved with it — a reminder that a ranking update propagates into the AI surfaces
+in the same window, so the before/after export has to include them (`FIELD`,
+reported 2026-07-09).
+
 ## Platform and policy changes worth dating (not "algorithm updates", still audit-relevant)
 
 | Change | When | Audit implication |
 |---|---|---|
-| FAQPage / Question / Answer rich results fully discontinued | 2026 (H1) | Remove FAQ markup from the plan as a SERP-feature play; keep the Q&A structure for extractability only. |
+| FAQPage / Question / Answer rich results fully discontinued | 2026-05 (reported 2026-05-08) | Remove FAQ markup from the plan as a SERP-feature play; keep the Q&A structure for extractability only. |
 | AMP cache switched off; Search redirects to the publisher's AMP host | 2026-07 | AMP ranks like any page — no advantage, and maintenance work on AMP is not an SEO investment. |
 | Preferred sources extended from Top stories to AI Overviews and AI Mode; "Highly cited" badge added | 2026-05 | Loyalty surfaces now feed AI answers. Publishers should promote the preferred-source link. |
 | Publisher/creator Search profiles (US-first; thresholds 100k YouTube/Instagram/X, 300k TikTok) | 2026-06 | Entity surface tied to social scale; reachable from Discover and the Knowledge Graph. |
@@ -44,13 +51,28 @@ whose decline predates the window above.
 | GSC control to opt out of AIO/AI Mode display (inherits from the nearest parent property) | 2026-06/07 | Verify inheritance before assuming a property's setting. |
 | GSC platform properties (YouTube, Instagram, TikTok, X) | 2026-07 | Ties social distribution to Search/Discover reporting. |
 | Bing Webmaster Tools AI Performance: citation share, grounding query intents/topics, GEO recommendations | 2026-04 → 06 | The most actionable AI reporting available; Bing also grounds ChatGPT. |
-| Spam policy updated to cover **manipulating generative AI answers**; sanctions synced between classic Search and AIO/AI Mode | 2026-05 | Mention-manipulation is now policy-equivalent to link buying (Gary Illyes). A Google penalty removes you from AI surfaces too. |
-| Google I/O 2026: Intelligent Search box, Gemini 3.5 Flash in Search, Personal Intelligence (~200 countries, 98 languages), search agents for AI Pro/Ultra | 2026-05-19 | Personalisation is now a variable in AI answers — visibility is per user, not per query. |
-| Web Guide (AI Labs experiment) | 2026 (testing) | Watch, do not optimise for it yet. |
+| Spam policy updated to cover **manipulating generative AI answers**; sanctions synced between classic Search and AIO/AI Mode | 2026-05; the Illyes remark is dated **2026-05-29** (Search Central Live Sydney) | Mention-manipulation is now policy-equivalent to link buying (Gary Illyes). A Google penalty removes you from AI surfaces too. Detection material for the paid version of this tactic: threats-and-defense.md I4. |
+| Google I/O 2026: Intelligent Search box, Gemini 3.5 Flash in Search, Personal Intelligence (~200 countries, 98 languages), search agents for AI Pro/Ultra | 2026-05-19 | Personalization is now a variable in AI answers — visibility is per user, not per query. |
+| Web Guide (AI Labs experiment) | 2026 (testing) | Watch, do not optimize for it yet. |
 | ChatGPT Atlas browser (macOS) | 2025-10 | Agentic browsing surface; relevant to WebMCP-style plays only. |
 | Yandex Commerce Protocol out of beta; Google UCP appearing in regular SERP | 2026-05 | For commerce, feed/protocol integration is a distribution decision, not an SEO one. |
 | Google documents `llms.txt` as ignored by Search, while Chrome Lighthouse adds an agentic-browsing check for it | 2026-06 | Two different surfaces; see myths.md. |
 | Open Knowledge Format (OKF) proposal — markdown + YAML knowledge bundles for agents | 2026-06 | Emerging, no ranking claim. |
+| Preferred sources rolled out to **all countries and languages** (including Russian); 200k+ unique sites marked by users | 2026-04-30 | The loyalty surface is global, not US-only — a publisher audit outside the US should now check whether the "mark as preferred source" link is promoted anywhere on the site. |
+| Yandex Webmaster: site ownership verifiable through Yandex Tag Manager **or** Google Tag Manager (official templates) | 2026-04-30 | RU first-party data is cheap to obtain — "no Yandex Webmaster access" is no longer an acceptable gap in a RU-market audit. |
+| Yandex "Query monitoring" refreshed to an hours-level delay | 2026-06-25 | Near-real-time RU query data — usable for date-aligning a decline instead of waiting on weekly exports. |
+| AI Mode / AI Overviews expanded: links to related articles, publisher subscription linking, quotes pulled from forums and social posts, more links inline in the answer text, hover preview of the site | 2026-05-06 | More link slots inside the answer, and third-party discussion is an explicit source — where the brand is discussed matters as much as what the brand publishes (entity-and-brand.md). |
+| Microsoft **Web IQ** announced: APIs serving live web content to AI systems and agents, organized around semantic representations of content rather than whole documents | 2026-06-04 | The grounding layer is being productized, and the unit of access is the passage, not the page (`HYPOTHESIS` — announcement only, no measurable surface yet). Watch; do not build a plan on it. |
+| GSC reporting incidents clustered on rollouts: Performance impression-count bug acknowledged and fixed (2026-05-03); Links report outage during the May 2026 core update, logged by Google as a database bug and serving week-old data until fixed; ~14-day page-indexing freeze alongside the June 2026 spam update, logged as an internal delay | 2026-05 → 2026-07 | 13 of 26 documented GSC outages since mid-2023 fall inside rollout windows (`STUDY` — correlation; the compute-reallocation explanation for it is `HYPOTHESIS`, and Google denies a link). Since late 2025 the "Due to internal issues, this report has not been updated" banner marks infrastructure, not a penalty. Confirm the report is still producing fresh points before diagnosing (measurement.md). |
+| Google canonicalization documentation updated: pages can stay in a duplicate group **up to two weeks** after the content is fixed, and split faster when the difference is obvious and substantial; the **self-referential canonical** is now the documented recommendation | 2026-07-10 / 2026-07-13 | Set the verification window for any canonical fix at ≥2 weeks before calling it failed (technical-checks.md §B). |
+| Cloudflare's Content Signals initiative stalled; the industry push for Google to split Googlebot into separate search and AI-training crawlers went unanswered | 2026-07-06 | There is still no way to opt out of Google's AI use while keeping Search. Never sell "block the AI crawlers, keep the rankings" as an available option for Google (technical-checks.md); the choice is real only for the standalone AI crawlers. |
+| Google experiment masking the destination URL behind a `google.com/goto` redirect in results | 2026-07-08 | If it ships, SERP scraping and some rank trackers break. Check your tracker's collection method before trusting a position series that spans this date (tooling.md). |
+| AI Overviews, AI Mode and Search Live launched in **France**; ~450 news publishers notified on 2026-06-29 that they will be paid for content used in AI answers | 2026-07-22 | AI-surface coverage is not uniform per market and can arrive mid-measurement — record the market with every AI-visibility baseline and re-baseline when a surface launches there. |
+| Yandex Alisa AI added in-chat bookings (restaurant tables, salon appointments) | 2026-06-24 | Agentic commerce in RU now completes the task inside the assistant — for those verticals, presence in the assistant's supply is a distribution decision, like YCP above. |
+| Google Images turned 25: image gallery interface (US desktop, English) and Nano Banana image generation inside AI Overviews announced for the following weeks | 2026-07-14 (announced) | An image-traffic dependent site should re-baseline image impressions after the rollout; keep image URLs stable while it lands (technical-checks.md). |
+| Publishing platforms shipped AI-text policies: Habr banned AI-generated posts; Substack shipped a Pangram-based AI detector | 2026-06-17 / 2026-07-22 | Scaled AI content now carries a distribution and reputation cost outside Google — surface it when a client proposes generation at volume (myths.md). |
+| **EU DMA:** Google is under a standing fine exposure for self-preferencing, and must share anonymized search-query data with competing services **from 2027** | reported 2026-07 (mandate effective 2027) | Two audit consequences, both forward-looking (`HYPOTHESIS` — announced obligation, no measurable surface yet). (a) Remedies that change SERP composition land inside a measurement window, so an EU-market before/after needs the regulatory date noted next to the update dates. (b) Query data reaching third parties from 2027 changes what keyword tools can see in the EU — do not lock a multi-year measurement plan to a single vendor's EU volume estimates (measurement.md). France's ~450 publishers being paid for AI-answer content sits on the same axis (row above). |
+| Google's scraping suit against **SerpApi** dismissed | reported 2026-07 | Rank-tracking supply is a live legal question, not settled infrastructure. Record the collection method and provider with every position series and keep a first-party fallback (measurement.md). |
 
 ## How to use the timeline in an audit
 
@@ -90,6 +112,11 @@ whose decline predates the window above.
 6. Only then form a hypothesis, and tag its evidence tier. Google's stated target
    for the update is context, not proof.
 7. Add the row to this file (below) with the audit implication you observed.
+8. **Run the AI surfaces in the same windows.** Spam sanctions are synced between
+   classic Search and AIO/AI Mode, and demotions have been observed moving the AI
+   answers with the SERP. Re-run the prompt set from aeo-geo.md before/after, and
+   pull Bing AI Performance and (where available) the GSC generative-AI report for
+   the same dates — otherwise "we only lost blue links" is an untested assumption.
 
 ## Refresh protocol for this file (part of the skill's Definition of Done)
 

@@ -41,6 +41,11 @@ public data alone stays `HYPOTHESIS` until something first-party confirms it.
 | Rank + SERP composition | An independent tracker; SERP screenshots per market/device | Record market, device, date with every observation |
 | AI visibility | The prompt set per engine + inbound logs + Bing AI Performance | Vendor "visibility scores" are directional at best (measurement.md J3) |
 | Conversion and call outcomes | Analytics + call tracking + CRM | See demand-and-conversion.md |
+| What robots.txt actually breaks in the render | A robots-aware proxy (`VorticonCmdr/robotstxtProxy`, shipped with Docker images for the proxy and a Chromium instance) or DevTools request blocking | Anything disallowed is never downloaded, so it is never rendered; block the same resources locally and read the degraded page yourself |
+| Forgotten hosts and subdomains | A subdomain enumerator (e.g. `guisublist3r`) before a migration, plus `site:` patterns against dev/staging host names | Run it on your own estate first — an indexed staging host is a common self-inflicted finding, not just a competitor-recon trick |
+| Query class for a keyword set | `queryclassifier.com` | Predicts the class that maps to which SERP features appear and where the answer has to sit (intent-and-content.md) |
+| CTR expectation for this site | GSC export + a custom CTR-curve notebook (Brittney Muller's Colab) | Generic CTR tables hide SERP-feature and brand effects; there is no universal benchmark (experience-signals.md) |
+| Evidence capture for the report | DevTools full-page screenshot + the response headers, both dated | A finding needs an artefact someone else can re-open, not a description (evidence-tiers.md) |
 
 ## Chrome DevTools recipes worth memorising
 
@@ -66,6 +71,28 @@ public data alone stays `HYPOTHESIS` until something first-party confirms it.
   custom extraction.
 - **Beautify minified sources** with `{}` in the Sources panel before reading
   third-party scripts.
+- **Parity diff, mechanically**: Elements panel → right-click → Copy → Copy
+  element for the rendered DOM, `view-source` → select all for the delivered
+  HTML, then diff the two. Ignore the injected script noise and read only for
+  `meta robots`, canonical, hreflang, title, headings and the body copy — those
+  are the differences that change indexing.
+- **Switch user agent** in Network conditions to see what a page returns to a
+  named crawler. Treat it as a smoke test for UA-conditional serving, not as a
+  rendering verdict: it does not reproduce Google's rendering service, so confirm
+  anything you find with URL Inspection.
+- **Layout Shift Regions** and the **Core Web Vitals overlay**, both in the
+  Rendering panel: the first highlights the areas that move during load, the
+  second puts live metric values on screen while you interact — this is how you
+  identify the element behind a CLS number instead of guessing from a score.
+- **Performance Insights with throttling and the cache disabled** reproduces a
+  first-time visitor and lists render-blocking resources with the moment each one
+  bites — the panel to open before anyone proposes an image-format project.
+- **Local Overrides** to hold an edit across reloads: prove the fix (remove a
+  render-blocking file, change the title, drop the offending element) on the real
+  page before writing the ticket. It costs minutes and turns "we think this is
+  it" into a demonstrated cause.
+- **Full-page screenshot** (Command menu → Capture full size screenshot) for the
+  dated artefact that goes into the report next to the header dump.
 
 ## Where the automation stops
 
@@ -75,7 +102,21 @@ public data alone stays `HYPOTHESIS` until something first-party confirms it.
 - `scripts/page_audit.py` in this skill covers per-page directives, canonical
   traps, headings, schema inventory, alt coverage, JS-gated prices and the
   answer-engine read budget. It does not crawl; pair it with a real crawler.
+- **An agent handed raw rows will invent the arithmetic.** Ask a model for
+  positions or click deltas and it answers fluently from rows it summed badly;
+  most analytics MCPs make this worse by pushing thousands of rows into the
+  context window. The pattern that holds: do the maths **before** the model sees
+  it — run CTR curves, decay, cannibalization and position deltas in SQL/Python
+  in the warehouse and hand back one compact result, so the model reads a
+  finished table and does the interpreting (`FIELD`). The same server-side path
+  is where URL Inspection API index-status checks and IndexNow submissions
+  belong. Two caveats: deterministic is not the same as correct — GSC sampling,
+  freshness lag and interpretation traps survive the rewrite — and the pattern
+  does not port to analytics for free, because GA4 schemas vary per property
+  while the GSC query shape is fixed.
 - Spreadsheet work is still where multi-source data gets joined (crawl + GSC +
   analytics + revenue). Clean first (blank rows/columns, inconsistent labels),
   join on the URL, then pivot by template — that view is what makes a finding
-  provable.
+  provable. Keep it survivable: named ranges instead of cell references, few
+  formulas rather than chained ones, conditional formatting to make the outliers
+  visible before anyone reads a number.

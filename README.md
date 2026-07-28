@@ -100,7 +100,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 - **Tiered claims.** Every recommendation carries `CONFIRMED` · `STUDY` · `FIELD`
   · `HYPOTHESIS`, and a hypothesis never outranks a confirmed blocker.
 - **Diagnose before prescribing.** "Add schema" is not a diagnosis.
-- **A myth guard** that refuses 25 popular tactics with published
+- **A myth guard** that refuses 29 popular tactics with published
   counter-evidence, and offers the working alternative instead.
 - **Defense, not offense.** Adversarial techniques appear only as things to
   detect and withstand, never as recommendations.
@@ -125,13 +125,14 @@ agent, not just Claude Code. This is the substance:
 | **Experience & conversion** | CWV triage order, satisfaction-signal mechanics, CRO × SEO evidence, conversion elements per template, lead capture, the attribution gaps (calls, offline, AI referrals, cross-device), paid × organic alignment | The post-click half of the funnel that audits usually leave on the table |
 | **Risk & defense** | Penalty behavior, subdomain and registrar risk, indirect prompt injection, takedown abuse, canonical hijacking, behavioral poisoning, proportionate link-risk handling | Turns "we got hit" into a specific, checkable hypothesis |
 | **Google update timeline** | Every core, spam and Discover update with start and completion dates, the platform changes that retired old tactics, and an update-response protocol | Lets the skill date-align a traffic curve instead of guessing |
-| **Growth plays** | 41 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
+| **Growth plays** | 59 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
 | **Benchmarks** | Dated figures for surface reach, click economics, citation mechanics, read budget, content correlations, operational targets and industry context | Lets the report size an opportunity with numbers instead of adjectives |
 | **Method** | Evidence tiers, experiment design, the myth guard, check → tool routing with DevTools recipes, and the deliverable templates | Keeps two different runs of the audit comparable |
 
 ### Data freshness
 
-- **Verified as of 2026-07-28.** The update timeline covers March 2025 → June
+- **Verified as of 2026-07-28.** Roughly 3,900 lines of distilled, dated
+  reference material. The update timeline covers March 2025 → June
   2026; every benchmark carries its own date and sample size.
 - The skill ships a **refresh routine**: re-fetch the update sources, append the
   new rows, re-check whether a shipped change retires a myth or invalidates a
@@ -264,7 +265,7 @@ E-E-A-T), техничка и экономика индексации, архи�
 движков, интент и информационная ценность контента, механика AEO/GEO по каждому
 движку с готовым набором промптов для замера бренда, сущности и «призрачные
 цитаты», опыт—конверсия—атрибуция (звонки, офлайн, AI-рефералы), риски и защита,
-датированный таймлайн апдейтов Google, 41 приём роста с уровнем
+датированный таймлайн апдейтов Google, 59 приёмов роста с уровнем
 доказательности, бенчмарки с датами и выборками, плюс метод: уровни
 доказательности, дизайн экспериментов, гард мифов, роутинг инструментов и
 шаблоны отчёта.

@@ -86,7 +86,7 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | # | Track | Answers | Reference |
 |---|---|---|---|
 | A | Access & indexation economics | Can bots fetch, render and afford to index this? Where is crawl budget burned? | [technical-checks.md](references/technical-checks.md) |
-| B | Canonicalization & duplication | Which URL is the one true URL, and does the engine agree? | [technical-checks.md](references/technical-checks.md) |
+| B | Canonicalization & duplication | Which URL is the one true URL, and does the engine agree — including across locales (hreflang)? | [technical-checks.md](references/technical-checks.md) |
 | C | Architecture & link equity | Do the money pages get authority, depth and crawl frequency? | [architecture-and-equity.md](references/architecture-and-equity.md) |
 | D | Intent & SERP fit | Does each page match what the SERP rewards, and do pages fight each other? | [intent-and-content.md](references/intent-and-content.md) + [onpage-checks.md](references/onpage-checks.md) |
 | E | Content value | Is there a reason to rank this page that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
@@ -209,7 +209,7 @@ the nearest thing that does work, and move on.
 ## References
 
 - [references/ranking-model.md](references/ranking-model.md) — how ranking actually works: systems vs signals, the three that carry weight, E-E-A-T's real status, query-dependent weighting.
-- [references/technical-checks.md](references/technical-checks.md) — tracks A/B: crawl, render, index, canonical, robots, sitemaps, migrations, plus the mechanical completeness sweep.
+- [references/technical-checks.md](references/technical-checks.md) — tracks A/B: crawl, render, index, canonical, robots, sitemaps, hreflang/international duplication, migrations, plus the mechanical completeness sweep.
 - [references/architecture-and-equity.md](references/architecture-and-equity.md) — track C: internal links, hubs, orphans, depth, read-budget-aware navigation.
 - [references/intent-and-content.md](references/intent-and-content.md) — tracks D/E: intent match, cannibalization, information gain, defensible content types.
 - [references/onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.

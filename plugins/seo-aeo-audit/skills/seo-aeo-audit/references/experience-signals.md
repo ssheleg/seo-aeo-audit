@@ -27,6 +27,13 @@ impression weights. 5% CTR at position 3 can be over- or under-performing
 depending on query, position, device and document age — **there is no universal
 CTR benchmark**. Build a site-specific CTR curve from your own GSC data instead.
 
+That curve is perishable. Practitioners reading the same leaked parameters report
+that a core update appears to reset the click model's expectation baseline across
+the corpus, and that SERP-layout changes (Local Service Ads, ad-block prominence)
+force their own recalibration — so rebuild the curve after each documented update
+and each layout change, and put the build date on it (HYPOTHESIS — practitioner
+observation on leaked fields, 2026-05; no engine confirmation, no sample stated).
+
 Two caveats an honest audit states: `unicornClicks` is a **child-account** marker
 (COPPA/GDPR-K isolation), not a premium-user signal — nothing to optimize there;
 and Brave's Web Discovery Project (which feeds Claude) gates every engagement
@@ -57,6 +64,18 @@ Avoid: context-free news, opinion without evidence, empty category pages, basic
 listicles that spawn ten new questions, and hub pages that link without
 answering.
 
+**Usefulness is judged on function, not only on text.** Google has evaluated
+where content sits on the page since the 2012 Page Layout algorithm (CONFIRMED —
+documented). The 2026 practitioner extension of that — "visual semantics" — is
+that whole verticals carry their value in comparison modules, tables and
+interactive layouts rather than prose: flight booking, credit aggregation and
+marketplace listings cannot be assessed from the running text at all, and a
+helpful page is one that lets the user complete the task, decide, or act
+(HYPOTHESIS — Koray Tuğberk Gübür, 2026-07-15; mechanism plausible, no controlled
+evidence). Audit each money template for whether the decision can be made **on
+the page**, not merely read about — that is the same property as the last long
+click, expressed as layout.
+
 ## H3. CRO and SEO are the same work
 
 Measured across 47 pages over 90 days: bounce −31%, dwell +187%, average position
@@ -78,6 +97,12 @@ Landing-page specifics with field evidence:
 - Aggregated across ~130,000 split tests, generic stock photography above the
   fold cost ~19% conversion; real product screenshots, uniformed staff and
   branded vehicles beat lifestyle imagery.
+- **Mobile-only failures hide behind a passing desktop page**: text below legible
+  size, tap targets crowded together, horizontal scroll, interstitial popups,
+  fixed elements covering the navigation. Mobile-first indexing means the mobile
+  rendering is the one indexed (CONFIRMED — documented), so test every money
+  template on a real device profile rather than a narrowed desktop window (FIELD
+  — recurring agency-audit finding, 2026-06).
 - Video above the fold cannibalises attention: session benchmark is 30–60s while
   the average explainer view is ~16s. Move it below the fold or behind a "See how
   it works" secondary button, use a static screenshot with a play button, no
@@ -93,6 +118,13 @@ Landing-page specifics with field evidence:
 5. Only then image formats and responsive images (`sizes="auto"` +
    `loading="lazy"` replaces hand-written `sizes`; width/height still required;
    the LCP hero must **not** be lazy-loaded).
+
+Inventory what blocks the render before optimizing anything. One documented
+template profile: 12 CSS files, 8 JS libraries (half of them unused), fonts
+queued ahead of the content, and synchronous analytics. Deferring the
+non-critical set took one SaaS site from 3.8s to 1.2s with organic up 23% (FIELD
+— single site, 2026-06; no control group, so treat the 23% as the size of a bet,
+not a forecast).
 
 INP traps: modal patterns that add a scroll-lock class to `<html>` plus a blurred
 overlay push style recalculation into the click handler and add tens of
@@ -122,7 +154,11 @@ targets across markets, and never let CWV work outrank an indexing fix.
 
 - Per template: CrUX field values (LCP/INP/CLS) by form factor, lab trace of the
   LCP path, TTFB.
-- GSC query-level CTR versus your own site curve (not an industry table).
+- GSC query-level CTR versus your own site curve (not an industry table), with
+  the date the curve was built and the update or layout change that invalidates
+  it.
+- Per money template: can the user decide or complete the task on the page, or
+  only read about it.
 - Behavioral metrics per template (bounce, dwell, pages/session, scroll depth),
   and the return-to-SERP rate if you can approximate it.
 - Before/after for any CRO change, with the 60–90 day ranking window stated.

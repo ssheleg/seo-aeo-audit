@@ -21,6 +21,26 @@ Nothing at FIELD or HYPOTHESIS tier ships sitewide. It ships as a test.
    the site's own playbook (it becomes CONFIRMED *for this site*).
 7. **Stack tests sequentially** so gains compound; do not run overlapping tests
    on the same cohort.
+8. **Sample AI citations repeatedly, never once.** Citation is intermittent: in a
+   34-page / 5-domain / 9,886-answer run (Feb–May 2026) roughly one page in four
+   was cited a single time and never again, a cited page reappeared about every
+   third day between its first and last citation, and the longest unbroken streak
+   was 52 days. Sample daily for ≥30 days, and score **retrieval** separately from
+   **citation** — Perplexity left 76% of retrieved pages uncited while ChatGPT
+   cited 61% of them.
+9. **Hold the prompt format constant across rounds.** Format moves brand counts
+   20–25% (rankings, lists and comparisons surface ~20% more brands;
+   keyword-explicit prompts ~25% more) while wording barely matters above ~0.50–0.60
+   cosine similarity (1,754 prompts / 37,804 answers). Changing the format between
+   measurements changes the instrument, not the result. Report per engine and per
+   persona.
+10. **Allow for crawl-scheduler hysteresis.** A URL that once carried
+    `noindex`/301/canonical stays deprioritized for 100+ days after the directive
+    is removed, so any directive test needs a recovery window measured in months —
+    and its control cohort must never have carried the directive.
+11. **Give rotation time before scoring a merge.** Google rotates competing URLs
+    every few days, so a cannibalization test needs ≥1 week of observation. Above
+    roughly 1M clicks GSC data hiding masks the effect — use layered filters.
 
 ## What cannot be split-tested
 
@@ -44,6 +64,43 @@ attribution is weaker.
 - **Grid size.** Cutting a category grid from 48 to 36 products was positive at
   85% confidence (below the usual bar) via page weight and LCP, not content
   depth.
+- **Title capitalization — the case behind the pattern.** One ecommerce site moved
+  every meta title to upper case and recorded +17.5% organic (mobile +20.4%), yet a
+  live-SERP check found almost no all-caps titles rendering and its PDPs mostly
+  surface inside product grids where the title text is not read. That is what
+  points the mechanism at indexing, not CTR. Test targeted capitalization of key
+  terms against full all-caps.
+- **Schema, measured per surface.** Two named studies disagree on both Google's
+  AI surfaces *and* ChatGPT (Study A / Study B, with samples and significance, in
+  benchmarks.md "Contested metrics" and aeo-geo.md F6), so both directions are
+  HYPOTHESIS and this is a live experiment candidate rather than a settled
+  result. Any schema test that reports one blended "AI visibility" number will
+  contradict itself; split the metric by engine, and hold the schema *type*
+  constant — Study B tested one type on homepages only. The canonical stance
+  (mark up what is real and required, then stop) stays in myths.md.
+- **"Crawled – currently not indexed": quality rejection or authority deficit?**
+  The two readings prescribe opposite work (rewrite versus link) and neither is
+  settled (technical-checks.md, architecture-and-equity.md). The discriminating
+  design is written up in architecture-and-equity.md: hold content constant, add
+  links from strong nodes to one cohort, leave a matched cohort alone, measure
+  index rate. Rule 2 (comparable cohorts) and rule 5 (control) do the heavy
+  lifting here.
+- **Promotional pages for an unknown entity.** 34 pages / 5 domains / 9,886
+  answers, 7 Feb – 31 May 2026: a brand-new conference filled 72 previously empty
+  answer slots (82% of the new mentions cited the published pages) while an
+  established tool drew only 6% from its own pages. Caveats worth carrying into
+  the design: 43% of answers linking the conference page never mentioned the
+  event, and retrieval without citation was worse (74% ignored). Test on a
+  category gap, not on an established brand.
+- **Web-font weight.** 900KB of preloaded fonts widened the P90 TTFB→FCP gap from
+  ~840ms on fast connections to ~1,488ms on slow ones and correlated with ~18%
+  fewer pageviews per session. Subsetting is a clean one-template test with a
+  field-data readout (CrUX, not lab).
+- **Content refresh on a directory.** 500 high-converting pages got a fresh FAQ
+  block and retargeted keywords; AI Overviews traffic +80% and the property +10%
+  period over period. Confounded — a Markdown pipeline and a template redesign
+  shipped in the same window — so reuse it as a hypothesis about refresh scope,
+  never as an effect size.
 - **Markdown serving to AI crawlers.** Conflicting evidence (0% crawler visits in
   a 100M-site test vs a single-site AIO gain) — a textbook experiment candidate,
   measured in server logs and AI-surface reporting, on one section only.
@@ -64,5 +121,5 @@ Verdict values: `win → rolled out`, `win → not rolled out (why)`, `no effect
 
 Do not ask a model to predict which variant will win: in a 48-test comparison the
 best model guessed 62.5% and the worst 48%, inside the noise band for that sample
-size. Use models to generate variants and to analyse results, not to replace the
+size. Use models to generate variants and to analyze results, not to replace the
 test.

@@ -35,10 +35,25 @@ can precede the manual action by 24h+.
   Validate by crawling twice (respecting vs ignoring robots.txt) and diffing the
   URL sets — every URL that disappears is a page the file hides from Google.
   Keep `robots.txt` in version control with a dated changelog; audit quarterly.
+- **A clean `robots.txt` proves nothing if the edge blocks the bot.** CDN, WAF
+  and bot-management rules answer crawlers with `403`, `429` or a JS challenge
+  while a browser gets `200`. Fetch one URL per template with each bot user agent
+  from an off-network IP and compare status code and byte size against the
+  browser fetch (`CONFIRMED` — the status code is the observation). Reported as
+  the first of three audit layers for AI reach, Jun 2026.
 - **Never cloak with a Googlebot-specific `Disallow: /`.** It hides nothing and
   reads as deception.
 - **`<meta name="robots" content="none">` ≡ `noindex, nofollow`.** Several SEO
   extensions parse it wrong — check the raw source, not a plugin.
+- **Directives arrive in HTTP headers, not only in HTML.** `X-Robots-Tag` and
+  `Link: <…>; rel="canonical"` never appear in `view-source`, and server,
+  directory (`.htaccess`) or edge config applies them to whole folders and to
+  non-HTML assets (PDF, images, feeds). Audit the response headers per template
+  **and** per asset type: status, robots rules, canonical, content type, cache
+  (SEJ *Ultimate Technical SEO Audit Workbook*, 2023). A near-empty PDF entered
+  the index immediately once its directory was given an `index, follow`
+  directive — the folder-level header, not the page content, was the blocker
+  (`FIELD`, Jul 2026).
 - **Blocked-but-indexed URLs are empty shells.** Google indexes the URL string
   without processing content, so they cannot trigger duplicate filters or dilute
   sitewide quality. Do **not** unblock `robots.txt` just to add `noindex` (that
@@ -55,7 +70,18 @@ can precede the manual action by 24h+.
   robots-blocked page returns `viewing lines [0-0] of 0` to ChatGPT Deep Research
   and silently vanishes from the report. Verify from logs with
   forward-confirmed reverse DNS — a crawler hit only proves the URL was fetched,
-  never that a model learned it.
+  never that a model learned it. Whether the domain appears in **Common Crawl**
+  is a separate check again. Bot identity today rests on a self-reported user
+  agent plus IP; Google's experimental **Web Bot Auth** (announced May 2026) has
+  agents sign requests cryptographically, which makes spoofed "trusted agents"
+  detectable — until it is widely adopted, forward-confirmed reverse DNS stays
+  the method.
+- **You cannot block Google's AI use without blocking Google Search.** Googlebot
+  is not split by purpose, and Cloudflare's Content Signals initiative (launched
+  2025) had little uptake as of Jul 2026. Sites that lost Google visibility lost
+  ChatGPT visibility roughly in proportion, because that pipeline reads Google's
+  index (`STUDY`; see aeo-geo.md). Price the trade-off before a block ships, not
+  after.
 
 ## A2. Indexation economics
 
@@ -68,7 +94,37 @@ US7509315B1). Publishing more pages dilutes unless demand grows with them.
 | Status | Meaning | Fix path |
 |---|---|---|
 | Discovered – currently not indexed | Crawl budget/priority exhausted | Importance signals: contextual internal links from your most-crawled pages, a priority sitemap with fresh `lastmod`, one external dofollow link from an indexed page, clean server signals (TTFB <200ms, no 5XX, no redirect chains). 70–80% index within 72h in field reports. |
-| Crawled – currently not indexed | Fetched and **rejected** on quality | Discovery signals will not help. Step back to page and sitewide quality: unique value, intent match, thin/duplicate clean-up. John Mueller: when systems doubt sitewide quality they crawl less and index less — that is not a technical bug to patch. |
+| Crawled – currently not indexed | Fetched and **not selected** — read here as a quality rejection, but the cause is disputed (see below) | Discovery signals will not help either way. Step back to page and sitewide quality: unique value, intent match, thin/duplicate clean-up. John Mueller: when systems doubt sitewide quality they crawl less and index less — that is not a technical bug to patch. |
+
+**The cause of "Crawled – currently not indexed" is contested.** This file reads
+it as a quality rejection (Mueller's statement above). A competing practitioner
+account (FIELD, 2026-06-18) reads it as almost purely an **authority deficit**,
+arguing from identical content indexing instantly on a strong domain and failing
+on a weak one — the same case recorded in architecture-and-equity.md. Both are
+credible and they prescribe different work (rewrite versus link), so the cause
+drops to **HYPOTHESIS**: do not assert one in a report. The discriminating
+experiment is in architecture-and-equity.md, "Crawl frequency is an architecture
+output" — hold content constant, add links from strong nodes to one cohort,
+leave a matched cohort alone, measure index rate (design it per experiments.md).
+Whichever theory holds, discovery-side pushes are the wrong fix, so the fix path
+above stands while the cause is open.
+
+**Check the reporting before you diagnose the site.** A page-indexing freeze ran
+for roughly 14 days alongside the June 2026 spam update and was logged by Google
+as an internal delay, not a rollout effect. Confirm the Pages report is still
+producing fresh data points — and cross-check GA4, server logs and an independent
+rank tracker — before calling an index-count change real (see measurement.md).
+
+**Indexing services can only force a crawl.** Link and page indexers queue a
+fetch; nothing in them touches the quality gate, so "guaranteed indexing" is a
+sales claim (`FIELD`, Jul 2026). The free lever that beats them is one internal
+link from a page Googlebot already crawls daily.
+
+**Removing `noindex` is not a recovery lever.** A sports site that bulk-noindexed
+pages on AI advice went from 4–5k daily impressions to about 10; stripping the
+tag changed nothing on its own, because Googlebot stops visiting noindexed URLs.
+Recovery is manual: filter the GSC Pages report for `Excluded by 'noindex' tag`,
+resubmit and relink in batches, and budget 6–12 weeks (`FIELD`, Jul 2026).
 
 **Index tiering** (a 50k-page store went from 8k indexed / 2.1k junk to 9.8k
 valuable URLs indexed, −87% zero-traffic pages, +67% organic in 90 days):
@@ -81,7 +137,9 @@ valuable URLs indexed, −87% zero-traffic pages, +67% organic in 90 days):
 - Tier 4 hard block: admin, cart, thin duplicates.
 
 Score each template on business value, search value and user value; if all three
-are low, it should not be in the index.
+are low, it should not be in the index. Then track the tiering as a running
+metric rather than a one-off clean-up: index coverage per tier, time-to-index for
+new URLs, and drop-out rate, reviewed monthly (`FIELD` — same case).
 
 **Crawl-budget killers**, in the order they usually bite:
 
@@ -91,11 +149,25 @@ are low, it should not be in the index.
    sensible, canonicalize empty pages.
 3. Duplicate variants: session IDs, tracking params, print versions, HTTP/HTTPS,
    www/non-www.
-4. Mass low-quality pages — audit for: zero organic in 12 months, no inbound
-   links, <200 words, bounce >80% → 410 / consolidate / noindex / improve.
-5. Server performance: TTFB <200ms optimal, <500ms acceptable; error rate <0.5%.
-   Audit response time **per template** (a real profile: 1.8s home, 2.2s
-   category, 7.4s product, 5.9s checkout).
+4. Mass low-quality pages that are **crawlable** — audit for: zero organic in 12
+   months, no inbound links, <200 words, bounce >80% → 410 / consolidate /
+   noindex / improve. Crawlable is the operative word: their content is fetched
+   and processed, so it counts against host quality and spends budget. This is
+   the opposite case to robots-**blocked**-but-indexed URLs, whose content is
+   never processed and therefore cannot dilute anything (see A1 above and
+   myths.md). Do not treat the two as one bucket, and never unblock the second
+   group in order to "clean it up".
+5. Server performance: past ~600ms crawl efficiency measurably degrades, and 5XX
+   responses force re-requests that spend the same allowance twice. Thresholds
+   (TTFB, error rate) are in benchmarks.md, "Operational benchmarks". Audit
+   response time **per template** — this is the profile to capture, and it is
+   owned here, not repeated elsewhere (a real one: 1.8s home, 2.2s category,
+   7.4s product, 5.9s checkout). A single sitewide average hides exactly the
+   template that is burning the allowance.
+
+A sixth cause is adversarial rather than architectural — bulk fabricated URLs
+pointed at your domain so the allowance is spent on 404s. Detect it from the log
+status-code mix against a per-day 404 baseline (see threats-and-defense.md).
 
 Log-file evidence beats opinion: one e-commerce audit found 40% of crawl going to
 filter URLs while products were recrawled every 90 days; after robots and
@@ -108,7 +180,9 @@ pages) drag host-level quality down and make Google abandon the site as a crawl
 target. In one publisher network, 120k soft 404s correlated with crawl requests
 falling from 60–70k/day to 20–30k/day; the fix stack (real 404/410, remove or
 noindex auto-generated pages, tighten parameters, rewrite canonicals) cut them
-83% — and the biggest recovery landed in **Discover**, not classic search.
+83% — and the biggest recovery landed in **Discover**, not classic search. The
+same network carried 513k "Crawled – currently not indexed" URLs in one country
+alone, down 57% within weeks of the fix.
 Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
 
 **Faceted navigation, done properly:**
@@ -126,12 +200,15 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
 - Promote proven parameter combinations to clean paths (`/shoes/?color=red` →
   301 → `/shoes/red/`) only after demand shows up in internal search logs or GSC.
 
-**Out-of-stock trap:** applying `noindex`/301/canonical while a product is out of
-stock makes the crawl scheduler deprioritize that URL for 100+ days *after* the
-directive is removed. Sitemap resubmission and manual GSC submissions do not
-break it; Atom/RSS feeds jump the fast-discovery queue, and dynamic internal
-links from high-crawl-frequency nodes help. Rendering an out-of-stock page with
-no directives can trigger a soft 404 and the same deprioritization.
+**Out-of-stock trap (mechanism owned here):** applying `noindex`/301/canonical
+while a product is out of stock leaves the crawl scheduler holding a negative
+priority on that URL *after* the directive is removed — the current HTTP status
+does not reset it. Sitemap resubmission and manual GSC submissions do not break
+it; Atom/RSS feeds jump the fast-discovery queue, and dynamic internal links
+from high-crawl-frequency nodes help. Rendering an out-of-stock page with no
+directives can trigger a soft 404 and the same deprioritization. The observed
+duration is in benchmarks.md, the recovery horizon in measurement.md §J5, and
+the play in growth-plays.md L9.
 
 **Sitemaps** are a discovery and diagnostic tool, not a ranking factor. Include
 only indexable, valuable, canonical URLs plus anything published in the last 24h;
@@ -141,8 +218,12 @@ orphans and phantom URLs.
 
 ## B. Canonicalization and duplication
 
-- **Self-referencing canonicals are the documented recommendation.** Every
-  indexable page should declare itself.
+- **Self-referencing canonicals are the documented recommendation** (written into
+  Google's documentation Jul 2026). Every indexable page should declare itself.
+- **Canonical can also arrive as an HTTP `Link` header** — the only option for
+  PDFs, images and feeds, and a common CDN or framework default. Check the header
+  and the in-page tag together: when they disagree, Google resolves the conflict
+  for you and you find out from URL Inspection, not from the template.
 - **Extra attributes silently kill the tag.** `<link rel="canonical">` carrying
   `media`, `type`, `hreflang` or `lang` makes Google discard the declaration —
   URL Inspection then reports user-declared canonical `None`. Framework `data-*`
@@ -160,21 +241,90 @@ orphans and phantom URLs.
   crawl-time demotion.
 - **Recovery is slow by design:** pages can stay in a duplicate group for up to
   two weeks after the fix, and they split faster only when the difference is
-  obvious and substantial.
+  obvious and substantial (Google canonicalization troubleshooting docs, Jul
+  2026).
 - Chains and loops: `A→B→C` where `B→C` breaks; canonicals pointing at noindexed
-  pages; HTTP/HTTPS mismatches. Crawl and diff.
+  pages; HTTP/HTTPS mismatches. Crawl and diff. The cost is not only Google's: a
+  canonical mismatch between two fetches of the same URL is one of the conditions
+  that makes Brave's Web Discovery Project discard the page outright, which zeroes
+  the signal feeding Claude's results (see aeo-geo.md).
+
+### B2. hreflang and international duplication
+
+Multi-locale sites are the duplication case canonicals cannot solve on their own:
+the pages are near-identical by design, and the job is to tell the engine *which
+audience gets which URL* rather than to collapse them. Everything in this
+subsection is documented by the engines (`CONFIRMED`); no case data is claimed
+for it.
+
+**Mechanics**
+
+- **Annotations must be bidirectional.** If A declares B, B must declare A. A
+  one-way annotation is ignored — the return tag is what authenticates the claim.
+- **Every page self-references.** Each URL lists itself in its own set, with its
+  own language/region value.
+- **`x-default`** names the fallback for users no other annotation matches
+  (language selector, global landing page). Optional, but its absence is what
+  leaves unmatched users on an arbitrary locale.
+- **Language vs country targeting.** The value is `language` or
+  `language-region` (ISO 639-1 language, ISO 3166-1 alpha-2 region), never
+  region alone. `en` targets English speakers everywhere; `en-GB` targets
+  English speakers in the UK. Do not invent `en-UK` or `pt-BR-x`.
+- **One delivery mechanism per set, applied consistently:** HTML `<link>` tags,
+  HTTP `Link` headers (the only option for non-HTML files), or the XML sitemap.
+  Mixing them across a set is where sets silently break.
+- **hreflang is not a canonical and not a ranking signal.** It selects which
+  variant is *shown* to whom. Each locale still needs its own self-referencing
+  canonical; a canonical pointing across locales removes the page the annotation
+  was pointing at. And a canonical `<link>` carrying an `hreflang` attribute is
+  discarded outright (see section B above).
+
+**Audit checks**
+
+| Check | Fail looks like | Where |
+|---|---|---|
+| Return tags complete | A→B present, B→A missing | crawl (hreflang report) |
+| Self-reference present in every set | sets listing siblings only | crawl |
+| Codes valid | `en-UK`, `zh-CN` used as a language, region-only values | crawl |
+| Annotated URLs are indexable and 200 | annotations pointing at redirects, 404s, noindexed or canonicalized-away URLs | crawl + status check |
+| Absolute URLs, correct protocol and host | relative hrefs, http in an https set, staging hosts leaking in | crawl |
+| One mechanism per set | tags on some templates, sitemap entries on others, both disagreeing | crawl + sitemap diff |
+| `x-default` declared where a fallback exists | no fallback for unmatched users | crawl |
+| GSC International Targeting / locale-split performance | one locale absorbing another's queries | GSC + query→country breakdown |
+
+**Common failure modes**
+
+1. **Broken return tags at scale** — usually a template that emits the set from a
+   translation table only some locales are in.
+2. **Annotations to non-canonical or redirecting URLs** — the set points at URLs
+   the engine has already replaced, so the whole set is discarded.
+3. **hreflang used to fix duplication.** Two English pages for two countries with
+   identical content still compete; hreflang routes users, it does not create
+   distinctiveness. Differentiate the pages (currency, stock, shipping, legal,
+   local proof) or consolidate them.
+4. **Locale collision in the SERP** — the wrong-country page ranks because the
+   set is incomplete on the winning template only. Verify per country with a
+   country-scoped rank check, not from your own location.
+5. **Auto-translated locales.** Bulk machine translation is a documented
+   demotion profile after the May/June 2026 updates (threats-and-defense.md I1)
+   — an intact hreflang set does not protect it. Audit translation quality per
+   locale before blaming the annotations.
+6. **Migration drift.** Locale URLs move and the sets are not rewritten. Add an
+   hreflang re-crawl to the migration checklist below.
 
 ## Migrations (the most expensive failure mode)
 
-Average migration loses ~30% of traffic; a disciplined protocol keeps it near 8%.
-Documented failure: 67% traffic lost, −340 positions, −73% revenue, six months to
-partial recovery.
+The eight-stage protocol below is owned by this file; growth-plays.md B11 is the
+play that points at it, and the loss figures (average, disciplined, documented
+failure) are in benchmarks.md, "Operational benchmarks". Quote them from there
+with the date.
 
 1. **Baseline**: export every URL, snapshot rankings for the top 500 keywords,
    12-month traffic baseline, full backup.
 2. **Map 1:1** old → new; **301, never 302**; test on staging; no chains.
 3. **Preserve technicals**: titles, descriptions, schema, internal links, alt
-   text; keep URL structure as close as possible.
+   text, and every hreflang set (re-crawl them after the move — see B2); keep URL
+   structure as close as possible.
 4. **Move all content**; never silently delete pages; keep heading hierarchy.
 5. **Pre-launch**: crawl staging, confirm `robots.txt` allows crawling, validate
    the sitemap, check CWV, validate schema, mobile, 404 audit.
@@ -189,9 +339,19 @@ Verification technique: one sheet pulling status code, title, description and
 heading hierarchy from old and new URLs side by side reveals redirect failures in
 bulk.
 
-**Change of address covers every variant.** Google's updated guidance: submit a
-change-of-address request for every subdomain and for the www/non-www variants of
-the old domain, even ones you no longer use — all verified in Search Console.
+**Watch the old host, not only the new one.** A leaky redirect map leaves Google
+crawling both. In a documented news-network move (Jan 2022, country domain →
+regional subdomain) crawl budget split across the two hosts and trust never
+consolidated: daily clicks sat at 2–4k against a 15–25k baseline for over a year,
+and recovery began only once the *old* domain's indexing problems were resolved
+seven months later (`FIELD`). Week-1 evidence: Googlebot hits on the old host
+decaying in the logs, and no old URL still answering `200`.
+
+**Change of address covers every variant.** Google's updated guidance (Jun 2026):
+submit a change-of-address request for every subdomain and for the www/non-www
+variants of the old domain, even ones you no longer use — all verified in Search
+Console. An unannounced subdomain move leaves Google treating the destination as
+new URLs and spending crawl budget on them even where they carry `noindex`.
 Enumerate forgotten subdomains before agreeing a migration plan.
 
 **Bulk 301s to the homepage burn equity.** Redirect each removed URL to the
@@ -218,6 +378,9 @@ when it has an observable impact.
 - Property verified in Search Console (all variants).
 - Key templates are indexed (URL Inspection / crawl comparison).
 - `robots.txt` does not block anything that must be crawled or rendered.
+- Each template returns the status code it should. The mirror image of a soft 404
+  is just as costly: a page that renders correctly for users while the header
+  says `404`/`410`, which removes it from the index silently.
 
 **Sitemaps**
 - Submitted in Search Console and referenced from `robots.txt`.
@@ -226,7 +389,8 @@ when it has an observable impact.
 - Under 50MB / 50,000 URLs per file.
 
 **Crawl optimization**
-- Meta directives set deliberately per template.
+- Meta directives set deliberately per template — and the header-level ones too
+  (`X-Robots-Tag`, `Link: rel="canonical"`), including on PDFs and images.
 - Pagination / load-more / infinite scroll implemented crawlably (`rel=next|prev`
   is no longer supported — do not "fix" it back in).
 - Faceted URLs are noindexed or isolated (facets vs filters, see above).
@@ -234,6 +398,8 @@ when it has an observable impact.
 - Important content is not inside iframes or dead embeds.
 - Same content served to all user agents (no cloaking); mobile URLs serve the
   right content regardless of device.
+- hreflang sets complete and reciprocal on every localized template, pointing at
+  indexable 200 URLs, one mechanism per set (see B2).
 - Removed pages return 404/410 rather than soft 200s; valuable removed URLs are
   redirected to the closest intent.
 - Internal links resolve 200; no redirect chains (keep any chain under a handful
@@ -268,4 +434,9 @@ when it has an observable impact.
   user-declared vs Google-selected canonical, crawl date, rendering.
 - Raw source vs rendered DOM for one URL per template (robots meta, canonical,
   content parity).
+- hreflang export for every localized template: URL, declared set, return-tag
+  status, target status code (B2).
+- Response headers for one URL per template and one per non-HTML asset type
+  (`X-Robots-Tag`, `Link: rel="canonical"`, status, cache), captured with a bot
+  user agent as well as a browser one.
 - Server-log summary: bot, status code, path bucket, count, per day.

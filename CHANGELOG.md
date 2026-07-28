@@ -1,5 +1,76 @@
 # Changelog
 
+## v0.4.0
+
+Deep extraction pass over the full source corpus, section by section, followed by
+a reconciliation pass over the whole set. +1,725 lines across all 19 contracts.
+
+**Extraction** — one pass per audit track, each mining the same corpus for what
+its own track was still missing:
+
+- **A/B technical**: edge/WAF blocks that answer crawlers above `robots.txt`;
+  header-delivered directives (`X-Robots-Tag`, `Link: rel="canonical"`) invisible
+  in view-source; bot identity and Web Bot Auth; "removing `noindex` is not a
+  recovery lever"; indexing services force crawling, never indexing; the
+  leaky-redirect migration failure that kept both hosts crawled for a year.
+- **C architecture**: crawl frequency as an architecture output (with the
+  waste-40%→10% profile at a flat budget); the NavBoost floor below which links
+  cannot lift a page; subfolder membership over visual navigation; local and
+  multi-location architecture (PageRank is not used in Local Search); what to
+  split-test rather than ship.
+- **D/E content**: one query, two surfaces; auditing modules rather than prose;
+  the two-wave mechanism behind the content collapse; volume as the aggravating
+  variable; refresh contamination (models delete the sentences that earned the
+  position) and cohort measurement of refreshes; the money-template sweep.
+- **F AEO/GEO**: Google's own AIO chain description; the retrieval budget stack;
+  per-engine rows rebuilt (Gemini arbitration, ChatGPT `resultsource` buckets,
+  Deep Research re-read behavior, Brave/Claude gating, Perplexity localization,
+  Алиса AI with RU figures); slots you do not control; the KDD benchmark with its
+  omissions stated.
+- **G entity/brand**: Wikidata quantified and bounded; the mention-manipulation
+  guardrail; cross-platform rating divergence as an attack signature; mention
+  volume versus semantic cluster; where the verdict is actually hosted; retrieval
+  added as a fourth state next to mention/citation/recommendation.
+- **H experience/conversion**: CTR curves as perishable; usefulness judged on
+  function; the mobile-only failure inventory; the render-blocking inventory; the
+  one legitimate exception to minimum form fields; self-reported attribution;
+  the AI-impression → offline-conversion ladder; conversion data as bidding fuel.
+- **I risk**: rich results withheld as a sanction; takedown abuse as a campaign
+  rather than an incident; canonical-hijack loss signature; behavioral-poisoning
+  timing; autocomplete and volume injection; entity records as an attack surface;
+  link-risk scale thresholds — all detection-and-defense only.
+- **J measurement**: aggregate before the model sees it; four reporting artifacts
+  that read as findings; personalization contaminating capture; the restored
+  cadence section; six horizon rows; five more things not to measure. Benchmarks
+  gained samples and dates on every row, a user-self-report section and a
+  contested-metrics section.
+- **Plays and experiments**: 18 new plays (B8–B11, L9–L12, G22–G28, P6–P8) and
+  four new experiment-design rules with five documented results.
+- **Model, myths, updates, tooling**: how a ranking change actually ships; the
+  retrieval/scoring/re-ranking stack with demotion and removal as separate
+  machinery; five new myths; 14 new dated platform rows; six tool-routing rows
+  and seven DevTools recipes.
+
+**Reconciliation** — one pass over all 19 files:
+
+- Sixteen contradictions resolved by naming both studies and demoting the
+  contested direction to HYPOTHESIS rather than picking a winner (schema on
+  ChatGPT, rank-1 versus Bing-only AI visibility, "crawled – not indexed" cause,
+  zero-click direction, Wikipedia's weight by query class, literal phrasing
+  versus title match).
+- Click-economics rebuilt as four distinct measures with an explicit note that
+  none refutes the others; vendor-sourced rows tagged undated.
+- Duplication removed with a single owner per fact: link velocity →
+  threats-and-defense, read budget → architecture-and-equity, index tiering,
+  migration protocol and out-of-stock → technical-checks, every dated figure →
+  benchmarks.
+- Coverage gaps filled: **hreflang and international duplication** (new
+  technical-checks §B2, engine-documented), fabricated information gain as a
+  detection signature, publisher licensing posture, rank-tracker vendor
+  continuity, EU DMA exposure.
+- Spelling drift swept again; SKILL.md flow and the Cursor rule re-verified
+  against the reference set.
+
 ## v0.3.1
 
 Consistency pass across the whole flow, plus a rewritten README.

@@ -26,7 +26,7 @@ changes, work in this order and keep the evidence rules.
 
 These twelve steps are the working order, not the ten audit tracks — several
 steps serve the same track, and the point is the sequence: blockers before
-optimisation, cause before prescription.
+optimization, cause before prescription.
 
 1. **Blockers**: manual action; `noindex` in the pre-render source (it wins even
    when the rendered DOM is clean, and a `meta refresh` + `noindex` combination
@@ -36,12 +36,21 @@ optimisation, cause before prescription.
 2. **Canonicalization**: self-referencing canonical everywhere; a canonical link
    carrying `media`, `type`, `hreflang` or `lang` is silently discarded by Google
    (framework `data-*` attributes are harmless); edge-rendered HTML must match
-   the client version.
+   the client version. On multi-locale sites, hreflang annotations must be
+   bidirectional, self-referencing, use valid `language`/`language-region`
+   codes, carry an `x-default`, and point only at indexable 200 URLs — hreflang
+   routes users, it never substitutes for a canonical or for making the locales
+   genuinely different.
 3. **Indexation economics**: "Discovered – not indexed" is a crawl-priority
    problem (internal links from most-crawled pages, priority sitemap, clean
-   server signals); "Crawled – not indexed" is a quality rejection and discovery
-   signals will not fix it. Robots wildcards match substrings — `Disallow: /*?`
-   takes out every parameterized URL behind it.
+   server signals); "Crawled – not indexed" is the opposite bucket and discovery
+   signals will not fix it — but its *cause* is contested (quality rejection vs
+   authority deficit), so do not assert one in a report; the discriminating test
+   holds content constant and adds links from strong nodes to one cohort only.
+   Robots wildcards match substrings — `Disallow: /*?` takes out every
+   parameterized URL behind it. Robots-*blocked*-but-indexed URLs are indexed
+   strings with no content processed and dilute nothing; a mass of *crawlable*
+   thin pages does.
 4. **Architecture**: money pages within 1–2 clicks; kill equity leaks (tag
    archives, calendars, author bios, internal search); descriptive internal
    anchors; find orphans by diffing a crawl against the sitemap.

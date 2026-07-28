@@ -25,6 +25,14 @@ that does.
 The same test applies to answer engines: pages that rank but are never cited
 usually fail the *direct answer* expectation rather than the relevance one.
 
+**One query, two surfaces.** The classic results and the AI answer on the same
+query do not always reward the same page type. Documented example: [outdoor
+lighting solutions] ranked ecommerce pages for purchase intent while the AI
+Overview answered the category question — types, power options, brightness
+levels, installation, maintenance (FIELD, one vendor-documented SERP, 2024-06;
+dated, re-check it live). Classify both surfaces before choosing the page type,
+and say which one a template is actually built for.
+
 **Query class is measurable.** Google classifies queries into a small number of
 classes, and the class predicts which SERP features appear and where the answer
 must sit (a short-fact query wants the answer immediately, not after a build-up).
@@ -88,6 +96,24 @@ structural (a travel blog does not become a tour operator in a quarter) — the
 plan then targets the reachable ones: task completion on-site, tighter focus,
 proprietary data.
 
+**Audit the modules, not only the prose.** Booking engines, aggregators and
+comparison platforms carry their value in designed blocks, tables and
+interactive modules rather than text, and the helpful-content system is
+described as evaluating whether the page lets the user finish the task — so
+layout and functionality are part of what gets read ("visual semantics",
+practitioner framework, 2026-07-15; HYPOTHESIS, mechanism plausible, no measured
+effect, but consistent with the ρ=0.381 task-completion correlation above). The
+practical consequence is an audit error to avoid: a text-only read scores a
+working comparison tool as a thin page. Inventory the modules per template and
+check they exist for a crawler (onpage-checks.md E1).
+
+**Trust does not travel with the template.** A dominant competitor's structure
+is copyable; the decades of navigational demand underneath it are not (FIELD,
+single observed case — a vendor blog holding #1 on head AI terms with
+unremarkable prose, 2026-04-30). "Do what they do" is not a finding. The same
+case carries the mirror warning for incumbents: topic expansion across every
+adjacent category eventually collides with the tight-focus feature.
+
 ## E2. Information gain
 
 Study of 150 top-3 pages across 50 keywords and 10 verticals:
@@ -110,6 +136,20 @@ Editorial consequence: cover the consensus baseline briefly, then spend the
 length on original measurements, internal analytics, and the questions everyone
 skipped. This is also the AEO play — models synthesise consensus for free and
 then look for what a single source can add on top.
+
+Read the study for what it is (STUDY, published 2026-07-27): it describes the
+state of the SERP, not the ranking function, and makes no claim that the score
+drives position. Two further details hold up. Original quantitative data shows
+no saturation ceiling in the data, unlike length, which plateaus. And the rehash
+share climbs to 37–40% below the top-3 against 24% inside it — the further down
+page one, the more filler, which is where a displacement opportunity usually is.
+
+When you verify information gain, verify the numbers. Unique data points are
+forgeable: a documented spam pattern extrapolates one national statistic down to
+every town to manufacture "original" local data across thousands of
+near-identical sites (detection material, threats-and-defense.md). A number
+counts as information gain only if somebody measured it, and the audit note
+should say who and when.
 
 ## E2b. What users expect to see on the page
 
@@ -164,6 +204,17 @@ DIY +2%, food −44%, travel −74%, lifestyle −90%, health −93%, finance �
 There are no safe niches, only safe content: does the reader need *this author*
 to get the result?
 
+That collapse ran in two waves, which is why "we already survived the helpful
+content update" is not reassurance: the September 2023 helpful-content update
+and the March 2024 core update demoted templated, single-channel content, and
+from 2025 the AI Overview became the default surface, so nothing has to be
+demoted — the answer arrives before the click. One trait (summarizable, no
+first-hand moat, one borrowed distribution channel) is fatal in both. The
+distribution is bimodal, too: survivors were mostly small sites compounding from
+a low base while established players in the same niches were gutted (one went
+54,000 → 1,100 monthly visits). A niche peer's growth curve is not evidence that
+your model still works.
+
 ## E4. Patterns that now hurt
 
 Sites in decline typically run three or more of these AI-content templates (the
@@ -177,6 +228,13 @@ worst run all eight):
 6. Scaled geo/language duplication
 7. One-question-per-page FAQ URLs
 8. Mass off-topic publishing
+
+Volume is the aggravating variable, not the template alone: the declining sites
+carry hundreds to thousands of URLs on these patterns, and the largest losses
+track the largest footprints (FIELD, pattern analysis across declining sites,
+2026-05-13). Enforcement is also uneven — millions of machine-translated URLs
+still rank on large platforms (FIELD, SERP observation, 2026-05-14) — so report
+this as a risk profile with a cost attached, never as a predicted penalty date.
 
 Self-promotional listicles are now actively negative in AI answers: when the
 model used a brand's own "best [category]" article as a source, the brand was
@@ -208,12 +266,43 @@ what counts: a title change, a substantial new section, or link changes (anchor,
 target, surrounding text — not navigation). Ignored: date and `lastmod` bumps,
 JavaScript, ads, navigation and boilerplate. "Update the date" is not an update.
 
+**Topic velocity sets the baseline**, so run the check per query, not sitewide:
+an evergreen question tolerates content that is years old when the competitors
+are equally old, while a fast-moving vertical prices a nine-day page as stale.
+Field report from hardware reviews: a three-season-old deep review stayed the
+freshest result while the products and the competing pages stood still (FIELD,
+2026-06-02).
+
+Tier the patent honestly: it is architecture, not a confirmed live weight, and
+the filing is read as scoring updates on history, links, behavioral signals and
+staleness markers beyond the fingerprint diff. Treat the three counted changes
+as the minimum bar for "substantial", not as the whole model.
+
+**Refreshing with a model erodes what already ranks.** Reported contamination
+pattern: asked to improve a page, a model quietly deletes the specific,
+hyper-relevant sentences it reads as redundant, and the page loses the passages
+that earned its position. Cap the edit instead of commissioning a rewrite —
+tighten title and H1 to the intent, rebuild the introduction, add the missing
+entity or question blocks, refresh internal links, and leave ranking passages
+alone (FIELD, practitioner method, 2026-05-13).
+
+Then measure the refresh as a cohort. One directory reported +10% organic and
++80% AI Overview traffic after updating 500 high-converting pages — while also
+redesigning the landing template and changing how content was served to AI
+crawlers in the same window (FIELD, 2026-05-29). Three simultaneous changes
+attribute to nothing. Ship refreshes as a batch against a held-back control and
+size the result from that (experiments.md).
+
 ## Evidence to capture for D/E
 
 - Per-target-keyword: the top-10 format inventory, your page type, the mismatch
   verdict, and current behavioral metrics.
 - The cannibalization table: query, competing URLs, clicks each, SERP overlap %,
   chosen winner, action.
-- Per key template: the five-feature scorecard, the count of unique data points,
-  and the unanswered-question list from People Also Ask / Reddit / support
-  tickets.
+- Per key template: the five-feature scorecard, the count of unique data points
+  (with the source of each — measured, or borrowed), the module inventory, and
+  the unanswered-question list from People Also Ask / Reddit / support tickets.
+- Per priority query: your last-modified date against the top-10 age
+  distribution, and whether the page sits outside the percentile.
+- For every refresh already shipped: what changed, on what date, what else
+  shipped in the same window, and what was held back as a control.

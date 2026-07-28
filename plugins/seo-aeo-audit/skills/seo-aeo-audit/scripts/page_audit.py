@@ -491,7 +491,7 @@ def to_markdown(results: list[dict]) -> str:
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description="Per-page SEO/AEO mechanical audit (stdlib only).")
     src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--url", help="single URL to fetch and analyse")
+    src.add_argument("--url", help="single URL to fetch and analyze")
     src.add_argument("--url-list", help="file with one URL per line")
     src.add_argument("--file", help="local HTML file (offline mode)")
     ap.add_argument("--base-url", default="", help="URL the local file represents (offline mode)")
