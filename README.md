@@ -51,7 +51,7 @@ npx skills update seo-aeo-audit --global --yes
 Or update the whole skill family in one command:
 
 ```bash
-npx github:ssheleg/sshlg-skills update
+npx sshlg-skills update
 ```
 
 Keep **one channel per agent** — do not leave a plain `~/.claude/skills/` copy
@@ -199,8 +199,8 @@ validator can fail.
 them all with a single command:
 
 ```bash
-npx github:ssheleg/sshlg-skills install
-npx github:ssheleg/sshlg-skills update
+npx sshlg-skills install
+npx sshlg-skills update
 ```
 
 ---
@@ -230,7 +230,7 @@ npx skills add ssheleg/seo-aeo-audit
 
 ```bash
 npx skills update seo-aeo-audit --global --yes
-npx github:ssheleg/sshlg-skills update   # обновить всё семейство
+npx sshlg-skills update                  # обновить всё семейство
 ```
 
 Правило: **один канал на агента** — не держать plain-копию в `~/.claude/skills/`
