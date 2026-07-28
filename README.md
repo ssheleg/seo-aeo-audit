@@ -253,3 +253,7 @@ One command installs all five for every agent you use:
 ```bash
 npx sshlg-skills install
 ```
+
+## License
+
+MIT © 2026 ssheleg.
