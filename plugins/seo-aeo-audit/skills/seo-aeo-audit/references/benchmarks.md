@@ -85,6 +85,44 @@ anything older than ~18 months before it enters a plan.
 | PageRank decay per hop | ~85% |
 | Bounce/dwell thresholds for intent match | bounce <40% and >2 min = match; >70% = mismatch |
 
+## Industry context (practitioner survey, State of SEO 2026)
+
+Survey of SEO professionals (78.5% with 4+ years' experience) — this is what the
+industry *believes and plans*, not effect data. Useful for framing a plan to
+stakeholders, never as evidence that a tactic works.
+
+| Finding | Share |
+|---|---|
+| Original content creation is the most impactful activity | 66.3% |
+| Fear AI-generated answers will reduce website clicks | 77.9% |
+| Cite algorithm volatility / SERP disruption as the biggest challenge | 59.3% |
+| Plan E-E-A-T investment as the strategic response | 49.6% |
+| Plan human-authored content supported by AI (vs 22.4% primarily AI-generated) | 58.5% |
+| Saw positive impact from technical SEO work | 42.3% |
+| Report on qualified leads / sales conversions | 60.4% |
+| Plan to invest in conversion-focused SEO | 33.7% |
+| Struggle with ROI measurement | 28.6% |
+| Content creation is the hardest thing to scale | 42.6% |
+| Cross-functional collaboration rated as impactful today / planned increase | 9.4% / 37.7% |
+| Trained teams on AI integration in the last year | 42.0% |
+| Expect stable or increased SEO investment | 65.0% |
+
+The two gaps worth quoting in a report: conversion measured (60.4%) versus
+conversion invested in (33.7%), and zero-click fear (77.9%) versus E-E-A-T
+investment (49.6%).
+
+## AI-surface coverage and device context
+
+| Metric | Value | Source/date |
+|---|---|---|
+| AI Overview coverage growth by vertical | entertainment +175%, travel +108%, B2B technology +7% | 2025 (SEJ/CallRail) |
+| Exact-match keyword phrasing present in AI Overviews | 5.4% | 2025 |
+| B2B buyers encountering AI Overviews / clicking a cited source | 72% / 90% | Google data via SEJ |
+| AI Overviews linking to Google-owned properties | 43% | BrightEdge |
+| AI search referrals originating on desktop | ~94% | BrightEdge |
+| Share of Google mobile traffic from iPhone | 58% | BrightEdge |
+| ChatGPT traffic originating from desktop apps | ~94%; Google is the only major AI search with a mobile majority (53%) | 2025 |
+
 ## Caveats
 
 - Single-case figures (marked FIELD in growth-plays.md) are directional, not

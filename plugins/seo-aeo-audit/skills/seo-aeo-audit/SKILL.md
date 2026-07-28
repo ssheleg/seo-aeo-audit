@@ -88,11 +88,11 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | A | Access & indexation economics | Can bots fetch, render and afford to index this? Where is crawl budget burned? | [technical-checks.md](references/technical-checks.md) |
 | B | Canonicalization & duplication | Which URL is the one true URL, and does the engine agree? | [technical-checks.md](references/technical-checks.md) |
 | C | Architecture & link equity | Do the money pages get authority, depth and crawl frequency? | [architecture-and-equity.md](references/architecture-and-equity.md) |
-| D | Intent & SERP fit | Does each page match what the SERP rewards, and do pages fight each other? | [intent-and-content.md](references/intent-and-content.md) |
-| E | Content value | Is there a reason to rank this page that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) |
+| D | Intent & SERP fit | Does each page match what the SERP rewards, and do pages fight each other? | [intent-and-content.md](references/intent-and-content.md) + [onpage-checks.md](references/onpage-checks.md) |
+| E | Content value | Is there a reason to rank this page that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
 | F | Extractability & AEO/GEO | Can an answer engine retrieve, read and quote the answer? | [aeo-geo.md](references/aeo-geo.md) |
 | G | Entity & brand consensus | Do the models know what this brand is, consistently, and name it? | [entity-and-brand.md](references/entity-and-brand.md) |
-| H | Experience & satisfaction | Do users complete the task here, or bounce back to the SERP? | [experience-signals.md](references/experience-signals.md) |
+| H | Experience & satisfaction | Do users complete the task here, or bounce back to the SERP? Does it convert, and is the conversion measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
 | I | Risk & threats | Penalties, hijacks, injections, adversaries, legal takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
 | J | Measurement | Will anyone be able to tell whether the plan worked? | [measurement.md](references/measurement.md) |
 
@@ -199,14 +199,18 @@ the nearest thing that does work, and move on.
 
 ## References
 
-- [references/technical-checks.md](references/technical-checks.md) — tracks A/B: crawl, render, index, canonical, robots, sitemaps, migrations.
+- [references/ranking-model.md](references/ranking-model.md) — how ranking actually works: systems vs signals, the three that carry weight, E-E-A-T's real status, query-dependent weighting.
+- [references/technical-checks.md](references/technical-checks.md) — tracks A/B: crawl, render, index, canonical, robots, sitemaps, migrations, plus the mechanical completeness sweep.
 - [references/architecture-and-equity.md](references/architecture-and-equity.md) — track C: internal links, hubs, orphans, depth, read-budget-aware navigation.
 - [references/intent-and-content.md](references/intent-and-content.md) — tracks D/E: intent match, cannibalization, information gain, defensible content types.
+- [references/onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.
 - [references/aeo-geo.md](references/aeo-geo.md) — track F: how answer engines retrieve and cite, per-engine mechanics, the prompt set.
 - [references/entity-and-brand.md](references/entity-and-brand.md) — track G: entity graph, cross-profile consistency, ghost citations, sentiment sources.
 - [references/experience-signals.md](references/experience-signals.md) — track H: CWV/INP/LCP triage, satisfaction signals, CRO × SEO.
+- [references/demand-and-conversion.md](references/demand-and-conversion.md) — track H+: conversion elements, lead capture, call/offline attribution, paid × organic alignment.
 - [references/threats-and-defense.md](references/threats-and-defense.md) — track I: penalties, negative SEO, prompt injection, takedown abuse, hijacks.
 - [references/measurement.md](references/measurement.md) — track J: GSC/Bing/AI reporting surfaces, per-engine metrics, what not to measure.
+- [references/tooling.md](references/tooling.md) — check → tool routing, the evidence ladder, DevTools recipes, where automation stops.
 - [references/growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from, with expected effect and evidence tier.
 - [references/experiments.md](references/experiments.md) — split-test design rules for anything below CONFIRMED.
 - [references/evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.

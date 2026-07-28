@@ -67,7 +67,11 @@ changes, work in this order and keep the evidence rules.
     next core update; half of documented GSC outages coincided with rollouts.
     Source: searchenginejournal.com/google-algorithm-history/ and
     status.search.google.com.
-11. **Measurement**: per engine, per persona; mentions and recommendations, not
+11. **Post-click**: does the money template carry the elements that close
+    (crawlable pricing, comparison naming real alternatives, implementation
+    detail, proof with numbers)? Are calls, offline conversions and AI referrals
+    tracked at all, or is last-click hiding whole channels?
+12. **Measurement**: per engine, per persona; mentions and recommendations, not
     citations alone; cross-check GSC against analytics, logs and an independent
     tracker before calling anything an algorithmic hit.
 

@@ -12,6 +12,12 @@ Sources:
 - Search Engine Journal, *Google Algorithm Updates & Changes: A Complete History*
   — <https://www.searchenginejournal.com/google-algorithm-history/> (fetched
   2026-07-28; feeds `references/algorithm-updates.md`).
+- Search Engine Journal ebooks and reports (2023–2026), distilled in PART E:
+  *The Ultimate Technical SEO Audit Workbook* (2023) + its companion spreadsheet,
+  *SEO In The Age Of AI* (2024), *The Future of AI Search* (2025, CallRail),
+  *State of SEO 2026*, *Google Ranking Factors: The 3 That Really Matter*,
+  *B2B Lead Generation: Create Content That Converts*, *PPC Trends 2026*,
+  *PPC Experts Tips*, *CallRail × SEJ: Better Leads, More Sales* (2025).
 - Search Engine Journal, *SEO Trends 2026* ebook (Nov 2025 / 2026 edition, 34pp;
   Katie Morton ed., contributors Shelley Walsh, Matt Southern, Roger Montti, Dan
   Taylor, Patrick Reinhart, Grzegorz Czapik, Sam Page) — distilled into
@@ -1089,3 +1095,95 @@ discovery doesn't suffer. **Source-order matters more than visual position.**
 
 Older eras (2024 → 2003) remain on the source page; pull them when a decline
 predates this window.
+
+
+## PART E — SEJ ebook corpus (2023–2026)
+
+### E1. Ultimate Technical SEO Audit Workbook (2023) + spreadsheet
+Workflow contract: pick a check → run it with the named tool → mark result →
+export the flagged URLs to a data tab → summarise in a recommendations tab with a
+priority (Critical / High / Medium / Low) and a link to the data. Checklist
+content (69 technical rows, ~26 on-page rows) folded into
+`technical-checks.md` §A7 and `onpage-checks.md`. Prioritisation guidance
+(Conductor): act immediately when pages are inaccessible, the site is penalised
+or traffic drops; then critical pages for business-critical terms; group issues
+into themes (indexability, content, speed, links, schema) so a team can act.
+Tool guide and DevTools walkthrough folded into `tooling.md`; the closing note —
+"the audit is only as good as the auditor", tools flag non-issues, contradictions
+need a deep dive — matches the skill's evidence discipline. Migration: audit both
+before and after. Conversions as the KPI (CallTrackingMetrics): track conversions
+from key pages, not just rankings.
+
+### E2. SEO In The Age Of AI (2024)
+Timeline of the SGE → AI Overviews transition (May 2023 labs → Nov 2023 120+
+countries → May 2024 AI Overviews US rollout → dial-backs after viral failures).
+Durable parts: citation behaviour differs per engine (Google wants quotable
+content above the fold answering the question directly; Perplexity leans
+academic/research citations; Bing engineers for discovery back to the origin
+site; ChatGPT digests and rephrases, citing publisher partners), so being the
+cited source is the new ranking; GEO overlaps quality SEO (keyword coverage
+including conversational phrasing, unified content strategy on E-E-A-T,
+technical hygiene, data-driven iteration); differentiation checklist (unique
+perspective, original research and case studies, rewrite/update, author
+credentials, trust signals, disclose AI use). Dated 2024 — tiered accordingly.
+
+### E3. The Future of AI Search (2025, CallRail-sponsored)
+AI systems favour direct answers, structured data (tables, lists), natural
+language over keyword repetition; exact-match keyword phrasing appears in 5.4% of
+AI Overviews; AI Overview coverage growth by vertical (entertainment +175%,
+travel +108%, B2B tech +7%); 72% of B2B buyers encounter AI Overviews and 90%
+click a cited source; 43% of AI Overviews link to Google-owned properties; ~94%
+of AI search referrals originate on desktop while 58% of Google mobile traffic is
+iPhone; ~94% of ChatGPT traffic from desktop apps, Google the only major AI
+search with mobile-majority referrals (53%). Conversion/attribution material
+(untracked calls at 80–90% of one channel's conversions, missed-call recovery,
+conversation intelligence lifting leads 67% / ROI 11% / sales 23%, 7% close-rate
+lift from coaching on call sentiment) folded into `demand-and-conversion.md`.
+Content that converts: transparent pricing tables AI can extract, implementation
+timelines, technical documentation, ROI calculators with benchmarks; ~70% of the
+buying process precedes contact; 58% of buyers seek expert input.
+
+### E4. State of SEO 2026 (practitioner survey)
+Opinion data, not effect data — tiered as survey context in `benchmarks.md`:
+66.3% say original content creation is the most impactful activity; 77.9% fear AI
+answers cutting clicks; 59.3% cite algorithm volatility as the top challenge;
+49.6% plan E-E-A-T investment; 58.5% plan human-authored content with AI support
+(22.4% primarily AI-generated); 42.3% saw positive impact from technical work;
+60.4% report on qualified leads/sales but only 33.7% plan conversion-focused
+investment; 42.6% find content creation hardest to scale; 9.4% rate
+cross-functional collaboration impactful today versus 37.7% planning to increase
+it; 42% trained teams on AI integration; 65% expect stable or increased
+investment. Tom Capper on "the Great Decoupling" of informational traffic; John
+Shehata on doubling down on the first E (original photos, walkthroughs, credible
+bios, transparent process).
+
+### E5. Google Ranking Factors: The 3 That Really Matter
+Basis of `ranking-model.md`: no official factor list; the "200" number traces to
+a 2009 remark; Yandex's 2023 leak showed ~690 factors; systems vs signals is
+"just language" (Illyes) and documentation moves items between them without
+behaviour changing; weighting is query-dependent (meaning, relevance, quality,
+usability, context). The three: content quality and relevance (helpful content,
+RankBrain, BERT, MUM, query-dependent freshness, entities), page experience
+(HTTPS, speed, mobile, CWV — a tiebreaker between near-equivalent candidates),
+and links (internal and external; deflated in public messaging because they are
+the most manipulated signal, still how pages are discovered and weighted).
+E-E-A-T is a rater specification, not a factor. Personalisation and locality sit
+on top of everything.
+
+### E6. B2B Lead Generation: Create Content That Converts
+A lead is a person who actively opted in — not a visitor. Two intersecting
+models: accessible content that earns subscribers, and gated content that
+converts them. "Add value before you extract value": a gated asset that could
+have been googled turns a warm lead hostile, and the follow-up email turns it
+into a spam report. Ask only for what the next step needs. Folded into
+`demand-and-conversion.md` §H+2.
+
+### E7. PPC Trends 2026 + PPC Experts Tips + CallRail lead report
+Relevant to an SEO audit only where the channels touch: AI-first campaign types
+(Performance Max, Demand Gen, AI-expanded search) change how much organic space a
+query has left; durable measurement now rests on consent-based first-party and
+zero-party data plus offline conversion import, not on last click; landing pages,
+titles/descriptions and high-value brand messaging are where human effort still
+beats generation; paid search-term data is a live intent feed for organic
+planning; buyers do not distinguish paid from organic, so contradictory messaging
+interrupts the journey. Folded into `demand-and-conversion.md` §H+4 and play G21.

@@ -29,6 +29,10 @@ REQUIRED_REFERENCES = (
     "benchmarks.md",
     "deliverable-templates.md",
     "algorithm-updates.md",
+    "ranking-model.md",
+    "onpage-checks.md",
+    "tooling.md",
+    "demand-and-conversion.md",
 )
 errors = []
 

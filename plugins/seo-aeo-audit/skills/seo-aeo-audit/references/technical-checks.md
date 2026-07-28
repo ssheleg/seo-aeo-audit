@@ -205,6 +205,61 @@ drop a product from position 1–3 past 50. Prefer a stable backend-proxied URL
 (`/product/{id}/image`) serving the current file; serving `.webp` bytes at a
 `.png` URL confuses crawlers over time — a plain 301 is safer.
 
+## A7. The mechanical sweep (completeness list)
+
+Run this after the diagnostic work, as a completeness pass. It catches the
+boring failures that quietly cost traffic. Group results by category, record the
+URL list behind every failure, and only promote an item into the findings table
+when it has an observable impact.
+
+**Availability and access**
+- Site and key pages respond (no timeouts); if a tool reports a timeout, verify
+  in a browser before reporting — it may need allow-listing.
+- Property verified in Search Console (all variants).
+- Key templates are indexed (URL Inspection / crawl comparison).
+- `robots.txt` does not block anything that must be crawled or rendered.
+
+**Sitemaps**
+- Submitted in Search Console and referenced from `robots.txt`.
+- Contains only valid, canonical, indexable URLs that return 200.
+- Does not contain URLs you deliberately keep out of the index.
+- Under 50MB / 50,000 URLs per file.
+
+**Crawl optimization**
+- Meta directives set deliberately per template.
+- Pagination / load-more / infinite scroll implemented crawlably (`rel=next|prev`
+  is no longer supported — do not "fix" it back in).
+- Faceted URLs are noindexed or isolated (facets vs filters, see above).
+- JavaScript renders for Googlebot; no console errors blocking content.
+- Important content is not inside iframes or dead embeds.
+- Same content served to all user agents (no cloaking); mobile URLs serve the
+  right content regardless of device.
+- Removed pages return 404/410 rather than soft 200s; valuable removed URLs are
+  redirected to the closest intent.
+- Internal links resolve 200; no redirect chains (keep any chain under a handful
+  of hops); no JS or meta-refresh redirects standing in for server-side 301s.
+
+**Performance**
+- CWV (LCP, INP, CLS, FCP) green on field data, per template and per device.
+- No mixed content; HTTP/2+; compression, caching and minification in place.
+- External requests bounded and non-blocking; no timing-out third parties.
+- Images: correct format, compressed, responsive, lazy-loaded below the fold,
+  never lazy for the LCP element; no broken images.
+
+**Accessibility** (users first; several items also affect crawlability)
+- Content available without JavaScript; ARIA landmarks; skip-to-content link.
+- Mobile-friendly, tap targets spaced, keyboard navigable.
+- Captions and transcripts for audio/video, plus user-accessible controls.
+- No strobing content; auto-scroll can be stopped; zoom works.
+- `lang` declared; form errors describe what is wrong; contrast meets WCAG.
+
+**Risk**
+- No hack indicators; no cloaked content; no keyword stuffing.
+- Backlink profile reviewed against the niche baseline
+  (threats-and-defense.md I6).
+- Structured data used honestly — markup matching visible content, no
+  unsupported claims (technical-checks.md B, onpage-checks.md D1).
+
 ## Evidence to capture for tracks A/B
 
 - `robots.txt` (full text + date), a diffed crawl (respecting vs ignoring it).

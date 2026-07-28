@@ -50,8 +50,13 @@ verification steps, honest horizons and rollbacks.
   what shipped since. Source of truth:
   [SEJ's algorithm history](https://www.searchenginejournal.com/google-algorithm-history/)
   plus the Search Status Dashboard.
-- **Growth plays, tiered.** ~45 plays with trigger, mechanism, observed effect
+- **Growth plays, tiered.** ~50 plays with trigger, mechanism, observed effect
   and evidence tier — not a checklist of best practices.
+- **Complete, not just clever.** Alongside the diagnostic tracks it carries the
+  mechanical sweeps (technical, on-page), the check → tool routing with DevTools
+  recipes, the ranking model (systems vs signals, what E-E-A-T actually is), and
+  the post-click half nobody audits: conversion elements, call/offline
+  attribution and paid × organic alignment.
 - **Defense, not offense.** Adversarial techniques (prompt injection, canonical
   hijacks, fake DMCA waves, behavioral poisoning, fabricated consensus) appear
   only as things to detect and withstand.
@@ -125,7 +130,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            15 contract files (shipped on every channel,
+      ├── references/*.md            19 contract files (shipped on every channel,
       │                                incl. the deliverable skeletons)
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)

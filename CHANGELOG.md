@@ -1,5 +1,44 @@
 # Changelog
 
+## v0.3.0
+
+Completeness pass — every audit track now carries both the judgement work and the
+mechanical sweep, and the post-click half of the funnel is in scope.
+
+- **`ranking-model.md`** (new): systems vs signals vs factors and why the
+  semantic argument is a trap; the "200 ranking factors" myth; the three that
+  carry weight (content and relevance, page experience, links); helpful-content,
+  RankBrain, BERT, MUM and query-dependent freshness; E-E-A-T's real status as a
+  rater specification rather than a dial; personalisation and locality.
+- **`onpage-checks.md`** (new): the per-template on-page sweep — crawler
+  comprehension, duplication and consolidation, on-page internal linking, content
+  substance, metadata as a click and citation surface — with the fail state and
+  the tool for each row.
+- **`tooling.md`** (new): the evidence ladder (logs → Search Console → crawl →
+  field data → third-party indices → manual), check → tool routing, Chrome
+  DevTools recipes (header/soft-404 forensics, JS parity, link and image tables,
+  emulation), and an explicit statement of where automation stops.
+- **`demand-and-conversion.md`** (new): conversion elements per money template,
+  lead capture without value destruction, the attribution gap table (last-click,
+  untracked calls, missed calls, offline conversions, AI referrals, cross-device,
+  zero-click) and paid × organic alignment.
+- **`technical-checks.md`** gains the mechanical completeness sweep: availability,
+  sitemaps, crawl optimization, performance, accessibility and risk — the boring
+  failures that quietly cost traffic.
+- **`benchmarks.md`** gains practitioner-survey context (State of SEO 2026) and
+  AI-surface coverage figures (AI Overview growth by vertical, exact-match
+  phrasing in AIO, B2B click-through to cited sources, device split of AI
+  referrals).
+- **`myths.md`** gains four: the 200-factors list, "E-E-A-T is a ranking factor",
+  "AI wrote it, just publish it", and "last-click tells us what organic did".
+- **`growth-plays.md`** gains G19 (call and offline conversion tracking), G20
+  (decision-accelerator content) and G21 (paid × organic alignment).
+- Sources distilled: SEJ *Ultimate Technical SEO Audit Workbook* + its
+  spreadsheet, *SEO In The Age Of AI*, *The Future of AI Search*, *State of SEO
+  2026*, *Google Ranking Factors: The 3 That Really Matter*, *B2B Lead
+  Generation*, *PPC Trends 2026*, *PPC Experts Tips*, and the CallRail × SEJ
+  lead report.
+
 ## v0.2.0
 
 Update awareness — the skill now carries the Google update history and knows how
