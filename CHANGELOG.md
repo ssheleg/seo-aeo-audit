@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.4.1
+
+Security hardening of the bundled auditor, plus an explicit statement of what the
+skill does at runtime.
+
+- **URL scheme guard.** `page_audit.py` passed operator-supplied URLs straight to
+  `urlopen`, which happily resolves `file://` — so a crafted `--url-list` could
+  have made the auditor read local files. It now refuses anything that is not
+  http/https before issuing a request, and refuses redirects that leave http(s).
+  Three regression tests cover it.
+- The default User-Agent no longer carries a version string that drifts out of
+  sync with the release.
+- **`SECURITY.md`**: what each component does at runtime, the exact network
+  behavior (plain GETs, no cookies or credentials, bounded by timeout and byte
+  cap, writes nothing, no telemetry), the defensive-only stance on adversarial
+  material, and a three-command recipe to verify the whole attack surface
+  yourself. Shipped in the npm tarball and summarized in the README.
+
 ## v0.4.0
 
 Deep extraction pass over the full source corpus, section by section, followed by

@@ -161,6 +161,19 @@ that exists in the source but not in extractable text (so engines cite an
 aggregator for your pricing), and the **answer-engine read budget** — how much of
 a ~5,700-character first read your navigation eats before the answer.
 
+## Security posture
+
+Text plus one stdlib Python script, and nothing else runs. `page_audit.py` makes
+plain http(s) GETs to the URLs you hand it — any other scheme is refused before a
+request is made, redirects off http(s) are refused, no cookies or credentials are
+sent, responses are bounded by `--timeout`/`--max-bytes`, and it writes nothing.
+No dependencies, no install script, no telemetry. Full statement in
+[SECURITY.md](SECURITY.md).
+
+Marketplace scanners rate skills that ship executable code above documentation-only
+skills by default; that rating is about the *category*, not a finding — the audit
+trail above is what it takes to check the claim yourself.
+
 ## Repo layout
 
 ```
@@ -174,6 +187,7 @@ plugins/seo-aeo-audit/
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
+SECURITY.md                          what runs, what it touches, how to verify
 test/validate.py                     structural validator
 test/test_page_audit.py              functional tests (offline fixtures)
 docs/research/                       provenance behind every claim in the references

@@ -130,6 +130,19 @@ md = subprocess.run(
 check("| severity | check | finding | reference |" in md, "markdown output: findings table missing")
 check("answer-engine first read" in md, "markdown output: read-budget line missing")
 
+# non-http(s) schemes must be refused before any fetch happens
+for bad in ("file:///etc/passwd", "ftp://example.com/x", "gopher://example.com"):
+    out = subprocess.run(
+        [sys.executable, SCRIPT, "--url", bad, "--format", "json"],
+        capture_output=True, text=True, check=True,
+    )
+    rec = json.loads(out.stdout)[0]
+    check(
+        "unsupported URL scheme" in rec.get("error", ""),
+        f"scheme guard: {bad} must be refused, got {rec.get('error')!r}",
+    )
+    check("Traceback" not in out.stderr, f"scheme guard: {bad} must not traceback")
+
 # a missing file must fail cleanly, not traceback
 missing = subprocess.run(
     [sys.executable, SCRIPT, "--file", os.path.join(FIXTURES, "nope.html")],
@@ -143,4 +156,4 @@ if failures:
     for f in failures:
         print(" - " + f)
     sys.exit(1)
-print("PASS: page_audit behavior (3 fixtures, markdown + json + error path)")
+print("PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + error path)")

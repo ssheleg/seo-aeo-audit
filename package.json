@@ -1,6 +1,6 @@
 {
   "name": "@ssheleg/seo-aeo-audit",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Evidence-first SEO + AEO/GEO website audit skill: ten audit tracks (access, canonicalization, architecture, intent, content value, extractability, entity consensus, experience, risk, measurement), a triage model and a prioritized change plan. This package is the installer CLI.",
   "bin": {
     "seo-aeo-audit": "bin/seo-aeo-audit.js"
@@ -15,7 +15,8 @@
     "templates",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
   "repository": "github:ssheleg/seo-aeo-audit",
   "homepage": "https://github.com/ssheleg/seo-aeo-audit",

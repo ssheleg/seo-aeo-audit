@@ -14,6 +14,10 @@ Usage:
   (--base-url applies to --file only; with --url the fetched URL is used)
   page_audit.py --url-list urls.txt --format json > audit.json
 
+Network behavior: plain GETs to the URLs you pass, http(s) only, no cookies or
+credentials, redirects off http(s) refused, response capped by --max-bytes. It
+writes nothing and phones nothing home.
+
 Exit codes: 0 = ran (findings may exist), 1 = usage/fetch error.
 """
 from __future__ import annotations
@@ -25,6 +29,7 @@ import re
 import sys
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 # --- constants -------------------------------------------------------------
 
@@ -37,7 +42,7 @@ CANONICAL_HARMLESS_PREFIXES = ("data-",)
 CANONICAL_HARMLESS_ATTRS = {"id", "class"}
 SKIP_TEXT_TAGS = {"script", "style", "template", "noscript", "svg"}
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
-DEFAULT_UA = "seo-aeo-audit/0.1 (+https://github.com/ssheleg/seo-aeo-audit)"
+DEFAULT_UA = "seo-aeo-audit (+https://github.com/ssheleg/seo-aeo-audit)"
 CURRENCY_RE = re.compile(r"[$€£¥₽]|\b(usd|eur|gbp|rub)\b", re.I)
 
 
@@ -431,11 +436,33 @@ def findings(r: dict) -> list[dict]:
 # --- io --------------------------------------------------------------------
 
 
-def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[str, dict]:
-    from urllib.request import Request, urlopen
+ALLOWED_SCHEMES = ("http", "https")
 
+
+class _SchemeGuardRedirectHandler(HTTPRedirectHandler):
+    """Refuse redirects that leave http(s) — e.g. a 302 to file:// or ftp://."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urlparse(newurl).scheme.lower() not in ALLOWED_SCHEMES:
+            raise ValueError(f"refusing redirect to non-http(s) URL: {newurl}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[str, dict]:
+    """Fetch one page over http(s).
+
+    The auditor only ever issues plain GETs to URLs the operator passed in: no
+    credentials, no cookies, no redirects off http(s), and nothing is written
+    anywhere. The scheme guard matters because `urlopen` would otherwise happily
+    read `file:///etc/passwd` from a `--url-list`.
+    """
+    scheme = urlparse(url).scheme.lower()
+    if scheme not in ALLOWED_SCHEMES:
+        raise ValueError(f"unsupported URL scheme {scheme or '(none)'!r}: only http and https are fetched")
+
+    opener = build_opener(_SchemeGuardRedirectHandler)
     req = Request(url, headers={"User-Agent": user_agent, "Accept-Encoding": "gzip"})
-    with urlopen(req, timeout=timeout) as resp:  # noqa: S310 - explicit user-provided URL
+    with opener.open(req, timeout=timeout) as resp:
         raw = resp.read(max_bytes)
         headers = dict(resp.headers.items())
         if (headers.get("Content-Encoding") or "").lower() == "gzip":
