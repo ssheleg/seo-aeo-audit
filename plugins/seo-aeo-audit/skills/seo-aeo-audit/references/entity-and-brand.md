@@ -306,7 +306,7 @@ Three different things — measure them separately:
 - **Mention**: the model names the brand in the answer. This is what the buyer
   actually hears. In field data on 85 mid-market companies, when a brand is named
   it is in the top-3 in 63% of cases.
-- **Citation**: the model links a source. It may link a parts catalogue while
+- **Citation**: the model links a source. It may link a parts catalog while
   recommending Audi — citation-only scorecards mark visible brands invisible.
 - **Recommendation**: the model tells the user to choose you. It rides on
   external signals (referring domains, brand mentions elsewhere in AI answers),

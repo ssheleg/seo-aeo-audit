@@ -723,7 +723,7 @@ These are attacker/competitor tactics an audit should *detect*, not deploy:
   canonicalized to a "master clone", tier-2 spam links to the stacks and PR links
   to the master → clone flips with the original in the SERP; "shadow affiliate"
   variant replaces Buy buttons with affiliate links back to the victim, so the
-  victim fulfils the order and never sees the interception in GSC. Audit: search
+  victim fulfills the order and never sees the interception in GSC. Audit: search
   for duplicated markup/structure of your own pages; monitor cross-domain
   canonical claims.
 - **Slow behavioral poisoning**: a low, steady drip of direct traffic with
@@ -1102,7 +1102,7 @@ predates this window.
 
 ### E1. Ultimate Technical SEO Audit Workbook (2023) + spreadsheet
 Workflow contract: pick a check → run it with the named tool → mark result →
-export the flagged URLs to a data tab → summarise in a recommendations tab with a
+export the flagged URLs to a data tab → summarize in a recommendations tab with a
 priority (Critical / High / Medium / Low) and a link to the data. Checklist
 content (69 technical rows, ~26 on-page rows) folded into
 `technical-checks.md` §A7 and `onpage-checks.md`. Prioritisation guidance
@@ -1118,7 +1118,7 @@ from key pages, not just rankings.
 ### E2. SEO In The Age Of AI (2024)
 Timeline of the SGE → AI Overviews transition (May 2023 labs → Nov 2023 120+
 countries → May 2024 AI Overviews US rollout → dial-backs after viral failures).
-Durable parts: citation behaviour differs per engine (Google wants quotable
+Durable parts: citation behavior differs per engine (Google wants quotable
 content above the fold answering the question directly; Perplexity leans
 academic/research citations; Bing engineers for discovery back to the origin
 site; ChatGPT digests and rephrases, citing publisher partners), so being the
@@ -1162,7 +1162,7 @@ bios, transparent process).
 Basis of `ranking-model.md`: no official factor list; the "200" number traces to
 a 2009 remark; Yandex's 2023 leak showed ~690 factors; systems vs signals is
 "just language" (Illyes) and documentation moves items between them without
-behaviour changing; weighting is query-dependent (meaning, relevance, quality,
+behavior changing; weighting is query-dependent (meaning, relevance, quality,
 usability, context). The three: content quality and relevance (helpful content,
 RankBrain, BERT, MUM, query-dependent freshness, entities), page experience
 (HTTPS, speed, mobile, CWV — a tiebreaker between near-equivalent candidates),

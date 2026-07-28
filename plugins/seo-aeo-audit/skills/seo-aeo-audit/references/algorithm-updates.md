@@ -19,7 +19,7 @@ below is dated so a traffic curve can be aligned against it.
 | Update | Rollout start | Complete | Type | What it means for an audit |
 |---|---|---|---|---|
 | June 2026 spam update | 2026-06-24 | 2026-06-26 | Spam | Fast, global. Spam actions and core-update recovery are **separate systems** — a domain hit here does not recover at the next core update (82% stayed blocked in the March-2026 study). |
-| May 2026 core update | 2026-05-21 | 2026-06-02 | Core | ~12 days. Analyses read it as a re-tuning of *which site type* Google prefers per intent and market, not a quality purge. Sites leaning on self-promotional "best [category]" listicles accelerated downward here. |
+| May 2026 core update | 2026-05-21 | 2026-06-02 | Core | ~12 days. Analysts read it as a re-tuning of *which site type* Google prefers per intent and market, not a quality purge. Sites leaning on self-promotional "best [category]" listicles accelerated downward here. |
 | March 2026 core update | 2026-03-27 | 2026-04-08 | Core | Followed the spam update three days earlier — do not attribute movement to one without separating the windows. |
 | March 2026 spam update | 2026-03-24 | 2026-03-25 | Spam | One-day rollout. SERP analysis over 100k queries: >24% of top-10 pages fell past position 100 (vs ~15% in December); domains older than 15 years took >57% of top-10 slots; sub-year-old domains ~0.7%. |
 | Discover core update | 2026-02-05 | ~2 weeks, then global | Core (Discover) | Discover has its own ranking pass. Feed composition shifted toward social sources; publishers report CTR decline. Audit Discover separately from Search. |

@@ -6,6 +6,14 @@ Release-readiness pass: a full read of every file in the repo looking for claims
 that contradict each other, claims that contradict the code, and half-finished
 work. Everything found is fixed here.
 
+### Fixed
+- **Spelling standard applied to the last holdouts.** `honours`, `catalogue`,
+  `Analyses`, `labelled`, `normalised`, `behaviour`, `fulfils` and `summarise`
+  across the references, the changelog and the research notes; the auditor's
+  `analyse()` renamed to `analyze()` with its call sites and test updated. The
+  repo standard is US spelling — a mixed standard has already cost one broken
+  anchor here.
+
 ### Fixed — contradictions
 
 - **One tier for the ChatGPT-versus-Google-index claim.** `technical-checks.md`
@@ -29,7 +37,7 @@ work. Everything found is fixed here.
   nothing runs unless you run it.
 - **Play list re-ordered.** `G15` sat after `G28` and `P4` after `P5`; the 59
   plays now read in order.
-- **Research notes re-dated.** They were labelled "working notes behind v0.1.0"
+- **Research notes re-dated.** They were labeled "working notes behind v0.1.0"
   while carrying the v0.3.0 and v0.4.0 source passes.
 - Every changelog entry carries its release date.
 
@@ -178,7 +186,7 @@ Consistency pass across the whole flow, plus a rewritten README.
   specific surfaces, never a ranking or citation lever) and the others point at
   it.
 - **Page-experience claim reconciled.** The speed case study in
-  `experience-signals.md` and play `G8` are now labelled as bundling satisfaction
+  `experience-signals.md` and play `G8` are now labeled as bundling satisfaction
   signals, so they no longer read as a contradiction of the tiebreaker framing in
   `ranking-model.md`.
 - **Keywords reconciled.** `ranking-model.md` now says explicitly that the
@@ -192,7 +200,7 @@ Consistency pass across the whole flow, plus a rewritten README.
 - **Flow documented**: the mechanical sweeps are now named in Step 2 of the audit
   procedure, and the read-budget and attribution numbers have a single canonical
   home with cross-references instead of parallel copies.
-- Spelling normalised again after the new files (one standard across references,
+- Spelling normalized again after the new files (one standard across references,
   Cursor rule and scripts).
 - **README rewritten**: what the skill is, install and update commands up front,
   the audit flow, what knowledge ships inside and what each area is worth, data

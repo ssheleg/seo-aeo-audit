@@ -113,7 +113,7 @@ Two structural details from the same account (FIELD, 2026-06-18):
   aggregate at URL, directory and subdomain level (experience-signals.md). Put a
   page in the directory whose reputation you want it to inherit.
 - Index coverage around **42%** is normal even at Amazon/eBay scale. On a large
-  catalogue, full coverage is not the target; coverage of the URLs that earn is.
+  catalog, full coverage is not the target; coverage of the URLs that earn is.
 
 ## Read-budget: navigation now costs you twice
 

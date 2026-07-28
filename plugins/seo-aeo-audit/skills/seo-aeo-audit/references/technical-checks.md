@@ -10,7 +10,7 @@ If any of these is true, stop and fix it before auditing anything else.
 | Check | How | Blocker if |
 |---|---|---|
 | Manual action | GSC → Security & Manual actions | Any action present. It is a **binary multiplier** — nothing else you improve counts until it is lifted. Fix everything, *then* file reconsideration; premature requests get rejected and the improvements shipped meanwhile are not re-evaluated. |
-| Sitewide `noindex` / auth wall | fetch the raw HTML (`view-source`, not the browser DOM) | `noindex` present in the **pre-render source** even if the rendered DOM is clean — Google honours the tag if it appears in *either* version, and GSC shows you neither the pre-render source nor the conflict. |
+| Sitewide `noindex` / auth wall | fetch the raw HTML (`view-source`, not the browser DOM) | `noindex` present in the **pre-render source** even if the rendered DOM is clean — Google honors the tag if it appears in *either* version, and GSC shows you neither the pre-render source nor the conflict. |
 | Robots-blocked site or key section | `robots.txt` + GSC robots tester | Money paths disallowed. |
 | Deindexation event | GSC Pages report + `site:` + log traffic | Sudden index loss → jump to [threats-and-defense.md](threats-and-defense.md) (hijack, DMCA, spam action). |
 | DNS / property coverage | GSC properties list | Only the canonical variant is verified. Verify **all**: domain property, https www, https non-www, http, and key directories. A domain property aggregates protocols and subdomains — it is where a hijacked `www` shows up as an anomalous click spike. |
