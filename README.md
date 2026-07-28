@@ -241,7 +241,7 @@ to do first.
 
 ## Author
 
-Built by ssheleg — [svlab.online](https://svlab.online)
+Built by ssheleg — [sshlg.me](https://sshlg.me)
 
 - X / Twitter — [@fuck_this_year](https://x.com/fuck_this_year)
 - Telegram — [@sshlg](https://t.me/sshlg)
