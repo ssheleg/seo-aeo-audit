@@ -64,6 +64,24 @@ happily read `file:///etc/passwd` if you let it.
 
 CI runs the same two plus negative self-tests that prove the validator can fail.
 
+
+### The family catalogue moves with the release
+
+`sshlg-skills` — the launcher that installs and updates the whole ssheleg family — pins every
+member's version in its own `skills.json`. **A release that does not bump that pin is invisible.**
+`npx sshlg-skills list` keeps reporting the previous version, `update` keeps installing it, and
+anyone comparing their install against `list` is told the wrong number with nothing to reveal it.
+
+So a release is not finished at `npm publish`:
+
+```bash
+# in ssheleg/sshlg-skills
+#   1. bump this member's "version" in skills.json
+#   2. bump the launcher's own version, changelog, tag
+npm publish --access public
+npx --yes sshlg-skills@latest list   # the new number must appear here
+```
+
 ## Where things go
 
 | Change | File |
