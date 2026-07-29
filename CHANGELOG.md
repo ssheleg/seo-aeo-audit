@@ -1,5 +1,53 @@
 # Changelog
 
+## v0.7.0 — 2026-07-29
+
+Bulk market data through one MCP endpoint, and the evidence discipline that has
+to travel with it. Written from a full audit run against a live property, so
+every cost and gotcha below is measured rather than assumed.
+
+### Added
+- `references/prowl-mcp.md` — the Prowl MCP as a rung-5 source: ~408 provider
+  tools (DataForSEO, Majestic, SpyFu, SearchAPI's 60+ engines, Firecrawl) behind
+  one pay-per-call endpoint, for when there is no Ahrefs or Semrush seat. Routed
+  by track, with the tools that carry each one, observed per-call costs, and the
+  operating notes that cost time to learn: `prowl_call_tool` nests its arguments
+  under `params`, failed calls are not billed, responses run 50-70 KB so they
+  belong in a file rather than the context window, and not every endpoint accepts
+  `order_by`. Carries an explicit disclosure that Prowl is a commercial product
+  and nothing in the skill requires it.
+
+### Changed
+- `tooling.md` — Prowl added to rung 5 under the same "estimates, never ground
+  truth" cap as Ahrefs and Semrush, plus a new rule: **two third-party indexes
+  agreeing is a stronger `STUDY`, not a `CONFIRMED`**. Four routing rows added:
+  demand validation against two independent volume datasets, sizing a whole
+  competitive set in one call, anchor profiling **filtered on spam score first**,
+  and finding which pages in a niche actually earn links. The AI-visibility row
+  now names the `dataforseo_ai_llm_mentions*` and per-engine `ai_*_responses`
+  tools for running the AEO prompt set at volume.
+- `SKILL.md` Step 0 — **test access, do not assume it**. A connected MCP server
+  is not a working one: API tiers gate endpoints and tokens carry narrower scopes
+  than the dashboard suggests. Probe the one call each source exists for before
+  planning around it, and record the result — "connected but returns
+  `Insufficient plan`" is a finding the next audit needs.
+- `SKILL.md` Step 1 — an explicit fallback for **no first-party access at all**:
+  what a third-party index can still establish (current rankings, link-profile
+  size against a sized competitive set, whether the target phrases carry demand),
+  capped at `STUDY`, and enough to tell a cold start from a decline — which need
+  opposite plans.
+
+### Why the two-index habit is now a rule
+On the audit this release was written from, four programmatic pages were found to
+target phrases one clickstream panel measured at zero. A second, independent
+index then returned **no keyword record at all** for the same six phrases. That
+turned "these pages have an intent mismatch" into "these pages target queries
+that do not exist" — a different fix entirely, and one no single source would
+have supported. The same run showed the inverse risk: the top anchors by
+referring domains for two competitors were PBN spam at spam scores 60-89, links
+pointed *at* them rather than built by them. Sorting without filtering would have
+produced an anchor strategy copied from someone else's negative-SEO problem.
+
 ## v0.6.1 — 2026-07-28
 
 Open-source hygiene pass — the repo is public, so the files a first-time

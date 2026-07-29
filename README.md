@@ -185,7 +185,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            19 contract files (shipped on every channel)
+      ├── references/*.md            20 contract files (shipped on every channel)
       └── scripts/page_audit.py      stdlib page auditor
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use

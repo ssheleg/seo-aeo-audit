@@ -33,6 +33,7 @@ REQUIRED_REFERENCES = (
     "onpage-checks.md",
     "tooling.md",
     "demand-and-conversion.md",
+    "prowl-mcp.md",
 )
 errors = []
 
