@@ -33,6 +33,7 @@ REQUIRED_REFERENCES = (
     "onpage-checks.md",
     "tooling.md",
     "demand-and-conversion.md",
+    "linkbuilding.md",
 )
 errors = []
 
@@ -182,6 +183,24 @@ for ref in REQUIRED_REFERENCES:
     if not os.path.isfile(os.path.join(ROOT, SKILL_DIR, "references", ref)):
         fail(f"missing reference: {SKILL_DIR}/references/{ref}")
 
+# every bundled script must exist, compile, and stay stdlib-only on python 3.9
+for _script in ("page_audit.py", "gsc_pull.py"):
+    _rel = f"{SKILL_DIR}/scripts/{_script}"
+    _path = os.path.join(ROOT, _rel)
+    if not os.path.isfile(_path):
+        fail(f"missing script: {_rel}")
+        continue
+    with tempfile.TemporaryDirectory() as _tmp:
+        try:
+            py_compile.compile(_path, doraise=True, cfile=os.path.join(_tmp, _script + "c"))
+        except py_compile.PyCompileError as _e:
+            fail(f"{_rel} does not compile: {_e}")
+    _src = open(_path, encoding="utf-8").read()
+    if "from __future__ import annotations" not in _src:
+        fail(f"{_rel}: missing 'from __future__ import annotations' (python 3.9 support)")
+    if re.search(r"\bimport requests\b|\bimport bs4\b|\bfrom google\.", _src):
+        fail(f"{_rel}: third-party import — bundled scripts must stay stdlib-only")
+
 # the bundled auditor must exist and compile
 script_rel = f"{SKILL_DIR}/scripts/page_audit.py"
 script_path = os.path.join(ROOT, script_rel)
@@ -212,6 +231,23 @@ else:
             slug_cache[ref_file] = heading_slugs(ref_path)
         if anchor not in slug_cache[ref_file]:
             fail(f"{script_rel}: finding anchor {ref_file}#{anchor} matches no heading in {ref_file}")
+
+
+# The link-building contract is the one place a deliverable mixes measured and
+# assumed data. If the "blank, not zero" rule ever drops out of the reference,
+# a contractor gets a CSV whose zeros look like measurements.
+_lb = os.path.join(ROOT, SKILL_DIR, "references", "linkbuilding.md")
+if os.path.isfile(_lb):
+    _lbsrc = open(_lb, encoding="utf-8").read()
+    for _needle, _why in (
+        ("product-candidate", "the candidate source label"),
+        ("blank", "the blank-not-zero rule for unmeasured volume"),
+        ("source", "the source column that separates measured from assumed"),
+    ):
+        if _needle not in _lbsrc:
+            fail(f"references/linkbuilding.md: lost {_why} ('{_needle}')")
+    if "priority,target_url,keyword" not in _lbsrc:
+        fail("references/linkbuilding.md: the CSV column contract is missing")
 
 # npm package: bin resolves, files whitelist ships the sources
 if pkg:

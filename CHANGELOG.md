@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.7.0 — 2026-07-29
+
+Link-building extraction — the audit now produces a deliverable someone else
+can execute, not only a diagnosis for the owner.
+
+- **New `references/linkbuilding.md`.** Target selection, the two collection
+  modes (Search Console reachable / not), anchor discipline, the exclusions a
+  brief must name, and the CSV column contract.
+- **New non-negotiable #7: never blend measured with assumed.** A link-building
+  CSV always carries both, so a `source` column separates them and the volume
+  cells of an unmeasured row stay **blank, not zero** — `0` reads as "measured,
+  no demand", blank reads as "nobody has checked". This one matters because the
+  reader spends a budget against it.
+- **New `scripts/gsc_pull.py`** (stdlib only, local ADC auth). Pulls what no
+  crawl can see: the query set with positions, and a cliff detector that only
+  reports a drop which *held* — a decline and a cliff have different causes and
+  only one of them is an algorithmic story. Names which of the three auth gates
+  you hit (scope / API enabled / quota-project header) instead of returning a
+  bare 403.
+- **Position-split discipline.** Rank a brief by the position bands, never by
+  impressions: a large impression count beyond position 30 is usually the
+  biggest number in the account and worth the least.
+- **Validator:** the new reference and script are required; the blank-not-zero
+  rule, the `source` column and the CSV contract are asserted in the reference
+  text; every bundled script is checked for compilation and stdlib-only imports.
+  Four negative tests confirm each rule can fail.
+
 ## v0.6.1 — 2026-07-28
 
 Open-source hygiene pass — the repo is public, so the files a first-time

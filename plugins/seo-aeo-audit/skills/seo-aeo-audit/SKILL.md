@@ -1,6 +1,6 @@
 ---
 name: seo-aeo-audit
-description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, or planning what to change and why - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "GEO audit", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "crawl budget", "cannibalization". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience, risk, measurement), carries a dated Google update timeline, and outputs a findings report plus a prioritized change plan with verification steps.
+description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, planning what to change, or extracting link-building targets and keywords - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга", "link building brief" / "бриф для линкбилдера". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience, risk, measurement) and outputs findings, a change plan, and a link-building brief with keyword CSV.
 ---
 
 # seo-aeo-audit — audit search + answer-engine visibility, then ship a plan
@@ -35,6 +35,11 @@ ends at a verified diagnosis and an executable plan.
    things to **detect and defend against**.
 6. **State what you could not check.** A missing GSC login is a gap in the
    report, not a silent omission.
+7. **Never blend measured with assumed.** When one deliverable carries both —
+   a link-building CSV always does — a `source` column separates them and the
+   volume cells of an unmeasured row stay **blank, not zero**. A `0` reads as
+   "measured, no demand"; blank reads as "nobody has checked". The distinction
+   matters most in work someone else executes on a budget.
 
 ## Step 0 — Detect mode, never ask twice
 
@@ -47,7 +52,11 @@ Inspect first, then act. In order:
    export (Screaming Frog, Sitebulb), server logs, any MCP tools connected
    (Ahrefs, GSC, analytics, a crawler MCP).
 3. Pick the scope with the user only if the answer changes the work: whole site,
-   one template/section, or one question ("why did traffic drop in May").
+   one template/section, one question ("why did traffic drop in May"), or a
+   **link-building extraction** — targets, keywords and anchors for a contractor.
+   That one is a deliverable rather than a diagnosis: read
+   [references/linkbuilding.md](references/linkbuilding.md) when it is the ask.
+   It works with or without Search Console.
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
@@ -121,6 +130,17 @@ DevTools. Use the highest rung you can actually reach for each check, and state
 in the report which rung a finding rests on. A public-only audit with no property
 access is valid work, but its indexation and query findings are inferences, not
 observations, and get tiered accordingly.
+
+`scripts/gsc_pull.py` (stdlib-only, local ADC auth) pulls the half of the picture
+no crawl can see: which queries a property actually surfaces for, at what position,
+and whether a drop is a *cliff that held* rather than a decline. Run it before
+rating any finding by impact — a large impression count at position 50 is not an
+opportunity, and only the position split shows that.
+
+```bash
+python3 scripts/gsc_pull.py --list
+python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
+```
 
 `scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)
 collects the per-page mechanical evidence for tracks A, B, C and F — canonical
@@ -228,4 +248,5 @@ the nearest thing that does work, and move on.
 - [references/myths.md](references/myths.md) — the refuted list, with sources.
 - [references/benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
 - [references/algorithm-updates.md](references/algorithm-updates.md) — dated Google update timeline, platform changes, the update-response protocol, and how to keep the file current.
+- [references/linkbuilding.md](references/linkbuilding.md) — extracting link-building targets, keywords and anchors for any site, with or without Search Console; the measured-vs-candidate rule and the CSV contract.
 - [references/deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.

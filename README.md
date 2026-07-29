@@ -144,7 +144,9 @@ agent, not just Claude Code. This is the substance:
 
 ---
 
-## The bundled auditor
+## The bundled scripts
+
+### `page_audit.py` — per-page evidence
 
 `scripts/page_audit.py` — stdlib only, nothing to install, works offline:
 
@@ -161,9 +163,51 @@ that exists in the source but not in extractable text (so engines cite an
 aggregator for your pricing), and the **answer-engine read budget** — how much of
 a ~5,700-character first read your navigation eats before the answer.
 
+### `gsc_pull.py` — the half a crawl cannot see
+
+Search Console evidence: which queries a property actually surfaces for, at what
+position, and whether a drop is a **cliff that held** rather than a decline.
+Stdlib only; auth is local Application Default Credentials, so no key file goes
+near the repo.
+
+```bash
+python3 scripts/gsc_pull.py --list
+python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
+```
+
+It prints the **position split** first, deliberately. Ranking findings by
+impressions is the mistake this script exists to prevent: a large impression
+count beyond position 30 is usually the biggest number in the account and worth
+the least, while a small cluster inside the top 20 carries most of the clicks.
+
+The cliff detector only reports a drop that **stayed down** — a single bad day
+is a reporting gap, and updates redistribute rather than zero a property for
+weeks. When it fires, it says so plainly and points at what the API cannot
+answer: Manual Actions and Index Coverage are web-UI only, at every scope.
+
+Three auth gates fail independently with unhelpful errors — the OAuth scope, the
+API being enabled on a project the account can *use*, and the quota-project
+header that client libraries add and raw HTTP does not. The script names which
+one you hit.
+
+## Link-building extraction
+
+The audit also produces a deliverable for someone else to execute: a brief plus
+a keyword CSV a contractor can work from. Two modes — with Search Console, every
+row is measured; without it, candidates are derived from what the site sells.
+
+The rule that makes it safe to hand over: **measured and assumed never share a
+column.** A `source` column separates them, and the volume cells of an
+unmeasured row stay **blank, not zero** — `0` reads as "measured, no demand",
+blank reads as "nobody has checked". An auditor who overstates a finding wastes
+their own time; a brief that overstates one spends a client's budget.
+
+See `references/linkbuilding.md` for target selection, the exclusions a brief
+must name, anchor discipline, and the CSV column contract.
+
 ## Security posture
 
-Text plus one stdlib Python script, and nothing else runs. `page_audit.py` makes
+Text plus two stdlib Python scripts, and nothing else runs. `page_audit.py` makes
 plain http(s) GETs to the URLs you hand it — any other scheme is refused before a
 request is made, redirects off http(s) are refused, non-HTML responses are
 refused, no cookies or credentials are sent, responses are bounded by
@@ -185,8 +229,8 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            19 contract files (shipped on every channel)
-      └── scripts/page_audit.py      stdlib page auditor
+      ├── references/*.md            20 contract files (shipped on every channel)
+      └── scripts/                   page_audit.py, gsc_pull.py (stdlib only)
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
 bin/seo-aeo-audit.js                 npx installer (zero dependencies)
