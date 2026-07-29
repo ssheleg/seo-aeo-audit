@@ -14,10 +14,38 @@ If any of these is true, stop and fix it before auditing anything else.
 | Robots-blocked site or key section | `robots.txt` + GSC robots tester | Money paths disallowed. |
 | Deindexation event | GSC Pages report + `site:` + log traffic | Sudden index loss → jump to [threats-and-defense.md](threats-and-defense.md) (hijack, DMCA, spam action). |
 | DNS / property coverage | GSC properties list | Only the canonical variant is verified. Verify **all**: domain property, https www, https non-www, http, and key directories. A domain property aggregates protocols and subdomains — it is where a hijacked `www` shows up as an anomalous click spike. |
+| **Every host variant actually resolves** | `curl -sI` each of `https://www.`, `https://`, `http://www.`, `http://` and read the status **and** the body title | Any variant returns 4xx/5xx instead of 200 or a 301 to the canonical host. A dead `www` silently kills every inbound link, citation and typed visit that used it — and it will not appear in any crawl that starts from the canonical host, so nothing else in this file catches it. |
 
 **Look for spikes, not only drops.** A one-day burst of clicks on one URL for
 off-topic queries is the classic signature of a subdomain takeover; deindexation
 can precede the manual action by 24h+.
+
+**Read the error body, not just the status, when a host variant fails.** A CDN
+returns its own branded error page and the `<title>` names the cause, which is
+usually not what the status code suggests:
+
+- **Cloudflare Error 1000, "DNS points to prohibited IP"** — a proxied record
+  pointing into the CDN's own address space. The classic shape is `www` as a
+  **proxied CNAME to the apex** while the apex A records themselves already hold
+  CDN addresses. The edge refuses to proxy to itself and answers 403 before the
+  origin is ever contacted. Reading only the `403` sends you looking for a WAF
+  rule or a missing redirect; neither exists.
+- Before proposing the fix, check **whether the origin would even accept the
+  host**. Platform-as-a-service origins (DigitalOcean App Platform, Heroku,
+  Vercel and friends) route on the Host header and reject anything not registered
+  as a domain on the app. If only the apex is registered, repointing DNS trades a
+  403 for a 404 and fixes nothing.
+- That leaves three real options, in cost order: a **redirect rule at the edge**
+  (Cloudflare Single Redirects — note the API token permission is
+  `Zone → Single Redirect → Edit`, *not* `Zone → Config → Edit`); a **tiny edge
+  worker** on a `host/*` route, which needs only Workers Routes Edit and is the
+  fallback when the redirect permission is unavailable; or **registering the host
+  on the origin** and redirecting in the application, which is the heaviest
+  because it usually means a deploy and a certificate.
+
+Whichever is used, verify with path and query preserved on a real deep URL, not
+just the root, and re-check a minute later — edge routes take a short while to
+propagate and can return transient 5xx immediately after deployment.
 
 ## A1. Crawl access and rendering
 

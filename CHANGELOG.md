@@ -37,6 +37,23 @@ every cost and gotcha below is measured rather than assumed.
   capped at `STUDY`, and enough to tell a cold start from a decline — which need
   opposite plans.
 
+### Also added — the host-variant blocker
+`technical-checks.md` A0 gains a check that nothing else in the file caught: **every
+host variant must actually resolve**. A dead `www` kills every inbound link,
+citation and typed visit that used it, and it never shows up in a crawl that
+starts from the canonical host.
+
+With it, the diagnostic that goes with it — **read the error body, not just the
+status**. Cloudflare Error 1000 ("DNS points to prohibited IP") presents as a bare
+403: a proxied `www` CNAME pointing at an apex whose own A records already hold
+CDN addresses, so the edge refuses to proxy to itself and never contacts the
+origin. Reading only the status sends you hunting for a WAF rule or a missing
+redirect, and neither exists. The entry also covers the trap that follows —
+PaaS origins route on the Host header, so repointing DNS when only the apex is
+registered trades a 403 for a 404 — and the three real fixes in cost order, with
+the API-token permission that actually gates Cloudflare Single Redirects
+(`Zone → Single Redirect → Edit`, not `Zone → Config → Edit`).
+
 ### Why the two-index habit is now a rule
 On the audit this release was written from, four programmatic pages were found to
 target phrases one clickstream panel measured at zero. A second, independent
