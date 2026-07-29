@@ -50,7 +50,14 @@ Inspect first, then act. In order:
 2. Establish what you can reach: the live site, a staging URL, `robots.txt`,
    `sitemap.xml`, Search Console / Bing Webmaster / analytics access, a crawl
    export (Screaming Frog, Sitebulb), server logs, any MCP tools connected
-   (Ahrefs, GSC, analytics, a crawler MCP).
+   (Ahrefs, GSC, analytics, a crawler MCP, or the
+   [Prowl MCP](references/prowl-mcp.md) for bulk competitive and demand data
+   without a per-vendor seat).
+   **Test the access, do not assume it.** A connected server is not a working
+   one: API tiers gate endpoints, and tokens carry narrower scopes than the
+   dashboard suggests. Probe the one call each source is there for before you
+   plan around it, and record what came back — "connected but returns
+   `Insufficient plan`" is a finding the next audit needs.
 3. Pick the scope with the user only if the answer changes the work: whole site,
    one template/section, one question ("why did traffic drop in May"), or a
    **link-building extraction** — targets, keywords and anchors for a contractor.
@@ -81,6 +88,14 @@ Record, with dates, so every later claim can be measured against it:
 - the **update timeline**: date-align every change in the curve against
   [references/algorithm-updates.md](references/algorithm-updates.md) before
   forming any hypothesis about a cause.
+
+**When there is no first-party access at all**, say so in the three-line status
+and fall back to what a third-party index can establish: what the domain ranks
+for today, how large its link profile is against a sized competitive set, and
+whether its target phrases carry measurable demand
+([references/prowl-mcp.md](references/prowl-mcp.md)). That baseline is capped at
+`STUDY` and cannot answer "why is this page not indexed" — but it is enough to
+tell a cold start from a decline, and those need opposite plans.
 
 If the site claims a traffic drop, **first separate reporting failure from
 ranking failure**: a frozen GSC report pins clicks at one date while a real hit
@@ -242,6 +257,7 @@ the nearest thing that does work, and move on.
 - [references/threats-and-defense.md](references/threats-and-defense.md) — track I: penalties, negative SEO, prompt injection, takedown abuse, hijacks.
 - [references/measurement.md](references/measurement.md) — track J: GSC/Bing/AI reporting surfaces, per-engine metrics, what not to measure.
 - [references/tooling.md](references/tooling.md) — check → tool routing, the evidence ladder, DevTools recipes, where automation stops.
+- [references/prowl-mcp.md](references/prowl-mcp.md) — bulk competitive, demand and AI-surface data through one MCP endpoint: which tools serve which track, the two-index cross-check habit, spam-score filtering on anchors, and the operating gotchas.
 - [references/growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from, with expected effect and evidence tier.
 - [references/experiments.md](references/experiments.md) — split-test design rules for anything below CONFIRMED.
 - [references/evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.

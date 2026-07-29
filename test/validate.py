@@ -34,6 +34,7 @@ REQUIRED_REFERENCES = (
     "tooling.md",
     "demand-and-conversion.md",
     "linkbuilding.md",
+    "prowl-mcp.md",
 )
 errors = []
 

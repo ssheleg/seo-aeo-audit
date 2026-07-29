@@ -16,13 +16,19 @@ auditor decides what is real. Two rules before anything else:
 | 2 | Search Console / Bing Webmaster / Yandex Webmaster | First-party index status, queries, AI-surface reporting, manual actions |
 | 3 | Full crawl (Screaming Frog, Sitebulb, Oncrawl, Botify) | Site-wide structure, directives, duplication, depth, internal links |
 | 4 | Field performance (CrUX, `cruxvis.withgoogle.com`, RUM) | Real-user CWV by form factor, competitor comparison |
-| 5 | Third-party indices (Ahrefs, Semrush) | Links, keyword estimates, competitor context — estimates, never ground truth |
+| 5 | Third-party indices (Ahrefs, Semrush, [Prowl MCP](prowl-mcp.md)) | Links, keyword estimates, competitor context — estimates, never ground truth |
 | 6 | Manual fetch + browser DevTools | The specific page, the specific header, the specific render |
 
 State in the report which rung each finding rests on. The rung caps the evidence
 tier: a log line or a Search Console screenshot can support `CONFIRMED`; a
 third-party index estimate cannot rise above `STUDY`, and an inference from
 public data alone stays `HYPOTHESIS` until something first-party confirms it.
+
+**Two third-party indexes agreeing is a stronger `STUDY`, not a `CONFIRMED`.**
+It is still worth doing: cross-checking a volume figure or a backlink profile
+against a second, independent index is the cheapest way to tell a real signal
+from an artefact of one vendor's panel. [prowl-mcp.md](prowl-mcp.md) covers how
+to run that cross-check when you have no second seat.
 
 ## Check → tool routing
 
@@ -39,7 +45,11 @@ public data alone stays `HYPOTHESIS` until something first-party confirms it.
 | Internal link equity | Crawl (internal PageRank) + backlink data | Overlay revenue to find the mismatch |
 | Backlink risk | GSC Links report + one third-party index | Toxicity scores are not a disavow trigger (threats-and-defense.md I6) |
 | Rank + SERP composition | An independent tracker; SERP screenshots per market/device | Record market, device, date with every observation |
-| AI visibility | The prompt set per engine + inbound logs + Bing AI Performance | Vendor "visibility scores" are directional at best (measurement.md J3) |
+| Does this phrase have demand at all | Two independent volume datasets — never one ([prowl-mcp.md](prowl-mcp.md): `dataforseo_labs_keyword_overview` + `dataforseo_kw_clickstream_bulk_volume`) | A page built on a zero-volume phrase is not an intent mismatch, it is a page with no query to rank for. One panel returning 0 is inconclusive; two indexes disagreeing with each other is itself the finding |
+| Sizing a whole competitive set at once | `dataforseo_bl_bulk_backlinks` — up to 1000 domains in one call | Establishes which competitors are reachable benchmarks and which are five orders of magnitude away, before you copy anyone's playbook |
+| Anchor profile of a competitor | `dataforseo_bl_anchors` + `majestic_get_anchor_text` for the second index | **Filter on `backlinks_spam_score` first.** Top anchors by referring domains are frequently PBN spam pointed *at* the domain; an unfiltered read copies someone else's negative-SEO problem |
+| Which pages in a niche actually earn links | `dataforseo_bl_domain_pages` (`page_summary.referring_domains`) across the competitive set | Tells you whether links in this category accrue to deep content or to a directory homepage — that decides whether the answer is publishing or placement |
+| AI visibility | The prompt set per engine + inbound logs + Bing AI Performance; at scale, `dataforseo_ai_llm_mentions*` and the per-engine `ai_*_responses` tools ([prowl-mcp.md](prowl-mcp.md)) | Vendor "visibility scores" are directional at best (measurement.md J3). Sampled observations of a non-deterministic surface — record engine and date, never present mention share as a rank |
 | Conversion and call outcomes | Analytics + call tracking + CRM | See demand-and-conversion.md |
 | What robots.txt actually breaks in the render | A robots-aware proxy (`VorticonCmdr/robotstxtProxy`, shipped with Docker images for the proxy and a Chromium instance) or DevTools request blocking | Anything disallowed is never downloaded, so it is never rendered; block the same resources locally and read the degraded page yourself |
 | Forgotten hosts and subdomains | A subdomain enumerator (e.g. `guisublist3r`) before a migration, plus `site:` patterns against dev/staging host names | Run it on your own estate first — an indexed staging host is a common self-inflicted finding, not just a competitor-recon trick |
@@ -99,6 +109,12 @@ public data alone stays `HYPOTHESIS` until something first-party confirms it.
 - Screaming Frog v24+ ships an MCP server — an agent can drive crawls and exports
   directly. Use it when available; it replaces the manual export step, not the
   judgement.
+- The [Prowl MCP](prowl-mcp.md) puts ~408 provider tools behind one endpoint on a
+  pay-per-call wallet, which is what makes bulk competitive and demand data
+  reachable without a per-vendor seat. It moves the same rung-5 caveat with it:
+  breadth, not ground truth. Discovery (`prowl_search_tools`, `prowl_tool_info`)
+  is free, failed calls are not billed, and every response carries its own
+  `billing` object — so quote the real spend in the report.
 - `scripts/page_audit.py` in this skill covers per-page directives, canonical
   traps, headings, schema inventory, alt coverage, JS-gated prices and the
   answer-engine read budget. It does not crawl; pair it with a real crawler.
