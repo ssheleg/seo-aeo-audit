@@ -202,25 +202,13 @@ for _script in ("page_audit.py", "gsc_pull.py"):
     if re.search(r"\bimport requests\b|\bimport bs4\b|\bfrom google\.", _src):
         fail(f"{_rel}: third-party import — bundled scripts must stay stdlib-only")
 
-# the bundled auditor must exist and compile
+# Every finding the auditor emits points a reader at a reference section. Those
+# pointers are plain strings, so nothing else catches a heading rename.
+# (Compilation and the stdlib rule are covered for every script by the loop above.)
 script_rel = f"{SKILL_DIR}/scripts/page_audit.py"
 script_path = os.path.join(ROOT, script_rel)
-if not os.path.isfile(script_path):
-    fail(f"missing script: {script_rel}")
-else:
-    with tempfile.TemporaryDirectory() as tmp:
-        try:
-            py_compile.compile(script_path, doraise=True, cfile=os.path.join(tmp, "page_audit.pyc"))
-        except py_compile.PyCompileError as e:
-            fail(f"{script_rel} does not compile: {e}")
+if os.path.isfile(script_path):
     src = open(script_path, encoding="utf-8").read()
-    # system python3 may be 3.9 — postponed annotations are required for `str | None`
-    if "from __future__ import annotations" not in src:
-        fail(f"{script_rel}: missing 'from __future__ import annotations' (python 3.9 support)")
-    if re.search(r"\bimport requests\b|\bimport bs4\b", src):
-        fail(f"{script_rel}: third-party import — the script must stay stdlib-only")
-    # Every finding the auditor emits points a reader at a reference section. Those
-    # pointers are plain strings, so nothing else catches a heading rename.
     ref_dir = os.path.join(ROOT, SKILL_DIR, "references")
     slug_cache: dict = {}
     for ref_file, anchor in sorted(set(re.findall(r"\b([a-z0-9-]+\.md)#([\w-]+)", src))):
@@ -232,6 +220,15 @@ else:
             slug_cache[ref_file] = heading_slugs(ref_path)
         if anchor not in slug_cache[ref_file]:
             fail(f"{script_rel}: finding anchor {ref_file}#{anchor} matches no heading in {ref_file}")
+
+# Nothing but sources may live under plugins/: both installers copy that tree
+# verbatim and `files` ships it to npm, so a stray __pycache__ from running a
+# bundled script locally is installed onto every user's machine. v0.7.0 shipped
+# exactly that.
+for dirpath, dirnames, filenames in os.walk(os.path.join(ROOT, "plugins")):
+    for junk in [d for d in dirnames if d == "__pycache__"] + [f for f in filenames if f.endswith(".pyc")]:
+        fail(f"build artifact inside the shipped tree: "
+             f"{os.path.relpath(os.path.join(dirpath, junk), ROOT)} — delete it before releasing")
 
 
 # The link-building contract is the one place a deliverable mixes measured and

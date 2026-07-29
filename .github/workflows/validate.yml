@@ -86,6 +86,19 @@ jobs:
             echo "OK: validator catches a dangling finding anchor"
           fi
 
+      - name: Negative self-test (bytecode in the shipped tree must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/pyc-copy
+          mkdir -p /tmp/pyc-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/__pycache__
+          touch /tmp/pyc-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/__pycache__/x.cpython-312.pyc
+          if python3 /tmp/pyc-copy/test/validate.py; then
+            echo "ERROR: validator passed with __pycache__ inside plugins/ — v0.7.0 shipped exactly that"
+            exit 1
+          else
+            echo "OK: validator refuses build artifacts in the shipped tree"
+          fi
+
       - name: Negative self-test (template drift must fail)
         run: |
           set -eu

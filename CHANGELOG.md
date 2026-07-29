@@ -54,6 +54,28 @@ registered trades a 403 for a 404 — and the three real fixes in cost order, wi
 the API-token permission that actually gates Cloudflare Single Redirects
 (`Zone → Single Redirect → Edit`, not `Zone → Config → Edit`).
 
+### Fixed — release hygiene
+- **v0.7.0 shipped Python bytecode to users.** The npm tarball carried
+  `plugins/…/scripts/__pycache__/gsc_pull.cpython-314.pyc`, left behind by a local
+  run of the new script: `files` whitelists `plugins` wholesale and both
+  installers copy that tree verbatim, so the artifact reached every install. Two
+  layers now stop it — the validator **fails** when any `__pycache__` or `.pyc`
+  exists under `plugins/` (with a CI negative test), and `files` excludes them so
+  an unclean working tree cannot publish one either. This is the same defect class
+  as the test-suite leak fixed in v0.6.1, arriving through a different script;
+  the guard is placed at the shipped tree rather than at either script.
+- **Two parallel v0.7.0 releases reconciled.** Link-building extraction and the
+  Prowl work were developed from the same parent and both numbered 0.7.0. The
+  published 0.7.0 keeps its entry unchanged; the Prowl and host-variant work is
+  this release.
+- **Validator de-duplicated.** Compilation, the `from __future__` requirement and
+  the stdlib rule ran twice for `page_audit.py` — once in the per-script loop and
+  once in an older block. The older block now carries only what is unique to it,
+  the finding-anchor resolution.
+- **README counts corrected**: nineteen/20 contract files → **21**, and the
+  distilled-line figure re-measured (~4,300). Link building and bulk market data
+  gained rows in the knowledge table.
+
 ### Why the two-index habit is now a rule
 On the audit this release was written from, four programmatic pages were found to
 target phrases one clickstream panel measured at zero. A second, independent

@@ -111,7 +111,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 
 ## What knowledge is packed inside
 
-Nineteen reference contracts ship *inside* the skill, so they travel to every
+Twenty-one reference contracts ship *inside* the skill, so they travel to every
 agent, not just Claude Code. This is the substance:
 
 | Area | What it holds | Why it is worth having |
@@ -127,11 +127,13 @@ agent, not just Claude Code. This is the substance:
 | **Google update timeline** | Every core, spam and Discover update with start and completion dates, the platform changes that retired old tactics, and an update-response protocol | Lets the skill date-align a traffic curve instead of guessing |
 | **Growth plays** | 59 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
 | **Benchmarks** | Dated figures for surface reach, click economics, citation mechanics, read budget, content correlations, operational targets and industry context | Lets the report size an opportunity with numbers instead of adjectives |
+| **Link building** | Target selection, both collection modes (Search Console reachable or not), anchor discipline, the exclusions a brief must name, and the CSV column contract | Turns the audit into a brief a contractor can execute without misreading an assumption as a measurement |
+| **Bulk market data** | The Prowl MCP as a rung-5 source — ~408 provider tools behind one pay-per-call endpoint, routed by track, with measured per-call costs and the operating gotchas | Gives a no-seat audit a second independent index, which is what makes a demand finding hold up |
 | **Method** | Evidence tiers, experiment design, the myth guard, check → tool routing with DevTools recipes, and the deliverable templates | Keeps two different runs of the audit comparable |
 
 ### Data freshness
 
-- **Verified as of 2026-07-28.** Roughly 3,900 lines of distilled, dated
+- **Verified as of 2026-07-29.** Roughly 4,300 lines of distilled, dated
   reference material. The update timeline covers March 2025 → June
   2026; every benchmark carries its own date and sample size.
 - The skill ships a **refresh routine**: re-fetch the update sources, append the
@@ -229,7 +231,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            20 contract files (shipped on every channel)
+      ├── references/*.md            21 contract files (shipped on every channel)
       └── scripts/                   page_audit.py, gsc_pull.py (stdlib only)
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
