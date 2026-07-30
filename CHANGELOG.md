@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.8.1 — 2026-07-30
+
+### Changed
+- **README** — `agent-sync` added to the family list, and the install block now
+  carries all three family commands (`install`, `update`, `list`) plus the
+  restart note. The registry copy of the README only moves on a release, so a
+  doc fix that stays on `main` reaches nobody.
+- `CONTRIBUTING.md` — how to run `test/validate.py` and what a PR is checked
+  against.
+
 ## v0.8.0 — 2026-07-29
 
 Bulk market data through one MCP endpoint, and the evidence discipline that has
