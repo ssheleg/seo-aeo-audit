@@ -1,6 +1,6 @@
 ---
 description: Audit a site for search + answer-engine visibility and produce a prioritized change plan
-argument-hint: [site URL or scope, e.g. "example.com" | "traffic dropped in May" | "/blog only"]
+argument-hint: '[site URL or scope, e.g. "example.com" | "traffic dropped in May" | "/blog only"]'
 ---
 
 Invoke the `seo-aeo-audit` skill for: $ARGUMENTS

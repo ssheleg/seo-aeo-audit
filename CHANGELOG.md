@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.9.2 — 2026-07-30
+
+### Fixed
+- **`argument-hint` in `/seo-aeo-audit` parsed as a two-item list**, split on the
+  comma inside it, because the value was unquoted — in YAML a bare `[...]` is a
+  flow sequence. Quoted with single quotes, since the hint itself contains double
+  quotes. Found by `claude plugin validate --strict`, which now runs in CI
+  against both this plugin and its marketplace manifest.
+- **`homepage` and `repository` sat at the top level of `marketplace.json`,
+  where Claude Code does not recognize them.** They are plugin-entry fields;
+  moved there, so the values reach the plugin listing instead of being ignored.
+
 ## v0.9.1 — 2026-07-30
 
 ### Changed
