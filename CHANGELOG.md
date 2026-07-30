@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.1 — 2026-07-30
+
+### Changed
+- `license: MIT` declared in the `marketplace.json` plugin entry and in the
+  skill's front matter. The `LICENSE` file reaches neither the plugin listing
+  nor an installed skill, so the terms were a repository visit away.
+
 ## v0.9.0 — 2026-07-30
 
 Tracking parameters get their own mechanism, separate from facets and filters.
