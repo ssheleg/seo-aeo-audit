@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.3 — 2026-07-30
+
+### Added
+- **`displayName`** ("SEO + AEO Audit") in both manifests — the picker shows
+  `name` otherwise, and `name` is kebab-case because it namespaces components.
+
 ## v0.9.2 — 2026-07-30
 
 ### Fixed
