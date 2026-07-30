@@ -1,5 +1,61 @@
 # Changelog
 
+## v0.9.0 — 2026-07-30
+
+Tracking parameters get their own mechanism, separate from facets and filters.
+The trigger was a community thread («Site Growth», Jul 2026) about a large Shopify
+store where a `robots.txt` `Disallow` on `utm_*` URLs was proposed as a
+crawl-budget win — and the reference set could be read as endorsing exactly that,
+because tracking parameters sat inside the facet-and-filter guidance with no case
+of their own.
+
+### Added
+- `technical-checks.md` A2 — **"Tracking parameters are not facets"**, the new
+  owner of the mechanism. UTM variants carry no independent demand, so the whole
+  job is consolidation and *crawled, not indexed* is the canonical working rather
+  than a leak. A `Disallow` cuts off a crawl Google performs legitimately, cannot
+  improve consolidation (a blocked URL never sees the canonical) and cannot touch
+  the one real failure case: a parameterized URL that out-signals its canonical
+  is selected despite the tag, and `robots.txt` changes no signal. The lever is
+  one step up, at the source — strip tracking parameters from internal links and
+  from affiliate and partner placements you control, and leave genuine
+  third-party tracking URLs crawlable, because they are real referrals carrying
+  real equity. Split tiers: `CONFIRMED` for the engine-documented mechanics,
+  `FIELD` for the link-accumulation trigger.
+- `technical-checks.md` A2 — hosted-platform duplicates priced before tracking
+  parameters: Shopify serves every product under
+  `/collections/{collection}/products/{handle}` as well as the canonical
+  `/products/{handle}` and appends `?variant=` per variant, so one product in
+  five collections with six variants is dozens of crawlable strings before a
+  single UTM exists (`CONFIRMED`, reproducible in any store's crawl). Plus the
+  scale check that has to precede the finding: the GSC Pages report grouped by
+  reason, where *Alternative page with proper canonical tag* closes the finding
+  and *Duplicate without user-selected canonical* is the finding.
+- `growth-plays.md` — play **L13**: tracking-parameter URLs named as the
+  crawl-budget problem, or already sitting under a `Disallow`.
+- `myths.md` — row: "`Disallow` the UTM URLs to protect crawl budget" (30 refuted
+  tactics now).
+- `tooling.md` — the rung-2 fallback for crawl-waste work with no server logs.
+  Shopify, Wix, Squarespace and comparable SaaS hosts expose no raw access logs,
+  so rung 1 does not exist there and the finding caps at rung 2: GSC Crawl Stats
+  gives host-level shares, totals and status mix, never per-URL truth. Say that
+  in the report instead of presenting a crawler's URL count as crawl data.
+
+### Changed
+- `technical-checks.md` A2 — the index-tiering Tier 3 line now reads "facet
+  parameter combinations" and states explicitly that tracking parameters are
+  **not** in that bucket; crawl-budget killer #3 no longer lists tracking params
+  alongside session IDs without qualification, and routes to the new block before
+  anyone spends a `robots.txt` line on them. This is the internal contradiction
+  the thread exposed.
+- `SKILL.md` — the myth guard's short list grows to fourteen of thirty and now
+  carries the tracking-parameter block, so the correction is reachable without
+  loading `myths.md`.
+- `README.md` — myth count 29 → 30, plays 59 → 60, freshness date and line total
+  refreshed, tracking-parameters case named in the technical row.
+- `docs/research/2026-07-source-distillation.md` — PART F records the source and
+  the per-claim tiers (repo-only; not shipped to agents or npm).
+
 ## v0.8.1 — 2026-07-30
 
 ### Changed

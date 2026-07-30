@@ -110,7 +110,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 - **Tiered claims.** Every recommendation carries `CONFIRMED` · `STUDY` · `FIELD`
   · `HYPOTHESIS`, and a hypothesis never outranks a confirmed blocker.
 - **Diagnose before prescribing.** "Add schema" is not a diagnosis.
-- **A myth guard** that refuses 29 popular tactics with published
+- **A myth guard** that refuses 30 popular tactics with published
   counter-evidence, and offers the working alternative instead.
 - **Defense, not offense.** Adversarial techniques appear only as things to
   detect and withstand, never as recommendations.
@@ -127,7 +127,7 @@ agent, not just Claude Code. This is the substance:
 | Area | What it holds | Why it is worth having |
 |---|---|---|
 | **Ranking model** | Systems vs signals vs "factors", the three that actually carry weight, what E-E-A-T really is, query-dependent weighting, personalization and locality | Stops audits built on documentation reshuffles and listicle "factor" claims |
-| **Technical & indexation** | Crawl access, rendering traps, robots wildcard failures, index tiering, crawl-budget killers, soft-404 collapse patterns, canonical traps, migration protocol, plus a full mechanical sweep | The failure modes that silently cost the most traffic, each with its exact observable |
+| **Technical & indexation** | Crawl access, rendering traps, robots wildcard failures, index tiering, crawl-budget killers, tracking parameters versus facets, soft-404 collapse patterns, canonical traps, migration protocol, plus a full mechanical sweep | The failure modes that silently cost the most traffic, each with its exact observable |
 | **Architecture & equity** | Equity distribution, hub-and-cluster, orphans, depth, anchor practice, and the answer-engine **read budget** | Explains why money pages starve while the homepage hoards authority — and why navigation now costs twice |
 | **Intent & content value** | The four intents and the page types they reward, cannibalization mechanics, information-gain findings, the content types that survive zero-click, and the AI-content patterns that now hurt | Turns "write better content" into a specific, testable page-level decision |
 | **AEO / GEO mechanics** | How an answer is actually built (fan-out → retrieval → grounding → arbitration), what correlates with citation, per-engine retrieval paths, extractability rules, and a ready prompt set for measuring brand presence | The part most audits either skip or fill with vendor folklore |
@@ -135,7 +135,7 @@ agent, not just Claude Code. This is the substance:
 | **Experience & conversion** | CWV triage order, satisfaction-signal mechanics, CRO × SEO evidence, conversion elements per template, lead capture, the attribution gaps (calls, offline, AI referrals, cross-device), paid × organic alignment | The post-click half of the funnel that audits usually leave on the table |
 | **Risk & defense** | Penalty behavior, subdomain and registrar risk, indirect prompt injection, takedown abuse, canonical hijacking, behavioral poisoning, proportionate link-risk handling | Turns "we got hit" into a specific, checkable hypothesis |
 | **Google update timeline** | Every core, spam and Discover update with start and completion dates, the platform changes that retired old tactics, and an update-response protocol | Lets the skill date-align a traffic curve instead of guessing |
-| **Growth plays** | 59 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
+| **Growth plays** | 60 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
 | **Benchmarks** | Dated figures for surface reach, click economics, citation mechanics, read budget, content correlations, operational targets and industry context | Lets the report size an opportunity with numbers instead of adjectives |
 | **Link building** | Target selection, both collection modes (Search Console reachable or not), anchor discipline, the exclusions a brief must name, and the CSV column contract | Turns the audit into a brief a contractor can execute without misreading an assumption as a measurement |
 | **Bulk market data** | The Prowl MCP as a rung-5 source — ~408 provider tools behind one pay-per-call endpoint, routed by track, with measured per-call costs and the operating gotchas | Gives a no-seat audit a second independent index, which is what makes a demand finding hold up |
@@ -143,7 +143,7 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Verified as of 2026-07-29.** Roughly 4,300 lines of distilled, dated
+- **Verified as of 2026-07-30.** Roughly 4,600 lines of distilled, dated
   reference material. The update timeline covers March 2025 → June
   2026; every benchmark carries its own date and sample size.
 - The skill ships a **refresh routine**: re-fetch the update sources, append the

@@ -163,7 +163,8 @@ valuable URLs indexed, −87% zero-traffic pages, +67% organic in 90 days):
   commercial pages.
 - Tier 2 should index: supporting content, clusters, category pages.
 - Tier 3 block: filter combinations, pagination, internal search results,
-  archives, parameter variants.
+  archives, facet parameter combinations — **not** tracking parameters, which are
+  a different case ("Tracking parameters are not facets" below).
 - Tier 4 hard block: admin, cart, thin duplicates.
 
 Score each template on business value, search value and user value; if all three
@@ -177,8 +178,10 @@ new URLs, and drop-out rate, reviewed monthly (`FIELD` — same case).
    of crawlable URLs).
 2. Pagination explosion (`?page=847`) — cap it, consolidate with View-All where
    sensible, canonicalize empty pages.
-3. Duplicate variants: session IDs, tracking params, print versions, HTTP/HTTPS,
-   www/non-www.
+3. Duplicate variants: session IDs, print versions, HTTP/HTTPS, www/non-www —
+   plus tracking parameters, the one entry here that is usually already solved by
+   a canonical. Read "Tracking parameters are not facets" below before spending a
+   `robots.txt` line on them.
 4. Mass low-quality pages that are **crawlable** — audit for: zero organic in 12
    months, no inbound links, <200 words, bounce >80% → 410 / consolidate /
    noindex / improve. Crawlable is the operative word: their content is fetched
@@ -229,6 +232,44 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
   directive).
 - Promote proven parameter combinations to clean paths (`/shoes/?color=red` →
   301 → `/shoes/red/`) only after demand shows up in internal search logs or GSC.
+
+**Tracking parameters are not facets (mechanism owned here).** `utm_*`, `gclid`,
+`fbclid` and their kin create a duplicate URL that carries no independent demand,
+so the entire job is consolidation — the case canonicals were built for. The
+healthy state for a tracking URL is *crawled and not indexed*: that is the tag
+working, not a leak. Three consequences:
+
+- **Do not `Disallow` them.** A block cuts off a crawl Google is performing
+  legitimately and cannot improve consolidation — a blocked URL never sees the
+  canonical either (A1 above, myths.md). It also removes the only fix for the
+  failure case below.
+- **Price the platform's own duplicates first.** On hosted commerce the platform
+  out-produces every tracking parameter: Shopify serves each product under
+  `/collections/{collection}/products/{handle}` as well as the canonical
+  `/products/{handle}`, and appends `?variant=` per variant — one product in five
+  collections with six variants is dozens of crawlable strings before a single UTM
+  exists (`CONFIRMED`, visible in any store's crawl). Size that before touching
+  tracking params.
+- **Confirm the scale before calling it a problem.** Group the GSC Pages report by
+  reason: *Alternative page with proper canonical tag* on tracking URLs means
+  consolidation is working and the finding is closed; *Duplicate without
+  user-selected canonical* means the tag is not being honored, and that is the
+  finding. Logs settle the share of crawl where they exist — tooling.md carries
+  the rung-2 fallback for platforms that expose none.
+
+**The one case that breaks the default.** Canonical is a hint, so Google can
+select a different URL; the trigger practitioners report is signal weight — a
+parameterized URL that accumulates more links and traffic than the clean one can
+be chosen despite the tag (`CONFIRMED` that Google may override the declaration;
+the link-accumulation trigger is `FIELD`). `robots.txt` is useless against it,
+because it changes no signal. The lever sits one step up, at the source:
+
+- Strip tracking parameters from **internal** links and from affiliate or partner
+  placements you control. Those are yours to fix, and internal UTM also breaks
+  session attribution (demand-and-conversion.md).
+- Leave genuine third-party tracking URLs alone: newsletter, social and partner
+  links copied and reshared in the wild are real referrals carrying real equity.
+  Suppressing them costs attribution and link value and returns no crawl budget.
 
 **Out-of-stock trap (mechanism owned here):** applying `noindex`/301/canonical
 while a product is out of stock leaves the crawl scheduler holding a negative

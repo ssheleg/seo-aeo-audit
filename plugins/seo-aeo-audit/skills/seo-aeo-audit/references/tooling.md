@@ -24,6 +24,12 @@ tier: a log line or a Search Console screenshot can support `CONFIRMED`; a
 third-party index estimate cannot rise above `STUDY`, and an inference from
 public data alone stays `HYPOTHESIS` until something first-party confirms it.
 
+**Rung 1 does not exist on most hosted platforms.** Shopify, Wix, Squarespace and
+comparable SaaS hosts expose no raw access logs, so a crawl-budget question there
+starts at rung 2 and the finding is capped there. Say that in the report instead
+of presenting a crawler's URL count as crawl data — a crawler tells you how many
+URLs exist, never which ones Google spent its allowance on.
+
 **Two third-party indexes agreeing is a stronger `STUDY`, not a `CONFIRMED`.**
 It is still worth doing: cross-checking a volume figure or a backlink profile
 against a second, independent index is the cheapest way to tell a real signal
@@ -39,6 +45,7 @@ to run that cross-check when you have no second seat.
 | Robots/directive conflicts | Crawl + raw source fetch | `view-source`, not the browser DOM; check `X-Robots-Tag` headers too |
 | Rendering parity | GSC URL Inspection, Rich Results Test, DevTools request blocking, a robots-aware rendering proxy | Never judge rendering from your own browser |
 | Crawl waste | Server logs by path bucket and status | Percentages of crawl per template beat any crawler estimate |
+| Crawl waste with no server logs (hosted platform) | GSC Crawl Stats (Settings → Crawl stats: by response, file type, purpose, Googlebot type) + Pages report grouped by reason + a full crawl | The rung-2 substitute: host-level shares, totals and status mix, never per-URL truth. Enough to rank the causes, not to claim a percentage per template (technical-checks.md A2) |
 | Site speed — field | CrUX / GSC CWV report / RUM | Lab numbers rank nothing |
 | Site speed — diagnosis | DevTools Performance + Lighthouse | See the recipes below |
 | Structured data | Rich Results Test + `scripts/page_audit.py` | Validation ≠ eligibility (technical-checks.md B) |

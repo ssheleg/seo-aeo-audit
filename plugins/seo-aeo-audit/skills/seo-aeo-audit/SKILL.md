@@ -226,7 +226,7 @@ technically literate non-specialist; expand jargon on first use.
 
 ## Myth guard — do not put these in a plan
 
-The thirteen most-requested of the **29** refuted claims. Each is refuted by 2026
+The fourteen most-requested of the **30** refuted claims. Each is refuted by 2026
 evidence; the full list, with the counter-evidence and the working alternative
 for each, is in [references/myths.md](references/myths.md) — read it before
 answering a tactic question that is not on this short list.
@@ -238,7 +238,8 @@ answering a tactic question that is not on this short list.
   publish date as a freshness signal · "just add more pages" · disavowing on a
   third-party toxicity score · buying an "AI visibility" number as a single KPI ·
   self-promotional "best [category]" listicles as an AEO play · scaled AI content
-  as a growth strategy.
+  as a growth strategy · `Disallow`-ing tracking-parameter URLs to protect crawl
+  budget (technical-checks.md A2 owns the mechanism).
 
 When the user asks for one of these, say plainly what the evidence shows, offer
 the nearest thing that does work, and move on.

@@ -19,6 +19,9 @@ Sources:
   *State of SEO 2026*, *Google Ranking Factors: The 3 That Really Matter*,
   *B2B Lead Generation: Create Content That Converts*, *PPC Trends 2026*,
   *PPC Experts Tips*, *CallRail × SEJ: Better Leads, More Sales* (2025).
+- Telegram channel «Site Growth» — community thread on `robots.txt` versus
+  canonical for tracking parameters (Jul 2026), distilled in PART F into
+  `technical-checks.md` A2, `tooling.md`, `growth-plays.md` (L13) and `myths.md`.
 - Search Engine Journal, *SEO Trends 2026* ebook (Nov 2025 / 2026 edition, 34pp;
   Katie Morton ed., contributors Shelley Walsh, Matt Southern, Roger Montti, Dan
   Taylor, Patrick Reinhart, Grzegorz Czapik, Sam Page) — distilled into
@@ -1188,3 +1191,50 @@ titles/descriptions and high-value brand messaging are where human effort still
 beats generation; paid search-term data is a live intent feed for organic
 planning; buyers do not distinguish paid from organic, so contradictory messaging
 interrupts the journey. Folded into `demand-and-conversion.md` §H+4 and play G21.
+
+## PART F — «Site Growth» thread: tracking parameters vs `robots.txt` (Jul 2026)
+
+One community thread, occasioned by a large Shopify store where a `Disallow` on
+`utm_*` URLs was proposed as a crawl-budget win. Single source, so nothing here
+rises above the tier its own mechanism carries.
+
+### F1. Tracking parameters are the case canonicals were built for
+UTM variants carry no independent demand, so the whole job is consolidation.
+Crawled-and-not-indexed is the tag working, not a leak. A `Disallow` blocks a
+crawl Google performs legitimately and cannot improve consolidation, because a
+blocked URL never sees the canonical either — the same blocked-≠-unindexed
+mechanism already documented in `technical-checks.md` A1 and `myths.md`.
+`CONFIRMED` (engine-documented mechanism). → `technical-checks.md` A2 block
+"Tracking parameters are not facets", `myths.md` row, play `L13`.
+
+### F2. The platform's own duplicates outrank UTM as the crawl hole
+Shopify serves every product under `/collections/{collection}/products/{handle}`
+as well as the canonical `/products/{handle}`, and appends `?variant=` per
+variant. One product across five collections with six variants is dozens of
+crawlable strings before a single tracking parameter exists. `CONFIRMED` —
+platform behavior, reproducible in any store's crawl. → `technical-checks.md` A2.
+
+### F3. The exception the block cannot fix
+Canonical is a hint, so Google may select a different URL. The trigger reported
+here is signal weight: a parameterized URL that accumulates more links and traffic
+than the clean one can win despite the tag, and `robots.txt` is irrelevant because
+it changes no signal. Split tiers: `CONFIRMED` that Google may override a declared
+canonical; `FIELD` for the link-accumulation trigger as the mechanism. →
+`technical-checks.md` A2, `growth-plays.md` L13.
+
+### F4. Intervention altitude — own sources versus the wild
+The controllable surface is internal links and affiliate/partner placements
+carrying UTM; those get cleaned (internal UTM also breaks session attribution,
+`demand-and-conversion.md`). Genuine third-party tracking links — newsletter,
+social, partner URLs copied and reshared — are real referrals carrying real
+equity; suppressing them costs attribution and link value and returns no crawl
+budget. `CONFIRMED` (mechanism). → `technical-checks.md` A2, play `L13`.
+
+### F5. Confirm the scale before treating it as a problem, and the no-logs case
+Size the tracking share in the GSC Pages report grouped by reason (*Alternative
+page with proper canonical tag* = closed; *Duplicate without user-selected
+canonical* = the actual finding) plus server logs. Hosted platforms including
+Shopify expose no raw access logs, so rung 1 of the tooling ladder is unavailable
+and the finding caps at rung 2: GSC Crawl Stats gives host-level shares, totals
+and status mix, never per-URL truth. `CONFIRMED`. → `tooling.md` ladder note and
+the "Crawl waste with no server logs" routing row.
