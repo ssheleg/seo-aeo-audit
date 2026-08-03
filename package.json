@@ -23,7 +23,10 @@
   "repository": "github:ssheleg/seo-aeo-audit",
   "homepage": "https://github.com/ssheleg/seo-aeo-audit",
   "license": "MIT",
-  "author": "ssheleg",
+  "author": {
+    "name": "ssheleg",
+    "url": "https://x.com/sshlg93"
+  },
   "engines": {
     "node": ">=16"
   },
