@@ -23,6 +23,54 @@ jobs:
       - name: Auditor functional tests
         run: python3 test/test_page_audit.py
 
+      - name: URL Inspection functional tests
+        run: python3 test/test_url_inspection.py
+
+      - name: Negative self-test (the wrong canonical field name must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/canon-copy
+          sed -i 's/idx.get("userCanonical")/idx.get("userDeclaredCanonical")/' \
+            /tmp/canon-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py
+          if python3 /tmp/canon-copy/test/test_url_inspection.py; then
+            echo "ERROR: tests passed while reading a field the API does not return"
+            exit 1
+          else
+            echo "OK: tests catch the userDeclaredCanonical mis-spelling"
+          fi
+
+      - name: Negative self-test (dropping the blindness caveat must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/caveat-copy
+          sed -i 's/server-rendered HTML only/redacted/' \
+            /tmp/caveat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py
+          if python3 /tmp/caveat-copy/test/validate.py; then
+            echo "ERROR: validator accepted a page_audit with no blindness caveat"
+            exit 1
+          else
+            echo "OK: validator rejects a silent instrument"
+          fi
+
+      - name: Negative self-test (Cursor doctrine drift must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/cursor-copy
+          # drop one non-negotiable from the Cursor channel only
+          python3 - <<'PY'
+          import re
+          p = "/tmp/cursor-copy/cursor/rules/seo-aeo-audit.mdc"
+          s = open(p, encoding="utf-8").read()
+          s = re.sub(r"\n8\. \*\*Know each instrument's blind spot.*?(?=\n## )", "\n", s, flags=re.S)
+          open(p, "w", encoding="utf-8").write(s)
+          PY
+          if python3 /tmp/cursor-copy/test/validate.py; then
+            echo "ERROR: validator accepted a Cursor rule missing a non-negotiable"
+            exit 1
+          else
+            echo "OK: validator catches doctrine drift between channels"
+          fi
+
       - name: Negative self-test (version drift must fail)
         run: |
           set -eu
