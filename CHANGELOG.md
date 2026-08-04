@@ -69,6 +69,31 @@ sources and are NOT in this release: `userDeclaredCanonical` (the API returns
 and says over 40%), and "~9% of post-recommendation visits arrive as AI referrals"
 (absent from the source). CI fails if the first ever reappears.
 
+## v0.9.3 — 2026-07-30
+
+### Added
+- **`displayName`** ("SEO + AEO Audit") in both manifests — the picker shows
+  `name` otherwise, and `name` is kebab-case because it namespaces components.
+
+## v0.9.2 — 2026-07-30
+
+### Fixed
+- **`argument-hint` in `/seo-aeo-audit` parsed as a two-item list**, split on the
+  comma inside it, because the value was unquoted — in YAML a bare `[...]` is a
+  flow sequence. Quoted with single quotes, since the hint itself contains double
+  quotes. Found by `claude plugin validate --strict`, which now runs in CI
+  against both this plugin and its marketplace manifest.
+- **`homepage` and `repository` sat at the top level of `marketplace.json`,
+  where Claude Code does not recognize them.** They are plugin-entry fields;
+  moved there, so the values reach the plugin listing instead of being ignored.
+
+## v0.9.1 — 2026-07-30
+
+### Changed
+- `license: MIT` declared in the `marketplace.json` plugin entry and in the
+  skill's front matter. The `LICENSE` file reaches neither the plugin listing
+  nor an installed skill, so the terms were a repository visit away.
+
 ## v0.9.0 — 2026-07-30
 
 Tracking parameters get their own mechanism, separate from facets and filters.

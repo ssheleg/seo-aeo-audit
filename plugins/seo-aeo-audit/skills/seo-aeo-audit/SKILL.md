@@ -1,6 +1,7 @@
 ---
 name: seo-aeo-audit
 description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, planning what to change, or extracting link-building targets and keywords - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга", "link building brief" / "бриф для линкбилдера". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience, risk, measurement) and outputs findings, a change plan, and a link-building brief with keyword CSV.
+license: MIT
 ---
 
 # seo-aeo-audit — audit search + answer-engine visibility, then ship a plan
