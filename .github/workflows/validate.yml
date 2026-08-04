@@ -26,6 +26,22 @@ jobs:
       - name: URL Inspection functional tests
         run: python3 test/test_url_inspection.py
 
+      - name: Collector functional tests
+        run: python3 test/test_collectors.py
+
+      - name: Negative self-test (lab score must never stand in for field data)
+        run: |
+          set -eu
+          cp -R . /tmp/psi-copy
+          sed -i 's/"field_data": field or None,/"field_data": field or {"LCP": {"p75": 0, "unit": "ms", "band": "good", "good_at_or_below": 2500, "poor_above": 4000}},/' \
+            /tmp/psi-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/psi_pull.py
+          if python3 /tmp/psi-copy/test/test_collectors.py; then
+            echo "ERROR: tests passed while absent CrUX data was reported as a pass"
+            exit 1
+          else
+            echo "OK: tests reject absence dressed up as a measurement"
+          fi
+
       - name: Negative self-test (the wrong canonical field name must fail)
         run: |
           set -eu
