@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time. This skill is mostly **knowledge** — nineteen
+Thanks for taking the time. This skill is mostly **knowledge** — twenty-one
 reference contracts plus a small standard-library auditor. That shapes what a
 good contribution looks like here.
 
@@ -55,7 +55,7 @@ python3 test/validate.py
 python3 test/test_page_audit.py
 ```
 
-`validate.py` checks structure, the four-way version sync, that all nineteen
+`validate.py` checks structure, the four-way version sync, that all twenty-one
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that the auditor is
 standard-library only. `test_page_audit.py` runs the auditor against offline

@@ -164,9 +164,19 @@ and whether a drop is a *cliff that held* rather than a decline. Run it before
 rating any finding by impact — a large impression count at position 50 is not an
 opportunity, and only the position split shows that.
 
+It also derives what a raw export leaves to hand-work: **cannibalization**
+(several URLs competing for one query, with the incumbent named), a **CTR curve
+built from this property's own rows** — never an industry table, which
+[references/measurement.md](references/measurement.md) J6 forbids — the pages
+falling materially below that curve, and the **branded / non-branded split**.
+The split needs `--brand-terms`; without them it reports itself unavailable
+rather than guessing, because a guess there misstates the one metric track F
+leans on.
+
 ```bash
 python3 scripts/gsc_pull.py --list
 python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
+python3 scripts/gsc_pull.py --site sc-domain:example.com --brand-terms "acme,acme app" --format json
 ```
 
 `scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)
@@ -179,6 +189,40 @@ run it on a representative URL per template, not on a single page.
 python3 scripts/page_audit.py --url https://example.com/pricing --format markdown
 python3 scripts/page_audit.py --file ./saved.html --base-url https://example.com/pricing
 python3 scripts/page_audit.py --url-list urls.txt --format json > audit.json
+```
+
+Its schema inventory reads **server-rendered HTML only**. Where a CMS injects
+JSON-LD with JavaScript, an empty inventory is not evidence of absent markup —
+non-negotiable #8, and the script says so in every report.
+
+`scripts/url_inspection.py` asks the index instead of inferring from a fetch:
+the Google-selected canonical against the declared one, coverage state, robots
+verdict, last crawl. These are the engine's own answers, so a finding built on
+them is `CONFIRMED` rather than an inference — which is what
+[references/evidence-tiers.md](references/evidence-tiers.md) has always required
+and nothing here could previously collect. Quota is **2000/day and 600/minute per
+property**: sample a representative URL per template plus the specific pages a
+finding is about, exactly as with `page_audit.py`.
+
+```bash
+python3 scripts/url_inspection.py --site sc-domain:example.com --urls https://example.com/pricing
+python3 scripts/url_inspection.py --site sc-domain:example.com --urls-file urls.txt --format json
+```
+
+`scripts/sitemap_audit.py` gives the *published* half of the step-1 count above —
+declared URLs clustered into the template families the site actually ships,
+derived from its own URLs. Pair it with the GSC Pages report for
+declared-vs-indexed per template. It does **not** detect orphans: a sitemap holds
+no link graph, so that needs a crawl.
+
+`scripts/psi_pull.py` returns field (CrUX) and lab (Lighthouse) separately and
+refuses to let one stand for the other. The field percentiles are the verdict;
+the lab run explains a failure you have already observed. Where CrUX has no data
+for a URL, that is reported as absent — not as a pass.
+
+```bash
+python3 scripts/sitemap_audit.py --url https://example.com/sitemap.xml
+python3 scripts/psi_pull.py --url https://example.com/pricing --strategy mobile
 ```
 
 ## Step 3 — Triage

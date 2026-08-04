@@ -123,6 +123,131 @@ def monthly_rollup(rows: list[dict]) -> list[dict]:
     return sorted(acc.values(), key=lambda a: a["month"])
 
 
+def ctr_curve(rows: list[dict], min_impressions: float = 30.0) -> dict:
+    """This property's own CTR by position band — the only honest expectation.
+
+    Industry CTR tables are in measurement.md J6's do-not-measure list, and for a
+    reason: CTR is contextual. 5% at position 3 can be over- or under-performing
+    depending on brand strength, SERP features and intent mix, none of which a
+    generic table knows about this site. So the baseline is built here, from the
+    property's own rows, and a page is judged against how *this* site performs at
+    *that* position.
+
+    Returns {band: {"median_ctr": float, "sample": int}}. Bands with too small a
+    sample are omitted rather than reported thinly — a curve fitted to four rows
+    is a guess with a decimal point.
+    """
+    buckets: dict[str, list[float]] = {}
+    for r in rows:
+        if r.get("impressions", 0) < min_impressions:
+            continue
+        p = r.get("position", 0)
+        if p <= 0:
+            continue
+        band = ("1-3" if p <= 3.5 else "4-10" if p <= 10.5 else
+                "11-20" if p <= 20.5 else "21-30" if p <= 30.5 else "31+")
+        buckets.setdefault(band, []).append(r.get("ctr", 0.0))
+    out = {}
+    for band, vals in buckets.items():
+        if len(vals) < 5:
+            continue
+        vals.sort()
+        mid = len(vals) // 2
+        median = vals[mid] if len(vals) % 2 else (vals[mid - 1] + vals[mid]) / 2
+        out[band] = {"median_ctr": round(median, 4), "sample": len(vals)}
+    return out
+
+
+def _band_of(position: float) -> str:
+    return ("1-3" if position <= 3.5 else "4-10" if position <= 10.5 else
+            "11-20" if position <= 20.5 else "21-30" if position <= 30.5 else "31+")
+
+
+def derive_ctr_gaps(rows: list[dict], curve: dict, min_impressions: float = 100.0,
+                    ratio: float = 0.5, limit: int = 50) -> list[dict]:
+    """Rows earning materially less than this property earns at that position.
+
+    `ratio` is a fraction of the site's own median for the band, not an absolute
+    CTR floor: a fixed "flag anything under 3%" threshold is the same mistake as
+    a generic curve, one step further from the data.
+    """
+    out = []
+    for r in rows:
+        if r.get("impressions", 0) < min_impressions:
+            continue
+        band = _band_of(r.get("position", 0))
+        ref = curve.get(band)
+        if not ref or ref["median_ctr"] <= 0:
+            continue  # no baseline for this band on this site — say nothing
+        if r.get("ctr", 0.0) < ref["median_ctr"] * ratio:
+            out.append({
+                "key": r["keys"][0],
+                "position": round(r.get("position", 0), 1),
+                "band": band,
+                "ctr": round(r.get("ctr", 0.0), 4),
+                "site_median_ctr_for_band": ref["median_ctr"],
+                "impressions": r.get("impressions", 0),
+            })
+    return sorted(out, key=lambda x: -x["impressions"])[:limit]
+
+
+def derive_cannibalization(rows: list[dict], min_impressions: float = 100.0,
+                           limit: int = 50) -> list[dict]:
+    """Queries where several URLs of this site compete for the same demand.
+
+    Needs query+page rows. Reports the incumbent (most clicks) and the rivals, so
+    the plan can consolidate toward one URL instead of guessing which page Google
+    prefers — intent-and-content.md owns what to do about it.
+    """
+    by_query: dict[str, list[dict]] = {}
+    for r in rows:
+        if len(r.get("keys", [])) < 2:
+            continue
+        by_query.setdefault(r["keys"][0], []).append(
+            {"page": r["keys"][1], "clicks": r.get("clicks", 0.0),
+             "impressions": r.get("impressions", 0.0),
+             "position": round(r.get("position", 0), 1)})
+    out = []
+    for q, pages in by_query.items():
+        if len(pages) < 2:
+            continue
+        total_impr = sum(p["impressions"] for p in pages)
+        if total_impr < min_impressions:
+            continue
+        pages.sort(key=lambda p: (-p["clicks"], p["position"]))
+        out.append({"query": q, "urls": len(pages), "impressions": total_impr,
+                    "incumbent": pages[0], "rivals": pages[1:4]})
+    return sorted(out, key=lambda x: -x["impressions"])[:limit]
+
+
+def classify_branded(q: str, brand_terms: list[str]) -> bool:
+    ql = q.lower()
+    return any(t and t.lower() in ql for t in brand_terms)
+
+
+def derive_branded_split(rows: list[dict], brand_terms: list[str]) -> dict:
+    """Branded vs non-branded demand. Without brand terms this returns None —
+    guessing which queries are brand queries would invent the number the split
+    exists to measure."""
+    if not brand_terms:
+        return {"available": False,
+                "why": "no --brand-terms given; the split is not inferable from "
+                       "query text alone and a guess here would misstate the "
+                       "single metric the AEO track leans on"}
+    acc = {"branded": {"clicks": 0.0, "impressions": 0.0, "queries": 0},
+           "non_branded": {"clicks": 0.0, "impressions": 0.0, "queries": 0}}
+    for r in rows:
+        k = "branded" if classify_branded(r["keys"][0], brand_terms) else "non_branded"
+        acc[k]["clicks"] += r.get("clicks", 0.0)
+        acc[k]["impressions"] += r.get("impressions", 0.0)
+        acc[k]["queries"] += 1
+    total_clicks = acc["branded"]["clicks"] + acc["non_branded"]["clicks"]
+    acc["available"] = True
+    acc["branded_click_share"] = (round(acc["branded"]["clicks"] / total_clicks, 4)
+                                  if total_clicks else None)
+    return acc
+
+
 def position_split(rows: list[dict]) -> dict:
     """Split a query set by position band. This is the number that decides a brief.
 
@@ -193,6 +318,9 @@ def main() -> int:
     ap.add_argument("--history-days", type=int, default=480,
                     help="long window for the trend and cliff detector (default 480)")
     ap.add_argument("--list", action="store_true", help="list visible properties and exit")
+    ap.add_argument("--brand-terms", default="",
+                    help="comma-separated brand terms; without them the branded/"
+                         "non-branded split is reported as unavailable rather than guessed")
     ap.add_argument("--format", choices=["text", "json"], default="text")
     args = ap.parse_args()
 
@@ -234,6 +362,11 @@ def main() -> int:
         "monthly": monthly_rollup(daily),
         "cliff": find_cliff(daily),
         "position_split": position_split(queries),
+        "ctr_curve": ctr_curve(queries),
+        "ctr_gaps": derive_ctr_gaps(queries, ctr_curve(queries)),
+        "cannibalization": derive_cannibalization(pairs),
+        "branded_split": derive_branded_split(
+            queries, [t.strip() for t in (args.brand_terms or "").split(",") if t.strip()]),
         "top_queries": sorted(queries, key=lambda r: -r["impressions"])[:100],
         "top_pages": sorted(pages, key=lambda r: -r["clicks"])[:100],
         "query_page_pairs": pairs[:5000],

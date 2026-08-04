@@ -111,6 +111,49 @@ out = subprocess.run([sys.executable, os.path.join(SCRIPTS, "sitemap_audit.py"),
 parsed = json.loads(out.stdout)
 check(parsed["analysis"]["urls_total"] == 6, "CLI must parse every declared URL")
 
+# ── gsc_pull derivations: the expectation comes from the property, not a table ──
+# measurement.md J6 puts industry-average CTR curves on the do-not-measure list.
+# A hardcoded "flag anything under 3%" threshold is the same error one step
+# further from the data, so the baseline is built from the site's own rows.
+gsc = load("gsc_pull")
+
+own = [{"keys": [f"q{i}"], "impressions": 500, "ctr": 0.10, "position": 6.0}
+       for i in range(10)]
+own.append({"keys": ["weak"], "impressions": 900, "ctr": 0.02, "position": 6.0})
+own.append({"keys": ["fine"], "impressions": 900, "ctr": 0.09, "position": 6.0})
+curve = gsc.ctr_curve(own)
+check(curve.get("4-10", {}).get("median_ctr") == 0.10,
+      f"the curve must come from this property's rows: {curve}")
+gaps = [g["key"] for g in gsc.derive_ctr_gaps(own, curve)]
+check(gaps == ["weak"], f"only rows far below the site's own median are gaps: {gaps}")
+
+# a band with too few rows must be omitted, not fitted — a curve from four rows
+# is a guess with a decimal point
+check(gsc.ctr_curve([{"keys": ["a"], "impressions": 100, "ctr": 0.5, "position": 1.0}]) == {},
+      "a thin band must produce no baseline rather than a confident one")
+check(gsc.derive_ctr_gaps([{"keys": ["x"], "impressions": 999, "ctr": 0.001, "position": 2.0}],
+                          {}) == [],
+      "with no baseline for the band, nothing may be reported as a gap")
+
+pairs = [{"keys": ["shoes", "/a"], "clicks": 10, "impressions": 200, "position": 4.0},
+         {"keys": ["shoes", "/b"], "clicks": 2, "impressions": 150, "position": 9.0}]
+cn = gsc.derive_cannibalization(pairs)
+check(cn and cn[0]["incumbent"]["page"] == "/a",
+      "the incumbent is the URL with the clicks, and the rivals are named")
+check(gsc.derive_cannibalization(
+    [{"keys": ["solo", "/a"], "clicks": 9, "impressions": 900, "position": 3.0}]) == [],
+    "one URL for a query is not cannibalization")
+
+# the branded split must refuse to guess rather than invent the metric
+nb = gsc.derive_branded_split(own, [])
+check(nb["available"] is False and "guess" in nb["why"],
+      "without brand terms the split must be reported unavailable, not estimated")
+bs = gsc.derive_branded_split([{"keys": ["acme login"], "clicks": 5, "impressions": 10},
+                               {"keys": ["running shoes"], "clicks": 1, "impressions": 40}],
+                              ["acme"])
+check(bs["branded"]["queries"] == 1 and bs["non_branded"]["queries"] == 1,
+      f"brand terms must partition the query set: {bs}")
+
 if failures:
     print("FAIL: collector behavior")
     for f in failures:

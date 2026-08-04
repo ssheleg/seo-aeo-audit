@@ -202,6 +202,37 @@ API being enabled on a project the account can *use*, and the quota-project
 header that client libraries add and raw HTTP does not. The script names which
 one you hit.
 
+`scripts/url_inspection.py` — asks the index rather than inferring from a fetch.
+The Google-selected canonical against the declared one, coverage state, robots
+verdict, last crawl: the engine's own answers, so findings built on them are
+`CONFIRMED` rather than inferences. Quota is 2000/day and 600/minute per
+property, so it samples — a representative URL per template, plus the pages a
+finding is about.
+
+```bash
+python3 scripts/url_inspection.py --site sc-domain:example.com --urls https://example.com/pricing
+```
+
+`scripts/sitemap_audit.py` — the published side of "indexed vs published per
+template": declared URLs clustered into the template families the site actually
+ships, derived from its own URLs rather than a guessed taxonomy. It does not
+detect orphans; a sitemap carries no link graph, and inferring them from path
+shape would be a guess wearing the clothes of a finding.
+
+`scripts/psi_pull.py` — Core Web Vitals with field (CrUX) and lab (Lighthouse)
+reported separately, judged at the 75th percentile. Where CrUX has no data for a
+URL that is reported as absent, never as a pass, and the lab score never stands
+in for it.
+
+```bash
+python3 scripts/sitemap_audit.py --url https://example.com/sitemap.xml
+python3 scripts/psi_pull.py --url https://example.com/pricing
+```
+
+Every one of them states its own blind spot in its output. That is the eighth
+non-negotiable: an instrument that cannot see something must not let its silence
+read as a measurement.
+
 ## Link-building extraction
 
 The audit also produces a deliverable for someone else to execute: a brief plus
