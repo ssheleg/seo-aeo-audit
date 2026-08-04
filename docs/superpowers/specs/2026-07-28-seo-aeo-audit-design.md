@@ -72,6 +72,7 @@ have in common rather than any shared schema.
 | `sitemap_audit.py` | `templates[]` (path-pattern families), `depth_distribution`, `duplicate_paths`, `findings[]` | no link graph exists in a sitemap, so orphans and click depth are **not derivable** and are refused outright |
 | `psi_pull.py` | `field_data` (CrUX p75 per metric with band), `origin_field_data`, `lab_performance_score`, `findings[]` | CrUX is absent for low-traffic URLs — reported as absent, never as zero, and the lab score never substitutes |
 | `gsc_pull.py` | `monthly`, `cliff`, `position_split`, `ctr_curve`, `ctr_gaps`, `cannibalization`, `branded_split` | the CTR expectation is built from this property's own rows; a band with <5 rows yields no baseline, and the branded split is unavailable without `--brand-terms` rather than guessed |
+| `preflight.py` | `probes[]` of `{source, reachable, detail, gate, blocks}` | it reports reachability, not data: an unreachable source is never recorded as absent data, and each failure names which of the independent gates it hit |
 
 Finding severities stay `blocker|high|medium|info` across every script, and every
 `reference` value must resolve to a real heading anchor — `validate.py` checks

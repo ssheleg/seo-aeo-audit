@@ -79,6 +79,17 @@ Inspect first, then act. In order:
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
+`scripts/preflight.py` performs step 2 rather than describing it: it probes every
+source the audit can lean on and reports which of the independent gates a failure
+hit — Search Console, the GSC API and PageSpeed all answer `403` for entirely
+different reasons, and their own messages do not distinguish them. An unreachable
+source comes back as unreachable, never as absent data, because that difference
+decides whether a finding is possible at all.
+
+```bash
+python3 scripts/preflight.py --site sc-domain:example.com --origin https://example.com
+```
+
 Access rules: read-only by default. Never submit forms, request indexing,
 disavow links, or change a live property without explicit approval in this
 session; those are outward-facing actions.

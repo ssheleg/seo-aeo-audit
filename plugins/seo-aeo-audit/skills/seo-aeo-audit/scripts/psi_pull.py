@@ -147,7 +147,10 @@ def render_markdown(rows: list[dict]) -> str:
             lines.append("| metric | p75 | band | good at or below |")
             lines.append("|---|---|---|---|")
             for short, m in r["field_data"].items():
-                lines.append(f"| {short} | {m['p75']}{m['unit']} | **{m['band']}** | "
+                # A missing percentile must not render as "None ms", which reads
+                # like a value. Absence gets a dash and an explicit band.
+                shown = f"{m['p75']}{m['unit']}" if m["p75"] is not None else "—"
+                lines.append(f"| {short} | {shown} | **{m['band']}** | "
                              f"{m['good_at_or_below']}{m['unit']} |")
         else:
             lines.append(f"- ⚠ {r['field_note']}")
@@ -159,7 +162,10 @@ def render_markdown(rows: list[dict]) -> str:
                      f"{r['lab_note']}")
         for f in findings(r):
             lines.append(f"  - **{f['severity']}** [{f['code']}] {f['message']}")
-        lines.append(f"- measured: `{r.get('fetched_at')}`\n")
+        # Every finding carries its date (non-negotiable #1). If the API did not
+        # give one, say so plainly rather than printing the word None.
+        stamp = r.get("fetched_at") or "not reported by the API — stamp it yourself"
+        lines.append(f"- measured: `{stamp}`\n")
     return "\n".join(lines)
 
 

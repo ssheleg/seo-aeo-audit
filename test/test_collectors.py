@@ -75,6 +75,31 @@ check(psi.findings(r2) == [],
 md = psi.render_markdown([r2])
 check("no CrUX field data" in md, "the human report must state the gap, not skip the section")
 
+# a metric block that arrives with no percentile must not render as "None ms",
+# which reads like a measurement
+r3 = psi.parse({"loadingExperience": {"metrics": {"LARGEST_CONTENTFUL_PAINT_MS": {}}},
+                "lighthouseResult": {"categories": {"performance": {"score": 0.5}}}}, "u")
+check(r3["field_data"]["LCP"]["band"] == "unknown", "a metric with no percentile is unknown")
+check(psi.findings(r3) == [], "an unknown band must not become a verdict")
+md3 = psi.render_markdown([r3])
+check("None" not in md3, f"absence must render as a dash, not the word None:\n{md3}")
+
+# sitemap: the per-file cap must be returned so the caller can report it —
+# a silent truncation reads as "this is the whole site"
+_pages, _maps, _dropped = sm.parse_sitemap(
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    + "".join(f"<url><loc>https://e.com/{i}/</loc></url>" for i in range(50010))
+    + "</urlset>")
+check(_dropped == 10, f"the cap must report what it dropped, got {_dropped}")
+check(len(_pages) == 50000, "the cap itself must still hold")
+
+# a sitemap index must yield maps, not pages
+_p, _m, _d = sm.parse_sitemap(
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    '<sitemap><loc>https://e.com/s1.xml</loc></sitemap></sitemapindex>')
+check(_p == [] and _m == ["https://e.com/s1.xml"],
+      f"an index must be read as nested sitemaps, not pages: {_p} {_m}")
+
 # ── sitemap_audit: template families come from the site's own URLs ───────────
 urls = ["https://e.com/blog/first-post/", "https://e.com/blog/second-post/",
         "https://e.com/product/123/", "https://e.com/product/456/",
@@ -153,6 +178,28 @@ bs = gsc.derive_branded_split([{"keys": ["acme login"], "clicks": 5, "impression
                               ["acme"])
 check(bs["branded"]["queries"] == 1 and bs["non_branded"]["queries"] == 1,
       f"brand terms must partition the query set: {bs}")
+
+# ── preflight: an unreachable source is a gap in the report, not silence ─────
+pf = load("preflight")
+
+rows = [pf.probe("python", True, "3.13.0"),
+        pf.probe("Search Console", False, "HTTP 403: insufficient scope", "scope",
+                 "query data, URL Inspection")]
+out = pf.render(rows)
+check("1 of 2 sources reachable" in out, "the header must count what was actually reached")
+check("gate: **scope**" in out,
+      "a failure must name WHICH gate it hit — all three say 403 on their own")
+check("blocks query data" in out, "a failure must say what it costs the audit")
+check("non-negotiable #6" in out, "the report must point at the rule it is serving")
+
+clean = pf.render([pf.probe("python", True, "3.13.0")])
+check("What this costs" not in clean, "a clean preflight must not invent a problems section")
+check("evidence ladder" in clean, "a clean preflight must say findings can climb the ladder")
+
+# the three GSC gates are told apart from the body, because their status codes
+# are identical and their messages are not
+check(pf.check_gsc(None, None, None)[0]["gate"] == "login",
+      "no token must be reported as a login gate, not a permission one")
 
 if failures:
     print("FAIL: collector behavior")

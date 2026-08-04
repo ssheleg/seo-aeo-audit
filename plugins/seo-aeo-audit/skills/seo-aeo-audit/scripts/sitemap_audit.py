@@ -60,27 +60,34 @@ def fetch(url: str) -> str:
     return raw.decode("utf-8", "replace")
 
 
-def parse_sitemap(text: str) -> tuple[list[str], list[str]]:
-    """Returns (page urls, nested sitemap urls). Namespace-agnostic."""
+def parse_sitemap(text: str) -> tuple[list[str], list[str], int]:
+    """Returns (page urls, nested sitemap urls, urls dropped by the cap).
+
+    Namespace-agnostic. Walks the CONTAINERS (`<url>`, `<sitemap>`) and reads
+    each one's own `<loc>` child, which is O(n). Locating each `<loc>`'s parent
+    by rescanning the tree instead is O(n^2), and at the 50,000 URLs the sitemap
+    spec permits that took minutes per file — a tool advertising a size it
+    cannot serve.
+    """
     pages: list[str] = []
     maps: list[str] = []
     try:
         root = ET.fromstring(text)
     except ET.ParseError as e:
         raise ValueError(f"not parseable XML: {e}") from e
-    for el in root.iter():
-        tag = el.tag.rsplit("}", 1)[-1]
-        if tag != "loc" or not (el.text or "").strip():
+    for container in root.iter():
+        kind = container.tag.rsplit("}", 1)[-1]
+        if kind not in ("url", "sitemap"):
             continue
-        loc = el.text.strip()
-        parent = tag  # default
-        # <sitemap><loc> means another map; <url><loc> means a page
-        for cand in root.iter():
-            if el in list(cand):
-                parent = cand.tag.rsplit("}", 1)[-1]
-                break
-        (maps if parent == "sitemap" else pages).append(loc)
-    return pages[:MAX_URLS_PER_MAP], maps
+        for child in container:
+            if child.tag.rsplit("}", 1)[-1] != "loc":
+                continue
+            loc = (child.text or "").strip()
+            if loc:
+                (maps if kind == "sitemap" else pages).append(loc)
+            break
+    dropped = max(0, len(pages) - MAX_URLS_PER_MAP)
+    return pages[:MAX_URLS_PER_MAP], maps, dropped
 
 
 def path_pattern(url: str) -> str:
@@ -193,13 +200,15 @@ def main(argv: list[str]) -> int:
     sources: list[str] = []
     urls: list[str] = []
     skipped = 0
+    truncated = 0
     try:
         if args.file:
             with open(args.file, encoding="utf-8") as fh:
                 text = fh.read()
             sources.append(args.file)
-            pages, maps = parse_sitemap(text)
+            pages, maps, capped = parse_sitemap(text)
             urls += pages
+            truncated += capped
             if maps:
                 print(f"note: {len(maps)} nested sitemap(s) referenced; pass --url to "
                       f"follow them", file=sys.stderr)
@@ -215,8 +224,9 @@ def main(argv: list[str]) -> int:
                     continue
                 seen.add(m)
                 sources.append(m)
-                pages, maps = parse_sitemap(fetch(m))
+                pages, maps, capped = parse_sitemap(fetch(m))
                 urls += pages
+                truncated += capped
                 queue += [x for x in maps if x not in seen]
     except (urllib.error.URLError, OSError, ValueError) as e:
         print(f"could not read sitemap: {e}", file=sys.stderr)
@@ -225,6 +235,10 @@ def main(argv: list[str]) -> int:
     if skipped:
         print(f"note: {skipped} nested sitemap(s) beyond --max-maps={args.max_maps} "
               f"were not read", file=sys.stderr)
+    if truncated:
+        # A silent cap reads as "this is the whole site" and it is not.
+        print(f"note: {truncated} URL(s) beyond the {MAX_URLS_PER_MAP}-per-file "
+              f"sitemap limit were not read", file=sys.stderr)
     if not urls:
         print("sitemap parsed but declared no page URLs", file=sys.stderr)
         return 1
@@ -232,6 +246,7 @@ def main(argv: list[str]) -> int:
     a = analyze(urls)
     a["sitemaps_read"] = len(sources)
     a["sitemaps_skipped"] = skipped
+    a["urls_truncated"] = truncated
     f = findings(a)
     if args.format == "json":
         print(json.dumps({"sources": sources, "analysis": a, "findings": f}, indent=2))
