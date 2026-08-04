@@ -93,6 +93,21 @@ propagate and can return transient 5xx immediately after deployment.
   URL-like strings wherever it finds them (source HTML, rendered DOM, JSON
   blocks) and queues them. The only reliable controls are `robots.txt` (for
   compliant crawlers) and firewall/WAF rules.
+- **Geo-redirects and content negotiation hide whole locales.** A site that
+  redirects by IP, or serves a different language on `Accept-Language`, shows
+  Googlebot one version and only one: Google crawls predominantly from US IPs
+  with a US-English `Accept-Language`, so every other locale can be
+  simultaneously live for users and **absent from the index**. It is invisible
+  from inside the company, because staff browse from the country whose version
+  works. Check: request a localized URL with a non-US egress and with varied
+  `Accept-Language`, compare status codes and final URLs against a plain
+  request; then confirm against the index rather than the response — the
+  Google-selected canonical and coverage state per locale come from
+  `scripts/url_inspection.py`, and a locale that resolves to another country's
+  URL there is the finding. The fix is the standard one: let every locale live
+  at its own crawlable URL, link them with reciprocal `hreflang`, and offer a
+  *suggestion* banner instead of a redirect. Bing also treats hreflang
+  differently from Google, so verify both when a property matters in each.
 - **AI crawlers are separate user agents.** `OAI-SearchBot` (ChatGPT retrieval)
   is not `GPTBot` (training); unblocking one does nothing for the other. A
   robots-blocked page returns `viewing lines [0-0] of 0` to ChatGPT Deep Research

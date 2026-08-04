@@ -92,6 +92,29 @@ evidence that traffic will or will not move.
 | Google index dependence | sites that lost 85% of Google traffic lost ~75% of ChatGPT traffic; blocking Googlebot cuts ChatGPT proportionally. A single Bing-only counter-case points the other way, so the *dependency* claim is HYPOTHESIS — both observations and the reading rule are in aeo-geo.md F4 | field observation, 2026 |
 | Mention volume vs commercial visibility | a viral scandal produced +2800% ChatGPT brand mentions in <60 days while the brand was dropped from transactional/recommendation prompts | single case, Jul 2026 |
 
+## What a recommendation is worth, and where the traffic shows up
+
+Being *recommended* is a different outcome from being *cited* (aeo-geo.md F7,
+measurement.md J3b). Similarweb tracked users who asked ChatGPT an
+industry-relevant question, got a brand recommendation, and then visited that
+brand or a competitor within seven days (US desktop; finance, travel, beauty).
+
+| Metric | AI-influenced | Comparison |
+|---|---|---|
+| Likelihood of visiting the recommended brand | **~2.5×** vs a competitor left off the list | — |
+| Visits arriving via **search** | **55.9%** | 40.4% of non-AI-influenced visits |
+| Visits arriving via **direct** | 19.9% | 38.8% of non-AI-influenced visits |
+| Pages per visit | 12 | 6.5 |
+| Time on site | 11.8 min | 5.6 min |
+
+**Read the first two rows together.** The majority of AI-influenced visits arrive
+as *search* traffic, so the AI touch is largely invisible to last-click
+attribution — which is the measured version of the blind spot
+demand-and-conversion.md describes. What this does **not** license is a single
+"X% of visits are AI referrals" figure: the study reports channel composition,
+not a referrer share, and the residual is bounded by the two rows above rather
+than measured directly.
+
 ## Read budget (ChatGPT Deep Research)
 
 The first-read window, the link-count bands and the re-read rate live with the
@@ -217,6 +240,55 @@ out of the report.
 | Does serving Markdown to AI crawlers help? | 0% AI-crawler visits to `.md` mirrors vs 4.6% to the HTML (100M-site experiment) | One subfolder test reported +34% AIO visibility and +4.5% clicks | Contested — experiment only, per myths.md |
 | Is zero-click still rising? | 68% and up from 60.45% in 2024 (US desktop+mobile panel, Jan–Apr 2026) | A desktop cut reported 2026-05 has zero-click falling from March 2026 with organic clicks rising | Contested — different device segments and windows. The **level** is quotable with its segment; the **direction** is HYPOTHESIS. See "Click economics" |
 | Does ChatGPT depend on Google's index? | An 85% Google traffic loss came with a ~75% ChatGPT loss, and blocking Googlebot cuts ChatGPT referrals proportionally (FIELD, 2026) | A YMYL site past Google page 7 collected 90k+ ChatGPT citations from Bing alone, 88k URLs indexed in Bing vs 45k in Google (FIELD, 2026) | Contested, both single cases → HYPOTHESIS. Full reading and the safe residue in aeo-geo.md F4. Neither figure licenses "blocking Googlebot is AI-neutral" |
+
+## Academic benchmarks — the only controlled numbers here
+
+Everything else on this page is vendor or field data. These two are peer-reviewed,
+and the second one bounds the first.
+
+| Finding | Figure | Source |
+|---|---|---|
+| Content changes that raise visibility in generative answers | Adding **citations, quotations from relevant sources and statistics** raised visibility by **over 40%** across queries; keyword-style manipulation scored at or below baseline | Aggarwal, Murahari, Rajpurohit, Kalyan, Narasimhan, Deshpande — *GEO: Generative Engine Optimization*, KDD '24 (arXiv:2311.09735), GEO-bench: **10,000 queries**, 9 methods |
+| The same methods on a real engine | **up to 37%** on Perplexity.ai | same paper |
+| The metric all of the above is measured in | **Position-Adjusted Word Count (PAWC)** — a source's words in the answer, weighted by where they appear. Not clicks, not citation counts as an engine reports them | same paper |
+| **What happens when everyone does it** | Across 9 C-SEO methods, 6 domains and **1,921 queries**, the methods are **mostly ineffective under competition**; in the retail domain a traditional-SEO baseline was about **7.6× more effective** than the best C-SEO method | Puerto, Gubri, Green, Oh, Yun — *C-SEO Bench*, NeurIPS 2025 Datasets & Benchmarks |
+
+**How to quote these together.** The KDD figures come from optimizing one source
+against a fixed set; C-SEO Bench measures what survives when rivals optimize too,
+which is the situation every client is actually in. Quoting the first without the
+second sells a lift that the follow-up study could not reproduce competitively.
+Treat the direction (evidence-dense, quotable, well-sourced content) as `STUDY`
+and the **magnitude** as unproven in a contested market. Secondary write-ups
+attribute the peak to a single named method (some say Quotation Addition, some
+Statistics Addition); the paper's own framing groups the three, so do not quote a
+per-method percentage.
+
+## Machine-readable files — adoption and consumption
+
+| Metric | Figure | Note |
+|---|---|---|
+| `llms.txt` files receiving **zero AI requests** | **97%** | The load-bearing number: adoption and consumption are different questions, and this one answers the second |
+| Adoption, top 1,000 sites | 8.7% (15.8% of the 549 that serve a page at the root) | Jun 2026 |
+| Adoption, top 10,000 sites | ~5.6% | Jun 2026 |
+| Adoption, Fortune 500 | 7.4% (37 of 500) | Mar 2026 |
+| Growth | ~36,120 sites by May 2026, **8.8×** in twelve months | Rising fast and still not read |
+
+Always state the denominator: as a share of the whole web the same count is
+~0.01%, and quoting that against a top-1,000 figure compares two different things.
+
+## Title and description rewriting
+
+Google routinely replaces what you wrote, which caps what any title/description
+work can be promised to deliver.
+
+| Element | Rewrite rate | Source |
+|---|---|---|
+| Title tags | **61%** (2023, Zyppy) → **76%** (Q1 2025); when rewritten, ~2.71 words removed and ~35% of the original retained | Two studies, different years — the direction is up |
+| Meta descriptions | **71%** mobile / **68%** desktop (Portent); ~63% across 192,000 pages (Ahrefs, 2022) | Figures differ by method and sample; quote one with its source |
+
+Use this to set expectations, not to skip the work: the tag is still the input
+Google rewrites *from*, and onpage-checks.md keeps the observable failure modes
+(truncated mid-word, duplicated across templates) rather than a character count.
 
 ## Caveats
 

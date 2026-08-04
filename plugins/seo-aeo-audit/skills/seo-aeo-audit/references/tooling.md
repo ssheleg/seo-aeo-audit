@@ -48,6 +48,9 @@ to run that cross-check when you have no second seat.
 | Crawl waste with no server logs (hosted platform) | GSC Crawl Stats (Settings → Crawl stats: by response, file type, purpose, Googlebot type) + Pages report grouped by reason + a full crawl | The rung-2 substitute: host-level shares, totals and status mix, never per-URL truth. Enough to rank the causes, not to claim a percentage per template (technical-checks.md A2) |
 | Site speed — field | CrUX / GSC CWV report / RUM | Lab numbers rank nothing |
 | Site speed — diagnosis | DevTools Performance + Lighthouse | See the recipes below |
+| Field + lab in one call, scriptable | PageSpeed Insights API (`pagespeedonline/v5/runPagespeed`, key optional) via `scripts/psi_pull.py` | Returns CrUX field data (`loadingExperience`, `originLoadingExperience`) **and** the Lighthouse lab run (`lighthouseResult`). Report the field percentiles; the lab score explains them, it does not replace them |
+| Lighthouse categories other than performance | `chrome-devtools` MCP `lighthouse_audit` | Covers SEO, accessibility, best practices **and agentic browsing** — the last is the surface where `llms.txt` is actually checked (myths.md). It **excludes performance**: for that, start a trace instead, or use the PSI row above |
+| Independent rank verification, and what the SERP actually contains | `searchapi:google_rank_tracking` — up to 100 results per query with position, title, URL and snippet, localized via `gl` / `location` | J2 makes an independent tracker a precondition of any decline diagnosis, and the client's own dashboard is not independent. Also the honest input for track D: SERP **composition** is an observation; an index's position estimate is not |
 | Structured data | Rich Results Test + `scripts/page_audit.py` | Validation ≠ eligibility (technical-checks.md B) |
 | Internal link equity | Crawl (internal PageRank) + backlink data | Overlay revenue to find the mismatch |
 | Backlink risk | GSC Links report + one third-party index | Toxicity scores are not a disavow trigger (threats-and-defense.md I6) |
@@ -116,7 +119,7 @@ to run that cross-check when you have no second seat.
 - Screaming Frog v24+ ships an MCP server — an agent can drive crawls and exports
   directly. Use it when available; it replaces the manual export step, not the
   judgement.
-- The [Prowl MCP](prowl-mcp.md) puts ~408 provider tools behind one endpoint on a
+- The [Prowl MCP](prowl-mcp.md) puts ~448 provider tools behind one endpoint on a
   pay-per-call wallet, which is what makes bulk competitive and demand data
   reachable without a per-vendor seat. It moves the same rung-5 caveat with it:
   breadth, not ground truth. Discovery (`prowl_search_tools`, `prowl_tool_info`)

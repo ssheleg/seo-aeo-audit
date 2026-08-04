@@ -223,13 +223,25 @@ Alice AI), fresh session, no memory, and note whether web search was on:
 8. "is [brand] any good / trustworthy?" 9. "[brand] pricing"
 10. "[problem statement] — what should I use?"
 
-Score every answer on three axes:
+**Prompt 11 — the rule-out check.** Add one requirements-heavy prompt in the
+client's own vocabulary: *"I need [category] for [specific constraint the client
+fails on] — what should I avoid?"* Models increasingly name products a buyer
+should **not** pick for a stated use case, with sources. Being absent from a
+shortlist and being argued against are different diagnoses with different plans:
+absence is usually a retrieval or consensus gap, an explicit rule-out is a
+sourced claim you can trace and often correct. Record which sources the model
+cites when it rules you out — that is the repair list.
+
+Score every answer on four axes:
 
 - **Accuracy** — positioning, products, geography, pricing correct, or stale and
   hallucinated?
 - **Confidence** — assertive ("is the leading…") or hedged ("some users report
   that it may offer…")?
 - **Consistency** — do the engines describe you the same way?
+- **Framing** — recommended, neutral, hedged, or **recommended against**? A
+  rising mention count with flat or negative framing is a specific, diagnosable
+  state, and counting mentions alone hides it.
 
 Two scoring traps. **Citation counts are not comparable across funnel stages** —
 one strong TOFU explainer routinely collects hundreds of citations while a strong
@@ -307,9 +319,26 @@ The one controlled academic benchmark (Aggarwal et al., KDD 2024 — 10k-query
 GEO-bench, 9 optimization methods) is still the only place where content changes
 were tested against a held-out query set: gains came from **citing authoritative
 sources, quoting named experts, adding statistics and improving readability**;
-keyword-style manipulation scored *below* baseline. Read the omissions honestly —
-schema, FAQ markup, heading hierarchy and machine-readable formats were never
-tested, so "no evidence" there means untested, not disproven. STUDY.
+keyword-style manipulation scored *below* baseline. The gains are measured in
+**PAWC — Position-Adjusted Word Count**, a source's words in the answer weighted
+by where they land; that is not clicks and not citations as an engine counts
+them, so quoting the percentage without the unit overstates what was measured.
+Read the omissions honestly — schema, FAQ markup, heading hierarchy and
+machine-readable formats were never tested, so "no evidence" there means
+untested, not disproven. STUDY.
+
+**And read its successor before quoting a number.** *C-SEO Bench* (NeurIPS 2025
+Datasets & Benchmarks) re-ran the question under **competition** — 9 methods, 6
+domains, 1,921 queries, with rivals optimizing too — and found the methods
+**mostly ineffective**; in retail a traditional-SEO baseline was about **7.6×**
+more effective than the best C-SEO method. The two studies are not in conflict:
+the first measures one source optimizing against a fixed field, the second
+measures what survives when the field optimizes back. Every client lives in the
+second condition. So the **direction** stays STUDY — evidence-dense, quotable,
+well-sourced content is the thing that travels — while the **magnitude** is not
+transferable to a contested market, and a plan that promises "+40% visibility"
+is quoting the wrong half of the literature. Figures and samples: benchmarks.md,
+"Academic benchmarks".
 
 **Penalties cascade into AI surfaces, at directory granularity.** A "Scaled
 content abuse" manual action against one directory (850k AI-generated articles)

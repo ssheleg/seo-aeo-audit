@@ -1,6 +1,6 @@
 # Prowl MCP — bulk market data without a per-vendor login
 
-One MCP endpoint (`https://prowl.chat/mcp`) fronts ~408 provider tools —
+One MCP endpoint (`https://prowl.chat/mcp`) fronts ~448 provider tools —
 DataForSEO, Majestic, SpyFu, SearchAPI/SerpApi across 60+ engines, Firecrawl,
 Exa, Perplexity — on a prepaid USD wallet billed per call. For an audit it
 solves one specific problem: **getting competitive and demand data in bulk when
@@ -50,7 +50,7 @@ own property, and for demand validation — not for what Google did to your site
 
 | Tool | Use |
 |---|---|
-| `prowl_search_tools` | Semantic search across all 408 tools. Ask in plain language: "anchor text distribution of backlinks for a domain". |
+| `prowl_search_tools` | Semantic search across all 448 tools. Ask in plain language: "anchor text distribution of backlinks for a domain". |
 | `prowl_tool_info` | Exact input schema plus a `cost_hint` before you spend anything. |
 | `prowl_get_stats` | Session token/cost totals. |
 
