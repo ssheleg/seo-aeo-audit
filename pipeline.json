@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "$schema": "https://raw.githubusercontent.com/ssheleg/task-pipeline/main/plugins/task-pipeline/skills/task-pipeline/pipeline.schema.json",
+  "stages": [
+    {
+      "id": 0,
+      "state": "intake",
+      "name": "Intake grill",
+      "model": "default",
+      "skills": ["task-pipeline:grill", "wiki-query"],
+      "gate": {
+        "type": "manual",
+        "check": "Source ledger written, REQ table frozen, carry-over ledger seeded, autonomy sweep covered, operator confirms the brief."
+      }
+    },
+    {
+      "id": 1,
+      "state": "docs",
+      "name": "Verify external contracts",
+      "model": "default",
+      "skills": ["context7-docs"],
+      "gate": {
+        "type": "auto",
+        "check": "Every external API shape and every carried claim is checked against a primary source. Anything that fails to verify goes to carry-over, never into references (CONTRIBUTING.md: evidence or silence)."
+      }
+    },
+    {
+      "id": 2,
+      "state": "decompose",
+      "name": "Module map",
+      "model": "default",
+      "skills": ["task-pipeline:decomposition"],
+      "gate": {
+        "type": "manual",
+        "check": "Module map committed; every REQ in exactly one module; no two parallel modules own the same file; walking skeleton first."
+      }
+    },
+    {
+      "id": 3,
+      "state": "spec",
+      "name": "Spec amendment",
+      "model": "default",
+      "skills": ["task-pipeline:spec"],
+      "gate": {
+        "type": "auto",
+        "check": "docs/superpowers/specs/ amended: Script contract covers every new script and every new finding code; contracts locked before any code."
+      }
+    },
+    {
+      "id": 4,
+      "state": "plan",
+      "name": "Task plan",
+      "model": "default",
+      "skills": ["task-pipeline:planning"],
+      "gate": {
+        "type": "auto",
+        "check": "Per-module task list with TDD order; each task names its file paths, its test and its definition of done."
+      }
+    },
+    {
+      "id": 5,
+      "state": "build",
+      "name": "Build",
+      "model": "default",
+      "skills": ["task-pipeline:build", "task-pipeline:tdd"],
+      "gate": {
+        "type": "auto",
+        "check": "Failing test first, minimal implementation, green, conventional commit per task. stdlib-only holds for every script."
+      }
+    },
+    {
+      "id": 6,
+      "state": "test",
+      "name": "Tests",
+      "model": "default",
+      "skills": ["task-pipeline:tdd"],
+      "gate": {
+        "type": "auto",
+        "check": "python3 test/validate.py && python3 test/test_page_audit.py both pass; every new doctrine guard is proved by watching it FAIL against a planted defect before it is trusted."
+      }
+    },
+    {
+      "id": 7,
+      "state": "lint",
+      "name": "Lint and CI parity",
+      "model": "default",
+      "skills": [],
+      "gate": {
+        "type": "auto",
+        "check": "CI negative self-tests still fail as designed; no Python bytecode in the tree; npm tarball clean."
+      }
+    },
+    {
+      "id": 8,
+      "state": "postdeploy",
+      "name": "Post-deploy",
+      "model": "default",
+      "skills": [],
+      "gate": {
+        "type": "auto",
+        "check": "No deploy this run by operator decision: branch to main, release deferred to carry-over CO-2."
+      }
+    },
+    {
+      "id": 9,
+      "state": "docs-close",
+      "name": "Docs, wiki and graph",
+      "model": "default",
+      "skills": ["wiki-update", "graphify"],
+      "gate": {
+        "type": "auto",
+        "check": "Every source-ledger row updated: CONTRIBUTING.md and the spec lose the nineteen-references drift, README counts corrected, DOCMAP propagation matrix walked, wiki synced, graph refreshed where built."
+      }
+    },
+    {
+      "id": 10,
+      "state": "acceptance",
+      "name": "Acceptance",
+      "model": "default",
+      "skills": ["task-pipeline:audit"],
+      "gate": {
+        "type": "manual",
+        "check": "Ladder walk per REQ (decision to spec to contract and its failure behaviour to task to change to executed test to surface/docs); absences become new REQ rows before the coverage table is written; carry-over counts printed beside the verdict; retro pruned, stamped and written."
+      }
+    }
+  ]
+}

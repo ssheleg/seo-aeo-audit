@@ -40,6 +40,18 @@ ends at a verified diagnosis and an executable plan.
    volume cells of an unmeasured row stay **blank, not zero**. A `0` reads as
    "measured, no demand"; blank reads as "nobody has checked". The distinction
    matters most in work someone else executes on a budget.
+8. **Know each instrument's blind spot, and say it in the output.** Rules 1 and
+   7 govern what *you* write; they do not see a tool that blends or omits before
+   you ever look. Two arrive constantly. A static fetch cannot see JSON-LD that
+   the CMS injects with JavaScript, so "no schema found" is a **false finding**
+   on any Yoast/RankMath/AIOSEO site — `scripts/page_audit.py` prints the caveat
+   next to every schema inventory, and absence is only reportable after a
+   rendering check. GA4 with consent-mode modelling returns observed and
+   estimated behaviour **inside one number** — see
+   [references/measurement.md](references/measurement.md) J1 for the three
+   activation conditions, the visible indicator, and the observed-only fallback.
+   The rule generalizes: before an instrument's silence becomes a finding,
+   establish that the instrument could have seen the thing at all.
 
 ## Step 0 — Detect mode, never ask twice
 

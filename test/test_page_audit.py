@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(
@@ -201,10 +202,58 @@ truncated = _gzip.compress(blob)[: len(_gzip.compress(blob)) // 2]
 check(len(page_audit._gunzip(truncated)) > 0, "truncated gzip body must be salvaged, not dropped")
 check(page_audit._gunzip(_gzip.compress(blob)) == blob, "intact gzip body must round-trip")
 
+# ── non-negotiable #8: the instrument declares its own blind spot ────────────
+# A static parser cannot see JSON-LD that a CMS injects with JavaScript, so an
+# empty inventory is not evidence of absent schema. If the caveat ever falls out
+# of the payload, "0 blocks" starts reading as a measurement and the tool becomes
+# a false-finding generator on every Yoast/RankMath/AIOSEO site.
+good = run("good-page.html", "https://example.com/pricing")
+check("jsonld_caveat" in good, "report payload must always carry jsonld_caveat")
+check("server-rendered HTML only" in good.get("jsonld_caveat", ""),
+      "jsonld_caveat must name the blind spot, not just hint at it")
+check("Rich Results Test" in good.get("jsonld_caveat", "")
+      or "rendering check" in good.get("jsonld_caveat", ""),
+      "jsonld_caveat must name the way to confirm, not only the limitation")
+
+_md = subprocess.run(
+    [sys.executable, SCRIPT, "--file", os.path.join(FIXTURES, "good-page.html"),
+     "--base-url", "https://example.com/pricing", "--format", "markdown"],
+    capture_output=True, text=True, check=True,
+).stdout
+check("server-rendered HTML only" in _md,
+      "the caveat must reach the human-readable report too, not only JSON")
+
+# a complete node must not be flagged — a guard that cries wolf gets ignored
+check(good["jsonld_missing_required"] == [],
+      f"good-page Product has name/offers; flagged anyway: {good['jsonld_missing_required']}")
+
+# and an incomplete one must be caught, by structure, without claiming anything
+# about rich-result eligibility (that needs Google's per-feature tables).
+_tmp = os.path.join(tempfile.mkdtemp(), "incomplete.html")
+with open(_tmp, "w", encoding="utf-8") as _fh:
+    _fh.write(
+        '<html><head><title>t</title>'
+        '<script type="application/ld+json">'
+        '{"@context":"https://schema.org","@type":"Article","author":"A"}'
+        "</script></head><body><h1>h</h1><p>body</p></body></html>"
+    )
+_inc = json.loads(subprocess.run(
+    [sys.executable, SCRIPT, "--file", _tmp, "--base-url", "https://example.com/a",
+     "--format", "json"],
+    capture_output=True, text=True, check=True,
+).stdout)[0]
+check("Article.headline" in _inc["jsonld_missing_required"],
+      f"Article without headline must be reported: {_inc['jsonld_missing_required']}")
+check("jsonld-incomplete" in {f["code"] for f in _inc["findings"]},
+      "a missing structural property must surface as a finding")
+check(any("Rich Results Test" in f["message"] for f in _inc["findings"]
+          if f["code"] == "jsonld-incomplete"),
+      "the incompleteness finding must route eligibility to the Rich Results Test")
+
 if failures:
     print("FAIL: page_audit behavior")
     for f in failures:
         print(" - " + f)
     sys.exit(1)
 print("PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + headers, "
-      "gzip, url-list and error paths)")
+      "gzip, url-list and error paths, blindness caveat, schema completeness)")

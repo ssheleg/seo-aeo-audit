@@ -10,17 +10,39 @@ changes, work in this order and keep the evidence rules.
 
 ## Non-negotiables
 
-- Every finding carries: the observation, where it was observed (URL, file:line,
-  report), the value, and the date. No finding you did not verify on this site.
-- Tag every recommendation with an evidence tier: CONFIRMED (engine-documented or
-  reproduced here) · STUDY (published multi-site data) · FIELD (single case) ·
-  HYPOTHESIS. Weights for prioritization: 1.0 / 0.7 / 0.4 / 0.2.
-- Diagnose the cause before prescribing a fix. "Add schema" is not a diagnosis.
-- Never ship a FIELD or HYPOTHESIS change sitewide — run it as a controlled test
-  (one variable, matched cohorts, 50+ URLs per group, 4+ weeks, control group,
-  discard tests that overlap a core update).
-- Never recommend deceptive tactics (cloaking, fabricated consensus, review
-  manipulation, takedown abuse, click spoofing).
+1. **Evidence or silence.** Every finding carries: the observation, where it was
+   observed (URL, file:line, report), the value, and the date. No finding you did
+   not verify on this site. "Best practice says" is not evidence.
+2. **Tag the evidence tier** of every recommendation: CONFIRMED (engine-documented
+   or reproduced here) · STUDY (published multi-site data) · FIELD (single case) ·
+   HYPOTHESIS. Weights for prioritization: 1.0 / 0.7 / 0.4 / 0.2. A HYPOTHESIS
+   never outranks a CONFIRMED blocker.
+3. **Diagnose before prescribing.** "Add schema" is not a diagnosis. And never
+   ship a FIELD or HYPOTHESIS change sitewide — run it as a controlled test (one
+   variable, matched cohorts, 50+ URLs per group, 4+ weeks, control group,
+   discard tests that overlap a core update).
+4. **Refuse the myth list** in "Never put these in a plan" below. Recommending
+   one wastes the client's budget and is a defect, not a nicety.
+5. **Never recommend deceptive tactics** (cloaking, fabricated consensus, review
+   manipulation, takedown abuse, click spoofing). They belong in an audit only as
+   things to detect and defend against.
+6. **State what you could not check.** A missing Search Console login is a gap in
+   the report, not a silent omission.
+7. **Never blend measured with assumed.** When one deliverable carries both — a
+   link-building CSV always does — a `source` column separates them, and the
+   volume cells of an unmeasured row stay **blank, not zero**. A `0` reads as
+   "measured, no demand"; blank reads as "nobody has checked".
+8. **Know each instrument's blind spot, and say it in the output.** Rules 1 and 7
+   govern what you write; they do not see a tool that blends or omits before you
+   look. A static fetch cannot see JSON-LD injected by JavaScript, so "no schema
+   found" is a **false finding** on any Yoast/RankMath/AIOSEO site — confirm with
+   a rendering check before reporting absence. GA4 with consent-mode modelling
+   returns observed and estimated behaviour inside one number: modelling needs
+   consent mode plus ~1,000 daily consent-denied events over 7+ days and ~1,000
+   daily consenting users on 7 of the last 28 days, it applies when the reporting
+   identity is **Blended**, GA4 marks it "Including estimated user data", and the
+   BigQuery export carries observed data only. Before an instrument's silence
+   becomes a finding, establish it could have seen the thing at all.
 
 ## Order of work
 
