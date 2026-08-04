@@ -54,8 +54,29 @@ links_before_first_text, exhausted}` and
 `refresh-noindex`, `canonical-attrs`, `canonical-multiple`, `canonical-missing`,
 `canonical-cross`, `nosnippet`, `h1-missing`, `h1-multiple`, `subheads-thin`,
 `thin`, `title-missing`, `description-missing`, `jsonld-invalid`,
-`jsonld-untyped`, `read-budget`, `nav-before-content`, `link-count`,
-`alt-missing`, `price-not-in-text`).
+`jsonld-untyped`, `jsonld-incomplete`, `read-budget`, `nav-before-content`,
+`link-count`, `alt-missing`, `price-not-in-text`).
+
+Amended 2026-08-04. Every bundled script is stdlib-only, python ≥3.9, and
+`validate.py` **discovers** them rather than listing them, so the contract binds
+new scripts automatically.
+
+Each one carries an obligation the others do not: it must state, in its own
+output, what it cannot see. That is non-negotiable #8, and it is what these four
+have in common rather than any shared schema.
+
+| Script | Emits | Its declared blind spot |
+|---|---|---|
+| `page_audit.py` | per-URL metrics, `read_budget`, `findings[]`, `jsonld_missing_required[]`, `jsonld_caveat` | server-rendered HTML only — JS-injected JSON-LD is invisible, so an empty inventory is not evidence of absent markup |
+| `url_inspection.py` | per-URL index verdict (`google_canonical`, `user_canonical`, `coverage_state`, `robots_txt_state`, `page_fetch_state`), `findings[]` | quota-capped at 2000/day and 600/min per property, so it samples; an un-inspected URL yields **no** findings |
+| `sitemap_audit.py` | `templates[]` (path-pattern families), `depth_distribution`, `duplicate_paths`, `findings[]` | no link graph exists in a sitemap, so orphans and click depth are **not derivable** and are refused outright |
+| `psi_pull.py` | `field_data` (CrUX p75 per metric with band), `origin_field_data`, `lab_performance_score`, `findings[]` | CrUX is absent for low-traffic URLs — reported as absent, never as zero, and the lab score never substitutes |
+| `gsc_pull.py` | `monthly`, `cliff`, `position_split`, `ctr_curve`, `ctr_gaps`, `cannibalization`, `branded_split` | the CTR expectation is built from this property's own rows; a band with <5 rows yields no baseline, and the branded split is unavailable without `--brand-terms` rather than guessed |
+| `preflight.py` | `probes[]` of `{source, reachable, detail, gate, blocks}` | it reports reachability, not data: an unreachable source is never recorded as absent data, and each failure names which of the independent gates it hit |
+
+Finding severities stay `blocker|high|medium|info` across every script, and every
+`reference` value must resolve to a real heading anchor — `validate.py` checks
+that for all of them.
 
 ### Distribution contract
 

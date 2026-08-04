@@ -260,6 +260,58 @@ def _jsonld_types(doc: Doc) -> tuple[list[str], list[str]]:
     return sorted(set(types)), errors
 
 
+# Structural requirements only: a node of this @type without these properties is
+# incomplete on its own terms, which is an observation about the page. It is NOT
+# a rich-result eligibility verdict — Google's per-feature required-property
+# tables are a separate contract, and claiming eligibility without checking them
+# would be exactly the guessing non-negotiable #1 forbids. Route to the Rich
+# Results Test for eligibility; report only what is observable here.
+REQUIRED_PROPS = {
+    "Article": ("headline",),
+    "NewsArticle": ("headline",),
+    "BlogPosting": ("headline",),
+    "Product": ("name",),
+    "Organization": ("name",),
+    "LocalBusiness": ("name",),
+    "BreadcrumbList": ("itemListElement",),
+    "FAQPage": ("mainEntity",),
+    "HowTo": ("name", "step"),
+    "Event": ("name", "startDate"),
+    "JobPosting": ("title", "datePosted"),
+    "Recipe": ("name",),
+}
+
+
+def _jsonld_required(doc: Doc) -> list[str]:
+    """`Type.property` for every documented-structural property that is absent."""
+    missing: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            raw_t = node.get("@type")
+            names = [raw_t] if isinstance(raw_t, str) else [
+                x for x in (raw_t or []) if isinstance(x, str)]
+            for t in names:
+                for prop in REQUIRED_PROPS.get(t, ()):
+                    val = node.get(prop)
+                    if val is None or (isinstance(val, (str, list, dict)) and len(val) == 0):
+                        entry = f"{t}.{prop}"
+                        if entry not in missing:
+                            missing.append(entry)
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for raw in doc.jsonld_raw:
+        try:
+            walk(json.loads(raw))
+        except Exception:  # noqa: BLE001 - malformed blocks are reported by _jsonld_types
+            continue
+    return missing
+
+
 def analyze(html: str, url: str, headers: dict | None = None) -> dict:
     parser = Parser()
     parser.feed(html)
@@ -329,6 +381,16 @@ def analyze(html: str, url: str, headers: dict | None = None) -> dict:
         "jsonld_blocks": len(doc.jsonld_raw),
         "jsonld_types": types,
         "jsonld_errors": jsonld_errors,
+        "jsonld_missing_required": _jsonld_required(doc),
+        # Non-negotiable #8: the instrument states its own blind spot, in the
+        # payload, every run — not in documentation somebody may not have read.
+        "jsonld_caveat": (
+            "server-rendered HTML only: this parser does not execute JavaScript, "
+            "so JSON-LD injected client-side (Yoast, RankMath, AIOSEO and most "
+            "CMS SEO plugins) is invisible here. Zero blocks is NOT evidence of "
+            "absent schema — confirm with a rendering check (GSC URL Inspection, "
+            "Rich Results Test, or a JS-rendering crawl) before reporting it."
+        ),
         "hreflang_count": len(doc.hreflang),
         "links_total": internal + external,
         "links_internal": internal,
@@ -403,6 +465,12 @@ def findings(r: dict) -> list[dict]:
     if r["jsonld_errors"]:
         add("high", "jsonld-invalid",
             f"invalid JSON-LD ({r['jsonld_errors'][0]})", "entity-and-brand.md#g3-knowledge-graph-plumbing")
+    if r["jsonld_missing_required"]:
+        add("medium", "jsonld-incomplete",
+            "JSON-LD node missing a structural property: "
+            + ", ".join(r["jsonld_missing_required"][:4])
+            + " (eligibility for any rich result still needs the Rich Results Test)",
+            "entity-and-brand.md#g3-knowledge-graph-plumbing")
     if r["jsonld_blocks"] and not r["jsonld_types"] and not r["jsonld_errors"]:
         add("medium", "jsonld-untyped", "JSON-LD present with no @type",
             "entity-and-brand.md#g3-knowledge-graph-plumbing")
@@ -529,7 +597,10 @@ def to_markdown(results: list[dict]) -> str:
             f"{' (extra attrs: ' + ', '.join(r['canonical_extra_attrs']) + ')' if r['canonical_extra_attrs'] else ''}\n"
             f"- robots: {', '.join(r['meta_robots']) or '—'}"
             f"{' · X-Robots-Tag: ' + r['x_robots_tag'] if r['x_robots_tag'] else ''}\n"
-            f"- JSON-LD: {r['jsonld_blocks']} block(s), types: {', '.join(r['jsonld_types']) or '—'}\n"
+            f"- JSON-LD: {r['jsonld_blocks']} block(s), types: {', '.join(r['jsonld_types']) or '—'}"
+            + (f"; missing: {', '.join(r['jsonld_missing_required'])}"
+               if r["jsonld_missing_required"] else "") + "\n"
+            f"  - ⚠ {r['jsonld_caveat']}\n"
             f"- links: {r['links_total']} ({r['links_internal']} internal / {r['links_external']} external, "
             f"{r['links_nofollow']} nofollow)\n"
             f"- images: {r['images_total']} ({r['images_missing_alt']} without alt, "

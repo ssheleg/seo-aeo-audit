@@ -1,5 +1,74 @@
 # Changelog
 
+## v0.10.0 — 2026-08-04
+
+An eighth non-negotiable, four new scripts, and the literature that bounds the
+one study this skill was leaning on.
+
+The run started as an audit of every SEO/AEO skill installed on one machine —
+twenty-six of them. None contributed knowledge: no mechanism, number or argument
+turned up that these references did not already hold. What they did expose was
+the opposite gap. This skill named evidence sources it had no way to collect, and
+two of its own instruments were quietly reporting assumed data as measured.
+
+### Added
+- **Non-negotiable #8 — instruments declare their own blind spots.** Rules #1 and
+  #7 govern what the auditor writes; neither can see a tool that blends or omits
+  before the auditor looks. `validate.py` enforces it, and the Cursor channel is
+  now count-checked against SKILL.md — it had shipped five non-negotiables where
+  SKILL.md carried seven, so Cursor users ran without the measured-vs-assumed rule.
+- `scripts/url_inspection.py` — the Google-selected canonical against the declared
+  one, coverage state, robots verdict. The engine's own answers, so findings built
+  on them are CONFIRMED. The skill cited URL Inspection in eight places and could
+  not collect it.
+- `scripts/sitemap_audit.py` — declared URLs clustered into the template families
+  a site actually ships, derived from its own URLs. It refuses orphan detection: a
+  sitemap holds no link graph.
+- `scripts/psi_pull.py` — CrUX field and Lighthouse lab reported separately, judged
+  at the 75th percentile. Absent field data is reported absent, never as a pass.
+- `scripts/preflight.py` — step 0's "test the access, do not assume it", performed.
+  Each failure names which independent gate it hit; three of them answer 403.
+- `gsc_pull.py` derivations — cannibalization, and a **CTR curve built from the
+  property's own rows**. Industry CTR tables are on measurement.md's do-not-measure
+  list; a hardcoded "under 3%" threshold is the same error one step further from
+  the data. Bands under five rows yield no baseline at all.
+- `benchmarks.md` — **C-SEO Bench** (NeurIPS 2025, 1,921 queries): under competition
+  the GEO methods are mostly ineffective, and in retail a traditional-SEO baseline
+  was ~7.6x more effective. It bounds Aggarwal et al. (KDD '24), which this file
+  quoted without it. Also PAWC named as the unit, the Similarweb recommendation
+  data, llms.txt consumption (97% of files get zero AI requests), and title and
+  description rewrite rates.
+- The visibility ladder in `measurement.md` — retrieved / cited / mentioned /
+  recommended, each governed by a different mechanism, so the gap between two rungs
+  is itself the diagnosis. Plus the rule-out check in the prompt set.
+- `technical-checks.md` — geo-redirects and content negotiation, a whole class of
+  locale invisible to staff who browse from the country that works.
+- `experience-signals.md` — the CWV thresholds this file spent its length fixing
+  without ever stating.
+- `docs/DOCMAP.md`, `docs/DECISIONS.md`, `scripts/check-docs.sh`,
+  `docs/superpowers/retro.md`.
+
+### Fixed
+- `page_audit.py` reported JS-injected JSON-LD as absent schema. On any Yoast,
+  RankMath or AIOSEO site that was a false finding — the exact defect this skill
+  exists to prevent. Every report now carries the caveat and the way to confirm.
+- `sitemap_audit.py` parsed in O(n^2): 10,000 URLs took 14.8s and a 60,000-URL
+  file never finished. Now 0.16s and 0.52s for the full 50,000 the spec permits.
+- Silent truncation in the sitemap cap, and `None` rendering as a value in
+  psi_pull. Absence must read as absence.
+- `measurement.md` — GA4 consent-mode modelling blends observed and estimated
+  behaviour inside one number. The three activation conditions, the reporting
+  identity, the visible indicator and the BigQuery escape hatch are recorded.
+- Reference count in CONTRIBUTING (nineteen -> twenty-one) and the Prowl tool
+  count (408 -> 448).
+
+### Verification note
+Three figures carried in from other skills failed verification against primary
+sources and are NOT in this release: `userDeclaredCanonical` (the API returns
+`userCanonical`), "+41% for Quotation Addition" (the paper groups three methods
+and says over 40%), and "~9% of post-recommendation visits arrive as AI referrals"
+(absent from the source). CI fails if the first ever reappears.
+
 ## v0.9.0 — 2026-07-30
 
 Tracking parameters get their own mechanism, separate from facets and filters.

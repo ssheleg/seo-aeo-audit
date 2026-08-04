@@ -184,8 +184,15 @@ for ref in REQUIRED_REFERENCES:
     if not os.path.isfile(os.path.join(ROOT, SKILL_DIR, "references", ref)):
         fail(f"missing reference: {SKILL_DIR}/references/{ref}")
 
-# every bundled script must exist, compile, and stay stdlib-only on python 3.9
-for _script in ("page_audit.py", "gsc_pull.py"):
+# Every bundled script must exist, compile, and stay stdlib-only on python 3.9.
+# Discovered, not listed: a hardcoded tuple silently exempts the next script
+# somebody adds, and the exemption looks identical to coverage.
+_scripts_dir = os.path.join(ROOT, SKILL_DIR, "scripts")
+_bundled = sorted(f for f in os.listdir(_scripts_dir)
+                  if f.endswith(".py")) if os.path.isdir(_scripts_dir) else []
+if not _bundled:
+    fail(f"{SKILL_DIR}/scripts/: no bundled scripts found")
+for _script in _bundled:
     _rel = f"{SKILL_DIR}/scripts/{_script}"
     _path = os.path.join(ROOT, _rel)
     if not os.path.isfile(_path):
@@ -247,6 +254,58 @@ if os.path.isfile(_lb):
     if "priority,target_url,keyword" not in _lbsrc:
         fail("references/linkbuilding.md: the CSV column contract is missing")
 
+# ── doctrine guards ──────────────────────────────────────────────────────────
+# Rung 3 (a script check) is earned when a failure CLASS has occurred twice.
+# This one has: a tool that cannot see something reports its absence as a
+# finding (page_audit and JS-injected JSON-LD), and a source that models data
+# hands back one number with observed and estimated blended into it (GA4
+# consent mode). Both are the same defect — assumed data presented as measured
+# — and both arrive through OUR OWN instruments, where non-negotiables #1 and
+# #7 cannot see them. A doctrine line alone was not enough: #7 already existed
+# and neither case was caught.
+
+
+def _needles(rel_path: str, needles, label: str):
+    """Require each needle in a shipped file, naming what the loss would cost."""
+    p = os.path.join(ROOT, rel_path)
+    if not os.path.isfile(p):
+        fail(f"missing file for {label}: {rel_path}")
+        return
+    src = open(p, encoding="utf-8").read()
+    for needle, why in needles:
+        if needle not in src:
+            fail(f"{rel_path}: lost {why} ('{needle}')")
+
+
+# The instrument must declare its own blind spot in the output it prints.
+# Reporting "no schema found" from a static fetch is a false finding on every
+# site whose CMS injects JSON-LD client-side (Yoast, RankMath, AIOSEO).
+_needles(
+    f"{SKILL_DIR}/scripts/page_audit.py",
+    (("server-rendered HTML only", "the JS-blind caveat on the schema inventory"),
+     ("jsonld_caveat", "the machine-readable caveat field in the report payload")),
+    "the page_audit blindness caveat",
+)
+
+# GA4 blends modelled with observed behind one number. An audit that sizes a
+# prize from that number breaks #7 by proxy, so measurement.md must carry the
+# observable check, not a vague warning.
+_needles(
+    f"{SKILL_DIR}/references/measurement.md",
+    (("Blended", "the reporting-identity setting that turns blending on"),
+     ("Including estimated user data", "the visible GA4 indicator an auditor can check"),
+     ("BigQuery", "the observed-only escape hatch")),
+    "the GA4 modelled-data guard",
+)
+
+# The doctrine that generalises both cases. If it drops out of SKILL.md the
+# guards above degrade into two unexplained string checks.
+_needles(
+    f"{SKILL_DIR}/SKILL.md",
+    (("blind spot", "the instrument-blindness non-negotiable"),),
+    "the instrument-blindness doctrine",
+)
+
 # npm package: bin resolves, files whitelist ships the sources
 if pkg:
     bin_map = pkg.get("bin") or {}
@@ -280,6 +339,31 @@ for f in mdcs:
     for target in re.findall(r"\[[^\]]*\]\(([^)\s]+)\)", mtxt):
         if not target.startswith(("http://", "https://", "mailto:", "#")):
             fail(f"cursor/rules/{f}: relative link {target!r} — .mdc must embed contracts inline")
+
+# The Cursor channel is a full copy of the doctrine for a different agent, and it
+# has already drifted: it shipped six non-negotiables while SKILL.md had seven,
+# so Cursor users ran without the measured-vs-assumed rule and nothing said so.
+_nn_re = re.compile(r"^\s*\d+\.\s+\*\*", re.M)
+
+
+def _nn_count(path: str) -> int:
+    """How many numbered non-negotiables a doctrine file carries. -1 = no section."""
+    if not os.path.isfile(path):
+        return -1
+    txt = open(path, encoding="utf-8").read()
+    m = re.search(r"^#{2,3}\s+Non-negotiables\s*$(.*?)(?=^#{2,3}\s|\Z)", txt, re.M | re.S)
+    return len(_nn_re.findall(m.group(1))) if m else -1
+
+
+_skill_nn = _nn_count(os.path.join(ROOT, SKILL_DIR, "SKILL.md"))
+if _skill_nn < 1:
+    fail("SKILL.md: no '## Non-negotiables' section with a numbered list")
+else:
+    for f in mdcs:
+        _cn = _nn_count(os.path.join(cursor_dir, f))
+        if _cn != _skill_nn:
+            fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
+                 f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
 
 # templates/: skeletons must NOT be named SKILL.md (the skills CLI would ship them)
 tpl_dir = os.path.join(ROOT, "templates")

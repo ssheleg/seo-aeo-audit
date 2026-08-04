@@ -29,6 +29,37 @@ Google is testing a `google.com/goto` redirect that masks the destination URL in
 the SERP (Jul 2026), so confirm how your rank tracker collects before you trust a
 step change in its numbers.
 
+**The independent tracker is not optional** — J2 makes cross-checking a
+precondition of any decline diagnosis, and "the client's dashboard" is not an
+independent source. Where no seat exists, a SERP endpoint collects the same
+evidence directly: `searchapi:google_rank_tracking` returns up to 100 results per
+query with position, title, URL and snippet, localized by `gl` and `location`.
+That is also the honest way to answer track D, because the **composition** of the
+SERP is an observation, whereas a third-party index's position estimate is not
+(tooling.md rung 5). Record the engine, locale and date beside the numbers.
+
+### GA4 with consent-mode modelling — one number, two kinds of data
+
+Non-negotiable #7 forbids blending measured with assumed in a deliverable. GA4
+can do the blending **before you see it**, so this needs checking, not trusting.
+When consent is denied, Google estimates that behaviour from consenting users and
+reports it together with observed behaviour. Sizing a prize from that number
+breaks #7 by proxy.
+
+It is checkable, and the conditions are narrow (`CONFIRMED` — Google documents
+its own product):
+
+| Question | Where to look |
+|---|---|
+| Can modelling even be active? | It needs consent mode **plus** ~1,000 daily consent-denied events for 7+ days **and** ~1,000 daily consenting users on 7 of the previous 28 days. Small properties never qualify — do not attach the caveat where it cannot apply |
+| Is it being applied to this report? | Only when the **reporting identity** is `Blended`. Check the setting; do not infer it from the presence of a cookie banner |
+| Is this specific report affected? | GA4 shows a data-quality indicator reading **"Including estimated user data"** with the activation date |
+| How do I get an unblended number? | Modelling is excluded from the **BigQuery** export, from explorations using sequences, from retention reports and from audiences. The BigQuery export is the observed-only baseline |
+
+Report it the way you report any other gap: name the mode, the indicator and the
+date, and state which figures in the audit rest on modelled data. An unqualified
+GA4 conversion count is an inference wearing the clothes of a measurement.
+
 **Rank tracking is a vendor-continuity risk, not just a data-quality one.**
 Almost every tracker rests on SERP collection by a third party, and both the
 technical basis and the legal basis of that collection are in motion: the
@@ -181,6 +212,32 @@ Two consequences for the report: stop treating last-click as the definition of
 success, and stop treating any single channel's ranking as the definition of
 visibility. A brand can be present at every step of the funnel and still show a
 flat "position" chart.
+
+### The visibility ladder — report the rungs, and the gap between them
+
+AI visibility is not one number and not one job. Four rungs, each governed by a
+**different mechanism**, which is why the distance between two of them is itself
+the diagnosis:
+
+| Rung | What it means | What governs it | Which track owns it |
+|---|---|---|---|
+| 1. Retrieved | the model read the page while building an answer, without citing it | crawlability, parseable structure, query relevance | A / F |
+| 2. Cited | the page appears as a source | usefulness of the content: structure, specifics, freshness | F |
+| 3. Mentioned | the brand is named in the answer text | entity recognition — does the model know what you are | G |
+| 4. **Recommended** | the product is on the shortlist the buyer considers | **aggregate web consensus** — reviews, forums, analysts, press; largely independent of your own pages | G |
+| — | **Recommended against** | a sourced argument for avoiding you on a stated requirement | G, and trace the cited sources |
+
+**The gap is the finding.** Rising citations with a flat recommendation rate is
+not "AI visibility improving slowly" — it is a specific, diagnosable state: the
+content works and the wider web does not yet corroborate it, so the effort
+belongs in track G (entity-and-brand.md), not in more content. The reverse gap —
+recommended without being cited — means the consensus carries you and your own
+pages are not retrievable, which is track A/F. One blended score hides both, and
+that is the concrete reason "a single AI visibility number" sits in J6.
+
+Two rungs are only visible if you look for them: rung 1 leaves a trace in server
+logs and nowhere else, and "recommended against" only appears if the prompt set
+asks (aeo-geo.md F5, prompt 11).
 
 One scorecard, not a wall of vendor dashboards: first-party data (Search
 Console, analytics, internal systems) plus at most one AI-monitoring tool,

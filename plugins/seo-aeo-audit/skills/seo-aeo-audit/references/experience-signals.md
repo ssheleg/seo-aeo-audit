@@ -154,6 +154,22 @@ targets across markets, and never let CWV work outrank an indexing fix.
 
 - Per template: CrUX field values (LCP/INP/CLS) by form factor, lab trace of the
   LCP path, TTFB.
+
+**The thresholds you are comparing against.** A measurement without its cut-off
+is not a finding, and this file spends its length on *how to fix* without ever
+stating *what counts as broken*:
+
+| Metric | Good | Needs improvement | Poor |
+|---|---|---|---|
+| **LCP** — largest contentful paint | ≤ 2.5 s | 2.5–4.0 s | > 4.0 s |
+| **INP** — interaction to next paint | ≤ 200 ms | 200–500 ms | > 500 ms |
+| **CLS** — cumulative layout shift | ≤ 0.1 | 0.1–0.25 | > 0.25 |
+
+A URL group passes only when the **75th percentile** of real-user data clears
+the "good" band on that metric — the pass is a distribution, not an average, and
+`scripts/psi_pull.py` reports the field percentiles beside the lab score so the
+two are never confused. Lab numbers rank nothing (tooling.md); they explain a
+field failure you have already observed.
 - GSC query-level CTR versus your own site curve (not an industry table), with
   the date the curve was built and the update or layout change that invalidates
   it.
