@@ -230,6 +230,52 @@ map pack. Internal structure still earns its keep locally in two ways:
   hold no local depth (FIELD, 2026-05-07). 500 substantive pages beat 5,000 thin
   ones — and 5,000 thin ones are what trips the filter the architecture exists to
   avoid.
+- **An internal link carries an intent, and the wrong one costs.** Adding a
+  commercial module to a template that ranks on local and navigational intent
+  measured negative in a controlled test, while a category-links module on the
+  same estate measured positive (experiments.md). Before adding links to a local
+  template, ask what intent the page is currently rewarded for; "more internal
+  links" is not the mechanism, and a block with a clean UX rationale can still
+  take the page down.
+
+### Service-area businesses: the site carries what the map pin cannot
+
+A plumber, a cleaner or a mobile mechanic has no address to attach a pin to,
+while proximity still weighs on the pack — so a competitor five minutes away wins
+on geography that no amount of authority overrides. What closes part of the gap
+is signal density, and almost all of it lives on the site (`FIELD`, Aug 2026,
+practitioner synthesis; treat the sizing claims about visibility radius as
+unverified — no number here, because none survived a source check).
+
+- **Profile setup.** Hide the address and declare service areas by **city** —
+  matching happens at city level, so a county or a state reads as noise. The
+  platform allows a long list; a list padded past where the business actually
+  works dilutes the geographic signal rather than extending it. Verification
+  still requires a real address that simply is not displayed.
+- **One real page per city, not a template with a variable in it.** City in the
+  H1 and title, an opening paragraph written for that city and duplicated
+  nowhere, at least one concrete local reference (a district, a landmark), a
+  review from a customer in that city, the local phone number, and service-area
+  markup (`areaServed` / `serviceArea`). A "we also cover these areas" list does
+  not rank, and shipping fifty of them is how a local estate ends up inside the
+  scaled-content filter (the pre-publish gate above applies here first).
+- **Reviews carry more weight when there is no pin.** What practitioners report
+  moving the pack is review volume relative to the competitors *in that area*,
+  the city or district named inside the review text, a steady arrival rate rather
+  than a batch, and a reply to every review. "Same-day in <district>" is a
+  geographic signal; "great service" is not — and soliciting the former is
+  ordinary review practice, while filtering which customers are asked is gating
+  and out of scope (threats-and-defense.md).
+- **Citations need their own rule.** With no displayed address, list city and
+  region only and never a PO box; use the service-area field where a directory
+  has one, and register as a no-fixed-location business where the platform
+  supports it. Inconsistency between directories that handle address-less
+  listings differently is itself the defect to look for.
+- **Measure the boundary, do not guess it.** Geo-grid rank data across the
+  claimed service area shows where pack position collapses; that boundary — not
+  the radius someone typed into the profile — is the honest map of current
+  visibility, and it is the baseline any local recommendation should be measured
+  against.
 
 ## Internal-link anchor mix
 

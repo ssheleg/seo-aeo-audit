@@ -147,6 +147,24 @@ it, not by counting words. A text-only judgement of "quality" will pass a page
 that answers nothing and fail a page that answers everything in a table
 (intent-and-content.md, experience-signals.md).
 
+Controlled evidence exists for the *position* half of this, and it is modest:
+split tests moving substance out of tabs and above the fold, and removing a
+commercial module from a template holding a non-commercial intent, both moved
+organic traffic (experiments.md). That supports "where an element sits is read",
+not "structure the page for the retriever" — chunk boundaries are the engine's
+choice, and myths.md holds that line. Google's spam policy on **misleading
+functionality** points the same way from the other side: a page promising a
+calculator or a comparison has to deliver one, which is a rule about the
+function being real, not about its markup.
+
+One counterweight to carry into any AEO plan built on layout: across 70 labelled
+sources for four B2B prompts in two answer engines, product pages barely
+appeared — listings and comparison pages took nearly all of it (FIELD,
+practitioner sample, 2026-08). If retrieval filters by page *type* before layout
+gets a vote, template work earns its return in classic ranking long before it
+shows up in citations. Sequence it accordingly, and do not sell a template
+rebuild as an AI-citation fix.
+
 ## E-E-A-T: important, not a factor
 
 Experience, Expertise, Authoritativeness, Trustworthiness comes from the Search

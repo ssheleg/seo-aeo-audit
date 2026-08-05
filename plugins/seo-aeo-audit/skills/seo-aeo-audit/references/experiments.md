@@ -92,6 +92,24 @@ attribution is weaker.
   the design: 43% of answers linking the conference page never mentioned the
   event, and retrieval without citation was worse (74% ignored). Test on a
   category gap, not on an established brand.
+- **Modules on category and store pages — direction replicated, cause not.** Two
+  controlled split tests point the same way: adding a brand carousel below the
+  content of store pages was estimated at **−2.8%** organic sessions, and
+  removing a product carousel from category pages was **+29%**. The proposed
+  mechanisms differ — commercial links diluting a local/navigational intent in
+  the first, page weight and stale content in the second — so the direction is
+  replicated while the cause stays open. Practical read: on any template whose
+  ranking rests on a non-commercial intent, test module **removal** before you
+  test module addition, and treat "add a carousel for discoverability" as a
+  hypothesis with two negative precedents (STUDY ×2, 2026-07; sources in
+  benchmarks.md).
+- **Position of the substance, not its length.** Bringing product descriptions
+  out of tabs and above the fold measured **+14%** on desktop, with the stated
+  hypothesis being that tabbed content needed JavaScript to render. Two variables
+  moved at once — position and render dependency — which is exactly why it is a
+  hypothesis rather than a layout law, and why it is worth re-running as two
+  tests on any template that hides substance behind an interaction (STUDY,
+  2026-07).
 - **Web-font weight.** 900KB of preloaded fonts widened the P90 TTFB→FCP gap from
   ~840ms on fast connections to ~1,488ms on slow ones and correlated with ~18%
   fewer pageviews per session. Subsetting is a clean one-template test with a

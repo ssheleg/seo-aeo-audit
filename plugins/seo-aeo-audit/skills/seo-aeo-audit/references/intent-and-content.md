@@ -293,6 +293,36 @@ crawlers in the same window (FIELD, 2026-05-29). Three simultaneous changes
 attribute to nothing. Ship refreshes as a batch against a held-back control and
 size the result from that (experiments.md).
 
+### E6. Timing an editorial target, and what on-site UGC is actually worth
+
+Two practitioner methods, both `FIELD`, both cheap enough to try on one section
+before they earn a place in a plan.
+
+**Publish at the onset of interest, not at the event.** Trend data read at its
+default settings hides the two things that decide an editorial win. Appending
+question modifiers ("what", "how", "when") to a rising query isolates the
+question forms that surface reporting flattens, which is where the uncontested
+targets are. And regional filters left at country or state level average away
+hyperlocal divergence — the same query can carry different intent in two counties
+during a live news cycle, and only the finer filter shows it. For a recurring
+event, the historical series gives the date interest actually starts rising,
+which is the publication date; the event date is when the competition arrives.
+Where the first news window is already lost, the residual demand shifts from
+"what happened" to "why", and a step-back explainer with the timeline holds its
+position longer than the original hit did.
+
+**Comments are a feature; a community is work.** On-site UGC earns its keep only
+when it puts *new words* on the page — use cases, phrasings and situations the
+editorial missed. Turning comments on adds an input box, not a corpus, and
+engines weight established third-party communities above a brand's own thread
+anyway. Where measurable return has been reported it came from **reviews**
+rather than discussion. Two failure modes to name before anyone budgets this:
+readers who write to an author want the author, so a thread with no author
+presence converts loyal readers into ignored customers; and a comment system
+pitched as an SEO play ships as a stripped MVP, gets ignored, and dies — the same
+project framed as community or support work attracts the people who can actually
+keep it alive.
+
 ## Evidence to capture for D/E
 
 - Per-target-keyword: the top-10 format inventory, your page type, the mismatch
