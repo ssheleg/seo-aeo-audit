@@ -110,3 +110,19 @@ one ships an absence as coverage.
 Presence checks over prose use fixed-string matching (`grep -F`), pick a token
 that cannot wrap, and are read as evidence only after one deliberate miss has been
 observed. A verification harness is a guard, so instruction #2 applies to it too.
+
+## 8. Verify every number in the diff, not every number on the list
+*Written 2026-08-05. Last fired 2026-08-05.*
+
+The primary-source rule (#1) was applied rigorously — to the eleven claims on the
+requirement list. A self-audit afterwards found four more figures that had entered
+references in passing: a sample size carried straight from a retelling, a range
+stated without the word *median* that made it, enforcement figures written from
+secondary coverage and confirmed against the paper only later, and an engine
+statement from **2017** dated to the 2026 post that restated it.
+
+None of them were on the list, which is exactly why they got through: the
+discipline attached to the items being consciously verified, not to the act of
+typing a number. The check is the diff, not the plan — before a module is
+committed, every figure and every date it adds gets asked the same question, and a
+date is a claim about a source, not decoration.
