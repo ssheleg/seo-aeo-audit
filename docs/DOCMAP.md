@@ -38,6 +38,7 @@ the reason no check can.
 | Change a deliverable skeleton | `templates/` and `references/deliverable-templates.md` together | `validate.py` fails on drift between the two copies |
 | Release a version | four manifests plus the CHANGELOG top entry | `validate.py` four-way sync |
 | Change what an instrument can see | its caveat string, and the guard that pins it | `validate.py` doctrine guards; CI negative self-tests |
+| Add a row to a claim table (myths, plays, detection patterns) | the prose count that names its size, and the table's own integrity | `validate.py` compares the README's myth count against `myths.md`, and rejects a blank line inside any table in the skill — both added after the class drifted twice |
 | Edit a tier definition | the quoted copy in `CONTRIBUTING.md`, and a re-read of every claim carrying that tier | `validate.py` compares the two copies string-for-string; the re-read is **review** — no check knows which claims were admitted under the old bar |
 
 ## What proves it

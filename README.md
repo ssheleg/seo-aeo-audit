@@ -144,9 +144,11 @@ agent, not just Claude Code. This is the substance:
 ### Data freshness
 
 - **Verified as of 2026-08-05.** Roughly 5,000 lines of distilled, dated
-  reference material (5,034 lines across the twenty-one contracts at this
-  release). The update timeline covers March 2025 → July
-  2026; every benchmark carries its own date and sample size.
+  reference material across the twenty-one contracts. The update timeline covers
+  March 2025 → July 2026; every benchmark carries its own date and sample size.
+  (An exact line count used to sit here. It was wrong four edits later, which is
+  the same defect class this skill refuses everywhere else — a number about a
+  thing, kept next to the thing, with nothing reconciling them.)
 - The skill ships a **refresh routine**: re-fetch the update sources, append the
   new rows, re-check whether a shipped change retires a myth or invalidates a
   benchmark, and downgrade any claim older than ~18 months that nothing has

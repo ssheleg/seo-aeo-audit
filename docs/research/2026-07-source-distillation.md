@@ -1269,7 +1269,7 @@ first.
 | Entity extractors are unreliable | On-Page.ai / E. Lancheres, 2026-07-20, n=166 pages / 48 SERPs; §3.4 gives the determinism split (n=50) | Admitted with the vendor conflict disclosed |
 | Brand carousel −2.8% | SearchPilot, 2026-07-17 — and the same publisher's carousel-*removal* test at +29% | Admitted, and strengthened into a replicated direction |
 | Alice AI 49.5M / 42% | Yandex Q2'26 results, 2026-07-29 | Admitted, with the Q1 point kept beside it |
-| Google detects generated-content networks | Google Research S-CTS paper: cluster-level termination, 50k clusters / 130k channels in six months | Admitted, upgraded to STUDY, marked as transferred by analogy |
+| Google detects generated-content networks | Secondary coverage of a Google Research paper (S-CTS): cluster-level termination, 50k clusters / 130k channels in six months | Admitted and tiered STUDY **on the secondary coverage** — the paper itself was only read during the self-audit that followed, which confirmed the figures and the wording. Right answer, wrong order |
 | Opt-out removes you from Top Stories | Scoped by the source to Top Stories *inside* AI Overviews, and explicitly unconfirmed by Google | Admitted as HYPOTHESIS, narrowed |
 | `inurl:` has been killed | Operator references say it still works with degraded precision and regional inconsistency; both readings agree on rate-limiting and fingerprinting | Rewritten as operator decay, demoted to HYPOTHESIS |
 | Compare `Last crawl` with `Last crawl rendered` in GSC | **No such field exists.** The tool exposes Last crawl, the stored render under *View crawled page*, and a live test | Diagnostic rewritten into the form that can be run |
@@ -1315,3 +1315,27 @@ coordinated generation, and review-queue attacks. `benchmarks.md` and
 | Live URL Test as a crawl-priority lever | Unverifiable folklore. The useful half of the same post — trust gating indexation — was admitted separately as FIELD |
 | Buying aged forum accounts; cloning validated SaaS products; thumbnail structure extraction; platform-specific growth tactics; click-signal manipulation and "freeze the page during a core update"; midpoint verification pins for service areas; hidden-text keyword loading | Out of scope by `CONTRIBUTING.md`: manipulative, or about a platform this skill does not audit |
 | Forcing an entity into a model's knowledge base via co-citation prompting | One anecdote. It belongs in `experiments.md` as a design if anyone wants it, not in a reference as a claim |
+
+### G4. The pass audited its own output (2026-08-05)
+
+A screening record that only lists what the screening caught is a record of the
+screening's confidence, not of its accuracy. So the pass's own diff went through
+the same two gates, and found seven defects — five of them introduced by the pass
+itself:
+
+| Defect | Class |
+|---|---|
+| A 2017 engine statement (Googlebot's ~9,000px render viewport, John Mueller, 2017-11) dated to the 2026 post that restated it, with the confirmed half fused to an unverified practitioner consequence | wrong date on a dated claim — the failure this corpus exists to prevent |
+| Two detection rows separated from their table by a blank line, rendering outside it | the second split table in one run → promoted into a validator check |
+| A growth play numbered G29 inserted before G28 | ordering |
+| Per-page entity counts stated as a plain range when the study reports **medians** | precision |
+| A B2B sample size ("70 labelled sources") carried from a retelling with no primary | the rule of gate 2, applied to the requirement list and not to the diff |
+| S-CTS enforcement figures written from secondary coverage and confirmed against the paper only afterwards | right answer, wrong order |
+| A play count asserted in the knowledge wiki (60) rather than counted (53) | a number about a list |
+
+The common shape of the five: **gate 2 attached to the eleven claims on the
+requirement list, not to the act of writing a number.** Four figures entered in
+passing — in a sentence framing a claim, in a benchmark row's source column, in a
+prose count — and none of them were on any list to be checked. That is now a
+standing instruction (`docs/superpowers/retro.md` #8: check the diff, not the
+plan), and two of the seven are checks rather than intentions.

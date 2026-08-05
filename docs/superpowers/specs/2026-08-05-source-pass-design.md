@@ -72,7 +72,7 @@ reproduction of the source text, and no claim that cannot be stated without it.
 
 | REQ | Lands in | Tier after stage 1 |
 |---|---|---|
-| R1 viewport stretch, one-shot | `technical-checks.md` A1 | CONFIRMED (mechanism) |
+| R1 viewport stretch, one-shot | `technical-checks.md` A1 | **split by the self-audit**: the tall viewport is CONFIRMED and dates to a 2017 engine statement; the once-per-render firing is FIELD, 2026-08 |
 | R2 five-second render myth | `myths.md`, `technical-checks.md` A1 | STUDY |
 | R3 entity-extractor reliability | `entity-and-brand.md` G3, `tooling.md`, `benchmarks.md` | STUDY (vendor-run, disclosed) |
 | R4 carousel tests | `experiments.md`, `architecture-and-equity.md`, `benchmarks.md` | STUDY ×2 |
