@@ -143,8 +143,9 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Verified as of 2026-07-30.** Roughly 4,600 lines of distilled, dated
-  reference material. The update timeline covers March 2025 → June
+- **Verified as of 2026-08-05.** Roughly 5,000 lines of distilled, dated
+  reference material (5,034 lines across the twenty-one contracts at this
+  release). The update timeline covers March 2025 → July
   2026; every benchmark carries its own date and sample size.
 - The skill ships a **refresh routine**: re-fetch the update sources, append the
   new rows, re-check whether a shipped change retires a myth or invalidates a

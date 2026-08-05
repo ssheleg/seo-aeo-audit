@@ -1,5 +1,76 @@
 # Changelog
 
+## v0.11.0 — 2026-08-05
+
+A two-week window of practitioner sources, screened on two gates: does it
+contradict what this skill already holds, and does the number survive its primary
+source. Eleven items entered unchanged, nine after their claim was narrowed, five
+as detection only. Nine were refused, three of them for contradicting evidence
+already in the corpus — and the refusals are recorded, because a rejected claim
+that leaves no trace returns next quarter wearing the same confidence.
+
+The primary-source pass removed three figures, refuted one field name and
+narrowed one claim **after** they had passed the first gate. That is the pass
+earning its keep: every one of them reads as mechanical, and every one would have
+shipped as fact.
+
+### Added
+- **Rendering as a second budget** (`technical-checks.md`). Crawl budget counts
+  URLs; the render queue decides how many of them ever run their JavaScript,
+  which is the ordinary cause behind *Crawled – currently not indexed* on a JS
+  template. The diagnostic is written in the form that can be executed — Last
+  crawl plus the stored render under *View crawled page*, against the raw source,
+  then a live test. The field the source named for it does not exist in the tool.
+- **Googlebot stretches its viewport once** to the page's full initial height
+  instead of scrolling, so a sequential infinite scroll never loads its second
+  batch and an unconstrained hero pushes the content thousands of pixels down the
+  render.
+- **Mobile-first status divergence** — a desktop-only 404 is not the response
+  being read — and the single internal link that keeps a dead URL in rotation.
+  Both are now in the mechanical sweep.
+- **Entity extraction has an instrument problem** (`entity-and-brand.md` G3,
+  `tooling.md`, `benchmarks.md`). Across 166 top-ranking pages, four
+  general-purpose extractors put 46.6–65.1% of their output on material with no
+  trace in Google's own vocabulary for the query, and the budget-LLM option
+  rewrites two entity sets in five between identical runs. The rule: the tool
+  proposes, the AI Overview / People Also Ask / related searches decide.
+- **A loop that turns the GSC generative report into prompts you can test**
+  (`measurement.md` J3), recording citation and mention as separate outcomes.
+- **Service-area businesses** get the block they never had
+  (`architecture-and-equity.md`): city-level areas, one real page per city,
+  reviews as the geographic signal, citations without an address, and a geo-grid
+  boundary measured rather than assumed.
+- **Five detection patterns** (`threats-and-defense.md`): the paid-mention market
+  selling itself as AEO, synthetic consensus with its documented case,
+  retrieve-and-switch, canonical pulsing from expired domains, cluster-level
+  detection of coordinated generation, and review-queue attacks.
+- Layout split tests, editorial trend-onset timing, on-site UGC read honestly,
+  map-pack call attribution, and a first-party reviews section with its gating
+  guardrail.
+
+### Fixed
+- **The evidence-tier vocabulary had two homes and they disagreed.** `FIELD` read
+  as "a single practitioner case" in `evidence-tiers.md` and "repeated
+  practitioner reports" in `CONTRIBUTING.md` — one label, two admission bars.
+  `evidence-tiers.md` is now the single home, CONTRIBUTING quotes it verbatim,
+  and `validate.py` fails on drift. The guard was watched failing against both a
+  drifted definition and a removed row before it was trusted.
+- **`onpage-checks.md` reported a non-finding.** "Several H1s" sat in the
+  crawler-understanding table while Google states the count carries no penalty.
+  The check survives as document structure and accessibility; what replaces it is
+  the meaning test on the mobile render, which is the loss that is real.
+- Two myths retired: the five-second render limit (the rendering service pauses
+  its own clock during fetches; the real ceiling is an event loop that never
+  idles) and the multiple-H1 penalty.
+
+### Changed
+- Alice AI figures move to Yandex's Q2'26 release — 42% of queries, 49.5M monthly
+  users — with the Q1 point kept beside it as a trend rather than replaced.
+- The generative-features opt-out is priced: the reported cost is Top Stories
+  shown inside an AI Overview, scoped and unconfirmed by Google.
+- Search-operator recon is demoted to HYPOTHESIS with both readings named, and
+  routed through "prove it on a known-positive query first".
+
 ## v0.10.0 — 2026-08-04
 
 An eighth non-negotiable, four new scripts, and the literature that bounds the
