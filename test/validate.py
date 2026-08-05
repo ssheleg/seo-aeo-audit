@@ -365,6 +365,24 @@ else:
             fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
                  f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
 
+# CONTRIBUTING.md tells a contributor what this file enforces, and had fallen four
+# guards behind — the same drift as every other prose summary of a moving thing.
+# Each guard family added here names itself, and the name has to survive in that
+# paragraph. It does not prove the description is *accurate*; it proves nobody can
+# add a guard family and leave the summary untouched.
+_GUARD_FAMILIES = (
+    "four-way version sync",
+    "standard-library only",
+    "tier vocabulary",
+    "myth count",
+    "table integrity",
+)
+_contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
+for _g in _GUARD_FAMILIES:
+    if _g not in _contrib:
+        fail(f"CONTRIBUTING.md does not mention the {_g!r} guard family — the "
+             f"summary of validate.py has drifted from what it runs")
+
 # A blank line inside a markdown table ends the table: the rows after it render as
 # loose text, and the content still reads fine in the source, so nobody sees it.
 # It happened twice in one run — appending rows by inserting before the following

@@ -62,9 +62,17 @@ python3 test/test_page_audit.py
 `validate.py` checks structure, the four-way version sync, that all twenty-one
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that the auditor is
-standard-library only. `test_page_audit.py` runs the auditor against offline
-fixtures — including the URL-scheme guard, which exists because `urlopen` will
-happily read `file:///etc/passwd` if you let it.
+standard-library only. It also reconciles the facts this repo keeps duplicating:
+the tier vocabulary across its four homes, the myth count in the README against
+the rows in `myths.md`, and table integrity — a blank line inside a table ends
+the table, and the rows after it stop rendering as one. Those names are not
+decoration: the validator asserts that this paragraph still mentions each guard
+family it runs, because a prose summary of a checker is a fact with two homes and
+this one had already fallen four checks behind.
+
+`test_page_audit.py` runs the auditor against offline fixtures — including the
+URL-scheme guard, which exists because `urlopen` will happily read
+`file:///etc/passwd` if you let it.
 
 CI runs the same two plus negative self-tests that prove the validator can fail.
 
