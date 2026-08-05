@@ -16,7 +16,7 @@ anything older than ~18 months before it enters a plan.
 | Google global traffic YoY | −0.89% — first recorded decline | Jun 2026 (same study) |
 | RU referral value by model | Alice AI sends ~5× more site referrals than ChatGPT, which leads on awareness and usage | Jun 2026 (same study) |
 | Bing | 1B MAU | May 2026 |
-| Yandex "Alice AI" (Алиса) | ~1 in 3 queries answered; 48.3M MAU on quick answers; ~10% of queries product-related | Q1–Q2 2026 |
+| Yandex "Alice AI" (Алиса) | **42%** of Search queries answered (+7pp QoQ) and **49.5M** monthly users of the quick answers under the search box; ~10% of queries product-related. Yandex attributes the coverage jump to a new generation of compact Alice AI Search models | Q2 2026 (Yandex quarterly results, 2026-07-29). Prior point: ~1 in 3 queries and 48.3M MAU (Q1 2026) — the metric wording is the company's own and unchanged, so the pair is a trend, not two measures |
 | Bot vs human web traffic | Bots overtook humans for the first time | Jun 2026 |
 | Google share of the search market | dipped below 90% | 2026 (SEJ) |
 | Gen Z searches starting with Google Lens | ~1 in 10; ~1 in 5 of those commercial | 2026 (SEJ) |
@@ -151,6 +151,62 @@ with the FIELD tier attached (logged across 10+ accounts, ~June 2026).
 | Rich result restored after a markup or content-parity fix | 2–4 weeks |
 | Spam-filter recovery | most domains pushed out of the top 100 stayed out through the following core update (82%, 2026) — do not date a recovery to the next update |
 | Manual-action lag after a hijack | deindexation preceded the manual action by ~24h in the documented case; reconsideration approved in 24h, full recovery 36h |
+
+## Rendering ceilings (not the five-second myth)
+
+| Metric | Value | Source |
+|---|---|---|
+| Render cut-off, live testing tools | 16–18 chained fetches ≈ 48–54s before the render was truncated | Published render tests, 2026-07-23 (myths.md) |
+| Render cut-off, actual indexing | ~10 chained fetches ≈ 30s, with the exact point drifting between runs | Same |
+| Reported duration of an awaited fetch inside the render | 0.02s for calls that took 3–6s of wall clock — the service pauses its own clock while a request is in flight | Same |
+| Googlebot render viewport | Expanded once to the page's full initial height; ~9,000px is Google's own suggestion for reproducing it in DevTools | Google (Mueller), reported 2026-08 |
+
+Read these as ceilings for pathological pages, not as a budget to optimize
+against: rendering ends when the event loop goes idle (technical-checks.md A1).
+
+## Entity extraction — how much of a tool's output is noise
+
+166 top-ranking pages across 48 SERPs, five extractors, judged against Google's
+own language for the query (AI Overview text, all People Also Ask questions,
+related searches, captured with the ranking pages). Published 2026-07-20 by
+On-Page.ai (Eric Lancheres) — a vendor whose own model wins the comparison, which
+is why its row is labelled as theirs; the referee data is external and the method
+is reproducible.
+
+| Extractor | False-positive rate | Precision, top-30 |
+|---|---|---|
+| On-Page.ai (the study's own model) | 13.4% | 48.6% |
+| Google Cloud Natural Language | 46.6% | 33.7% |
+| TextRazor | 54.3% | 21.2% |
+| gpt-5-mini (naive prompting) | 59.9% | 17.8% |
+| spaCy `en_core_web_sm` | 65.1% | 16.4% |
+
+Run-to-run stability, three identical runs over identical text (n=50 pages, mean
+pairwise Jaccard): gpt-5-mini **61%**, the other four **100%**. Per-page entity
+counts across the five ranged from 15 to 172 on the same pages. Audit rules in
+entity-and-brand.md G3.
+
+## Layout and module split tests
+
+| Test | Result | Source |
+|---|---|---|
+| Brand carousel added below content on store pages | −2.8% organic sessions (estimated) | SearchPilot, 2026-07-17 |
+| Product carousel removed from category pages | +29% | SearchPilot, reported 2026 |
+| Product description moved out of tabs, above the fold | +14% desktop | SearchPilot, reported 2026 |
+
+Direction over the first two replicates; the proposed causes differ (intent
+dilution vs page weight and staleness), so the mechanism stays open
+(experiments.md).
+
+## Coordinated-generation enforcement
+
+| Metric | Value | Source |
+|---|---|---|
+| Generation clusters terminated | 50,000 clusters covering 130,000 channels over six months | Google Research, S-CTS paper, 2026-08 |
+
+A video-platform system. It is here because the unit of enforcement is the
+cluster — shared infrastructure plus templated output — not the individual page
+(threats-and-defense.md I4).
 
 ## Industry context (practitioner survey, State of SEO 2026)
 
