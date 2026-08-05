@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.1 — 2026-08-05
+
+### Fixed
+- Two myth-guard rows added in v0.11.0 were separated from the claim table by a
+  blank line, so they rendered as loose text instead of table rows. Found by a
+  new validator check rather than by eye.
+- `validate.py` now compares the README's myth-guard count against the number of
+  rows in `myths.md`. A prose count sitting next to the list it counts has now
+  drifted twice in this repo — nineteen references against twenty-one enforced,
+  and this one — which is the bar for moving a rule off the page into a check.
+
 ## v0.11.0 — 2026-08-05
 
 A two-week window of practitioner sources, screened on two gates: does it

@@ -365,6 +365,33 @@ else:
             fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
                  f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
 
+# A prose count about a list, sitting next to the list, is the drift this repo
+# keeps re-discovering: CONTRIBUTING said nineteen references while the validator
+# enforced twenty-one, and the README's myth count went stale the moment two rows
+# were added. Second occurrence of the class, so it stops being a review item.
+_myths = os.path.join(ROOT, SKILL_DIR, "references", "myths.md")
+if os.path.isfile(_myths):
+    _rows, _in_table = 0, False
+    for _line in open(_myths, encoding="utf-8"):
+        if _line.startswith("| Claim | Reality |"):
+            _in_table = True
+            continue
+        if _in_table:
+            if not _line.startswith("|"):
+                break
+            if not _line.startswith("|---"):
+                _rows += 1
+    _readme = open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
+    _m = re.search(r"myth guard\*\* that refuses (\d+) popular tactics", _readme)
+    if not _rows:
+        fail("myths.md: could not find the claim table — the count check is blind")
+    elif not _m:
+        fail("README.md: the myth-guard sentence changed shape; the count check "
+             "can no longer read it (expected 'refuses N popular tactics')")
+    elif int(_m.group(1)) != _rows:
+        fail(f"README.md says the myth guard refuses {_m.group(1)} tactics, "
+             f"myths.md carries {_rows} rows")
+
 # The tier vocabulary is a second fact with two homes: references/evidence-tiers.md
 # defines it for the auditor, CONTRIBUTING.md repeats it for contributors. They had
 # already drifted — FIELD read as "a single practitioner case" in one and "repeated

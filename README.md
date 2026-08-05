@@ -110,7 +110,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 - **Tiered claims.** Every recommendation carries `CONFIRMED` · `STUDY` · `FIELD`
   · `HYPOTHESIS`, and a hypothesis never outranks a confirmed blocker.
 - **Diagnose before prescribing.** "Add schema" is not a diagnosis.
-- **A myth guard** that refuses 30 popular tactics with published
+- **A myth guard** that refuses 32 popular tactics with published
   counter-evidence, and offers the working alternative instead.
 - **Defense, not offense.** Adversarial techniques appear only as things to
   detect and withstand, never as recommendations.
