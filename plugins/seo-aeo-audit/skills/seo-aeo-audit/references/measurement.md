@@ -187,6 +187,36 @@ Four more artifacts that read as findings and are not:
   out at any stage, and a deployed model's parametric memory is frozen until the
   next training cycle. Never correlate a GPTBot hit with a knowledge change.
 
+### Turning the generative report into prompts you can test
+
+The GSC generative-AI report says which pages took impressions on an AI surface
+and nothing else — not which prompt produced them, and not whether the answer
+named the brand or merely linked the page. There is no native export of
+impressions by URL and date. The loop practitioners use to close that gap, worth
+running because each step is checkable (`FIELD`, method, Aug 2026):
+
+1. **Extract** the URLs and impressions per day from the report, day by day.
+2. **Classify** each URL by intent from its own structure — informational, where
+   the win is a citation, versus commercial, where the win is being named — and
+   resolve the ambiguous ones by hand rather than by rule.
+3. **Propose** candidate prompts per URL with a model reading the page: what
+   questions does this page answer? This step is search, not truth. What comes
+   back is a hypothesis about the trigger, and treating it as the trigger is how
+   a measurement plan starts reporting its own guesses.
+4. **Validate** each candidate against an engine, recording two outcomes
+   separately: **citation** (the domain appears in the sources) and **mention**
+   (the brand appears in the answer text). Grounded model APIs are the cheap way
+   to run this at volume, and they are *not* the AI Overview — same family, not
+   the same surface — so record which engine and which mode produced every
+   observation (J3, "no single number").
+
+What the loop is for is the gap between the two outcomes. The reported pattern is
+that informational pages generate the impressions while commercial pages are
+where the brand gets named — different pages, different objectives, and one
+blended "AI visibility" number hides both. Track the ratio of citations to
+mentions over weeks: a drift in either direction is the machine's reading of the
+page changing, which is a signal you get long before traffic moves.
+
 ## J3b. The KPI set has moved
 
 (The attribution gaps behind these metrics — calls, offline conversions, AI

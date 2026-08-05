@@ -148,6 +148,43 @@ spend.
   Answer the question when a client raises it, never bill it as a lever
   (HYPOTHESIS, proposal-stage, 2026-04-27).
 
+### The entity list a tool hands you is mostly noise — validate it against Google
+
+Entity work is only as good as the extractor underneath it, and the extractors
+disagree with each other about what is even on the page. Five of them run over
+the same 166 top-ranking pages across 48 SERPs produced between 15 and 172
+entities per page, and were scored against an external referee: Google's own
+language for that query — the AI Overview text, every People Also Ask question,
+and the related searches, captured at the same time as the ranking pages.
+
+The number that decides whether a tool can pay for itself is the false-positive
+rate: entities it reports that have no trace in the engine's own vocabulary or in
+the competing top pages. Across the four general-purpose extractors it ran from
+**46.6% to 65.1%** — half or more of every recommendation list pointing at
+material the SERP shows no sign of wanting. Precision over each model's top-30
+entities ran the other way, **16.4% to 33.7%**. Figures per extractor, method and
+sample: benchmarks.md (`STUDY`, 2026-07-20; run by a vendor whose own model wins
+the comparison — the referee data is external and the method is reproducible,
+which is why it is usable, and the conflict is why the vendor's own figures are
+recorded as theirs).
+
+One finding is separate from the ranking, and matters more for anything you plan
+to track over time: four of the five extractors are deterministic, and the budget
+LLM is not. Three identical runs over identical text overlapped **61%** on
+average — two entities in five change when you ask again, with the page
+untouched.
+
+Two rules follow, and they hold whichever tool you use:
+
+1. **Validate every recommended entity against Google's own blocks for that
+   query** — AI Overview, People Also Ask, related searches, and the pages
+   already ranking. An entity that appears in none of them is a false positive
+   until something else says otherwise, and adding it is a page change bought
+   with no evidence.
+2. **Never track an entity score that moves while the page does not.** A metric
+   that rewrites two-fifths of itself between runs cannot show progress; it can
+   only show noise, and a report built on it will claim wins that no edit caused.
+
 ## G3b. Discovery is fragmented — audit where the audience actually is
 
 Buyers now form an opinion before any query reaches your site: on TikTok, Reddit,
@@ -240,6 +277,30 @@ Audit steps:
    accounts. A wide divergence between two review surfaces for one brand is the
    cheapest coordinated-attack detector you have; the attack patterns themselves
    are catalogued in threats-and-defense.md (FIELD, 2026-07-13).
+
+### Where a rating actually bites, and the placement that is a liability
+
+Two practitioner claims about third-party reputation, both `HYPOTHESIS`, both
+worth auditing because the work they imply is cheap:
+
+- **The rating gates the recommendation, not the mention.** The reported pattern
+  is a secondary check — the model resolves "[brand] reviews" before committing
+  to a recommendation, and a weak third-party rating vetoes the brand even where
+  it is present across the category's listicles. State it that precisely or not
+  at all: the counter-intuitive finding above says badly-rated brands *surface*
+  more often than mediocre ones, and the two only coexist because they describe
+  different outcomes. Mention, citation and recommendation are three metrics
+  here (G5) — a reputation claim that does not name which one it moves is
+  contradicting this file, not extending it.
+- **A listicle that sells its slots is a liability, not a win.** Where a
+  ranking page carries a "contact us to be added" invitation, the page is paid
+  inventory wearing editorial clothes, and the reported consequence is the
+  source being discounted — which makes a placement there worth less than
+  nothing to the brand inside it. Audit the placements a client already has,
+  not just the ones they want: open each ranking listicle that names them and
+  look for the solicitation, the outbound commercial anchors to competitors, and
+  the absence of any author. This is the same footprint the paid-mention market
+  leaves (threats-and-defense.md I4), seen from the buyer's side.
 
 ### Mention volume is not brand visibility — the cluster label decides
 
