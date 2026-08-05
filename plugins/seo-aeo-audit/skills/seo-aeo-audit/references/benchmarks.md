@@ -159,7 +159,8 @@ with the FIELD tier attached (logged across 10+ accounts, ~June 2026).
 | Render cut-off, live testing tools | 16–18 chained fetches ≈ 48–54s before the render was truncated | Published render tests, 2026-07-23 (myths.md) |
 | Render cut-off, actual indexing | ~10 chained fetches ≈ 30s, with the exact point drifting between runs | Same |
 | Reported duration of an awaited fetch inside the render | 0.02s for calls that took 3–6s of wall clock — the service pauses its own clock while a request is in flight | Same |
-| Googlebot render viewport | Expanded once to the page's full initial height; ~9,000px is Google's own suggestion for reproducing it in DevTools | Google (Mueller), reported 2026-08 |
+| Googlebot render viewport | Very tall rather than screen-sized; ~9,000px in DevTools is Google's own suggestion for reproducing what it sees | John Mueller, **2017-11** — long-standing behaviour, re-observed in practice since. Do not date this to the report that reminded you of it |
+| Viewport expansion fires listeners **once** | A single resize at render time, so `scroll` and `IntersectionObserver` callbacks run one time only | Practitioner rendering research, 2026-08 (`FIELD` — no primary read; the tall viewport above is the confirmed half, this consequence is not) |
 
 Read these as ceilings for pathological pages, not as a budget to optimize
 against: rendering ends when the event loop goes idle (technical-checks.md A1).
@@ -202,7 +203,7 @@ dilution vs page weight and staleness), so the mechanism stays open
 
 | Metric | Value | Source |
 |---|---|---|
-| Generation clusters terminated | 50,000 clusters covering 130,000 channels over six months | Google Research, S-CTS paper, 2026-08 |
+| Generation clusters terminated | 50K clusters comprising 130K channels, over a six-month operational period, on "a major Online Video Platform" the paper does not name | Google Research, *Scalable Detection of Adversarial Synthetic Slop and Coordinated Media Abuse* (Mathur, Orten, Liu, Tan, Liu), 2026 |
 
 A video-platform system. It is here because the unit of enforcement is the
 cluster — shared infrastructure plus templated output — not the individual page

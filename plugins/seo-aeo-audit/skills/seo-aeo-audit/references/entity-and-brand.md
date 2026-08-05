@@ -152,7 +152,7 @@ spend.
 
 Entity work is only as good as the extractor underneath it, and the extractors
 disagree with each other about what is even on the page. Five of them run over
-the same 166 top-ranking pages across 48 SERPs produced between 15 and 172
+the same 166 top-ranking pages across 48 SERPs returned medians of 15 to 172
 entities per page, and were scored against an external referee: Google's own
 language for that query — the AI Overview text, every People Also Ask question,
 and the related searches, captured at the same time as the ranking pages.

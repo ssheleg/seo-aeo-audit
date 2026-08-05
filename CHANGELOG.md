@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.11.2 — 2026-08-05
+
+A self-audit of the two releases above, run on the same two gates the pass itself
+used. Seven defects, five of them mine.
+
+### Fixed
+- **A 2017 engine statement was dated 2026.** Googlebot's ~9,000px render
+  viewport is John Mueller's advice from November 2017, not a finding from this
+  window — the recent report merely restated it. Both the benchmark row and the
+  technical-checks passage now date the confirmed half to 2017 and mark the
+  practitioner half (that the expansion fires listeners exactly once) as the
+  unverified 2026 observation it is. Dating a claim to the post that reminded you
+  of it is the exact rot `benchmarks.md` exists to prevent.
+- **A second split table**, in `threats-and-defense.md`: two detection rows sat
+  behind a blank line and rendered outside the table. Second occurrence of the
+  class in one run, so `validate.py` now rejects a blank line inside any table in
+  the skill — watched failing on a planted seam.
+- `growth-plays.md` G29 was inserted before G28.
+- Per-page entity counts are **medians** (15–172), which the study says and the
+  reference did not.
+- The B2B page-type counterweight in `ranking-model.md` quoted a sample size that
+  no primary source supports; the observation stays, the number is gone.
+- The S-CTS row now carries the paper's title, authors and its own wording for the
+  platform — the figures were written from secondary coverage first and confirmed
+  against the paper only during this audit, which is the wrong order.
+
 ## v0.11.1 — 2026-08-05
 
 ### Fixed

@@ -365,6 +365,26 @@ else:
             fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
                  f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
 
+# A blank line inside a markdown table ends the table: the rows after it render as
+# loose text, and the content still reads fine in the source, so nobody sees it.
+# It happened twice in one run — appending rows by inserting before the following
+# heading leaves the original blank line in the middle.
+for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, SKILL_DIR)):
+    for _fn in sorted(f for f in _filenames if f.endswith(".md")):
+        _fp = os.path.join(_dirpath, _fn)
+        _rel = os.path.relpath(_fp, ROOT)
+        _prev_row, _saw_blank = False, False
+        for _n, _line in enumerate(open(_fp, encoding="utf-8"), 1):
+            _stripped = _line.rstrip("\n")
+            if _prev_row and _stripped == "":
+                _saw_blank = True
+                continue
+            if _saw_blank and _stripped.startswith("|"):
+                fail(f"{_rel}:{_n}: table row separated from its table by a blank "
+                     f"line — the rows above it stop being a table here")
+            _saw_blank = False
+            _prev_row = _stripped.startswith("|")
+
 # A prose count about a list, sitting next to the list, is the drift this repo
 # keeps re-discovering: CONTRIBUTING said nineteen references while the validator
 # enforced twenty-one, and the README's myth count went stale the moment two rows

@@ -157,10 +157,10 @@ functionality** points the same way from the other side: a page promising a
 calculator or a comparison has to deliver one, which is a rule about the
 function being real, not about its markup.
 
-One counterweight to carry into any AEO plan built on layout: across 70 labelled
-sources for four B2B prompts in two answer engines, product pages barely
-appeared — listings and comparison pages took nearly all of it (FIELD,
-practitioner sample, 2026-08). If retrieval filters by page *type* before layout
+One counterweight to carry into any AEO plan built on layout: in a practitioner sample of
+B2B prompts across two answer engines, product pages barely appeared — listings
+and comparison pages took nearly all of it (FIELD, 2026-08; the source's own
+sample count did not survive a primary check, so it is not quoted here). If retrieval filters by page *type* before layout
 gets a vote, template work earns its return in classic ranking long before it
 shows up in citations. Sequence it accordingly, and do not sell a template
 rebuild as an AI-citation fix.

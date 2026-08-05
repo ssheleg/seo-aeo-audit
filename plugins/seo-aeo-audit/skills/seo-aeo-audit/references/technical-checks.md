@@ -167,11 +167,16 @@ carrying full content in the initial HTML response, and do not add
 
 ### Googlebot does not scroll — it stretches, once
 
-To evaluate lazily-loaded content Googlebot renders with a viewport expanded to
-the page's full initial height; Google's own advice for reproducing what it sees
-is a viewport around 9,000px tall in DevTools. The expansion happens **once per
-render**, and that single resize is what fires scroll listeners and
-`IntersectionObserver` callbacks. Two consequences worth auditing:
+To evaluate lazily-loaded content Googlebot renders with a viewport far taller
+than a screen rather than scrolling down the page. That much is an engine
+statement, and an old one — Google's advice for reproducing what it sees has been
+a viewport around 9,000px tall in DevTools since **2017** (`CONFIRMED`; date it
+to Mueller, not to whichever recent post reminded you of it). What practitioner
+rendering research adds is the part that decides the audit: the expansion happens
+**once per render**, and that single resize is what fires scroll listeners and
+`IntersectionObserver` callbacks (`FIELD`, 2026-08 — no primary published, so
+verify it on the template rather than asserting it). Two consequences worth
+auditing:
 
 - **Sequential infinite scroll never loads batch two.** An implementation that
   needs a second, third and n-th scroll event gets one, so everything after the
