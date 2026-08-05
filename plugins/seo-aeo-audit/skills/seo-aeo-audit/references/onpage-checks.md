@@ -25,7 +25,7 @@ of optimization-conscious sites, 2026-07-14). Everything else gets swept second.
 |---|---|---|
 | Canonical version of the site declared and consistent ★ | http/https and www/non-www both resolve 200; conflicting declarations | crawl + GSC |
 | Title tag present, unique, descriptive ★ | missing, duplicated across templates, multiple `<title>` elements, truncated mid-word | crawl (Screaming Frog / Ahrefs / Semrush) |
-| H1 present, single, matching the page's subject ★ | missing, duplicated sitewide, several H1s, H1 that repeats the nav | crawl + page_audit |
+| H1 present and matching the page's subject ★ | missing, duplicated sitewide, H1 that repeats the nav | crawl + page_audit |
 | H2–H4 structure reflects the content ★ | 0–3 subheads on a long page; headings used for styling; questions never mirrored | crawl + page_audit |
 | One page per query cluster | several pages ranking for the same query (see cannibalization, intent-and-content.md D2) | GSC query→page breakdown |
 | URL structure readable and stable | parameters where paths belong, dates in evergreen URLs, year suffixes | crawl |
@@ -33,6 +33,16 @@ of optimization-conscious sites, 2026-07-14). Everything else gets swept second.
 | Image `alt` present and factual ★ | missing alt on informative images; keyword-stuffed alt; decorative images with text alt | crawl + page_audit |
 | The subject is named in the structural elements, not only the prose | subheads that would fit any page ("Overview", "Conclusion"); internal anchors reading "read more"; captions and `alt` that never mention what the page is about | crawl + page_audit |
 | Structured data valid and matched to visible content ★ | validation errors; markup claiming ratings/prices the page does not show | Rich Results Test + page_audit |
+
+**The H1 count is not one of these checks.** Google states that one H1 and
+several H1s both work, with no penalty for the count (myths.md) — so a "multiple
+H1s" line in an audit spends a finding on a non-finding. Count belongs to
+document structure and screen-reader navigation, and it is worth raising as an
+accessibility note, never as a crawler-understanding failure. What does matter on
+a responsive template is meaning: Google evaluates the mobile render, so a
+desktop-only word carrying the subject is a real loss. Check that the mobile H1
+still names the subject; prefer one H1 with the optional tail inside a span over
+two H1s swapped by display classes.
 
 On schema, hold the canonical stance from myths.md: mark up what is real and
 required for the features you actually want (products, jobs, events,

@@ -365,6 +365,47 @@ else:
             fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
                  f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
 
+# The tier vocabulary is a second fact with two homes: references/evidence-tiers.md
+# defines it for the auditor, CONTRIBUTING.md repeats it for contributors. They had
+# already drifted — FIELD read as "a single practitioner case" in one and "repeated
+# practitioner reports" in the other, which are different admission bars wearing the
+# same label. Compare the copies rather than trusting whoever edits next.
+_TIERS = ("CONFIRMED", "STUDY", "FIELD", "HYPOTHESIS")
+
+
+def _tier_definitions(path: str) -> dict:
+    """Map tier name -> its definition cell, from a markdown table in `path`."""
+    out = {}
+    if not os.path.isfile(path):
+        return out
+    for line in open(path, encoding="utf-8"):
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        name = cells[0].strip("*` ").upper()
+        if name in _TIERS and cells[1]:
+            # First occurrence wins: the definition table precedes any later
+            # table that merely mentions a tier name in its first column.
+            out.setdefault(name, " ".join(cells[1].replace("**", "").split()))
+    return out
+
+
+_tier_home = os.path.join(ROOT, SKILL_DIR, "references", "evidence-tiers.md")
+_tier_copy = os.path.join(ROOT, "CONTRIBUTING.md")
+_home_defs = _tier_definitions(_tier_home)
+_copy_defs = _tier_definitions(_tier_copy)
+for _t in _TIERS:
+    if _t not in _home_defs:
+        fail(f"evidence-tiers.md: no definition row for {_t} — it is the single home")
+    elif _t not in _copy_defs:
+        fail(f"CONTRIBUTING.md: no definition row for {_t}")
+    elif _home_defs[_t] != _copy_defs[_t]:
+        fail(f"tier {_t} differs between references/evidence-tiers.md and "
+             f"CONTRIBUTING.md — one home, quoted verbatim "
+             f"(home: {_home_defs[_t]!r}; copy: {_copy_defs[_t]!r})")
+
 # templates/: skeletons must NOT be named SKILL.md (the skills CLI would ship them)
 tpl_dir = os.path.join(ROOT, "templates")
 if not os.path.isdir(tpl_dir):
