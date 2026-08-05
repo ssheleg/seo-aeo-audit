@@ -16,7 +16,7 @@ duplicated into commit messages or the changelog — those reference it.
 | The audit doctrine (non-negotiables) | `plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` | `cursor/rules/*.mdc` carries a full copy for a different agent — count-checked by `validate.py`, never summarized |
 | A dated number | `references/benchmarks.md` | Other references quote it **with its date and source**, never restate it |
 | A refuted claim | `references/myths.md` | SKILL.md carries the short list only |
-| The evidence-tier vocabulary | `references/evidence-tiers.md` | `CONTRIBUTING.md` quotes the four definitions verbatim — compared by `validate.py`, never paraphrased |
+| The evidence-tier vocabulary | `references/evidence-tiers.md` | `CONTRIBUTING.md` quotes the four definitions verbatim; `SKILL.md` carries the confidence weights inline and `cursor/rules/*.mdc` a compressed gloss, because a `.mdc` may not link out. `validate.py` compares all four homes — verbatim where it can, and on the weights plus the word `single` where it cannot |
 | Tool → check routing | `references/tooling.md` | SKILL.md names a script; the routing table owns which rung it sits on |
 | A script's contract | its own docstring | README and SKILL.md describe usage; neither is the contract |
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |

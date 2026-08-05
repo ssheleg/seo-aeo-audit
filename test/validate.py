@@ -433,6 +433,33 @@ for _t in _TIERS:
              f"CONTRIBUTING.md — one home, quoted verbatim "
              f"(home: {_home_defs[_t]!r}; copy: {_copy_defs[_t]!r})")
 
+# The vocabulary has two further homes that cannot be verbatim copies: SKILL.md
+# carries the confidence weights inline, and the Cursor rule carries a compressed
+# gloss because a .mdc may not link out. Those cannot be string-compared, so check
+# the two things that actually broke: the weights (exact) and the one word that
+# separated the two FIELD definitions when they drifted (`single`). This is a
+# narrow check by design — it does not prove the glosses are otherwise faithful.
+_weights = {"CONFIRMED": "1.0", "STUDY": "0.7", "FIELD": "0.4", "HYPOTHESIS": "0.2"}
+_skill_txt = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
+_home_txt = open(_tier_home, encoding="utf-8").read()
+for _t, _w in _weights.items():
+    if not re.search(rf"\|\s*\*\*{_t}\*\*\s*\|.*\|\s*{re.escape(_w)}\s*\|", _home_txt):
+        fail(f"evidence-tiers.md: {_t} no longer carries weight {_w} — SKILL.md's "
+             f"triage math quotes it")
+    if not re.search(rf"{_t}\s*{re.escape(_w)}", _skill_txt):
+        fail(f"SKILL.md: no '{_t} {_w}' in the confidence line — the weights have "
+             f"drifted from references/evidence-tiers.md")
+for _f in mdcs:
+    _mdc_txt = open(os.path.join(cursor_dir, _f), encoding="utf-8").read()
+    _gloss = re.search(r"FIELD\s*\(([^)]*)\)", _mdc_txt)
+    if not _gloss:
+        fail(f"cursor/rules/{_f}: no FIELD gloss — the Cursor channel must carry "
+             f"the tier vocabulary inline")
+    elif "single" not in _gloss.group(1).lower():
+        fail(f"cursor/rules/{_f}: FIELD glossed as {_gloss.group(1)!r} — the home "
+             f"definition is a *single* practitioner case, and that is the exact "
+             f"word these two copies drifted on before")
+
 # templates/: skeletons must NOT be named SKILL.md (the skills CLI would ship them)
 tpl_dir = os.path.join(ROOT, "templates")
 if not os.path.isdir(tpl_dir):
