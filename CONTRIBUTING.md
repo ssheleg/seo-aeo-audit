@@ -9,12 +9,16 @@ good contribution looks like here.
 **Evidence or silence.** Every claim in this repo carries an evidence tier, and
 the tier is a promise about what backs the claim:
 
+These four definitions are quoted verbatim from
+`plugins/seo-aeo-audit/skills/seo-aeo-audit/references/evidence-tiers.md`, which
+is their single home. `test/validate.py` fails if the two copies drift.
+
 | Tier | What it means |
 |---|---|
-| `CONFIRMED` | Documented by the search engine itself, or reproducible on demand |
-| `STUDY` | A published study with a stated method and sample |
-| `FIELD` | Repeated practitioner reports, named |
-| `HYPOTHESIS` | Plausible, untested — routed to experiments, never to the plan |
+| `CONFIRMED` | Documented by the engine, or reproduced on this site with an observation you can point at (GSC output, log line, HTTP response, rendered DOM) |
+| `STUDY` | Published multi-site data with a stated method and sample size |
+| `FIELD` | A single practitioner case, one site, no control |
+| `HYPOTHESIS` | Mechanism plausible, evidence absent or contradictory |
 
 A PR that adds a claim without a tier, or with a tier the source does not
 support, will be asked to fix that before anything else. Single-case numbers are

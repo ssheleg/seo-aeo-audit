@@ -3,6 +3,12 @@
 Every finding and every recommendation carries a tier. The tier changes what you
 are allowed to do with it.
 
+This table is the **single home** of the tier vocabulary. `CONTRIBUTING.md`
+quotes the four definitions for contributors; `test/validate.py` compares the two
+copies and fails when they diverge. They diverged once — `FIELD` read as "a
+single practitioner case" here and as "repeated practitioner reports" there,
+which are different admission bars for the same label.
+
 | Tier | Definition | Allowed action | Confidence weight |
 |---|---|---|---|
 | **CONFIRMED** | Documented by the engine, or reproduced on this site with an observation you can point at (GSC output, log line, HTTP response, rendered DOM) | Ship it. Blockers of this tier come first. | 1.0 |

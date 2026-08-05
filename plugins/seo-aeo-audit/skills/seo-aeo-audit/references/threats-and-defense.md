@@ -122,7 +122,10 @@ Two 2026 additions to the same duty:
 | Historic-URL resurrection | A dead URL path of yours recreated on someone else's domain, inheriting algorithmic memory | Keep valuable retired URLs redirected and monitored rather than simply deleted |
 | Autocomplete and volume injection | Suggestions pairing your brand with terms nobody types, or someone else's brand riding your head term; third-party tools report volume that GSC impressions never corroborate | Snapshot brand autocomplete per country monthly, report fabricated suggestions through Google's autocomplete feedback link, and refuse to budget against tool volume with no impression trail (FIELD, 2026-06-18) |
 
-Three of these need more than a row.
+| Retrieve-and-switch | A page earns indexing and stable retrieval on inoffensive informational filler, and the body is swapped for the commercial or affiliate offer once the engines are reliably pulling it. Signature: a URL whose ranking history and inbound context do not match the content it serves today, and a stored render that disagrees with the live page in substance rather than in detail | Detection only. Compare a competitor's cached/stored render against the live page before treating their position as evidence of anything; on your own estate, the same comparison catches a compromised template. `HYPOTHESIS` — pattern description, no controlled measurement |
+| Canonical pulsing from expired domains | A cross-domain canonical pointed from an aged expired domain at a money page, removed the moment suppression lands, and reapplied once the historical score has reset — the removal is the point, because it breaks the association before it can be scored against the target | Detection only, and it is the same watch as the canonical-hijack row: cross-domain canonical claims naming your properties, plus the 301-source audit in I6, which is where an expired domain's whole profile arrives. `HYPOTHESIS` |
+
+Several of these need more than a row.
 
 **Takedown abuse — plan for a campaign, not an incident.** Intake carries no
 identity or veracity check, and Google enforces US DMCA globally regardless of
@@ -172,6 +175,79 @@ continuously, which is why per-IP rate limits and CDN bot rules do not catch it.
 Alert on zero-dwell direct traffic per template against a control benchmark
 **inside** the collection window, not at quarter end (FIELD, 2026-06-16).
 
+**The paid-mention market now sells itself as AEO.** The industry's belief that
+third-party brand mentions drive AI visibility opened an arbitrage: outreach
+vendors repackaging the same link inventory as "GEO" or "AI visibility" at a
+large multiple of a normal placement price. This one arrives as a proposal on the
+client's desk, so the audit needs the signature rather than an opinion (`FIELD`,
+vendor audits, Aug 2026):
+
+- A brand mention priced at a multiple of that vendor's own link price, with
+  "partnership" language standing in for a disclosure.
+- Donor domains with no topical relationship to the client — a single page about
+  the client's category on a site otherwise publishing whatever pays.
+- Placements on pages already carrying outbound commercial anchors to
+  competitors.
+- Community "seeding" that the platform removes within weeks for breaching its
+  own rules, which is the tell that it was never participation.
+- Billing where the vendor pays the publisher directly and re-invoices the
+  client, with approval falling to whoever is junior enough not to evaluate the
+  donor.
+
+Two things to say when it lands. Google's spam policy covers manipulating
+generative answers and states there are no special optimizations for its AI
+surfaces (algorithm-updates.md), so this is the paid-link conversation wearing a
+new label, and sanctions are synced across surfaces. And the mechanism the pitch
+rests on — that models learn brands from third-party sources — does not imply
+that *bought* mentions on discounted domains change an answer; one proposed
+explanation for any short-term effect is that a second index still carries pages
+the first has discounted, which would make the window a defect rather than a
+channel (`HYPOTHESIS`).
+
+**Synthetic consensus is cheap, and the cluster is what sells it.** A fabricated
+industry award — no legal entity, no committee, no ceremony, judges invented —
+ranked first for its category term within days, and Google's AI Overview
+described it in its own words as a leading programme in the field. The lever was
+not the site: it was three source types agreeing (an exact-match domain, a
+neutral-reading reference page, and a page on an established personal domain the
+engine already trusted), with the last one carrying the weight because a known
+entity vouching for an unknown one reads as corroboration. A press-release
+variant reached an AI Overview citation within minutes of distribution
+(`FIELD`, Aug 2026). Defensively this is the "fabricated consensus networks" row
+above with a documented case attached, and the consequence for your own site is
+the uncomfortable one: an engine that cannot verify an entity is also unable to
+verify *you*, so first-party claims need corroboration you can point at —
+independent coverage, a method published next to your numbers, records that
+predate the claim.
+
+**Coordinated generation is detected at the cluster, not the page.** Google
+Research published a two-stage system for synthetic-content abuse on video
+platforms (S-CTS): one component scores repetitive, templated generated
+narratives, the other groups accounts by shared infrastructure signals into
+"generation clusters" which are then terminated together — reported as 50,000
+clusters covering 130,000 channels over six months, with a lightweight adapter
+retrained when operators switch generative models (`STUDY`, published research,
+2026-08; a video-platform system, transferred here by analogy — the mechanism is
+not documented for web search). What transfers is the join key: shared build
+footprints, one publishing cadence and one template make a set of properties a
+single object to a detector even where each page would pass alone. Two audit
+consequences follow, both defensive. A site built by a page generator carries its
+boilerplate signature whether or not the content is thin — check what your
+builder leaves behind. And a "network" of your own microsites sharing a
+template, a host and a publishing script is one object, so the risk is not priced
+per site.
+
+**Review moderation is a queue, and queues are attackable.** Local review
+platforms generate a ticket per report rather than merging duplicates, so a
+volume of reports on one review distributes across several human reviewers, and
+the attack works on the probability that one of them errs — which means genuine
+reviews disappear without any policy having been broken (`FIELD`, Aug 2026).
+Defensive practice: track review counts per location over time so a removal is
+noticed at all, keep your own evidence for each review you would contest, and
+limit profile access to the smallest set of roles that still gives you
+redundancy, so a suspension on one account cannot take a whole portfolio of
+locations with it.
+
 ## I5. Brand-SERP defense
 
 - Track what occupies page one for the brand query, including UGC threads.
@@ -201,6 +277,22 @@ Alert on zero-dwell direct traffic per template against a control benchmark
   option — so your only warning arrives in the mailbox tied to the listing, and
   in that market a scrubbing habit is now disclosed to consumers (CONFIRMED,
   2026-04-29).
+- **Displacement beats removal, and it is slower than anyone budgets.** A hostile
+  thread ranking on the brand term survives because it earns clicks, and chasing
+  moderators turns them adversarial. The documented sequence that worked ran the
+  other way round: months of genuine presence on the platform first, until
+  first-party threads ranked for a spread of brand queries and the sentiment mix
+  changed; only then, with an account that read as official rather than as spam,
+  an approach to the original author — whose complaint had since been fixed —
+  which ended in the author removing their own post (FIELD, Aug 2026). The order
+  is the finding: the outreach worked because the trust was already built, and a
+  plan that starts at the outreach is a plan to be ignored.
+- **Own the review query rather than renting it.** A first-party `/reviews`
+  section on the root domain competes for "<brand> reviews" against third-party
+  threads and feeds the same source pool the answer engines read
+  (growth-plays.md G29). It holds only on genuine feedback: choosing which
+  customers are asked is review gating, which is a policy violation and belongs
+  on this page, not in a plan.
 - Keep a register of every report filed: rule cited, content, date, user,
   outcome. Removal then becomes a repeatable process rather than a one-off favor.
 

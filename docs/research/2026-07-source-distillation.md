@@ -7,9 +7,15 @@ shipped to agents or npm) so that every recommendation can be traced back to its
 source and re-checked when the surfaces move.
 
 
+The file keeps its July name because things link to it; the corpus it records now
+runs to 2026-08-05 (PART G).
+
 Sources:
 - Telegram channels `@notjohnmu` ("noindex, nofollow", 175 posts) and
   `@MikeBlazerX` ("Mike Blazer", 217 posts), 27.04.2026–27.07.2026.
+- The same two channels for 27.07.2026–05.08.2026, plus `@MikeBlazerPRO`
+  (23.07.2026–05.08.2026), distilled in PART G. The PRO channel is closed and
+  paid; the boundary on using it is recorded in `docs/DECISIONS.md`.
 - Search Engine Journal, *Google Algorithm Updates & Changes: A Complete History*
   — <https://www.searchenginejournal.com/google-algorithm-history/> (fetched
   2026-07-28; feeds `references/algorithm-updates.md`).
@@ -1238,3 +1244,74 @@ Shopify expose no raw access logs, so rung 1 of the tooling ladder is unavailabl
 and the finding caps at rung 2: GSC Crawl Stats gives host-level shares, totals
 and status mix, never per-URL truth. `CONFIRMED`. → `tooling.md` ladder note and
 the "Crawl waste with no server logs" routing row.
+
+## PART G — the 2026-08 window (27.07–05.08.2026)
+
+Screened against everything above, so overlap with PART B is excluded by
+construction: `@MikeBlazerX` was already distilled to post 6568, and the new
+window is 6569–6590 plus `@notjohnmu` 2919–2937. `@MikeBlazerPRO` (414–433) had
+never been read and is entirely new.
+
+Two gates were applied before anything entered a reference. **Non-contradiction:**
+a candidate that disagrees with a claim the corpus already holds on better
+evidence is refused, not demoted — `evidence-tiers.md` rule 3 governs
+disagreement between two credible sources, and an unmethodded assertion is not
+the second credible source. **Evidence:** every carried number was treated as a
+lead until a primary source was read (`docs/superpowers/retro.md` #1). That
+second gate removed three figures and one field name that had already passed the
+first.
+
+### G1. What the primary-source pass changed
+
+| Claim as carried | What the primary said | Outcome |
+|---|---|---|
+| Five-second render limit is real | Published test pages and method (D. Smart, 2026-07-23): the WRS pauses its own clock during fetches; real cut-off 48–54s live, ~30s for indexing | Admitted as a myth-guard row with the ceilings |
+| Entity extractors are unreliable | On-Page.ai / E. Lancheres, 2026-07-20, n=166 pages / 48 SERPs; §3.4 gives the determinism split (n=50) | Admitted with the vendor conflict disclosed |
+| Brand carousel −2.8% | SearchPilot, 2026-07-17 — and the same publisher's carousel-*removal* test at +29% | Admitted, and strengthened into a replicated direction |
+| Alice AI 49.5M / 42% | Yandex Q2'26 results, 2026-07-29 | Admitted, with the Q1 point kept beside it |
+| Google detects generated-content networks | Google Research S-CTS paper: cluster-level termination, 50k clusters / 130k channels in six months | Admitted, upgraded to STUDY, marked as transferred by analogy |
+| Opt-out removes you from Top Stories | Scoped by the source to Top Stories *inside* AI Overviews, and explicitly unconfirmed by Google | Admitted as HYPOTHESIS, narrowed |
+| `inurl:` has been killed | Operator references say it still works with degraded precision and regional inconsistency; both readings agree on rate-limiting and fingerprinting | Rewritten as operator decay, demoted to HYPOTHESIS |
+| Compare `Last crawl` with `Last crawl rendered` in GSC | **No such field exists.** The tool exposes Last crawl, the stored render under *View crawled page*, and a live test | Diagnostic rewritten into the form that can be run |
+| A relocated widget produced €120k/yr | No primary found | Number dropped; the mechanism kept, carried by the published tabs/above-fold test instead |
+| SAB visibility radius 2–5 miles vs 5–10 | No primary found | Number dropped; the block ships without it |
+| 10+ sponsorships → +83% visibility | No primary found; unnamed survey | Number dropped; the guardrail kept |
+
+### G2. Admitted, by destination
+
+`technical-checks.md` — the render queue as a budget separate from crawl budget,
+with an executable diagnostic; the one-shot viewport stretch and its two
+consequences (sequential infinite scroll, unconstrained hero); mobile-first
+status divergence and the single internal link as a discovery path; trust as the
+gate on a new domain's indexing. `myths.md` — the five-second limit, the
+multiple-H1 penalty. `entity-and-brand.md` — extractor false-positive ranges and
+the validate-against-Google rule; rating as a recommendation-stage input, scoped
+against the existing "bad ratings surface more" finding; pay-to-play listicle
+footprints as a placement liability. `tooling.md` — entity-gap routing, operator
+decay. `measurement.md` — the generative-report → grounded-validation loop, with
+citation and mention recorded separately. `experiments.md` — three layout split
+tests. `architecture-and-equity.md` — internal-link intent, and the service-area
+block. `ranking-model.md` — controlled evidence for layout position, plus the
+B2B page-type counterweight. `linkbuilding.md` — the sponsorship guardrail.
+`demand-and-conversion.md` — map-pack call attribution. `intent-and-content.md` —
+trend-onset timing, on-site UGC. `growth-plays.md` + `threats-and-defense.md` —
+the first-party reviews section with its gating guardrail.
+`threats-and-defense.md` — five detection entries: the paid-mention market
+labelled as AEO, synthetic consensus with its documented case, retrieve-and-
+switch, canonical pulsing from expired domains, cluster-level detection of
+coordinated generation, and review-queue attacks. `benchmarks.md` and
+`algorithm-updates.md` carry the figures and the dated platform change.
+
+### G3. Refused, and why — so the next pass does not re-litigate it
+
+| Refused | Reason |
+|---|---|
+| "Parsers ignore hidden JSON-LD in favour of visible HTML tables"; a three-sentence embedding-dense intro yielding 76% citation | Contradicts a STUDY already in the corpus (JSON-LD +6.5pp across 353,799 pages, `aeo-geo.md` F2). The counter-claim has no published method and an unverifiable sample, so rule 3 does not apply — this is refusal, not demotion. The actionable half (facts in plain HTML, one claim per sentence) is already in F3 |
+| ORCAS clickstream as a source of "empirical conversion and revenue models" | The dataset is 2020, contains clicked query–URL pairs and **no conversion or revenue data at all**, and is released for non-commercial research. The claim describes a dataset that does not exist |
+| Hourly automated news publishing as a freshness strategy | Is the documented scaled-content-abuse profile the corpus already refuses (`myths.md`). The 21-day QDF cycle survives only as the reason such traffic is rented |
+| Ranking exchange and "second spot" placement to dodge self-promotion filters | Manipulation. The underlying observation — self-promotional sourcing costs the recommendation — is already in `myths.md` from a different study, and needed nothing from here |
+| EU/UK AI Mode visits overtaking the US | A screenshot of a third-party panel chart with no method and no figures available |
+| "Publisher search traffic 51% → 27% in two years" | No source named anywhere in the material |
+| Live URL Test as a crawl-priority lever | Unverifiable folklore. The useful half of the same post — trust gating indexation — was admitted separately as FIELD |
+| Buying aged forum accounts; cloning validated SaaS products; thumbnail structure extraction; platform-specific growth tactics; click-signal manipulation and "freeze the page during a core update"; midpoint verification pins for service areas; hidden-text keyword loading | Out of scope by `CONTRIBUTING.md`: manipulative, or about a platform this skill does not audit |
+| Forcing an entity into a model's knowledge base via co-citation prompting | One anecdote. It belongs in `experiments.md` as a design if anyone wants it, not in a reference as a claim |

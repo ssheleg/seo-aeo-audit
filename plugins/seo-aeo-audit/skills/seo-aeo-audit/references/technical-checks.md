@@ -128,6 +128,77 @@ propagate and can return transient 5xx immediately after deployment.
   owns both observations and the reading rule. Neither reading makes a Googlebot
   block safe: price the trade-off before it ships, not after.
 
+### Rendering is a second budget, and it is not the crawl budget
+
+Crawling and rendering are separate passes. Fetching HTML is cheap; executing
+JavaScript is not, so JS-dependent pages queue for a later render that can arrive
+hours or days behind the fetch. Crawl budget counts URLs fetched; the render
+queue decides how many of them ever have their JavaScript run. On a JS template
+this is the ordinary cause behind *Crawled – currently not indexed*: the page was
+read, the content was not.
+
+**The executable diagnostic.** URL Inspection reports **Last crawl**, and *View
+crawled page* shows the HTML Google stored at that crawl. Compare that stored
+copy against the raw source: content that exists only after JavaScript runs and
+is missing from the stored copy is content Google has not rendered yet. Then run
+*Test live URL*, which fetches and renders now — the gap between the stored copy
+and the live render is the queue you are measuring. The tool exposes no
+"last rendered" timestamp, so a diagnostic written around one cannot be run;
+this is the form that can (`CONFIRMED` — both surfaces are documented, and the
+comparison is an observation you can point at).
+
+**What burns the render budget** is practitioner consensus, not measurement:
+heavy bundles, third-party tags (analytics, session recording, chat widgets, a
+tag manager carrying a dozen of them), lazy-loading that never fires for a bot,
+and infinite scroll. Named thresholds — a megabyte of bundle, 200KB of
+first-screen JavaScript — are places to measure, not targets to report
+(`HYPOTHESIS`; no published study fixes them). One field account of a 700KB
+bundle put the lever on third-party scripts plus server-side rendering rather
+than bundle weight alone (`FIELD`, Jul 2026).
+
+**Fix order that survives contact.** Server-render the content, headings and
+metadata that define the page; then cut payload; never lazy-load the hero image,
+the body copy, the headings or the navigation. Where SSR is impossible, serving
+the crawler a cached HTML snapshot is allowed *provided the snapshot matches what
+users get* — divergence is cloaking. Give every paginated batch a crawlable URL
+carrying full content in the initial HTML response, and do not add
+`rel=next`/`rel=prev` while doing it (A7: it is unsupported and must not be
+"fixed" back in).
+
+### Googlebot does not scroll — it stretches, once
+
+To evaluate lazily-loaded content Googlebot renders with a viewport expanded to
+the page's full initial height; Google's own advice for reproducing what it sees
+is a viewport around 9,000px tall in DevTools. The expansion happens **once per
+render**, and that single resize is what fires scroll listeners and
+`IntersectionObserver` callbacks. Two consequences worth auditing:
+
+- **Sequential infinite scroll never loads batch two.** An implementation that
+  needs a second, third and n-th scroll event gets one, so everything after the
+  first payload stays invisible to the indexer. Crawlable pagination URLs are the
+  fix, not a taller viewport.
+- **An unconstrained hero breaks the rendered layout.** A full-screen hero image
+  with no CSS `max-height` scales with the stretch and pushes the main content
+  thousands of pixels down the rendered page. Whether that depth costs ranking
+  weight is unproven (`HYPOTHESIS`); that the rendered page no longer resembles
+  the designed one is visible in the rendered screenshot, which is where to check
+  it rather than in a browser.
+
+### Mobile-first: the mobile response is the only one that counts
+
+A URL can return 404 on desktop and 200 on mobile and stay indexed and ranking
+for months — the desktop status is not the one being read. Two checks follow:
+
+- **Request each template's status with a mobile user agent**, not only the
+  desktop default. A 410 served to desktop alone changes nothing.
+- **Kill the discovery path, not just the response.** A single internal link — one
+  mention on a parent FAQ page — is enough to keep an obsolete URL in rotation,
+  because the crawler keeps arriving and keeps re-confirming it. Removing that
+  link destroys the path; `noindex` or an honest 404/410 removes the URL, with no
+  meaningful speed difference between them; the GSC removal tool only buys time
+  while one of those takes effect (John Mueller). `CONFIRMED` — the status code
+  and the link are both observations.
+
 ## A2. Indexation economics
 
 Treat the index as a scarce resource: Google raises the quality bar when it hits
@@ -164,6 +235,17 @@ rank tracker — before calling an index-count change real (see measurement.md).
 fetch; nothing in them touches the quality gate, so "guaranteed indexing" is a
 sales claim (`FIELD`, Jul 2026). The free lever that beats them is one internal
 link from a page Googlebot already crawls daily.
+
+**On a domain with no trust yet, none of the levers fire.** A new domain given
+the full indexing toolkit — a paid indexer, links from aged footers, hub pages on
+free platforms, syndicated posts on social publishing sites — recorded no
+indexing progress at all, while the same target keywords placed inside an article
+on an established ranking domain were indexed immediately (`FIELD`, Aug 2026,
+single practitioner cohort). Read alongside the row above: those tools force a
+crawl, and the gate that follows is applied before inclusion. The audit
+consequence is an expectation, not a task — on a young domain, set the
+indexing timeline against earned trust and say so in the report, rather than
+selling a technical fix that the evidence says will not move it.
 
 **Removing `noindex` is not a recovery lever.** A sports site that bulk-noindexed
 pages on AI advice went from 4–5k daily impressions to about 10; stripping the
@@ -484,6 +566,9 @@ when it has an observable impact.
 - Important content is not inside iframes or dead embeds.
 - Same content served to all user agents (no cloaking); mobile URLs serve the
   right content regardless of device.
+- Status codes verified with a **mobile** user agent, not only the desktop
+  default — mobile-first means a desktop-only 404 or 410 is not the response
+  being read (A1).
 - hreflang sets complete and reciprocal on every localized template, pointing at
   indexable 200 URLs, one mechanism per set (see B2).
 - Removed pages return 404/410 rather than soft 200s; valuable removed URLs are

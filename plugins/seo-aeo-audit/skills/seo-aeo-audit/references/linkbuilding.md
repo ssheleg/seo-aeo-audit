@@ -127,6 +127,17 @@ exclusions:
   `references/myths.md` and `references/threats-and-defense.md`. A site that has
   just cleaned its on-site signals should not acquire off-site ones that undo it.
 
+**Sponsorship, said honestly.** Sponsoring a local organization is ordinary
+marketing, the coverage is genuinely local, and sponsor pages survive for years
+because volunteer-run sites rarely audit them — which is exactly why they get
+pitched as a link tactic. Hold the distinction in the brief: a sponsorship the
+business would fund anyway is marketing, and a sponsorship bought for the link is
+a **paid link**, which needs qualifying (`rel="sponsored"`) whatever the invoice
+says. Recommend it as community presence with a link that may or may not pass
+equity; never as a per-link price, never as a volume program, and never with a
+visibility multiplier attached — the figures circulating for that come from an
+unnamed survey and did not survive a source check, so they are not in this file.
+
 ## CSV contract
 
 One row per target × keyword. Columns, in this order:

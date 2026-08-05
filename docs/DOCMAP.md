@@ -16,6 +16,7 @@ duplicated into commit messages or the changelog — those reference it.
 | The audit doctrine (non-negotiables) | `plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` | `cursor/rules/*.mdc` carries a full copy for a different agent — count-checked by `validate.py`, never summarized |
 | A dated number | `references/benchmarks.md` | Other references quote it **with its date and source**, never restate it |
 | A refuted claim | `references/myths.md` | SKILL.md carries the short list only |
+| The evidence-tier vocabulary | `references/evidence-tiers.md` | `CONTRIBUTING.md` quotes the four definitions verbatim — compared by `validate.py`, never paraphrased |
 | Tool → check routing | `references/tooling.md` | SKILL.md names a script; the routing table owns which rung it sits on |
 | A script's contract | its own docstring | README and SKILL.md describe usage; neither is the contract |
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |
@@ -37,6 +38,7 @@ the reason no check can.
 | Change a deliverable skeleton | `templates/` and `references/deliverable-templates.md` together | `validate.py` fails on drift between the two copies |
 | Release a version | four manifests plus the CHANGELOG top entry | `validate.py` four-way sync |
 | Change what an instrument can see | its caveat string, and the guard that pins it | `validate.py` doctrine guards; CI negative self-tests |
+| Edit a tier definition | the quoted copy in `CONTRIBUTING.md`, and a re-read of every claim carrying that tier | `validate.py` compares the two copies string-for-string; the re-read is **review** — no check knows which claims were admitted under the old bar |
 
 ## What proves it
 

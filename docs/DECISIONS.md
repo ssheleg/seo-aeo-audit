@@ -42,3 +42,43 @@ candidates" inferred from path shape, a guessed brand classification. Each would
 manufacture a finding out of missing data, which is the defect this skill exists
 to prevent. The refusals are held by tests because the useful-looking wrong
 feature is the one that gets added back later.
+
+## 2026-08-05 — The evidence-tier vocabulary has one home
+
+**Decision.** `references/evidence-tiers.md` is the single home of the four tier
+definitions. `CONTRIBUTING.md` quotes them verbatim, and `test/validate.py` fails
+when the copies diverge.
+
+**Why.** They had already diverged on the one tier that decides most admissions:
+`FIELD` read as "a single practitioner case, one site, no control" in the
+reference and "repeated practitioner reports, named" in CONTRIBUTING. Same label,
+two different admission bars, and nothing comparing them — the third instance of
+the pattern the DOCMAP was seeded for. The reference wins because the corpus is
+written against it: claims across the reference set are tagged `FIELD, single
+case`.
+
+**Alternative rejected.** Splitting into two tiers (`FIELD` for repeated reports,
+a new `CASE` for single ones). More precise, and it would have required
+re-tiering every claim in twenty-one files against a vocabulary the spec fixes as
+closed. Recorded in the carry-over ledger instead.
+
+## 2026-08-05 — A closed, paid source may be recorded, inside a stated boundary
+
+**Decision.** Material from the closed `@MikeBlazerPRO` channel may enter the
+skill under the same two gates as anything else, and the channel is named in
+`docs/research/` with post ids. The boundary: facts and mechanics restated in
+this repo's own words, attributed by channel and id; no quotation, no
+reproduction of the source text, and nothing admitted that cannot be stated
+without it.
+
+**Why.** The alternative — admitting only what a public source also carries —
+was considered and rejected: it would have dropped the service-area block, the
+review-queue defense and three detection patterns, none of which are
+manipulative and all of which are ordinary craft knowledge. Attribution without
+reproduction is how the free channels were already handled; the paid status
+changes who paid to read it, not whether a fact about Googlebot can be restated.
+
+**What this does not license.** Bulk distillation of a paid feed into a public
+repository. Each admitted item has to survive both gates on its own, and the
+refusal list in PART G is part of the record precisely because it shows the gate
+running.

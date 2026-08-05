@@ -146,6 +146,16 @@ leads and 11% higher ROI after mining call conversations, another a 23% sales
 lift after aligning landing-page messaging with the questions callers actually
 asked. Treat transcripts as the cheapest keyword research you own.
 
+**Map-pack calls need their own number, or they land in the organic pile.**
+Where a local business runs paid placement on the map pin, the standard tagging
+does not survive a click-to-call: there is no landing page to carry a parameter.
+The fix is on the profile rather than in the ad — a dedicated tracking number
+entered in the profile's advanced settings, which the platform substitutes for
+the organic number only while the paid placement is showing. Without it, paid
+calls are counted as organic local demand, and the local channel reports a
+success it did not earn (`FIELD`, Aug 2026). Audit it wherever paid and organic
+share a listing.
+
 ## H+4. Paid and organic in the same room
 
 The audit should say something about paid whenever it exists, because the two
