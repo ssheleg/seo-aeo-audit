@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.12.0 — 2026-08-06
+
+### Added
+- **`references/discover.md`** — Discover audited as its own surface. The skill
+  mentioned Discover 42 times and mentioned `og:image` and `max-image-preview`
+  **zero** times, so the one check whose failure is binary was the one it could
+  not make. Carries the two tags without which no card renders, image
+  requirements, the two metatags reported to halt the pipeline entirely, the
+  freshness window, and a four-command audit.
+- **Sitemap protocol** in `references/technical-checks.md` — the namespace and
+  schema contract, the five characters that must be escaped (and why `&` in a
+  query string is the one that actually breaks files), W3C Datetime for
+  `lastmod` and why a build-stamped one is worse than none, the 50,000/50MB
+  limits, `robots.txt` submission, and a mechanical check rather than an eyeball.
+
+### Notes
+- **The new reference states its own evidence tiers in its opening section**, and
+  they are not uniform. Google's documentation carries the image and
+  `max-image-preview` requirements (CONFIRMED, verified 2026-08-06 against *Get
+  on Discover*); the parsing fallback chains, freshness buckets and
+  pipeline-blocking metatags come from one practitioner's SDK reverse-engineering
+  and ship as **FIELD**. Mixing the two silently would have been the exact
+  failure `references/evidence-tiers.md` exists to prevent — a plan someone funds
+  should not treat "Google says" and "one researcher observed" as the same claim.
+- `discover.md` is in `REQUIRED_REFERENCES`, with its own negative self-test:
+  deleting it must fail the validator.
+
 ## v0.11.2 — 2026-08-05
 
 A self-audit of the two releases above, run on the same two gates the pass itself

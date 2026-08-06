@@ -325,6 +325,7 @@ the nearest thing that does work, and move on.
 - [references/demand-and-conversion.md](references/demand-and-conversion.md) — track H+: conversion elements, lead capture, call/offline attribution, paid × organic alignment.
 - [references/threats-and-defense.md](references/threats-and-defense.md) — track I: penalties, negative SEO, prompt injection, takedown abuse, hijacks.
 - [references/measurement.md](references/measurement.md) — track J: GSC/Bing/AI reporting surfaces, per-engine metrics, what not to measure.
+- [references/discover.md](references/discover.md) — Google Discover as its own surface: the two tags without which no card renders, image requirements, the metatags that halt the pipeline entirely, freshness, and the evidence tier each claim actually carries.
 - [references/tooling.md](references/tooling.md) — check → tool routing, the evidence ladder, DevTools recipes, where automation stops.
 - [references/prowl-mcp.md](references/prowl-mcp.md) — bulk competitive, demand and AI-surface data through one MCP endpoint: which tools serve which track, the two-index cross-check habit, spam-score filtering on anchors, and the operating gotchas.
 - [references/growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from, with expected effect and evidence tier.

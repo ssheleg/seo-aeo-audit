@@ -538,6 +538,66 @@ drop a product from position 1–3 past 50. Prefer a stable backend-proxied URL
 (`/product/{id}/image`) serving the current file; serving `.webp` bytes at a
 `.png` URL confuses crawlers over time — a plain 301 is safer.
 
+## Sitemap protocol — the details that make one silently ignored
+
+A sitemap that parses in your editor and fails at the engine is a common,
+invisible defect: Search Console reports "couldn't fetch" or quietly indexes
+nothing new, and the file looks fine.
+
+**The namespace is part of the contract.** A urlset without it, or with a typo
+in it, is not a sitemap:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+```
+
+An index file uses `<sitemapindex>` with the same namespace and the
+`siteindex.xsd` schema. Mixing the two — `<urlset>` holding `<sitemap>`
+children — parses as XML and means nothing.
+
+**Five characters must be escaped in every URL**, and the one that actually
+bites is `&` inside a query string, because a CMS emits it unescaped and the
+whole file becomes invalid at the first product URL with two parameters:
+
+| Character | Escape |
+|---|---|
+| `&` | `&amp;` |
+| `'` | `&apos;` |
+| `"` | `&quot;` |
+| `>` | `&gt;` |
+| `<` | `&lt;` |
+
+**`lastmod` must be W3C Datetime**, and it must be true. `2026-08-06` and
+`2026-08-06T14:30:00+00:00` are both valid; a US-format date is not, and a
+`lastmod` that updates on every build regardless of content is worse than none —
+it is the signal that gets a sitemap discounted, and nothing reports that it
+happened.
+
+**Limits:** 50,000 URLs and 50MB uncompressed per file; split into an index past
+either. Gzip is accepted and the 50MB limit applies to the *uncompressed* size.
+
+**Submission:** reference it from `robots.txt` with an absolute URL
+(`Sitemap: https://example.com/sitemap.xml`) — that is the discovery path that
+works for every engine, including the ones with no console. Cross-domain
+submission requires the sitemap be reachable and the domains verified together.
+
+**Alternative formats** are legal and rarely worth it: a plain text file of one
+URL per line, or an RSS/Atom feed. Both drop `lastmod` semantics and priority.
+Use them only when generating XML is genuinely not an option.
+
+**Check it mechanically, not by eye:**
+
+```bash
+curl -s https://example.com/sitemap.xml | xmllint --noout -    # well-formed?
+curl -s https://example.com/sitemap.xml | grep -c '<loc>'      # count vs expectation
+curl -s https://example.com/sitemap.xml | grep -oE '<loc>[^<]*&[^a][^m][^p]' | head
+# ^ unescaped ampersands: any hit is a parse failure waiting at the engine
+```
+
 ## A7. The mechanical sweep (completeness list)
 
 Run this after the diagnostic work, as a completeness pass. It catches the

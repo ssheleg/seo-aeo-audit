@@ -15,6 +15,7 @@ SKILL_DIR = f"plugins/{NAME}/skills/{NAME}"
 REQUIRED_TEMPLATES = ("audit-report.template.md", "action-plan.template.md")
 REQUIRED_REFERENCES = (
     "technical-checks.md",
+    "discover.md",
     "architecture-and-equity.md",
     "intent-and-content.md",
     "aeo-geo.md",
