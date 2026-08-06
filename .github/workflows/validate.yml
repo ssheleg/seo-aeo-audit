@@ -112,6 +112,18 @@ jobs:
             echo "OK: validator requires the reference contracts"
           fi
 
+      - name: Negative self-test (the Discover reference is a contract, not a file)
+        run: |
+          set -eu
+          cp -R . /tmp/nodiscover-copy
+          rm -f /tmp/nodiscover-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/discover.md
+          if python3 /tmp/nodiscover-copy/test/validate.py; then
+            echo "ERROR: validator passed with the Discover track missing"
+            exit 1
+          else
+            echo "OK: discover.md is required, not optional"
+          fi
+
       - name: Negative self-test (stray SKILL.md must fail)
         run: |
           set -eu
