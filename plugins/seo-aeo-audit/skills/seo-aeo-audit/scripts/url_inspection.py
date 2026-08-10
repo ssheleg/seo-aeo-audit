@@ -107,8 +107,9 @@ def parse(raw: dict, url: str) -> dict:
     declared canonical as missing."""
     if "_error" in raw:
         return {"url": url, "error": raw["_error"]}
-    idx = _as_dict(_as_dict(raw.get("inspectionResult")).get("indexStatusResult"))
-    rich = _as_dict(_as_dict(raw.get("inspectionResult")).get("richResultsResult"))
+    inspection = _as_dict(raw.get("inspectionResult"))
+    idx = _as_dict(inspection.get("indexStatusResult"))
+    rich = _as_dict(inspection.get("richResultsResult"))
     rich_types = []
     for item in _as_list(rich.get("detectedItems")):
         name = _as_dict(item).get("richResultType")
@@ -116,6 +117,10 @@ def parse(raw: dict, url: str) -> dict:
             rich_types.append(name)
     return {
         "url": url,
+        # Whether the index answered at all, kept apart from what it answered: with
+        # no indexStatusResult every field below parses to None, and "all fields
+        # absent" used to come out as the finding "never crawled".
+        "has_index_status": bool(idx),
         "verdict": idx.get("verdict"),
         "coverage_state": idx.get("coverageState"),
         "indexing_state": idx.get("indexingState"),
@@ -132,6 +137,15 @@ def parse(raw: dict, url: str) -> dict:
     }
 
 
+# Google documents the coverage states; the verdict field is the engine's own
+# summary of them. PASS and PARTIAL are indexed; FAIL and NEUTRAL are not, and
+# NEUTRAL is where every *exclusion* lands — duplicates, canonical alternates,
+# `noindex`, unknown URLs. Substring-matching "not indexed" caught two of those
+# and silently passed the rest.
+INDEXED_VERDICTS = frozenset({"PASS", "PARTIAL"})
+NOT_INDEXED_VERDICTS = frozenset({"FAIL", "NEUTRAL"})
+
+
 def findings(r: dict) -> list[dict]:
     """Only what the index actually said. No inference, no eligibility claims."""
     out: list[dict] = []
@@ -141,6 +155,12 @@ def findings(r: dict) -> list[dict]:
 
     if r.get("error"):
         return out
+    if not r.get("has_index_status"):
+        add("high", "no-index-status",
+            "the API answered without an indexStatusResult, so nothing about this URL's "
+            "index state was returned. This is a gap in the report, not a verdict about "
+            "the page — re-run it, and check the property and URL match")
+        return out
     gc, uc = r.get("google_canonical"), r.get("user_canonical")
     if gc and uc and gc != uc:
         add("blocker", "canonical-disagreement",
@@ -149,11 +169,15 @@ def findings(r: dict) -> list[dict]:
     if uc in (None, "") and gc:
         add("high", "canonical-undeclared",
             f"no user-declared canonical; Google picked {gc} on its own")
-    if r.get("verdict") == "FAIL" or (
-            r.get("coverage_state") and "not indexed" in str(r["coverage_state"]).lower()):
+    _verdict = (r.get("verdict") or "").upper()
+    if _verdict in NOT_INDEXED_VERDICTS or (
+            _verdict not in INDEXED_VERDICTS
+            and r.get("coverage_state")
+            and "not indexed" in str(r["coverage_state"]).lower()):
         add("blocker", "not-indexed",
-            f"coverage state: {r.get('coverage_state')!r} — nothing else about this "
-            "page matters until it is in the index")
+            f"the index reports verdict {_verdict or '(none)'} with coverage state "
+            f"{r.get('coverage_state')!r} — this URL is not in the index, and nothing else "
+            "about the page matters until it is")
     if r.get("robots_txt_state") == "DISALLOWED":
         add("blocker", "robots-disallowed", "robots.txt disallows this URL")
     if r.get("page_fetch_state") not in (None, "SUCCESSFUL"):
@@ -183,8 +207,23 @@ def render_markdown(rows: list[dict], dropped: int) -> str:
         for f in r.get("findings", []):
             lines.append(f"  - **{f['severity']}** [{f['code']}] {f['message']}")
         lines.append("")
-    lines.append("Evidence tier: CONFIRMED — these are the index's own answers, "
-                 "not inferences from a fetch. Record the date beside them.")
+    # The tier belongs to answers that arrived. Printed unconditionally, this line
+    # declared a run of 403s to be CONFIRMED evidence — from the one instrument in
+    # the skill whose whole justification is that it can legitimately claim the tier.
+    answered = [r for r in rows if not r.get("error") and r.get("has_index_status")]
+    if answered:
+        lines.append(f"Evidence tier: CONFIRMED for the {len(answered)} of {len(rows)} URL(s) "
+                     f"the index answered for — those are the engine's own answers, not "
+                     f"inferences from a fetch. Record the date beside them.")
+        if len(answered) != len(rows):
+            lines.append(f"The remaining {len(rows) - len(answered)} produced no index answer "
+                         f"and support no finding at any tier (non-negotiable #6: that is a "
+                         f"gap in the report, not a silent omission).")
+    else:
+        lines.append("No index answers were obtained: every URL failed or returned no index "
+                     "status, so this run supports **no findings at any tier**. Fix the access "
+                     "gate named above and re-run; report the gap meanwhile "
+                     "(non-negotiable #6).")
     return "\n".join(lines)
 
 

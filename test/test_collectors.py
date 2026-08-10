@@ -201,10 +201,113 @@ check("evidence ladder" in clean, "a clean preflight must say findings can climb
 check(pf.check_gsc(None, None, None)[0]["gate"] == "login",
       "no token must be reported as a login gate, not a permission one")
 
+# ── preflight: CrUX presence is decided by the metrics, not by a key name ────
+# The probe read at most 4096 bytes of a several-hundred-KB PSI response and then
+# decided on the presence of the *string* `loadingExperience`, which PSI returns
+# whether or not CrUX has data for the URL. psi_pull.py has always known better:
+# the data lives in that block's `metrics` child. So the probe could report
+# "CrUX field data present for this URL" from a key that is always there, and
+# "NO CrUX field data — too little traffic" from a read that never reached it.
+check(pf.has_crux_field_data({"loadingExperience": {"metrics": {
+          "LARGEST_CONTENTFUL_PAINT_MS": {"percentile": 2000}}}}) is True,
+      "a block carrying metrics is field data")
+check(pf.has_crux_field_data({"loadingExperience": {"id": "https://e.com/",
+                                                    "initial_url": "https://e.com/"}}) is False,
+      "the key without metrics is PSI's way of saying there is no CrUX data")
+check(pf.has_crux_field_data({"loadingExperience": {"metrics": {}}}) is False,
+      "an empty metrics map is absence, not presence")
+check(pf.has_crux_field_data({}) is False, "no block at all is absence")
+# and the same rule as psi_pull, on the same shape, so the two cannot drift
+_psi_says = psi.parse({"loadingExperience": {"id": "u"},
+                       "lighthouseResult": {"categories": {"performance": {"score": 0.9}}}},
+                      "u")["field_data"] is not None
+check(pf.has_crux_field_data({"loadingExperience": {"id": "u"}}) == _psi_says,
+      "preflight and psi_pull must agree about what counts as CrUX field data")
+
+# ── sitemap_audit: the cap has to appear where the number is read ────────────
+# The notice went to stderr under a comment saying a silent cap reads as "this is
+# the whole site". Any run that captures stdout — which is how the skill's own
+# examples use these scripts — loses it exactly when the count becomes evidence.
+_capped = sm.analyze(["https://e.com/a/"])
+_capped["urls_truncated"] = 12
+_capped["sitemaps_skipped"] = 3
+_capped["sitemaps_read"] = 50
+_md_cap = sm.render_markdown(_capped, sm.findings(_capped), ["https://e.com/sitemap.xml"])
+check("12" in _md_cap and "truncat" in _md_cap.lower(),
+      "the markdown report must name the URLs the per-file cap dropped")
+check("3" in _md_cap and "not read" in _md_cap.lower(),
+      "the markdown report must name the nested sitemaps it never opened")
+_clean = sm.analyze(["https://e.com/a/"])
+_clean.update({"urls_truncated": 0, "sitemaps_skipped": 0, "sitemaps_read": 1})
+_md_clean = sm.render_markdown(_clean, sm.findings(_clean), ["s.xml"])
+check("truncat" not in _md_clean.lower(),
+      "a complete read must not invent a truncation caveat")
+
+# ── gsc_pull: the default format must not silently drop four analyses ────────
+# ctr_curve, ctr_gaps, cannibalization and branded_split were computed into the
+# report and printed only under --format json, while `text` is the default and the
+# documented invocation. An agent that runs the documented command sees no
+# cannibalization section and reports either "none found" or writes one from
+# nothing — and derive_branded_split's careful refusal to guess never arrives.
+_report = {
+    "site": "sc-domain:e.com",
+    "recent_window": {"start": "2026-05-01", "end": "2026-07-30"},
+    "history_window": {"start": "2025-04-01", "end": "2026-07-30"},
+    "monthly": [{"month": "2026-07", "clicks": 100.0, "impressions": 5000.0}],
+    "cliff": None,
+    "position_split": {"top20": {"queries": 2, "impressions": 300, "clicks": 30, "ctr": 0.1},
+                       "striking_21_30": {"queries": 1, "impressions": 100, "clicks": 1, "ctr": 0.01},
+                       "beyond_30": {"queries": 5, "impressions": 9000, "clicks": 2, "ctr": 0.0002}},
+    "ctr_curve": {"4-10": {"median_ctr": 0.1, "sample": 12}},
+    "ctr_gaps": [{"key": "weak", "position": 6.0, "band": "4-10", "ctr": 0.02,
+                  "site_median_ctr_for_band": 0.1, "impressions": 900}],
+    "cannibalization": [{"query": "shoes", "urls": 2, "impressions": 350,
+                         "incumbent": {"page": "/a", "clicks": 10, "impressions": 200,
+                                       "position": 4.0},
+                         "rivals": [{"page": "/b", "clicks": 2, "impressions": 150,
+                                     "position": 9.0}]}],
+    "branded_split": {"available": False, "why": "no --brand-terms given; the split is not "
+                                                "inferable from query text alone and a guess "
+                                                "here would misstate the single metric the AEO "
+                                                "track leans on"},
+    "top_queries": [{"keys": ["q"], "clicks": 5.0, "impressions": 50.0, "position": 4.0}],
+    "top_pages": [{"keys": ["/p"], "clicks": 5.0, "impressions": 50.0, "position": 4.0}],
+    "query_page_pairs": [],
+    "sitemaps": [],
+    "rows_dropped_as_noise": 4,
+    "row_limits": {"query": 5000, "page": 5000, "query_page": 25000},
+    "row_limit_reached": ["query"],
+}
+_text = gsc.render_text(_report)
+check("cannibaliz" in _text.lower(), "the text report must show cannibalization")
+check("/a" in _text and "/b" in _text, "cannibalization must name the incumbent and the rival")
+check("ctr" in _text.lower() and "4-10" in _text, "the text report must show the site's own CTR curve")
+check("weak" in _text, "pages below the site's own curve must be listed")
+check("brand" in _text.lower() and "--brand-terms" in _text,
+      "the branded split must report itself unavailable in the DEFAULT format, not only in JSON")
+
+# the cliff detector fires only on a >=90% collapse held for 14 days. Silence from
+# a detector whose sensitivity is never printed reads as "no collapse".
+check("90%" in _text or "min_drop" in _text or "90 %" in _text,
+      "when no cliff is found the report must state the threshold that found nothing")
+_days = [{"keys": [f"2026-01-{d:02d}"], "clicks": 5.0, "impressions": 500.0} for d in range(1, 8)]
+_days += [{"keys": [f"2026-01-{d:02d}"], "clicks": 0.0, "impressions": 5.0} for d in range(8, 25)]
+check(gsc.find_cliff(_days) is not None, "a 99% drop that held must still be detected")
+check(gsc.find_cliff(_days)["threshold"] >= 0.9,
+      "the detected cliff must carry the threshold it was measured against")
+
+# row limits are not pagination: a property with more queries than the limit gets
+# its long tail dropped, which is precisely the band position_split is used to rank.
+check("5000" in _text and "row" in _text.lower(),
+      "the report must say the query set hit the API row limit")
+check("4" in _text and "noise" in _text.lower(),
+      "the rows dropped as scraper noise must be counted, not silently removed")
+
 if failures:
     print("FAIL: collector behavior")
     for f in failures:
         print(" - " + f)
     sys.exit(1)
 print("PASS: collector behavior (psi field/lab separation, CLS rescale, absent-CrUX "
-      "honesty, sitemap template families, orphan refusal)")
+      "honesty, sitemap template families, orphan refusal, sitemap cap in the report, "
+      "preflight/psi CrUX agreement, gsc text parity with json)")

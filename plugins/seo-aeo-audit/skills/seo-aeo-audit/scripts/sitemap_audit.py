@@ -165,8 +165,23 @@ def render_markdown(a: dict, f: list[dict], sources: list[str]) -> str:
     lines = ["# Sitemap inventory — what the site declares", "",
              f"Sources: {', '.join(sources)}", "",
              f"**{a['urls_total']} URL(s)** across **{len(a['templates'])} template "
-             f"pattern(s)**.", "", "## Template families", "",
-             "| pattern | URLs |", "|---|---|"]
+             f"pattern(s)**.", ""]
+    # The caps belong beside the count they cap. They used to go to stderr only, so
+    # any run that captured stdout — which is how this script is meant to be used —
+    # lost them at the moment the number became evidence (non-negotiable #8).
+    if a.get("urls_truncated") or a.get("sitemaps_skipped"):
+        lines.append("> ⚠ **This is not the whole declaration.**")
+        if a.get("urls_truncated"):
+            lines.append(f"> {a['urls_truncated']} URL(s) beyond the "
+                         f"{MAX_URLS_PER_MAP}-per-file sitemap limit were truncated and are "
+                         f"not counted above.")
+        if a.get("sitemaps_skipped"):
+            lines.append(f"> {a['sitemaps_skipped']} nested sitemap(s) were not read "
+                         f"(`--max-maps` reached after {a.get('sitemaps_read', '?')}). "
+                         f"Raise `--max-maps` before treating the count as complete.")
+        lines.append("")
+    lines += ["## Template families", "",
+              "| pattern | URLs |", "|---|---|"]
     for t in a["templates"][:40]:
         lines.append(f"| `{t['pattern']}` | {t['urls']} |")
     if len(a["templates"]) > 40:

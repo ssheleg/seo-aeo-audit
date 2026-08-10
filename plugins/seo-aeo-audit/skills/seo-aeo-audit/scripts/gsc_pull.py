@@ -103,10 +103,25 @@ def call(path: str, token: str, quota_project: str | None,
 
 def query(site: str, token: str, quota_project: str | None, dimensions: list[str],
           start: str, end: str, row_limit: int = 25000) -> list[dict]:
+    """One searchAnalytics page. No pagination — see ROW_LIMIT_NOTE.
+
+    The API orders rows by clicks descending, so a property with more rows than
+    `row_limit` loses its long tail, which is exactly the band `position_split`
+    exists to size. The caller reports when a limit was reached rather than
+    presenting a truncated set as the query set (measurement.md J1 already names
+    "data hiding on large properties" as the GSC caveat; this is the local form).
+    """
     enc = urllib.parse.quote(site, safe="")
     body = {"startDate": start, "endDate": end,
             "dimensions": dimensions, "rowLimit": row_limit}
     return call(f"/sites/{enc}/searchAnalytics/query", token, quota_project, body).get("rows", [])
+
+
+ROW_LIMIT_NOTE = (
+    "the API returned exactly the row limit for this dimension, so the long tail is "
+    "missing — and the tail is where the beyond-30 band lives. Treat the split as a "
+    "lower bound on that band, or narrow the window and re-run"
+)
 
 
 # ── pure analysis (no network — unit-testable) ───────────────────────────────
@@ -293,8 +308,19 @@ def find_cliff(rows: list[dict], min_drop: float = 0.9, min_baseline: float = 50
             continue
         return {"before": daily[i - 1]["keys"][0], "after": daily[i]["keys"][0],
                 "before_impressions": round(daily[i - 1]["impressions"]),
-                "after_impressions": round(today), "drop": round(drop, 4)}
+                "after_impressions": round(today), "drop": round(drop, 4),
+                # The sensitivity travels with the answer. Silence from a detector
+                # whose threshold is never stated reads as "no collapse", and this
+                # one only fires on a near-total one.
+                "threshold": min_drop, "hold_days": hold_days, "window": window}
     return None
+
+
+CLIFF_SENSITIVITY = (
+    "the detector reports only a drop of >=90% against the previous 7-day mean that "
+    "then held for 14 days. A 60% drop that held is real and invisible here — read the "
+    "monthly series below yourself before concluding the curve is intact"
+)
 
 
 def iso_days_before(days: int, today: date) -> str:
@@ -304,6 +330,135 @@ def iso_days_before(days: int, today: date) -> str:
 def is_noise(q: str) -> bool:
     """Scraper and operator noise that should never reach a deliverable."""
     return q.startswith("-site:") or '"' in q or "http" in q
+
+
+# ── rendering (pure — the text format must show what the json format shows) ───
+
+
+def render_text(report: dict) -> str:
+    """The default format. It used to print six of the ten things it computed.
+
+    `ctr_curve`, `ctr_gaps`, `cannibalization` and `branded_split` were built into
+    the report and returned only under `--format json`, while `text` is the default
+    and the documented invocation. So an agent running the documented command saw
+    no cannibalization section and either reported none or wrote one from nothing —
+    and `derive_branded_split`'s refusal to guess never reached anybody.
+    """
+    n = lambda x: f"{round(x):,}"  # noqa: E731
+    out: list[str] = [f"property: {report['site']}"]
+    rw, hw = report.get("recent_window", {}), report.get("history_window", {})
+    if rw:
+        out.append(f"recent window: {rw.get('start')} -> {rw.get('end')}  ·  "
+                   f"history: {hw.get('start')} -> {hw.get('end')}")
+
+    ps = report["position_split"]
+    out += ["", "position split (recent window) — rank the brief by THIS, not by impressions:"]
+    for band, label in (("top20", "<= 20"), ("striking_21_30", "21-30"), ("beyond_30", "> 30")):
+        b = ps[band]
+        out.append(f"  pos {label:<6} queries={b['queries']:<5} impressions={n(b['impressions']):>9} "
+                   f"clicks={b['clicks']:<5} ctr={b['ctr']*100:5.2f}%")
+
+    # What the numbers above do NOT include, stated next to them.
+    limits = report.get("row_limits") or {}
+    reached = report.get("row_limit_reached") or []
+    if reached:
+        for dim in reached:
+            out.append(f"  ! {dim}: row limit {limits.get(dim, '?')} reached — {ROW_LIMIT_NOTE}")
+    dropped = report.get("rows_dropped_as_noise")
+    if dropped:
+        out.append(f"  ! {dropped} row(s) removed as scraper/operator noise "
+                   f"(quoted strings, raw URLs, `-site:`) before every number above")
+
+    cliff = report.get("cliff")
+    out.append("")
+    if cliff:
+        out.append(f"COLLAPSE: {cliff['before']} ({n(cliff['before_impressions'])} imp) -> "
+                   f"{cliff['after']} ({n(cliff['after_impressions'])} imp), "
+                   f"{cliff['drop']*100:.1f}% and held.")
+        out += ["  A cliff that holds is site-level, not an algorithmic update. Check which",
+                "  URLs ranked before it and whether they still resolve. Manual Actions and",
+                "  Index Coverage are web-UI only — the API cannot clear them."]
+    else:
+        out.append(f"no collapse detected — sensitivity: {CLIFF_SENSITIVITY}")
+
+    out += ["", "month      clicks  impressions"]
+    for m in report["monthly"]:
+        out.append(f"  {m['month']}  {n(m['clicks']):>6}  {n(m['impressions']):>11}")
+
+    # ── the four derivations that used to exist only in json ──────────────────
+    bs = report.get("branded_split") or {}
+    out += ["", "--- branded / non-branded ---"]
+    if bs.get("available"):
+        share = bs.get("branded_click_share")
+        out.append(f"  branded      clicks={n(bs['branded']['clicks']):>7} "
+                   f"impressions={n(bs['branded']['impressions']):>9} "
+                   f"queries={bs['branded']['queries']}")
+        out.append(f"  non-branded  clicks={n(bs['non_branded']['clicks']):>7} "
+                   f"impressions={n(bs['non_branded']['impressions']):>9} "
+                   f"queries={bs['non_branded']['queries']}")
+        out.append(f"  branded share of clicks: "
+                   f"{'—' if share is None else f'{share*100:.1f}%'}")
+    else:
+        out.append(f"  UNAVAILABLE — {bs.get('why', 'no brand terms given')}")
+        out.append("  Pass --brand-terms \"brand,brand app\" to measure it. It is not "
+                   "estimated here on purpose.")
+
+    curve = report.get("ctr_curve") or {}
+    out += ["", "--- this property's own CTR curve (never an industry table) ---"]
+    if curve:
+        for band in ("1-3", "4-10", "11-20", "21-30", "31+"):
+            if band in curve:
+                c = curve[band]
+                out.append(f"  pos {band:<6} median ctr={c['median_ctr']*100:5.2f}%  "
+                           f"(from {c['sample']} rows)")
+    else:
+        out.append("  no band had enough rows to build a baseline — a curve fitted to a "
+                   "handful of rows is a guess with a decimal point, so none is offered")
+
+    gaps = report.get("ctr_gaps") or []
+    out += ["", f"--- below this property's own curve ({len(gaps)} row(s)) ---"]
+    if not gaps:
+        out.append("  none, or no baseline existed for the band (nothing is inferred)")
+    for g in gaps[:20]:
+        out.append(f"  {n(g['impressions']):>8} imp  pos {g['position']:5.1f}  "
+                   f"ctr {g['ctr']*100:5.2f}% vs site median "
+                   f"{g['site_median_ctr_for_band']*100:5.2f}%  {str(g['key'])[:60]}")
+
+    cann = report.get("cannibalization") or []
+    out += ["", f"--- cannibalization ({len(cann)} query/queries with several URLs) ---"]
+    if not cann:
+        out.append("  none found in the query x page rows pulled for this window")
+    for c in cann[:20]:
+        inc = c["incumbent"]
+        out.append(f"  \"{str(c['query'])[:48]}\"  {c['urls']} URLs, "
+                   f"{n(c['impressions'])} imp")
+        out.append(f"      incumbent {inc['page'][:60]} "
+                   f"(clicks {n(inc['clicks'])}, pos {inc['position']})")
+        for riv in c["rivals"]:
+            out.append(f"      rival     {riv['page'][:60]} "
+                       f"(clicks {n(riv['clicks'])}, pos {riv['position']})")
+
+    for label, rows_, k in (("top queries", report["top_queries"], 30),
+                            ("top pages", report["top_pages"], 30)):
+        out += ["", f"--- {label} ---"]
+        for r in rows_[:k]:
+            out.append(f"  {n(r['clicks']):>6} clicks {n(r['impressions']):>9} imp "
+                       f"pos {r['position']:5.1f}  {r['keys'][0][:80]}")
+
+    out += ["", "--- sitemaps ---"]
+    sitemaps = report.get("sitemaps") or []
+    if not sitemaps:
+        out.append("  none submitted")
+    for sm in sitemaps:
+        c = (sm.get("contents") or [{}])[0]
+        out.append(f"  {sm['path']}  submitted={c.get('submitted','-')} "
+                   f"errors={sm.get('errors',0)} lastDownloaded={(sm.get('lastDownloaded') or '-')[:19]}")
+    out += ["", "Note: the sitemap 'indexed' field reads 0 for every sitemap — Google no longer",
+            "populates it. It is not an indexation measurement.",
+            "",
+            "What this API cannot give you at any scope: Manual Actions, Security Issues and",
+            "the Index Coverage report are web-UI only. An unexplained cliff needs a human."]
+    return "\n".join(out)
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -346,16 +501,29 @@ def main() -> int:
     start_recent = iso_days_before(REPORTING_LAG_DAYS + args.days, today)
     start_hist = iso_days_before(REPORTING_LAG_DAYS + args.history_days, today)
 
+    QUERY_LIMIT = PAGE_LIMIT = 5000
+    PAIR_LIMIT = 25000
     daily = query(site, token, qp, ["date"], start_hist, end)
-    queries = [r for r in query(site, token, qp, ["query"], start_recent, end, 5000)
-               if not is_noise(r["keys"][0])]
-    pages = query(site, token, qp, ["page"], start_recent, end, 5000)
-    pairs = [r for r in query(site, token, qp, ["query", "page"], start_recent, end, 25000)
-             if not is_noise(r["keys"][0])]
+    raw_queries = query(site, token, qp, ["query"], start_recent, end, QUERY_LIMIT)
+    pages = query(site, token, qp, ["page"], start_recent, end, PAGE_LIMIT)
+    raw_pairs = query(site, token, qp, ["query", "page"], start_recent, end, PAIR_LIMIT)
+    # Both filters below remove rows before every derived number, so both are
+    # counted: a silent filter and a silent cap read the same way in a report.
+    queries = [r for r in raw_queries if not is_noise(r["keys"][0])]
+    pairs = [r for r in raw_pairs if not is_noise(r["keys"][0])]
+    dropped_noise = (len(raw_queries) - len(queries)) + (len(raw_pairs) - len(pairs))
+    row_limits = {"query": QUERY_LIMIT, "page": PAGE_LIMIT, "query_page": PAIR_LIMIT}
+    limit_reached = [name for name, rows, cap in
+                     (("query", raw_queries, QUERY_LIMIT), ("page", pages, PAGE_LIMIT),
+                      ("query_page", raw_pairs, PAIR_LIMIT))
+                     if len(rows) >= cap]
     sitemaps = call(f"/sites/{urllib.parse.quote(site, safe='')}/sitemaps",
                     token, qp).get("sitemap", [])
 
     report = {
+        "rows_dropped_as_noise": dropped_noise,
+        "row_limits": row_limits,
+        "row_limit_reached": limit_reached,
         "site": site,
         "recent_window": {"start": start_recent, "end": end},
         "history_window": {"start": start_hist, "end": end},
@@ -378,43 +546,7 @@ def main() -> int:
         print()
         return 0
 
-    n = lambda x: f"{round(x):,}"  # noqa: E731
-    print(f"property: {site}")
-    ps = report["position_split"]
-    print("\nposition split (recent window) — rank the brief by THIS, not by impressions:")
-    for band, label in (("top20", "<= 20"), ("striking_21_30", "21-30"), ("beyond_30", "> 30")):
-        b = ps[band]
-        print(f"  pos {label:<6} queries={b['queries']:<5} impressions={n(b['impressions']):>9} "
-              f"clicks={b['clicks']:<5} ctr={b['ctr']*100:5.2f}%")
-
-    if report["cliff"]:
-        c = report["cliff"]
-        print(f"\nCOLLAPSE: {c['before']} ({n(c['before_impressions'])} imp) -> "
-              f"{c['after']} ({n(c['after_impressions'])} imp), {c['drop']*100:.1f}% and held.")
-        print("  A cliff that holds is site-level, not an algorithmic update. Check which")
-        print("  URLs ranked before it and whether they still resolve. Manual Actions and")
-        print("  Index Coverage are web-UI only — the API cannot clear them.")
-
-    print("\nmonth      clicks  impressions")
-    for m in report["monthly"]:
-        print(f"  {m['month']}  {n(m['clicks']):>6}  {n(m['impressions']):>11}")
-
-    for label, rows_, k in (("top queries", report["top_queries"], 30),
-                            ("top pages", report["top_pages"], 30)):
-        print(f"\n--- {label} ---")
-        for r in rows_[:k]:
-            print(f"  {n(r['clicks']):>6} clicks {n(r['impressions']):>9} imp "
-                  f"pos {r['position']:5.1f}  {r['keys'][0][:80]}")
-
-    print("\n--- sitemaps ---")
-    if not sitemaps:
-        print("  none submitted")
-    for sm in sitemaps:
-        c = (sm.get("contents") or [{}])[0]
-        print(f"  {sm['path']}  submitted={c.get('submitted','-')} "
-              f"errors={sm.get('errors',0)} lastDownloaded={(sm.get('lastDownloaded') or '-')[:19]}")
-    print("\nNote: the sitemap 'indexed' field reads 0 for every sitemap — Google no longer")
-    print("populates it. It is not an indexation measurement.")
+    print(render_text(report))
     return 0
 
 

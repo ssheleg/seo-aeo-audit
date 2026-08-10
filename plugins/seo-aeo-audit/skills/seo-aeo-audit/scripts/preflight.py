@@ -40,15 +40,34 @@ def probe(name: str, ok: bool, detail: str, gate: str | None = None,
             "gate": gate, "blocks": blocks}
 
 
-def _get(url: str, timeout: int = 20) -> tuple[int, str]:
+def _get(url: str, timeout: int = 20, max_bytes: int = 4096) -> tuple[int, str]:
+    """A probe reads only what it needs. `max_bytes` is explicit because a decision
+    taken on a prefix of a large JSON body is a coin flip wearing a verdict."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, r.read(4096).decode("utf-8", "replace")
+            return r.status, r.read(max_bytes).decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, e.read(400).decode("utf-8", "replace")
     except Exception as exc:  # noqa: BLE001 - a failed probe is a result
         return 0, str(exc)[:200]
+
+
+def has_crux_field_data(payload: dict) -> bool:
+    """Does this PageSpeed response actually carry CrUX field data?
+
+    PSI returns the `loadingExperience` block whether or not CrUX has data for the
+    URL — with no `metrics` child when it does not. Testing for the *key* (or worse,
+    for the string in a truncated body) reports field data that is not there, and
+    the negative branch then explains the absence with a cause nobody established
+    ("too little traffic"). psi_pull.py has always read `metrics`; this is the same
+    rule, so the two instruments cannot disagree about what was measured.
+    """
+    block = payload.get("loadingExperience")
+    if not isinstance(block, dict):
+        return False
+    metrics = block.get("metrics")
+    return isinstance(metrics, dict) and bool(metrics)
 
 
 def check_python() -> dict:
@@ -146,16 +165,27 @@ def check_psi(origin: str | None) -> dict:
         return probe("PageSpeed Insights", False, "no --origin given", "usage",
                      "field CWV (psi_pull.py)")
     q = urllib.parse.urlencode({"url": origin, "strategy": "mobile"})
-    status, body = _get(f"{PSI}?{q}&category=PERFORMANCE", timeout=90)
+    # The whole body, parsed: the field-data question is answered by a nested key,
+    # so a byte-capped read can only guess at it.
+    status, body = _get(f"{PSI}?{q}&category=PERFORMANCE", timeout=90,
+                        max_bytes=8_000_000)
     if status != 200:
         return probe("PageSpeed Insights", False, f"HTTP {status} — {body[:120]}",
                      "rate-limit" if status == 429 else "http",
                      "field CWV (psi_pull.py)")
-    has_field = '"loadingExperience"' in body or "loadingExperience" in body
+    try:
+        payload = json.loads(body)
+    except ValueError:
+        return probe("PageSpeed Insights", True,
+                     "reachable, but the response did not parse as JSON — cannot say "
+                     "whether CrUX field data exists for this URL")
+    if has_crux_field_data(payload):
+        return probe("PageSpeed Insights", True,
+                     "reachable; CrUX field data present for this URL")
     return probe("PageSpeed Insights", True,
-                 "reachable" + ("; CrUX field data present for this URL" if has_field
-                                else "; NO CrUX field data for this URL — too little "
-                                     "traffic, so lab-only for this page"))
+                 "reachable; no CrUX field data for this URL — the response carries no "
+                 "field metrics, so this page is lab-only. That is absence, not a pass: "
+                 "psi_pull.py will report it as absent and offer the origin aggregate")
 
 
 def render(rows: list[dict]) -> str:
