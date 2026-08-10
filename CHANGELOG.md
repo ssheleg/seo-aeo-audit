@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.14.1 — 2026-08-10
+
+**The acceptance walk found what the requirement table could not**, which is what
+it is for: a comparison needs two sides, and an absence has one.
+
+`v0.14.0` fixed the eleven unreachable invocations in `SKILL.md` and guarded that
+file. The **README carried eight more**, and the slash command a ninth. The guard
+had been written against the one home the defect was noticed in — the exact
+mechanism this repository has now recorded four times, committed **inside the
+release that exists to fix it**.
+
+Worse in the README's case: those paths did not resolve for a contributor in a
+clone either. `scripts/` at the repository root is the documentation gate, so
+`python3 scripts/page_audit.py` finds `check-docs.sh`'s neighbour or nothing —
+a third way to be wrong, in the file a first-time reader opens.
+
+- Both homes now use `$SKILL_DIR`, and the README explains the two contexts it
+  resolves in: a clone, and an installed plugin.
+- The reachability guard reads **three** homes, and only flags runnable forms — a
+  backticked `scripts/page_audit.py` used as a name is fine and reads better.
+  Its CI self-test plants the defect in each home rather than one.
+
 ## v0.14.0 — 2026-08-10
 
 A second audit of the skill, run through the lens the first one did not use: **what

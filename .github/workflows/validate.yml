@@ -59,18 +59,22 @@ jobs:
             echo "OK: a newline in a table cell is caught"
           fi
 
-      - name: Negative self-test (a script path relative to the caller must fail)
+      - name: Negative self-test (a script path relative to the caller must fail, in each home)
         run: |
           set -eu
-          rm -rf /tmp/path-copy && cp -R . /tmp/path-copy
-          sed -i 's|python3 "\$SKILL_DIR/scripts/preflight.py"|python3 scripts/preflight.py|' \
-            /tmp/path-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md
-          if python3 /tmp/path-copy/test/validate.py; then
-            echo "ERROR: validator accepted an invocation unreachable from a project root"
-            exit 1
-          else
-            echo "OK: bare scripts/ paths are rejected"
-          fi
+          for home in \
+            plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md \
+            README.md
+          do
+            rm -rf /tmp/path-copy && cp -R . /tmp/path-copy
+            perl -0pi -e 's{python3 "\$SKILL_DIR/scripts/}{python3 "scripts/}' "/tmp/path-copy/$home"
+            if python3 /tmp/path-copy/test/validate.py; then
+              echo "ERROR: validator accepted an unreachable invocation in $home"
+              exit 1
+            else
+              echo "OK: bare scripts/ paths rejected in $home"
+            fi
+          done
 
       - name: Negative self-test (a stale defect count must fail)
         run: |

@@ -22,6 +22,8 @@ Status: `open` · `in progress` · `done` · `dropped (why)`.
 | B-6 | 2.0 | A second-window mode for `gsc_pull.py`, for `gsc-historic-<window>` rows | The CSV contract defines the label and the script pulls one window; the workaround (two runs with different `--days`) is documented but manual | ledger D41 | open |
 | B-7 | 1.5 | Fixture for a truncated **gzip** response | The truncation flag is proven end-to-end for an uncompressed body and unit-tested for the salvage path; the two are not covered together | ledger D3 | open |
 | B-8 | 3.0 | Re-read every claim admitted under the old `FIELD` bar | `DECISIONS.md` 2026-08-05 marks this **review** — no check knows which claims were admitted under which definition of the tier that gates the most admissions | DOCMAP propagation matrix | open |
+| B-9 | 1.5 | A shared `coverage` contract every collector emits — requested / returned / dropped | Six instruments were each taught honesty separately: `_flat` has four copies, the "did anything arrive" predicate two, the exit semantics four. Nothing states the contract, so a seventh script starts from zero and the copies are only held together by a count in `validate.py` | v0.13.0 plan root cause 4; v0.14.0 M1 | open |
+| B-10 | 0.7 | Make the code graph's incremental mode usable in this repo | `detect_incremental` reports 72 of 72 files changed against either root, so `--update` cannot tell what moved; and re-extracting a file gives its entities new ids, which orphaned a hyperedge and pushed dangling endpoints from 6.3% to 10.3% between two builds one day apart. A graph that degrades each refresh is a false premise carrying a machine's authority | 2026-08-10 stage 9 | open |
 
 ## How this file is used
 

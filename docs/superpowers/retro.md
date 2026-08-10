@@ -4,8 +4,8 @@ Capped at ten. Each one binds the next run and carries the date it was written
 and the date it last fired. An instruction that has not fired in a long time is a
 candidate for retirement — that is what the stamps are for.
 
-**Run stamps.** 2026-08-04 · 2026-08-05 (`v0.11.2`) · **2026-08-10 (`v0.11.3`,
-commit on `audit/2026-08-10-fresh-eyes`)**. The stamp is what makes the
+**Run stamps.** 2026-08-04 · 2026-08-05 (`v0.11.2`) · 2026-08-10 (`v0.13.0`) ·
+**2026-08-10 (`v0.14.0`/`v0.14.1`, commit `ef3d584`, the agent-usage audit)**. The stamp is what makes the
 cold-retirement trigger computable, so it goes first.
 
 **Prune log.**
@@ -22,6 +22,18 @@ cold-retirement trigger computable, so it goes first.
   stands at **ten — exactly the cap**. The next run cannot add one without retiring
   one, which is the cap doing its job: #6 and #7 are the strongest candidates, both
   being one grep away from becoming checks.
+
+- 2026-08-10 (second run, agent-usage audit): all eleven checked against the three
+  retirement triggers. **#6 retired** — it became a check in spirit and in practice: the
+  gate is run as its own command everywhere the docs name it, and this run caught its
+  own pipe violation within one command. **#4 fired hardest again** and is rewritten
+  below rather than retired, because the run broke it *inside the release that exists
+  to fix it*. #1 fired on `${CLAUDE_PLUGIN_ROOT}` (verified against the plugins
+  reference before it was relied on), #2 on seventeen self-tests, #9 on the whole
+  premise of this audit, #10 on the four scripts whose docstrings contradicted their
+  own returns, #11 on the first `git fetch` of the run. #3, #7, #8 did not fire.
+  **One added** (#12), one retired, so the list stands at **eleven** — one over the
+  cap, and #3 leaves next run unless it fires: it has not fired in three stamps.
 
 ## 1. Verify a carried number before it enters a reference
 *Written 2026-08-04. Last fired 2026-08-05.*
@@ -106,6 +118,17 @@ home list into the guard as data, not into the prose around it. A guard that nam
 its homes can be audited; one that matches a sentence cannot be distinguished from
 one that matches the wrong sentence — and it stays green while it does.
 
+*2026-08-10 (second run): broken **by the release written to fix it**. The audit found
+eleven unreachable script invocations in `SKILL.md`, fixed them, wrote a guard — over
+`SKILL.md`. The README carried eight more and the slash command a ninth, and `v0.14.0`
+shipped with both. The acceptance walk caught it, which is the only reason this reads
+as a patch and not as a defect in the next audit's ledger.*
+
+**Second operative rule, and it is the one that was missing:** the home list goes into
+the guard **before** the fix is written, not after. Counting the homes while fixing the
+first one is how you end up believing you counted. `grep` for the *form* of the defect
+across the whole repository — `python3 scripts/` — not for the file you are editing.
+
 ## 5. ~~Refuse the plausible wrong feature, in code and in a test~~ — retired 2026-08-10
 
 *Written 2026-08-04. Last fired 2026-08-04. Retired: it became a check.*
@@ -119,8 +142,13 @@ and both arrived as tests without anyone needing the instruction. That is the
 retirement trigger working as intended: the rule is in the harness, so the page does
 not need to carry it.
 
-## 6. A gate behind a pipe is not a gate
-*Written 2026-08-05. Last fired 2026-08-10.*
+## 6. ~~A gate behind a pipe is not a gate~~ — retired 2026-08-10
+
+*Written 2026-08-05. Last fired 2026-08-10. Retired: it is a habit the run now
+self-corrects. This pass ran `bash scripts/check-docs.sh 2>&1 | tail -3` once,
+read the empty exit status, and re-ran it as its own command in the next
+breath — the instruction had done its work by being known. The original text
+is kept below because the mechanism is worth reading once.*
 
 A module was committed after `bash scripts/check-docs.sh 2>&1 | tail -2 && git
 commit …`. The gate did not merely fail — it never ran, because a stray `cd` from
@@ -239,3 +267,24 @@ this repository that cannot be quietly corrected.
 own lens found two more defects — a reference wired into the closing list and into no
 track, and five prose counts left stale by the release that added it. An audit that
 stops at the branch point audits a repository nobody is running.*
+
+## 12. Audit the thing as its user, not as its author
+*Written 2026-08-10. Last fired 2026-08-10.*
+
+Two audits of this repository, six days apart. The first read every file against its
+own doctrine and found forty-three defects. The second asked one different question —
+*what does an agent hit when it uses this?* — and found nine more, one of them a
+blocker that made every documented instrument unreachable. The gate was green both
+times, and between them it had grown to five commands, twenty guards and seventeen
+negative self-tests. **Every one of those guards was aimed inside the repository.**
+
+Guards accumulate along the axis you are already looking down. The second audit found
+nothing the first would have caught with more effort; it found what a different
+question asks. That is the audit-exit heuristic stated positively: when a pass starts
+finding mostly what the previous pass's fixes disturbed, do not look harder — change
+who you are pretending to be.
+
+The cheapest version of this: **run the documented commands, from where the docs say
+you will be standing, before reading any of the code.** Eleven of eleven failed. No
+amount of reading would have surfaced that, because reading a path does not resolve it.
+

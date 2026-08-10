@@ -17,6 +17,12 @@ what the whole skill is about.
 A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
+## v0.14.1 — 2026-08-10 acceptance walk
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| R-34 | Every runnable invocation resolves, in all three homes | **observed** + **planted** | the walk found eight bare invocations in the README and one in the slash command after `v0.14.0` guarded `SKILL.md` alone; the CI self-test now plants the defect in each home and each was watched failing |
+
 ## v0.14.0 — 2026-08-10 agent-usage audit
 
 The lens this time was the agent's path from invocation to report, not the

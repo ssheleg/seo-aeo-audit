@@ -9,7 +9,9 @@ Follow the skill exactly.
 
 1. Detect mode first (new audit vs re-audit vs single-question diagnosis), report
    available inputs, missing inputs and scope in three lines, then start. Run
-   `scripts/preflight.py` to test the access rather than assuming it — and remember
+   `"$SKILL_DIR/scripts/preflight.py"` — resolve `SKILL_DIR` first, as SKILL.md
+   shows, because a path relative to the project you are standing in will not find
+   it — to test the access rather than assuming it — and remember
    it cannot probe Bing, Yandex, analytics, logs, a crawl export or any MCP tool, so
    make the one call each of those is there for by hand.
 2. Establish the baseline with dates before forming any opinion.

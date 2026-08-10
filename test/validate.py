@@ -657,12 +657,28 @@ else:
 # directory" in the only environment the skill is ever used in. The failure is
 # quiet in the way that matters: the agent falls back to checking by hand, the
 # whole audit drops to the bottom rung of the evidence ladder, and nothing says so.
+#
+# Three homes, because the acceptance walk found the guard had been written against
+# one: after SKILL.md was fixed, the README still carried eight bare invocations and
+# the slash command a ninth — and the README's did not resolve for a developer in a
+# clone either, since `scripts/` at the repository root is the documentation gate.
+_INVOCATION_HOMES = (
+    os.path.join(SKILL_DIR, "SKILL.md"),
+    "README.md",
+    os.path.join("plugins", "seo-aeo-audit", "commands", "seo-aeo-audit.md"),
+)
+for _rel in _INVOCATION_HOMES:
+    _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+    # Runnable forms only. A backticked `scripts/page_audit.py` used as a *name*
+    # is fine and reads better; what breaks is a line somebody copies and runs.
+    _bare = re.findall(r"python3\s+\"?(?:\./)?scripts/(\w+\.py)", _txt)
+    if _bare:
+        fail(f"{_rel} names {sorted(set(_bare))} by a path relative to the caller's "
+             f"working directory — write it as \"$SKILL_DIR/scripts/<name>.py\". "
+             f"Nobody stands where that path resolves: an agent stands in the user's "
+             f"project, a contributor in a clone whose root `scripts/` is the gate")
+
 _skill_md = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
-_bare = re.findall(r"^python3 (?:\./)?scripts/(\S+\.py)", _skill_md, re.M)
-if _bare:
-    fail(f"SKILL.md invokes {sorted(set(_bare))} by a path relative to the caller's "
-         f"working directory — write it as \"$SKILL_DIR/scripts/<name>.py\" and keep "
-         f"the block that resolves SKILL_DIR")
 if "SKILL_DIR" not in _skill_md:
     fail("SKILL.md documents no way to resolve the skill directory, so every script "
          "invocation in it is unreachable from a project root")

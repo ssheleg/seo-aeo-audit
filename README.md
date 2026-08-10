@@ -168,14 +168,27 @@ agent, not just Claude Code. This is the substance:
 
 ## The bundled scripts
 
-### `page_audit.py` — per-page evidence
-
-`scripts/page_audit.py` — stdlib only, nothing to install, works offline:
+They live inside the skill, not at the repository root — `scripts/` here is the
+documentation gate. Every command below is written against `$SKILL_DIR`, so set it
+once for whichever context you are in:
 
 ```bash
-python3 scripts/page_audit.py --url https://example.com/pricing
-python3 scripts/page_audit.py --file saved.html --base-url https://example.com/pricing
-python3 scripts/page_audit.py --url-list urls.txt --format json > audit.json
+SKILL_DIR=plugins/seo-aeo-audit/skills/seo-aeo-audit          # in a clone of this repo
+SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit"          # installed as a Claude Code plugin
+```
+
+An agent gets the same instruction from `SKILL.md`, and the validator rejects a
+path relative to the caller in either file: all eleven invocations were once
+written that way and none of them resolved from where anybody actually stands.
+
+### `page_audit.py` — per-page evidence
+
+Stdlib only, nothing to install, works offline:
+
+```bash
+python3 "$SKILL_DIR/scripts/page_audit.py" --url https://example.com/pricing
+python3 "$SKILL_DIR/scripts/page_audit.py" --file saved.html --base-url https://example.com/pricing
+python3 "$SKILL_DIR/scripts/page_audit.py" --url-list urls.txt --format json > audit.json
 ```
 
 It catches what eyeballing misses: `content="none"` (≡ `noindex, nofollow`), a
@@ -193,8 +206,8 @@ Stdlib only; auth is local Application Default Credentials, so no key file goes
 near the repo.
 
 ```bash
-python3 scripts/gsc_pull.py --list
-python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --list
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --site sc-domain:example.com --quota-project my-proj
 ```
 
 It prints the **position split** first, deliberately. Ranking findings by
@@ -220,7 +233,7 @@ property, so it samples — a representative URL per template, plus the pages a
 finding is about.
 
 ```bash
-python3 scripts/url_inspection.py --site sc-domain:example.com --urls https://example.com/pricing
+python3 "$SKILL_DIR/scripts/url_inspection.py" --site sc-domain:example.com --urls https://example.com/pricing
 ```
 
 `scripts/sitemap_audit.py` — the published side of "indexed vs published per
@@ -235,8 +248,8 @@ URL that is reported as absent, never as a pass, and the lab score never stands
 in for it.
 
 ```bash
-python3 scripts/sitemap_audit.py --url https://example.com/sitemap.xml
-python3 scripts/psi_pull.py --url https://example.com/pricing
+python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml
+python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing
 ```
 
 Every one of them states its own blind spot in its output. That is the eighth
