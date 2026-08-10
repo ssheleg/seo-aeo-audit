@@ -105,7 +105,7 @@ practitioner framework, 2026-07-15; HYPOTHESIS, mechanism plausible, no measured
 effect, but consistent with the ρ=0.381 task-completion correlation above). The
 practical consequence is an audit error to avoid: a text-only read scores a
 working comparison tool as a thin page. Inventory the modules per template and
-check they exist for a crawler (onpage-checks.md E1).
+check they exist for a crawler (onpage-checks.md O4).
 
 **Trust does not travel with the template.** A dominant competitor's structure
 is copyable; the decades of navigational demand underneath it are not (FIELD,

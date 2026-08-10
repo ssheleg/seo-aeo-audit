@@ -331,7 +331,7 @@ check(_ld["currency_in_source_only"] is False,
 check("price-not-in-text" not in {f["code"] for f in _ld["findings"]},
       "correct Product/Offer markup must not be reported as a JS-gated price")
 # it IS a markup-versus-visible-content parity observation, which is a different
-# finding with a different fix (onpage-checks.md D1 starred item).
+# finding with a different fix (onpage-checks.md O1 starred item).
 check("jsonld_price_declared" in _ld, "the payload must record a declared JSON-LD price")
 check("jsonld-price-parity" in {f["code"] for f in _ld["findings"]},
       "a JSON-LD price absent from the visible text must surface as a parity finding")
@@ -437,7 +437,7 @@ if _h1_findings:
 _h1_missing = [f for f in run("bad-page.html", "https://example.com/pricing")["findings"]
                if f["code"] == "h1-missing"]
 check(_h1_missing and "onpage-checks.md" in _h1_missing[0]["reference"],
-      "h1-missing must point at onpage-checks.md D1, which owns the check")
+      "h1-missing must point at onpage-checks.md O1, which owns the check")
 
 # ── the thin-content threshold cited a study that refutes it ─────────────────
 # intent-and-content.md E2: "Length barely matters". The finding fired at a bare
@@ -457,7 +457,7 @@ if "low-extractable-text" in _short_findings:
           "the finding must state that length itself is not the ranking signal")
 
 # ── the subhead check keeps the qualifier its doctrine attaches ──────────────
-# onpage-checks.md D1: the failure is "0–3 subheads **on a long page**".
+# onpage-checks.md O1: the failure is "0–3 subheads **on a long page**".
 _shortpage = analyze_html(
     "<html><head><title>t</title></head><body><h1>h</h1><h2>a</h2>"
     "<p>" + "word " * 90 + "</p></body></html>"

@@ -49,32 +49,49 @@ git clone https://github.com/ssheleg/seo-aeo-audit && cd seo-aeo-audit
 
 ## Before you open a PR
 
-Both must pass:
+One command runs the gate, and it is the same one CI runs:
+
+```bash
+bash scripts/check-docs.sh
+```
+
+It runs exactly these four, in this order, and nothing else — so the gate cannot
+drift from what it claims to enforce:
 
 ```bash
 python3 test/validate.py
-```
-
-```bash
 python3 test/test_page_audit.py
+python3 test/test_url_inspection.py
+python3 test/test_collectors.py
 ```
 
 `validate.py` checks structure, the four-way version sync, that all twenty-one
 references exist and every relative link resolves, that the templates embedded in
-`deliverable-templates.md` match the root copies, and that the auditor is
+`deliverable-templates.md` match the root copies, and that every bundled script is
 standard-library only. It also reconciles the facts this repo keeps duplicating:
-the tier vocabulary across its four homes, the myth count in the README against
-the rows in `myths.md`, and table integrity — a blank line inside a table ends
-the table, and the rows after it stop rendering as one. Those names are not
-decoration: the validator asserts that this paragraph still mentions each guard
-family it runs, because a prose summary of a checker is a fact with two homes and
-this one had already fallen four checks behind.
+the tier vocabulary across its four homes, the myth count in **all four** of its
+homes plus the size of the two short lists, the play count, the Prowl tool count,
+the CWV thresholds against `psi_pull.py`, the gate commands against this file and
+the README, per-finding tier coverage in `page_audit.py`, section-id uniqueness
+across references, the two freshness facts in `algorithm-updates.md`, and
+table integrity — both a blank line inside a table and a row with more cells than
+its header, either of which stops rows rendering as part of the table.
+
+Those names are not decoration: the validator asserts that this paragraph still
+mentions each guard family it runs, because a prose summary of a checker is a fact
+with two homes and this one had already fallen four checks behind, then four more.
+Keep each family name on one line — the check uses fixed-string matching, and a
+name wrapped across a line break reads as absent (it caught this very paragraph
+being rewritten).
 
 `test_page_audit.py` runs the auditor against offline fixtures — including the
 URL-scheme guard, which exists because `urlopen` will happily read
-`file:///etc/passwd` if you let it.
+`file:///etc/passwd` if you let it. `test_url_inspection.py` and
+`test_collectors.py` do the same for the other five bundled scripts.
 
-CI runs the same two plus negative self-tests that prove the validator can fail.
+CI runs the same four plus negative self-tests that prove each guard can fail.
+**Add a guard and you add its negative self-test**: a guard nobody has watched
+fail against a planted defect is indistinguishable from a guard that cannot.
 
 
 ### The family catalogue moves with the release
@@ -103,7 +120,7 @@ npx --yes sshlg-skills@latest list   # the new number must appear here
 | A tactic worth trying | `growth-plays.md`, with a tier and an effort estimate |
 | A tactic with counter-evidence | `myths.md`, with the counter-evidence |
 | A Google update | `algorithm-updates.md`, with start and completion dates |
-| Auditor behavior | `scripts/page_audit.py` **and** a fixture-backed test |
+| Auditor behavior | the script in `skills/*/scripts/` **and** a fixture-backed test (`test_page_audit.py` for the page auditor, `test_url_inspection.py` for the index checker, `test_collectors.py` for psi / sitemap / gsc / preflight) |
 
 Adding a reference file means wiring it into `SKILL.md` and into
 `REQUIRED_REFERENCES` in the validator. A reference nothing links to is never

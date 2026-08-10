@@ -277,7 +277,7 @@ client.
 | Metric | Value | Source/date |
 |---|---|---|
 | AI Overview coverage growth by vertical | entertainment +175%, travel +108%, B2B technology +7% | 2025, vendor (SEJ/CallRail) |
-| Exact-match keyword phrasing present in AI Overviews | 5.4% | 2025, vendor — the body-phrasing finding behind onpage-checks.md E2; it is about literal query strings in the *answer*, not about title/heading match (aeo-geo.md F2) |
+| Exact-match keyword phrasing present in AI Overviews | 5.4% | 2025, vendor — the body-phrasing finding behind onpage-checks.md O5; it is about literal query strings in the *answer*, not about title/heading match (aeo-geo.md F2) |
 | B2B buyers encountering AI Overviews / clicking a cited source | 72% / 90% | 2025, undated-vendor (Google data quoted via SEJ), B2B buyers only — **not comparable** to the ~1% in-answer click rate or the 68% zero-click share in "Click economics", which measure all sessions and a different action |
 | AI Overviews linking to Google-owned properties | 43% | 2025, undated-vendor (BrightEdge, quoted in the same report) |
 | AI search referrals originating on desktop | ~94% | 2025, undated-vendor (BrightEdge, same) |

@@ -4,7 +4,15 @@ The judgement calls live in intent-and-content.md. This file is the mechanical
 sweep: run it per template (not per page), record the URL list behind every
 failure, and feed the results into the findings table.
 
-`scripts/page_audit.py` automates the starred (★) items for a sample URL.
+**Why O-numbers and not D/E.** This file is the sweep for tracks D and E, and
+intent-and-content.md is the diagnosis for the same two tracks. Both used to
+number their sections `D1`, `D2`, `E1`, `E2` — four ids defined twice with
+different content, so "run D1" had two answers and a cross-reference had to name
+the file to mean anything. The sweep owns `O1`–`O5`; the diagnosis keeps `D`/`E`.
+
+`scripts/page_audit.py` automates part of the starred (★) items for a sample URL —
+see "What page_audit actually covers" below for which part, because three of the
+starred checks are cross-page or judgement calls it cannot make.
 
 Tiering: a failed check here is an observation on this site, so it enters the
 report as `CONFIRMED` for *existence*. The claimed *impact* of fixing it keeps
@@ -19,7 +27,7 @@ share of copy too thin for the SERP it competes in (68.6%) — the templates
 closest to revenue are usually the least finished (STUDY, self-selected sample
 of optimization-conscious sites, 2026-07-14). Everything else gets swept second.
 
-## D1. Can crawlers understand what the page is about
+## O1. Can crawlers understand what the page is about
 
 | Check | Fail looks like | Where |
 |---|---|---|
@@ -58,7 +66,7 @@ revisit. Name the subject where the structure already exists; do not raise
 density in the body, where keyword-style manipulation scored below baseline in
 the one controlled benchmark (myths.md).
 
-## D2. Duplication and consolidation
+## O2. Duplication and consolidation
 
 | Check | Fail looks like | Where |
 |---|---|---|
@@ -74,7 +82,7 @@ keys mainly on slug, title and H1 rather than body text (technical-checks.md),
 so two pages with genuinely different content can still be filtered out of the
 SERP for sharing those three strings.
 
-## D3. Internal linking on the page
+## O3. Internal linking on the page
 
 | Check | Fail looks like | Where |
 |---|---|---|
@@ -84,7 +92,7 @@ SERP for sharing those three strings.
 | Key content within a few clicks of the homepage | depth 5+ on revenue pages | crawl |
 | Link volume per page kept sane ★ | hundreds of links on every template; navigation ahead of content in source order | crawl + page_audit read budget |
 
-## E1. Content substance (judgement, evidence required)
+## O4. Content substance (judgement, evidence required)
 
 | Check | What good looks like | Reference |
 |---|---|---|
@@ -98,7 +106,7 @@ SERP for sharing those three strings.
 | Decision-accelerator elements present where the intent is commercial | transparent pricing table in plain HTML, implementation timeline, integration guide, ROI calculator, industry case study | demand-and-conversion.md |
 | No AI-slop signature | generic phrasing, no evidence, no author, templated structure across dozens of pages | intent-and-content.md E4 |
 
-## E2. Metadata as a click and citation surface
+## O5. Metadata as a click and citation surface
 
 - Titles and descriptions written for the searcher, not the crawler; test rather
   than assume (experiments.md documents year-in-title, capitalization and
@@ -118,6 +126,28 @@ SERP for sharing those three strings.
   opening sentence), then answer it plainly in the prose.** Raising phrase
   density in the body is the failure mode — keyword-style manipulation scored
   below baseline in the one controlled benchmark (myths.md).
+
+## What `page_audit.py` actually covers
+
+The ★ used to be read as "the script does this". It does not do all of it, and a
+sweep marked covered on that reading is an absence reported as coverage. Per
+starred item:
+
+| ★ check | What the script does | What is still yours |
+|---|---|---|
+| O1 canonical version of the **site** declared and consistent | reads the canonical on the page you gave it, and flags the attribute trap, duplicates and a cross-canonical | http/https and www/non-www both answering 200 is a multi-request check — `preflight.py` probes the host variants, `url_inspection.py` gives Google's own selection |
+| O1 title present, **unique**, descriptive | presence and length | uniqueness is cross-page (a crawl); "descriptive" is judgement |
+| O1 H1 present and matching the page's subject | presence, and the count as an accessibility note | whether the H1 names the subject, and whether the **mobile** H1 still does |
+| O1 H2–H4 structure reflects the content | counts H2–H4, and flags 0–3 on a long page | whether the headings mirror the questions |
+| O1 image `alt` present and factual | counts missing and empty `alt` | whether the text is factual rather than stuffed |
+| O1 structured data valid and **matched to visible content** | parses JSON-LD, reports invalid blocks, missing structural properties, and a declared price absent from the visible text | every other markup-versus-content parity claim (ratings, availability, review counts) — Rich Results Test plus a read of the page |
+| O2 canonicals used to consolidate near-duplicates | nothing: consolidation is a property of a URL set | a crawl plus URL Inspection |
+| O3 link volume per page kept sane | link totals, links before the first text, and the read-budget share | whether the links point where priority says they should |
+
+Two whole-file caveats travel with every run: the parser does not execute
+JavaScript (so an empty schema inventory is not absent schema), and a response cut
+off by `--max-bytes` reports itself truncated and suppresses every count-based
+finding rather than publishing a fragment as a measurement.
 
 ## How to record it
 

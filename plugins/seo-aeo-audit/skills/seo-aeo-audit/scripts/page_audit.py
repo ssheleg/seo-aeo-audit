@@ -542,7 +542,7 @@ def analyze(html: str, url: str, headers: dict | None = None,
                                     and not bool(CURRENCY_RE.search(text))),
         # A declared price is a separate observation with a separate fix: markup
         # that claims a price the page does not show is the parity check in
-        # onpage-checks.md D1, not a JS-gated price.
+        # onpage-checks.md O1, not a JS-gated price.
         "jsonld_price_declared": jsonld_price,
         "data_nosnippet_elements": doc.data_nosnippet,
         "jsonld_blocks": len(doc.jsonld_raw),
@@ -636,9 +636,9 @@ def findings(r: dict) -> list[dict]:
             "aeo-geo.md#f3-extractability--the-part-most-audits-skip")
     if r["h1_count"] == 0:
         add("medium", "h1-missing", "no H1 on the page",
-            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
+            "onpage-checks.md#o1-can-crawlers-understand-what-the-page-is-about")
     elif r["h1_count"] > 1:
-        # onpage-checks.md D1 and myths.md are explicit that the count is not a
+        # onpage-checks.md O1 and myths.md are explicit that the count is not a
         # ranking issue. Reported as the accessibility note it is, with the reason
         # attached, so nobody turns it back into "consolidate to one H1".
         add("info", "h1-multiple",
@@ -646,9 +646,9 @@ def findings(r: dict) -> list[dict]:
             "rank penalty for the count — this is a document-structure and screen-reader "
             "note, not an SEO finding. What is worth auditing is the meaning: check the "
             "mobile H1 still names the subject",
-            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
+            "onpage-checks.md#o1-can-crawlers-understand-what-the-page-is-about")
     # The subhead optimum was measured on pages long enough to carry sections;
-    # onpage-checks.md D1 scopes the failure to "0-3 subheads on a long page", so a
+    # onpage-checks.md O1 scopes the failure to "0-3 subheads on a long page", so a
     # four-section pricing page is not the case the study describes.
     if r["subheads_h2_h4"] < 4 and r["word_count"] >= 600:
         add("medium", "subheads-thin",
@@ -718,7 +718,7 @@ def findings(r: dict) -> list[dict]:
             "JSON-LD declares a price that does not appear in the page's extractable text. "
             "Markup has to match visible content: this is the parity check, not proof the "
             "price is JS-gated — confirm which by looking at the rendered page",
-            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
+            "onpage-checks.md#o1-can-crawlers-understand-what-the-page-is-about")
     if r.get("truncated"):
         out = [f for f in out if f["code"] not in COMPLETENESS_DEPENDENT]
     return out

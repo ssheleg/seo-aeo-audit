@@ -660,7 +660,7 @@ when it has an observable impact.
 - Backlink profile reviewed against the niche baseline
   (threats-and-defense.md I6).
 - Structured data used honestly — markup matching visible content, no
-  unsupported claims (technical-checks.md B, onpage-checks.md D1).
+  unsupported claims (technical-checks.md B, onpage-checks.md O1).
 
 ## Evidence to capture for tracks A/B
 

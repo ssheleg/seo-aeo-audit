@@ -187,6 +187,51 @@ jobs:
             echo "OK: validator catches template drift"
           fi
 
+      - name: Negative self-tests for the reconciliation guards
+        run: |
+          set -eu
+          S=plugins/seo-aeo-audit/skills/seo-aeo-audit
+          # Each row plants one defect the guard exists for and requires a non-zero
+          # exit. A guard nobody has watched fail is indistinguishable from a guard
+          # that cannot — and the 2026-08-10 audit found guards written against one
+          # home of a fact that lived in four, all of them green.
+          plant() {
+            desc="$1"; shift
+            rm -rf /tmp/neg && cp -R . /tmp/neg
+            ( cd /tmp/neg && "$@" )
+            if python3 /tmp/neg/test/validate.py >/dev/null 2>&1; then
+              echo "BROKEN GUARD: $desc — validator still passes"; exit 1
+            fi
+            echo "ok: $desc"
+          }
+          plant "myth count drifting in SKILL.md (not the README home)" \
+            sed -i "s/most-requested of the \*\*32\*\*/most-requested of the **30**/" "$S/SKILL.md"
+          plant "myth count drifting in the Cursor channel" \
+            sed -i "s/out of 32 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
+          plant "the two myth short lists disagreeing in size" \
+            sed -i "s/The fourteen asked for most often/The thirteen asked for most often/" \
+              cursor/rules/seo-aeo-audit.mdc
+          plant "play count drifting from the table" \
+            sed -i "s/| \*\*Growth plays\*\* | 61 plays/| **Growth plays** | 60 plays/" README.md
+          plant "the Prowl tool count disagreeing across homes" \
+            sed -i "s/~448 provider tools/~408 provider tools/" README.md
+          plant "a table row with more cells than its header" \
+            sed -i "s/^| B1 | Manual action present |/| B1 | Manual action present | extra |/" \
+              "$S/references/growth-plays.md"
+          plant "CONTRIBUTING naming a subset of the gate" \
+            sed -i "/^python3 test\/test_collectors.py$/d" CONTRIBUTING.md
+          plant "a section id defined in two references" \
+            sed -i "s/^## O1\. Can crawlers/## D1. Can crawlers/" "$S/references/onpage-checks.md"
+          plant "a row appended without moving the newest-row line" \
+            sed -i "s/\*\*Newest row in this file: 2026-07-30\.\*\*/**Newest row in this file: 2026-07-01.**/" \
+              "$S/references/algorithm-updates.md"
+          plant "a finding emitted with no evidence tier" \
+            sed -i "s/^    \"truncated-read\": \"CONFIRMED\",$//" "$S/scripts/page_audit.py"
+          plant "the CWV thresholds drifting from their documented home" \
+            sed -i "s/(\"LCP\", 2500, 4000/(\"LCP\", 2000, 4000/" "$S/scripts/psi_pull.py"
+          plant "a backticked references/ pointer resolving to nothing" \
+            sed -i "s/\`references\/myths.md\`/\`references\/mythz.md\`/" "$S/references/linkbuilding.md"
+
       - name: install.sh syntax check
         run: bash -n install.sh
 

@@ -1,6 +1,17 @@
 # Google update timeline — and how to keep it current
 
-**Verified as of: 2026-07-28.** Primary source, re-fetch it on every refresh:
+**Sources last re-fetched: 2026-07-28.**
+**Newest row in this file: 2026-07-30.**
+
+Two dates, because they are two facts and the file used to state one of them as if
+it covered both. The stamp said 2026-07-28 while a row dated 2026-07-30 had already
+been appended from a dated report — so the copy that travels to every agent claimed
+verification it did not have. Rows may legitimately arrive between refreshes; what
+must not happen is one date standing in for the other. The next full refresh moves
+both, and `test/validate.py` fails when the newest-row line stops matching the
+newest date in the file.
+
+Primary source, re-fetch it on every refresh:
 <https://www.searchenginejournal.com/google-algorithm-history/> (Search Engine
 Journal, full history back to 2003; the page is organized by year, newest first).
 

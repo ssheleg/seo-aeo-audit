@@ -404,32 +404,300 @@ for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, SKILL_DIR)):
             _saw_blank = False
             _prev_row = _stripped.startswith("|")
 
+# The third way a table breaks: a row with more cells than its header. Markdown
+# drops the surplus, so the row renders shifted and its last column disappears —
+# in growth-plays.md that silently deleted play P5's evidence tier, in the file
+# whose closing rule is "never ship a FIELD or HYPOTHESIS play sitewide". The
+# blank-line guard above could not see it. Code fences are skipped: a fenced
+# two-line row template is deliberate, not a broken table.
+for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, SKILL_DIR)):
+    for _fn in sorted(f for f in _filenames if f.endswith(".md")):
+        _fp = os.path.join(_dirpath, _fn)
+        _rel = os.path.relpath(_fp, ROOT)
+        _fence, _hdr_cells, _hdr_line = 0, None, 0
+        for _n, _line in enumerate(open(_fp, encoding="utf-8"), 1):
+            _s = _line.rstrip("\n").strip()
+            _m = re.match(r"^(`{3,}|~{3,})", _s)
+            if _m:
+                _marker = len(_m.group(1))
+                if _fence and _marker >= _fence:
+                    _fence = 0
+                elif not _fence:
+                    _fence = _marker
+                _hdr_cells = None
+                continue
+            if _fence or not _s.startswith("|"):
+                if not _fence:
+                    _hdr_cells = None
+                continue
+            _cells = len(_s.strip("|").split("|"))
+            if re.match(r"^\|[\s:\-|]+\|$", _s):
+                continue          # the separator row confirms the header above it
+            if _hdr_cells is None:
+                _hdr_cells, _hdr_line = _cells, _n
+            elif _cells != _hdr_cells:
+                fail(f"{_rel}:{_n}: table row has {_cells} cells, the header at line "
+                     f"{_hdr_line} has {_hdr_cells} — markdown drops the surplus, so the "
+                     f"last column of this row does not render")
+
 # A prose count about a list, sitting next to the list, is the drift this repo
 # keeps re-discovering: CONTRIBUTING said nineteen references while the validator
 # enforced twenty-one, and the README's myth count went stale the moment two rows
 # were added. Second occurrence of the class, so it stops being a review item.
-_myths = os.path.join(ROOT, SKILL_DIR, "references", "myths.md")
-if os.path.isfile(_myths):
-    _rows, _in_table = 0, False
-    for _line in open(_myths, encoding="utf-8"):
-        if _line.startswith("| Claim | Reality |"):
-            _in_table = True
+#
+# The 2026-08-10 audit found the third form of it: this check was written against
+# the ONE sentence that had drifted, while the same count lived in four places. It
+# was green while README said 29 in its second mention, SKILL.md said 30 and the
+# Cursor rule said 29, against 32 rows. Standing instruction #4 says count the
+# homes; so the homes are enumerated here and every one of them is read.
+
+
+def _table_rows(path: str, header_prefix: str) -> int:
+    """Rows in the first markdown table whose header line starts with the prefix."""
+    if not os.path.isfile(path):
+        return 0
+    rows, in_table = 0, False
+    for line in open(path, encoding="utf-8"):
+        if line.startswith(header_prefix):
+            in_table = True
             continue
-        if _in_table:
-            if not _line.startswith("|"):
+        if in_table:
+            if not line.startswith("|"):
                 break
-            if not _line.startswith("|---"):
-                _rows += 1
-    _readme = open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
-    _m = re.search(r"myth guard\*\* that refuses (\d+) popular tactics", _readme)
-    if not _rows:
-        fail("myths.md: could not find the claim table — the count check is blind")
-    elif not _m:
-        fail("README.md: the myth-guard sentence changed shape; the count check "
-             "can no longer read it (expected 'refuses N popular tactics')")
-    elif int(_m.group(1)) != _rows:
-        fail(f"README.md says the myth guard refuses {_m.group(1)} tactics, "
-             f"myths.md carries {_rows} rows")
+            if not line.startswith("|---"):
+                rows += 1
+    return rows
+
+
+_myths = os.path.join(ROOT, SKILL_DIR, "references", "myths.md")
+_myth_rows = _table_rows(_myths, "| Claim | Reality |")
+if not _myth_rows:
+    fail("myths.md: could not find the claim table — the count check is blind")
+else:
+    # (file, regex with one numeric group, what the sentence is for)
+    _MYTH_COUNT_HOMES = (
+        ("README.md",
+         r"myth guard\*\* that refuses (\d+) popular tactics",
+         "the feature list"),
+        ("README.md",
+         r"myth guard\.\*\* (\d+) popular tactics with published",
+         "the closing pitch"),
+        (f"{SKILL_DIR}/SKILL.md",
+         r"most-requested of the \*\*(\d+)\*\* refuted claims",
+         "the myth-guard section"),
+        ("cursor/rules/seo-aeo-audit.mdc",
+         r"out of (\d+) refuted claims",
+         "the Cursor channel"),
+    )
+    for _rel, _pat, _what in _MYTH_COUNT_HOMES:
+        _p = os.path.join(ROOT, _rel)
+        if not os.path.isfile(_p):
+            fail(f"missing file for the myth-count check: {_rel}")
+            continue
+        _txt = open(_p, encoding="utf-8").read()
+        _m = re.search(_pat, _txt)
+        if not _m:
+            fail(f"{_rel}: the myth count in {_what} changed shape, so the check can no "
+                 f"longer read it (expected /{_pat}/) — a count nothing reads is the "
+                 f"drift this guard exists for")
+        elif int(_m.group(1)) != _myth_rows:
+            fail(f"{_rel}: {_what} says {_m.group(1)} myths, myths.md carries {_myth_rows}")
+
+    # The two short lists must also agree on their own size, and with each other's
+    # claim about it: SKILL.md said "fourteen" and listed 14, the Cursor rule said
+    # "thirteen" and listed 13, and nothing compared the two channels.
+    _WORDS = {"ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+              "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
+              "nineteen": 19, "twenty": 20}
+    _skill_src = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
+    _mdc_src = open(os.path.join(ROOT, "cursor", "rules", "seo-aeo-audit.mdc"),
+                    encoding="utf-8").read()
+
+    def _shortlist_claim(txt: str, pat: str) -> int | None:
+        m = re.search(pat, txt, re.I)
+        return _WORDS.get(m.group(1).lower()) if m else None
+
+    def _shortlist_items(txt: str, start: str, stop: str) -> int:
+        """Count ` · `-separated entries in the short list between two markers."""
+        try:
+            body = txt.split(start, 1)[1].split(stop, 1)[0]
+        except IndexError:
+            return -1
+        return len([p for p in body.split("·") if p.strip()])
+
+    _skill_claim = _shortlist_claim(_skill_src, r"The (\w+) most-requested of")
+    _skill_items = _shortlist_items(_skill_src, "read it before\nanswering a tactic question",
+                                    "When the user asks for one of these")
+    if _skill_claim is None:
+        fail("SKILL.md: the myth short-list size is no longer stated in words the check "
+             "can read (expected 'The <word> most-requested of')")
+    elif _skill_items < 0:
+        fail("SKILL.md: the myth short list moved; the item count cannot be read")
+    elif _skill_claim != _skill_items:
+        fail(f"SKILL.md says {_skill_claim} most-requested myths and lists {_skill_items}")
+    _mdc_claim = _shortlist_claim(_mdc_src, r"The (\w+) asked for most often")
+    _mdc_items = _shortlist_items(_mdc_src, "install it for the counter-evidence and the working "
+                                            "alternative to\neach):", "## Deliverables")
+    if _mdc_claim is None:
+        fail("cursor/rules: the myth short-list size is no longer stated in readable words")
+    elif _mdc_items < 0:
+        fail("cursor/rules: the myth short list moved; the item count cannot be read")
+    elif _mdc_claim != _mdc_items:
+        fail(f"cursor/rules says {_mdc_claim} most-asked myths and lists {_mdc_items}")
+    elif _skill_claim is not None and _skill_claim != _mdc_claim:
+        fail(f"the myth short list is {_skill_claim} items in SKILL.md and {_mdc_claim} in the "
+             f"Cursor rule — the two channels must offer the same shortlist")
+
+# The play count is the same class of fact as the myth count, and it had drifted
+# the same way: README said 60 against 61 rows, after an earlier correction from
+# 59 to 60. A prose number about a table gets a check, not a review item.
+_plays = os.path.join(ROOT, SKILL_DIR, "references", "growth-plays.md")
+if os.path.isfile(_plays):
+    _play_rows = len(re.findall(r"^\| *`?[A-Z]+\d+ *\|", open(_plays, encoding="utf-8").read(),
+                                re.M))
+    _readme_src = open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
+    _pm = re.search(r"\*\*Growth plays\*\* \| (\d+) plays", _readme_src)
+    if not _play_rows:
+        fail("growth-plays.md: no play rows found — the count check is blind")
+    elif not _pm:
+        fail("README.md: the growth-plays row changed shape; the play-count check can no "
+             "longer read it (expected '**Growth plays** | N plays')")
+    elif int(_pm.group(1)) != _play_rows:
+        fail(f"README.md says {_pm.group(1)} plays, growth-plays.md carries {_play_rows}")
+
+# Prowl's tool count is a third prose number with several homes: README said ~408
+# while tooling.md and prowl-mcp.md said ~448.
+_prowl_counts = {}
+for _rel in ("README.md", f"{SKILL_DIR}/references/tooling.md",
+             f"{SKILL_DIR}/references/prowl-mcp.md"):
+    _p = os.path.join(ROOT, _rel)
+    if os.path.isfile(_p):
+        _prowl_counts[_rel] = set(re.findall(r"~?(\d{3}) (?:provider )?tools",
+                                            open(_p, encoding="utf-8").read()))
+_seen_prowl = set().union(*_prowl_counts.values()) if _prowl_counts else set()
+if len(_seen_prowl) > 1:
+    fail(f"the Prowl provider-tool count disagrees across its homes: "
+         f"{ {k: sorted(v) for k, v in _prowl_counts.items() if v} }")
+
+# The gate is one fact with four homes: scripts/check-docs.sh runs it, CI repeats
+# it, and CONTRIBUTING and README tell a contributor what to run. CONTRIBUTING
+# named two of the four commands and called CI "the same two".
+_gate_path = os.path.join(ROOT, "scripts", "check-docs.sh")
+if not os.path.isfile(_gate_path):
+    fail("missing scripts/check-docs.sh — the documentation gate")
+else:
+    _gate_cmds = re.findall(r"^python3 (test/\S+\.py)\s*$", open(_gate_path, encoding="utf-8").read(),
+                            re.M)
+    if len(_gate_cmds) < 2:
+        fail("scripts/check-docs.sh: no `python3 test/*.py` lines found — the gate-parity "
+             "check cannot read it")
+    for _rel in ("CONTRIBUTING.md", "README.md"):
+        _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+        for _cmd in _gate_cmds:
+            if _cmd not in _txt:
+                fail(f"{_rel} does not mention `{_cmd}`, which scripts/check-docs.sh runs — "
+                     f"a contributor following the docs runs a subset of the gate")
+    _ci = open(os.path.join(ROOT, ".github", "workflows", "validate.yml"),
+               encoding="utf-8").read()
+    for _cmd in _gate_cmds:
+        if _cmd not in _ci:
+            fail(f"CI does not run `{_cmd}`, which scripts/check-docs.sh runs")
+
+# Every finding page_audit emits must have a tier in FINDING_TIERS. The behaviour
+# test proves the fixtures carry one; this proves the next finding somebody adds
+# cannot ship without one, which is the case a fixture cannot cover.
+_pa = os.path.join(ROOT, SKILL_DIR, "scripts", "page_audit.py")
+if os.path.isfile(_pa):
+    _pasrc = open(_pa, encoding="utf-8").read()
+    _declared = set(re.findall(r'^\s+"([a-z0-9-]+)": "(?:CONFIRMED|STUDY|FIELD|HYPOTHESIS)",',
+                               _pasrc, re.M))
+    _emitted = set(re.findall(r'add\(\s*"[a-z]+",\s*"([a-z0-9-]+)"', _pasrc))
+    for _code in sorted(_emitted - _declared):
+        fail(f"page_audit.py emits finding {_code!r} with no entry in FINDING_TIERS — "
+             f"non-negotiable #2 makes the tier the multiplier in the triage formula")
+    if not _emitted:
+        fail("page_audit.py: no finding codes found — the tier-coverage check is blind")
+
+# The CWV thresholds live in psi_pull.py and in experience-signals.md. Two homes,
+# and the numbers decide whether a page passes.
+_psi = os.path.join(ROOT, SKILL_DIR, "scripts", "psi_pull.py")
+_exp = os.path.join(ROOT, SKILL_DIR, "references", "experience-signals.md")
+if os.path.isfile(_psi) and os.path.isfile(_exp):
+    _psisrc = open(_psi, encoding="utf-8").read()
+    _expsrc = open(_exp, encoding="utf-8").read()
+    for _key, _short, _good, _poor in (
+            ("LARGEST_CONTENTFUL_PAINT_MS", "LCP", "2500", "4000"),
+            ("INTERACTION_TO_NEXT_PAINT", "INP", "200", "500"),
+            ("CUMULATIVE_LAYOUT_SHIFT_SCORE", "CLS", "0.10", "0.25")):
+        if not re.search(rf'"{_key}":\s*\("{_short}",\s*{_good},\s*{_poor}', _psisrc):
+            fail(f"psi_pull.py: {_short} thresholds are no longer ({_good}, {_poor}) — "
+                 f"experience-signals.md publishes those numbers as the pass bands")
+        _row = re.search(rf"\*\*{_short}\*\*[^|]*\|([^|]*)\|([^|]*)\|([^|]*)\|", _expsrc)
+        if not _row:
+            fail(f"experience-signals.md: no threshold row for {_short} — psi_pull.py's "
+                 f"bands have no documented home")
+        else:
+            # The doc states LCP in seconds and the code in milliseconds, so compare
+            # the numbers the row actually contains against the value in either unit
+            # rather than string-matching one spelling of it.
+            _nums = {float(x) for x in re.findall(r"\d+(?:\.\d+)?", " ".join(_row.groups()))}
+            for _label, _raw in (("good", _good), ("poor", _poor)):
+                _v = float(_raw)
+                _forms = {_v, round(_v / 1000, 3)} if _v >= 100 else {_v}
+                if not (_forms & _nums):
+                    fail(f"experience-signals.md: the {_short} row carries {sorted(_nums)} and "
+                         f"none of them is psi_pull.py's {_label} threshold {_raw} "
+                         f"(in ms or s)")
+
+# algorithm-updates.md carries a "Verified as of" stamp and its own refresh
+# protocol says to move it. It said 2026-07-28 while the file already held a row
+# dated 2026-07-30, so the copy that travels to every agent was stamped older than
+# its own newest claim.
+_au = os.path.join(ROOT, SKILL_DIR, "references", "algorithm-updates.md")
+if os.path.isfile(_au):
+    _ausrc = open(_au, encoding="utf-8").read()
+    _refetch = re.search(r"\*\*Sources last re-fetched:\s*(\d{4}-\d{2}-\d{2})", _ausrc)
+    _newest = re.search(r"\*\*Newest row in this file:\s*(\d{4}-\d{2}-\d{2})", _ausrc)
+    # Every date in the file except the two header claims themselves.
+    _body = _ausrc.split("Primary source", 1)[-1]
+    _dates = sorted(re.findall(r"\b(20\d{2}-\d{2}-\d{2})\b", _body))
+    if not _refetch:
+        fail("algorithm-updates.md: no '**Sources last re-fetched: YYYY-MM-DD**' line")
+    if not _newest:
+        fail("algorithm-updates.md: no '**Newest row in this file: YYYY-MM-DD**' line — the "
+             "two freshness facts must be stated separately, because one of them used to "
+             "stand in for the other")
+    elif _dates and _dates[-1] != _newest.group(1):
+        fail(f"algorithm-updates.md says its newest row is {_newest.group(1)} but the newest "
+             f"date in the file is {_dates[-1]} — a row was appended without moving the line")
+
+# Section ids must be unique across the reference set. Two files defined D1, D2,
+# E1 and E2 with different content, so "run D1" had two answers.
+_sec_home: dict = {}
+for _ref in sorted(REQUIRED_REFERENCES):
+    _p = os.path.join(ROOT, SKILL_DIR, "references", _ref)
+    if not os.path.isfile(_p):
+        continue
+    for _line in open(_p, encoding="utf-8"):
+        _m = re.match(r"^#{2,4}\s+([A-Z]\d+[a-z]?)[.\s]", _line)
+        if _m:
+            _sec_home.setdefault(_m.group(1), set()).add(_ref)
+for _sec, _homes in sorted(_sec_home.items()):
+    if len(_homes) > 1:
+        fail(f"section id {_sec} is defined in {sorted(_homes)} — a cross-reference that "
+             f"names only the id resolves to two different sections")
+
+# A backticked `references/<file>.md` in prose is a pointer the markdown link
+# checker never sees, and one of them pointed at a file that exists and does not
+# contain the claim. The file must at least resolve.
+for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, SKILL_DIR)):
+    for _fn in sorted(f for f in _filenames if f.endswith(".md")):
+        _fp = os.path.join(_dirpath, _fn)
+        _rel = os.path.relpath(_fp, ROOT)
+        for _target in set(re.findall(r"`(references/[a-z0-9-]+\.md)`",
+                                      open(_fp, encoding="utf-8").read())):
+            if not os.path.isfile(os.path.join(ROOT, SKILL_DIR, _target)):
+                fail(f"{_rel}: backticked pointer `{_target}` resolves to no file")
 
 # The tier vocabulary is a second fact with two homes: references/evidence-tiers.md
 # defines it for the auditor, CONTRIBUTING.md repeats it for contributors. They had

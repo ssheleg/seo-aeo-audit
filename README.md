@@ -135,10 +135,10 @@ agent, not just Claude Code. This is the substance:
 | **Experience & conversion** | CWV triage order, satisfaction-signal mechanics, CRO × SEO evidence, conversion elements per template, lead capture, the attribution gaps (calls, offline, AI referrals, cross-device), paid × organic alignment | The post-click half of the funnel that audits usually leave on the table |
 | **Risk & defense** | Penalty behavior, subdomain and registrar risk, indirect prompt injection, takedown abuse, canonical hijacking, behavioral poisoning, proportionate link-risk handling | Turns "we got hit" into a specific, checkable hypothesis |
 | **Google update timeline** | Every core, spam and Discover update with start and completion dates, the platform changes that retired old tactics, and an update-response protocol | Lets the skill date-align a traffic curve instead of guessing |
-| **Growth plays** | 60 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
+| **Growth plays** | 61 plays, each with the trigger that justifies it, the mechanism, the observed effect and its evidence tier | A plan built from things that measurably worked, not from best-practice lists |
 | **Benchmarks** | Dated figures for surface reach, click economics, citation mechanics, read budget, content correlations, operational targets and industry context | Lets the report size an opportunity with numbers instead of adjectives |
 | **Link building** | Target selection, both collection modes (Search Console reachable or not), anchor discipline, the exclusions a brief must name, and the CSV column contract | Turns the audit into a brief a contractor can execute without misreading an assumption as a measurement |
-| **Bulk market data** | The Prowl MCP as a rung-5 source — ~408 provider tools behind one pay-per-call endpoint, routed by track, with measured per-call costs and the operating gotchas | Gives a no-seat audit a second independent index, which is what makes a demand finding hold up |
+| **Bulk market data** | The Prowl MCP as a rung-5 source — ~448 provider tools behind one pay-per-call endpoint, routed by track, with measured per-call costs and the operating gotchas | Gives a no-seat audit a second independent index, which is what makes a demand finding hold up |
 | **Method** | Evidence tiers, experiment design, the myth guard, check → tool routing with DevTools recipes, and the deliverable templates | Keeps two different runs of the audit comparable |
 
 ### Data freshness
@@ -253,14 +253,25 @@ must name, anchor discipline, and the CSV column contract.
 
 ## Security posture
 
-Text plus two stdlib Python scripts, and nothing else runs. `page_audit.py` makes
-plain http(s) GETs to the URLs you hand it — any other scheme is refused before a
-request is made, redirects off http(s) are refused, non-HTML responses are
-refused, no cookies or credentials are sent, responses are bounded by
-`--timeout`/`--max-bytes`, and it writes nothing. No dependencies, no npm
-lifecycle scripts, no telemetry. The installers (`install.sh`,
-`bin/seo-aeo-audit.js`) only copy files into `~/.claude/` and only when you run
-them. Full statement in [SECURITY.md](SECURITY.md).
+Text plus **six** standard-library Python scripts, and nothing else runs. Three of
+them are read-only network clients (`page_audit.py`, `psi_pull.py`,
+`sitemap_audit.py`); two call Google APIs with a token minted locally
+(`gsc_pull.py`, `url_inspection.py`); one probes access (`preflight.py`). None of
+them writes anything, and none submits, requests indexing or changes a property.
+
+`page_audit.py` makes plain http(s) GETs to the URLs you hand it — any other scheme
+is refused before a request is made, redirects off http(s) are refused, non-HTML
+responses are refused, no cookies or credentials are sent, responses are bounded by
+`--timeout`/`--max-bytes` (and a truncated response says so rather than reporting a
+fragment as a measurement), and it writes nothing.
+
+`gsc_pull.py`, `url_inspection.py` and `preflight.py` shell out to `gcloud auth
+application-default print-access-token` — that is the only subprocess any of them
+starts, no key file goes near the repo, and the token never leaves the process.
+
+No dependencies, no npm lifecycle scripts, no telemetry. The installers
+(`install.sh`, `bin/seo-aeo-audit.js`) only copy files into `~/.claude/` and only
+when you run them. Full statement in [SECURITY.md](SECURITY.md).
 
 Marketplace scanners rate skills that ship executable code above documentation-only
 skills by default; that rating is about the *category*, not a finding — the audit
@@ -276,7 +287,8 @@ plugins/seo-aeo-audit/
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
       ├── references/*.md            21 contract files (shipped on every channel)
-      └── scripts/                   page_audit.py, gsc_pull.py (stdlib only)
+      └── scripts/                   6 stdlib-only scripts: page_audit, gsc_pull,
+                                     url_inspection, psi_pull, sitemap_audit, preflight
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
 bin/seo-aeo-audit.js                 npx installer (zero dependencies)
@@ -284,8 +296,11 @@ install.sh                           POSIX installer for a local clone
 package.json                         npm manifest for the installer CLI
 CONTRIBUTING.md                      evidence discipline, checks, where things go
 SECURITY.md                          what runs, what it touches, how to verify
-test/validate.py                     structural validator
-test/test_page_audit.py              functional tests (offline fixtures)
+scripts/check-docs.sh                the gate — runs the four test files below
+test/validate.py                     structural validator and doctrine guards
+test/test_page_audit.py              page-auditor tests (offline fixtures)
+test/test_url_inspection.py          index-verdict tests (documented API shape)
+test/test_collectors.py              psi / sitemap / gsc / preflight tests
 test/fixtures/*.html                 pages the auditor is tested against
 .github/workflows/validate.yml       CI, including negative self-tests
 docs/research/                       provenance behind every claim in the references
@@ -294,8 +309,11 @@ docs/research/                       provenance behind every claim in the refere
 ## Development
 
 ```bash
+bash scripts/check-docs.sh      # the gate: runs exactly the four below, nothing else
 python3 test/validate.py        # structure, version sync, references, links, anchors, drift
-python3 test/test_page_audit.py # auditor behavior against offline fixtures
+python3 test/test_page_audit.py # page auditor against offline fixtures
+python3 test/test_url_inspection.py  # index verdicts against the documented API shape
+python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```
@@ -333,7 +351,7 @@ to do first.
 - **Evidence or silence.** Every finding carries an observation, a location and
   a date; every recommendation carries an evidence tier, so you can tell proven
   from worth-testing at a glance.
-- **A myth guard.** 29 popular tactics with published counter-evidence are
+- **A myth guard.** 32 popular tactics with published counter-evidence are
   refused outright — the ones an agent will otherwise recommend with total
   confidence.
 - **The output is a prioritized change plan** with verification steps and honest
@@ -344,7 +362,9 @@ to do first.
 Issues and pull requests are welcome — see
 [CONTRIBUTING.md](CONTRIBUTING.md). The short version: every claim carries an
 evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
-`python3 test/validate.py` plus `python3 test/test_page_audit.py` must pass.
+`bash scripts/check-docs.sh` must pass — it runs `python3 test/validate.py`,
+`python3 test/test_page_audit.py`, `python3 test/test_url_inspection.py` and
+`python3 test/test_collectors.py`.
 Everyone taking part is expected to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 
