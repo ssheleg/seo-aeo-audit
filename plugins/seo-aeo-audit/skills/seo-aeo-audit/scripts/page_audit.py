@@ -18,7 +18,22 @@ Network behavior: plain GETs to the URLs you pass, http(s) only, no cookies or
 credentials, redirects off http(s) refused, non-HTML content types refused,
 response capped by --max-bytes. It writes nothing and phones nothing home.
 
-Exit codes: 0 = ran (findings may exist), 1 = usage/fetch error.
+Every finding carries an evidence tier as well as a severity, because SKILL.md
+non-negotiable #2 makes the tier the confidence multiplier in
+`priority = (impact x confidence) / effort`. Severity says how loud a finding is;
+the tier says what backs it, and the two are not interchangeable. The mapping is
+declared once, in FINDING_TIERS below, so a reader can audit it:
+
+  CONFIRMED  the check is an observation on this page (a directive is present, a
+             count is what it is) or the mechanism is engine-documented. Per
+             onpage-checks.md this covers *existence*; the claimed impact of
+             fixing it keeps whatever tier its mechanism has.
+  STUDY      the threshold comes from published multi-site data (subhead count).
+  FIELD      the threshold comes from one engine measured by one practitioner
+             group (everything resting on the answer-engine read budget).
+
+Exit codes: 0 = at least one page was analyzed, 1 = usage error, or every URL
+failed (a run that produced no analysis is not a success).
 """
 from __future__ import annotations
 
@@ -34,8 +49,65 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 # --- constants -------------------------------------------------------------
 
-# ChatGPT Deep Research first-read window, measured from WebSocket logs (2026).
+# ChatGPT Deep Research first-read window: the MEDIAN of what one practitioner
+# group measured across 10+ accounts, ~June 2026 (max ~8,000) — architecture-and-
+# equity.md owns the numbers, aeo-geo.md F4 owns the tier. It is one engine's
+# median, not a budget every answer engine enforces, and anything resting on it is
+# FIELD. The window basis travels in the payload so a report cannot quote the
+# number without it.
 READ_BUDGET_CHARS = 5700
+READ_BUDGET_BASIS = (
+    "median first-read window measured on ChatGPT Deep Research (10+ accounts, "
+    "~June 2026; max ~8,000 chars) — FIELD, one engine, not a universal budget"
+)
+# Directives whose value is a parameter, not another directive. `content="none"`
+# really is `noindex, nofollow`, and `max-image-preview:none` really is not — a
+# word-boundary match over the whole string cannot tell them apart, and it
+# reported a track-A blocker on pages that say `index, follow`.
+PARAMETER_DIRECTIVES = frozenset(
+    {"max-snippet", "max-image-preview", "max-video-preview", "unavailable_after"}
+)
+NOINDEX_TOKENS = frozenset({"noindex", "none"})
+# Content the browser never renders as text. The price check has to read the
+# markup a crawler sees, not every byte in the file: searched against raw HTML it
+# fired on jQuery's `$` and on a correct Offer.priceCurrency.
+INERT_BLOCK_RE = re.compile(
+    r"<(script|style|template|noscript)\b[^>]*>.*?</\1\s*>|<!--.*?-->", re.I | re.S
+)
+# A truncated read cannot support a finding that depends on having the whole page.
+# Presence findings survive (a directive that is there is there); absence and
+# count findings do not.
+COMPLETENESS_DEPENDENT = frozenset({
+    "low-extractable-text", "subheads-thin", "read-budget", "nav-before-content",
+    "link-count", "alt-missing", "canonical-missing", "title-missing",
+    "description-missing", "h1-missing", "jsonld-price-parity",
+})
+# One home for the severity -> tier mapping, so the two never drift apart.
+FINDING_TIERS = {
+    "noindex": "CONFIRMED",
+    "refresh-noindex": "CONFIRMED",
+    "canonical-attrs": "CONFIRMED",
+    "canonical-missing": "CONFIRMED",
+    "canonical-multiple": "CONFIRMED",
+    "canonical-cross": "CONFIRMED",
+    "nosnippet": "CONFIRMED",
+    "h1-missing": "CONFIRMED",
+    "h1-multiple": "CONFIRMED",
+    "subheads-thin": "STUDY",
+    "low-extractable-text": "CONFIRMED",
+    "title-missing": "CONFIRMED",
+    "description-missing": "CONFIRMED",
+    "jsonld-invalid": "CONFIRMED",
+    "jsonld-incomplete": "CONFIRMED",
+    "jsonld-untyped": "CONFIRMED",
+    "jsonld-price-parity": "CONFIRMED",
+    "read-budget": "FIELD",
+    "nav-before-content": "FIELD",
+    "link-count": "FIELD",
+    "alt-missing": "CONFIRMED",
+    "price-not-in-text": "CONFIRMED",
+    "truncated-read": "CONFIRMED",
+}
 # Only rel and href are safe on a canonical link; anything that changes the
 # semantics of the element makes Google discard the declaration.
 CANONICAL_SAFE_ATTRS = {"rel", "href"}
@@ -54,6 +126,11 @@ class Doc:
         self.title: str | None = None
         self.meta_description: str | None = None
         self.meta_robots: list[str] = []
+        # The directive *contents*, kept apart from the display list above: the
+        # display list is prefixed with the meta name, which a parser must not
+        # mistake for a directive of its own.
+        self.robots_contents: list[str] = []
+        self.data_nosnippet = 0
         self.canonicals: list[dict] = []
         self.headings: list[tuple[str, str]] = []
         self.jsonld_raw: list[str] = []
@@ -88,6 +165,10 @@ class Parser(HTMLParser):
     def handle_starttag(self, tag, attrs):  # noqa: C901 - flat dispatch is clearer
         tag = tag.lower()
         a = self._attrs(attrs)
+        # Element-level preview suppression, which the nosnippet finding has always
+        # claimed to cover and never checked.
+        if "data-nosnippet" in a:
+            self.doc.data_nosnippet += 1
         if tag in SKIP_TEXT_TAGS:
             if tag == "script" and a.get("type", "").lower() == "application/ld+json":
                 self._in_jsonld = True
@@ -105,7 +186,9 @@ class Parser(HTMLParser):
             if name == "description":
                 self.doc.meta_description = a.get("content", "").strip()
             elif name in ("robots", "googlebot", "google"):
-                self.doc.meta_robots.append(f"{name}:{a.get('content', '').strip()}")
+                content = a.get("content", "").strip()
+                self.doc.meta_robots.append(f"{name}:{content}")
+                self.doc.robots_contents.append(content)
             if a.get("http-equiv", "").lower() == "refresh":
                 self.doc.meta_refresh = a.get("content", "").strip()
         elif tag == "link":
@@ -227,12 +310,82 @@ def _read_budget(doc: Doc, budget: int = READ_BUDGET_CHARS) -> dict:
     pct = round(100.0 * content / used, 1) if used else 0.0
     return {
         "window_chars": budget,
+        "window_basis": READ_BUDGET_BASIS,
+        "window_engine": "ChatGPT Deep Research",
+        "window_tier": "FIELD",
         "chars_used": used,
         "content_pct": pct,
         "link_marker_pct": round(100.0 - pct, 1) if used else 0.0,
         "links_before_first_text": links_before_content,
         "exhausted": used >= budget,
     }
+
+
+def parse_directives(values) -> set[str]:
+    """Directive tokens from robots meta contents and X-Robots-Tag values.
+
+    A directive is one comma-separated token. A token shaped `key:value` is a
+    parameter when the key is one of PARAMETER_DIRECTIVES — its value is data, not
+    a directive — and otherwise a user-agent prefix, where the value *is* the
+    directive (`X-Robots-Tag: googlebot: noindex`).
+
+    Matching the whole string with a word-boundary regex instead reads
+    `max-image-preview:none` as `none`, i.e. as `noindex, nofollow`, and reports a
+    fabricated indexation blocker on a page that declares `index, follow`.
+    """
+    out: set[str] = set()
+    for raw in values:
+        for token in (raw or "").split(","):
+            token = token.strip().lower()
+            if not token:
+                continue
+            if ":" in token:
+                key, _, val = token.partition(":")
+                key, val = key.strip(), val.strip()
+                if key in PARAMETER_DIRECTIVES:
+                    continue
+                token = val or key
+            if token:
+                out.add(token)
+    return out
+
+
+def strip_inert(html: str) -> str:
+    """HTML with script, style, template, noscript bodies and comments removed.
+
+    The price check asks whether a currency symbol exists in the markup but not in
+    the extractable text. Run against every byte of the file it answered yes for
+    jQuery's `$` and for a correct `Offer.priceCurrency` — both of them markup a
+    crawler reads as something other than page text.
+    """
+    return INERT_BLOCK_RE.sub(" ", html)
+
+
+def _jsonld_price(doc: Doc) -> bool:
+    """Does any JSON-LD node declare a price? (a different question from the text)"""
+    keys = ("price", "priceCurrency", "lowPrice", "highPrice")
+    found = False
+
+    def walk(node):
+        nonlocal found
+        if found:
+            return
+        if isinstance(node, dict):
+            if any(node.get(k) not in (None, "") for k in keys):
+                found = True
+                return
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for raw in doc.jsonld_raw:
+        try:
+            walk(json.loads(raw))
+        except Exception:  # noqa: BLE001 - malformed blocks are reported elsewhere
+            continue
+    return found
 
 
 def _jsonld_types(doc: Doc) -> tuple[list[str], list[str]]:
@@ -312,7 +465,8 @@ def _jsonld_required(doc: Doc) -> list[str]:
     return missing
 
 
-def analyze(html: str, url: str, headers: dict | None = None) -> dict:
+def analyze(html: str, url: str, headers: dict | None = None,
+            truncated: bool = False) -> dict:
     parser = Parser()
     parser.feed(html)
     parser.close()
@@ -339,12 +493,10 @@ def analyze(html: str, url: str, headers: dict | None = None) -> dict:
         if link.get("nofollow"):
             nofollow += 1
 
-    robots_values = " ".join(doc.meta_robots).lower()
-    x_robots = headers.get("x-robots-tag", "").lower()
-    directives = robots_values + " " + x_robots
-    # word boundaries: `none` is a directive, `nonexistent` is not
-    noindex = bool(re.search(r"\bnoindex\b|\bnone\b", directives))
-    nosnippet = bool(re.search(r"\bnosnippet\b", directives))
+    # Parse the directives instead of pattern-matching the string they arrive in.
+    directives = parse_directives(doc.robots_contents + [headers.get("x-robots-tag", "")])
+    noindex = bool(NOINDEX_TOKENS & directives)
+    nosnippet = "nosnippet" in directives or doc.data_nosnippet > 0
 
     canonical_href = doc.canonicals[0]["href"] if doc.canonicals else None
     canonical_abs = urljoin(url or "", canonical_href) if canonical_href else None
@@ -356,8 +508,14 @@ def analyze(html: str, url: str, headers: dict | None = None) -> dict:
     imgs_empty_alt = sum(1 for i in doc.images if i["alt"] == "")
 
     first_100 = " ".join(prose.split()[:100])
+    markup = strip_inert(html)
+    jsonld_price = _jsonld_price(doc)
     result = {
         "url": url,
+        # Non-negotiable #8 again: a fragment is not a page. Everything below that
+        # counts or fails to find something is unreliable when this is true, so it
+        # travels with the numbers rather than in a log line nobody kept.
+        "truncated": bool(truncated),
         "title": doc.title,
         "title_len": len(doc.title or ""),
         "meta_description_len": len(doc.meta_description or ""),
@@ -377,7 +535,16 @@ def analyze(html: str, url: str, headers: dict | None = None) -> dict:
         "link_text_words": link_words,
         "first_100_words": first_100,
         "currency_in_text": bool(CURRENCY_RE.search(text)),
-        "currency_in_source_only": bool(CURRENCY_RE.search(html)) and not bool(CURRENCY_RE.search(text)),
+        # Markup a crawler reads as page structure, with script/style/JSON-LD
+        # bodies removed — see strip_inert() for why the raw HTML is the wrong
+        # haystack.
+        "currency_in_source_only": (bool(CURRENCY_RE.search(markup))
+                                    and not bool(CURRENCY_RE.search(text))),
+        # A declared price is a separate observation with a separate fix: markup
+        # that claims a price the page does not show is the parity check in
+        # onpage-checks.md D1, not a JS-gated price.
+        "jsonld_price_declared": jsonld_price,
+        "data_nosnippet_elements": doc.data_nosnippet,
         "jsonld_blocks": len(doc.jsonld_raw),
         "jsonld_types": types,
         "jsonld_errors": jsonld_errors,
@@ -406,11 +573,26 @@ def analyze(html: str, url: str, headers: dict | None = None) -> dict:
 
 
 def findings(r: dict) -> list[dict]:
-    """Deterministic checks. Each finding names the observation, not a guess."""
+    """Deterministic checks. Each finding names the observation, not a guess.
+
+    Two rules hold for everything below. Each finding carries its evidence tier
+    from FINDING_TIERS, because the tier is what the triage formula multiplies by.
+    And on a truncated read every finding in COMPLETENESS_DEPENDENT is dropped: a
+    count taken from a fragment is not an observation about the page.
+    """
     out: list[dict] = []
 
     def add(sev, code, msg, ref):
-        out.append({"severity": sev, "code": code, "message": msg, "reference": ref})
+        out.append({"severity": sev, "code": code, "message": msg, "reference": ref,
+                    "tier": FINDING_TIERS.get(code, "HYPOTHESIS")})
+
+    if r.get("truncated"):
+        add("high", "truncated-read",
+            "the response was cut off by --max-bytes, so this page was analyzed as a "
+            "fragment: every count below (words, links, subheads, images, read budget) "
+            "is a lower bound and every absence is unverified. Re-run with a larger "
+            "--max-bytes before reporting any of it",
+            "technical-checks.md#a1-crawl-access-and-rendering")
 
     if r["noindex"]:
         add("blocker", "noindex",
@@ -441,22 +623,48 @@ def findings(r: dict) -> list[dict]:
             f"canonical points elsewhere ({r['canonical']}) — confirm that is intended",
             "technical-checks.md#b-canonicalization-and-duplication")
     if r["nosnippet"]:
+        _where = []
+        if "nosnippet" in " ".join(r["meta_robots"]).lower() or (
+                "nosnippet" in (r["x_robots_tag"] or "").lower()):
+            _where.append("a page-level nosnippet directive")
+        if r.get("data_nosnippet_elements"):
+            _where.append(f"{r['data_nosnippet_elements']} element(s) carrying data-nosnippet")
         add("high", "nosnippet",
-            "nosnippet / data-nosnippet gates what answer engines may quote from this page",
+            f"{' and '.join(_where) or 'nosnippet'} gates what answer engines may quote "
+            "from this page; preview control is the highest-weighted citation factor the "
+            "publisher fully controls",
             "aeo-geo.md#f3-extractability--the-part-most-audits-skip")
     if r["h1_count"] == 0:
-        add("medium", "h1-missing", "no H1 on the page", "intent-and-content.md")
+        add("medium", "h1-missing", "no H1 on the page",
+            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
     elif r["h1_count"] > 1:
-        add("info", "h1-multiple", f"{r['h1_count']} H1 elements", "intent-and-content.md")
-    if r["subheads_h2_h4"] < 4:
+        # onpage-checks.md D1 and myths.md are explicit that the count is not a
+        # ranking issue. Reported as the accessibility note it is, with the reason
+        # attached, so nobody turns it back into "consolidate to one H1".
+        add("info", "h1-multiple",
+            f"{r['h1_count']} H1 elements. Google states one and several both work, with no "
+            "rank penalty for the count — this is a document-structure and screen-reader "
+            "note, not an SEO finding. What is worth auditing is the meaning: check the "
+            "mobile H1 still names the subject",
+            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
+    # The subhead optimum was measured on pages long enough to carry sections;
+    # onpage-checks.md D1 scopes the failure to "0-3 subheads on a long page", so a
+    # four-section pricing page is not the case the study describes.
+    if r["subheads_h2_h4"] < 4 and r["word_count"] >= 600:
         add("medium", "subheads-thin",
-            f"{r['subheads_h2_h4']} H2–H4 subheads; 4–10 is the observed citation optimum "
-            "(33.2% vs 28% for 1–3)",
+            f"{r['subheads_h2_h4']} H2–H4 subheads on {r['word_count']} words of prose; "
+            "4–10 is the observed citation optimum (33.2% vs 28% for 1–3)",
             "aeo-geo.md#f2-what-correlates-with-being-cited-ranked-evidence")
+    # Not a length verdict. The reference this points at measured length and found
+    # it barely matters; what a very short body does affect is how much there is to
+    # extract and quote. Report the observation, name what it is not.
     if r["word_count"] < 300:
-        add("medium", "thin",
-            f"{r['word_count']} words of prose (link labels excluded; "
-            f"{r['link_text_words']} more words sit in link text)",
+        add("medium", "low-extractable-text",
+            f"only {r['word_count']} words of extractable prose (link labels excluded; "
+            f"{r['link_text_words']} more words sit in link text). Length itself is not a "
+            "ranking signal — the study behind this reference found it barely correlates — "
+            "so treat this as 'little for an engine to quote', and judge the page on "
+            "information gain and task completion instead",
             "intent-and-content.md#e2-information-gain")
     if r["title_len"] == 0:
         add("high", "title-missing", "no <title>", "technical-checks.md")
@@ -477,17 +685,22 @@ def findings(r: dict) -> list[dict]:
     rb = r["read_budget"]
     if rb["content_pct"] < 55:
         add("high", "read-budget",
-            f"only {rb['content_pct']}% of the ~{rb['window_chars']}-char answer-engine first read is "
-            f"content; {rb['link_marker_pct']}% is link markers "
-            f"({rb['links_before_first_text']} links before the first text)",
+            f"only {rb['content_pct']}% of the first ~{rb['window_chars']} characters is content; "
+            f"{rb['link_marker_pct']}% is link markers "
+            f"({rb['links_before_first_text']} links before the first text). That window is the "
+            "median measured on ChatGPT Deep Research, not a budget every answer engine "
+            "enforces — treat the share as the finding and the window as one engine's median",
             "architecture-and-equity.md#read-budget-navigation-now-costs-you-twice")
     elif rb["links_before_first_text"] >= 20:
         add("medium", "nav-before-content",
-            f"{rb['links_before_first_text']} links appear before the first text in source order",
+            f"{rb['links_before_first_text']} links appear before the first text in source order, "
+            "which spends the opening of the read on navigation (median window measured on "
+            "ChatGPT Deep Research)",
             "architecture-and-equity.md#read-budget-navigation-now-costs-you-twice")
     if r["links_total"] >= 60:
         add("medium", "link-count",
-            f"{r['links_total']} links on the page; above 60 the first read is ~33% content",
+            f"{r['links_total']} links on the page; in the same Deep Research measurement pages "
+            "above 60 links spent ~33% of the first read on content",
             "architecture-and-equity.md#read-budget-navigation-now-costs-you-twice")
     if r["images_missing_alt"]:
         add("medium", "alt-missing",
@@ -496,9 +709,18 @@ def findings(r: dict) -> list[dict]:
             "aeo-geo.md#f3-extractability--the-part-most-audits-skip")
     if r["currency_in_source_only"]:
         add("high", "price-not-in-text",
-            "a price appears in the source but not in extractable text (JS-gated or image) — "
-            "engines fall back to citing aggregators for your pricing",
+            "a currency symbol appears in the page markup (an attribute, an image name) but "
+            "not in extractable text — a JS-gated or image-only price. Engines that grep raw "
+            "HTML for a number then cite an aggregator for your pricing instead",
             "aeo-geo.md#f3-extractability--the-part-most-audits-skip")
+    if r.get("jsonld_price_declared") and not r["currency_in_text"]:
+        add("medium", "jsonld-price-parity",
+            "JSON-LD declares a price that does not appear in the page's extractable text. "
+            "Markup has to match visible content: this is the parity check, not proof the "
+            "price is JS-gated — confirm which by looking at the rendered page",
+            "onpage-checks.md#d1-can-crawlers-understand-what-the-page-is-about")
+    if r.get("truncated"):
+        out = [f for f in out if f["code"] not in COMPLETENESS_DEPENDENT]
     return out
 
 
@@ -534,10 +756,10 @@ def collapse_headers(items) -> dict:
     return out
 
 
-def _gunzip(raw: bytes) -> bytes:
-    """Decompress a gzip body, tolerating a stream cut short by --max-bytes."""
+def _gunzip(raw: bytes) -> tuple[bytes, bool]:
+    """Decompress a gzip body. Returns (bytes, salvaged_from_truncated_stream)."""
     try:
-        return gzip.decompress(raw)
+        return gzip.decompress(raw), False
     except Exception:  # noqa: BLE001 - truncated stream: salvage what decoded
         try:
             salvaged = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw)
@@ -547,16 +769,23 @@ def _gunzip(raw: bytes) -> bytes:
             raise ValueError(
                 "gzip response could not be decompressed (raise --max-bytes if the page is larger)"
             ) from None
-        return salvaged
+        return salvaged, True
 
 
-def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[str, dict]:
-    """Fetch one page over http(s).
+def fetch(url: str, timeout: float, user_agent: str,
+          max_bytes: int) -> tuple[str, dict, bool]:
+    """Fetch one page over http(s). Returns (text, headers, truncated).
 
     The auditor only ever issues plain GETs to URLs the operator passed in: no
     credentials, no cookies, no redirects off http(s), and nothing is written
     anywhere. The scheme guard matters because `urlopen` would otherwise happily
     read `file:///etc/passwd` from a `--url-list`.
+
+    `truncated` is the third return value and not a log line, because every number
+    downstream is computed on what came back: a page cut off at --max-bytes
+    produced word counts, link totals and a read-budget share that read as
+    measurements of the whole page. One byte past the cap is read deliberately so
+    the difference between "fits" and "was cut" is observable rather than inferred.
     """
     scheme = urlparse(url).scheme.lower()
     if scheme not in ALLOWED_SCHEMES:
@@ -568,12 +797,15 @@ def fetch(url: str, timeout: float, user_agent: str, max_bytes: int) -> tuple[st
         declared = resp.headers.get("Content-Type")
         if declared and declared.split(";")[0].strip().lower() not in HTML_CONTENT_TYPES:
             raise ValueError(f"not an HTML document (Content-Type: {declared.strip()})")
-        raw = resp.read(max_bytes)
+        raw = resp.read(max_bytes + 1)
+        truncated = len(raw) > max_bytes
+        raw = raw[:max_bytes]
         headers = collapse_headers(resp.headers.items())
         if (headers.get("content-encoding") or "").lower() == "gzip":
-            raw = _gunzip(raw)
+            raw, salvaged = _gunzip(raw)
+            truncated = truncated or salvaged
         charset = resp.headers.get_content_charset() or "utf-8"
-    return raw.decode(charset, errors="replace"), headers
+    return raw.decode(charset, errors="replace"), headers, truncated
 
 
 SEVERITY_ORDER = {"blocker": 0, "high": 1, "medium": 2, "info": 3}
@@ -589,6 +821,12 @@ def to_markdown(results: list[dict]) -> str:
             lines.append("")
             continue
         rb = r["read_budget"]
+        if r.get("truncated"):
+            lines.append(
+                "- ⚠ **truncated read**: the response was cut off by `--max-bytes`, so every "
+                "count below is a lower bound and no absence below is verified. Re-run with a "
+                "larger `--max-bytes` before quoting any of it."
+            )
         lines.append(
             f"- title ({r['title_len']} chars): {r['title'] or '—'}\n"
             f"- H1: {r['h1'] or '—'} · subheads H2–H4: {r['subheads_h2_h4']} · prose words: "
@@ -611,11 +849,12 @@ def to_markdown(results: list[dict]) -> str:
         lines.append(f"> first 100 prose words: {r['first_100_words'][:400] or '—'}")
         lines.append("")
         if r["findings"]:
-            lines.append("| severity | check | finding | reference |")
-            lines.append("|---|---|---|---|")
+            lines.append("| severity | tier | check | finding | reference |")
+            lines.append("|---|---|---|---|---|")
             for f in sorted(r["findings"], key=lambda x: SEVERITY_ORDER[x["severity"]]):
                 lines.append(
-                    f"| {f['severity']} | `{f['code']}` | {f['message']} | {f['reference']} |"
+                    f"| {f['severity']} | `{f.get('tier', '?')}` | `{f['code']}` | "
+                    f"{f['message']} | {f['reference']} |"
                 )
         else:
             lines.append("No mechanical findings on this page.")
@@ -665,8 +904,9 @@ def main(argv: list[str]) -> int:
             return 1
         for url in urls:
             try:
-                html, headers = fetch(url, args.timeout, args.user_agent, args.max_bytes)
-                results.append(analyze(html, url, headers))
+                html, headers, truncated = fetch(url, args.timeout, args.user_agent,
+                                                 args.max_bytes)
+                results.append(analyze(html, url, headers, truncated=truncated))
             except Exception as exc:  # noqa: BLE001 - one bad URL must not kill the run
                 results.append({"url": url, "error": f"{type(exc).__name__}: {exc}", "findings": []})
 
@@ -674,6 +914,12 @@ def main(argv: list[str]) -> int:
         print(json.dumps(results, ensure_ascii=False, indent=2))
     else:
         print(to_markdown(results))
+    # A run that analyzed nothing is not a success, whatever the docstring used to
+    # say. Partial failure keeps exit 0 — the error rows are the report — but a run
+    # where every URL failed must not look like one where every URL was clean.
+    if results and all("error" in r for r in results):
+        print("error: every URL failed; no page was analyzed", file=sys.stderr)
+        return 1
     return 0
 
 
