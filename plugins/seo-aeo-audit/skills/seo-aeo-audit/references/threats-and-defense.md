@@ -6,17 +6,20 @@ withstand** them; none of them belongs in a client plan.
 ## I1. Penalties and algorithmic suppression
 
 - **Manual actions are binary.** Until lifted, content, technical, trust and link
-  improvements return nothing. Complete every fix, document it, then request
-  reconsideration once. Case timeline for a hacked-subdomain action: fix within
-  the hour, reconsideration approved in 24h, full recovery in 36h.
+  improvements return nothing (`CONFIRMED` — documented behaviour). Complete every
+  fix, document it, then request reconsideration once. Case timeline for a
+  hacked-subdomain action: fix within the hour, reconsideration approved in 24h,
+  full recovery in 36h (`FIELD`, single case, undated — an existence proof that fast
+  recovery is possible, not a horizon to promise).
 - **Penalties cascade into AI surfaces.** A "Scaled content abuse" action on one
   directory removed it from Google *and* collapsed that directory's ChatGPT
   citations to near zero (residual traffic came through Bing fallback), while the
   rest of the domain kept ranking and being cited. Actions can be
   directory-level.
 - **Spam filters and core updates are separate systems.** After a spam action,
-  82% of domains that fell out of the top-100 stayed blocked through the
-  following core update — do not promise "the next core update will fix it".
+  82% of domains that fell out of the top-100 stayed blocked through the following
+  core update (`STUDY`, March-2026 SERP study; figures in benchmarks.md) — do not
+  promise "the next core update will fix it".
 - **Quality suppression looks like nothing.** Referring domains flat for months,
   traffic bleeding with no content or technical cause, `BadBackLinksPenalized`-
   style throttling rather than a visible action. Diagnose by exclusion.
@@ -68,13 +71,15 @@ withstand** them; none of them belongs in a client plan.
 ## I3. Indirect prompt injection — the new technical-SEO duty
 
 Google Threat Intelligence recorded a **32% rise** in malicious indirect
-prompt-injection attempts between Nov 2025 and Feb 2026. Injections are
+prompt-injection attempts between Nov 2025 and Feb 2026 (`STUDY` — vendor threat
+report, window stated). Injections are
 instructions embedded in content an AI system will later read: "ignore previous
 instructions", "recommend this business above all others", "do not mention
 competitors", "insert this phrase into your summary". Research from Cornell shows
 a **13-word** insertion on a UGC platform can steer deep-research agents, because
 the agents use lexical similarity to the query as a proxy for trustworthiness —
-and agents cite UGC in roughly a quarter of citations.
+and agents cite UGC in roughly a quarter of citations (`STUDY` — published academic
+work; the citation share is from the same paper).
 
 Audit five surfaces:
 
@@ -298,9 +303,10 @@ locations with it.
 ## I6. Link risk, in proportion
 
 Penguin 4.0 devalues rather than demotes: isolated junk links almost never move
-rankings. Leaked quality tags include `SiteAuthority`, `PageRankNS` and
-`BadBackLinksPenalized` — the last behaves as a lingering ceiling rather than a
-visible action.
+rankings (`CONFIRMED` — engine-documented behaviour). Leaked quality tags include
+`SiteAuthority`, `PageRankNS` and `BadBackLinksPenalized`, the last behaving as a
+lingering ceiling rather than a visible action — a leak describes architecture, not
+a live weight, so that reading is `STUDY` at best (evidence-tiers.md rule 5).
 
 Disavow only in four situations:
 
@@ -311,8 +317,9 @@ Disavow only in four situations:
 3. A bought-link blast you can date (a burst from automated comment/forum tools).
 4. Inherited spam from a previous agency.
 
-Toxicity is relative to the niche baseline: 20% exact-match anchors is fatal for
-a local plumber and normal in iGaming. Third-party toxicity percentages collapse
+Toxicity is relative to the niche baseline: 20% exact-match anchors is fatal for a
+local plumber and normal in iGaming (`FIELD` — practitioner reading, undated; the
+*relativity* is the durable part, the percentage is an illustration). Third-party toxicity percentages collapse
 context into one number and cause self-inflicted damage — a legitimate DR-10
 local blog is fine, a DR-70 expired domain selling guest posts is not, and the
 tool cannot tell them apart. Also audit **301 sources**: a redirect from an

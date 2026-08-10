@@ -39,8 +39,11 @@ Audit each money template for the elements that actually move a decision:
   lead-generation ebook 2024; no effect data, re-check before it enters a plan).
 
 Roughly 70% of the buying process happens before a prospect contacts sales, and
-58% of buyers seek expert input before deciding — the research-phase assets above
-*are* the sales conversation for most of the funnel.
+58% of buyers seek expert input before deciding (`STUDY` — **undated 2025 vendor
+figures, B2B buyers only**; quote them from benchmarks.md with that caveat, and
+never against the ~1% in-answer click rate, which measures all sessions —
+growth-plays G20 carries the same warning). The research-phase assets above *are*
+the sales conversation for most of the funnel.
 
 Landing-page rules that carry over from paid: match the page to buyer
 sophistication rather than to the keyword (informed prospects skip beginner

@@ -1,8 +1,17 @@
 # Deliverable templates
 
-The two files the audit produces. Copy these skeletons verbatim into the target
-project; they are duplicated at `templates/*.template.md` in the repo for
-non-agent use, and the validator keeps the two copies identical.
+The files the audit produces. Copy these skeletons verbatim into the target
+project; the first two are duplicated at `templates/*.template.md` in the repo for
+non-agent use, and the validator keeps those copies identical.
+
+Three files, not two — `experiments.md` was named in `experiments.md` as the place
+to keep one row per test and had no skeleton anywhere, which is how a deliverable
+becomes optional by accident:
+
+1. `docs/seo/audit-<YYYY-MM-DD>.md` — the findings.
+2. `docs/seo/plan-<YYYY-MM-DD>.md` — the change plan.
+3. `docs/seo/experiments.md` — the running experiment record, appended to rather
+   than dated, because it outlives any single audit.
 
 Never overwrite an existing audit or plan silently — write a new dated file, or
 ask before replacing.
@@ -48,6 +57,7 @@ Repeat this block per finding, most severe first.
 - **Issue:** {{what is wrong}}
 - **Impact:** {{1–5}} — {{traffic/revenue framing}}
 - **Evidence:** {{observation, location, value, date}}
+- **Evidence rung:** {{1 logs | 2 Search Console | 3 crawl | 4 field data | 5 third-party index | 6 manual fetch}} — the rung caps the tier (tooling.md)
 - **Cause:** {{the mechanism, not the symptom}}
 - **Fix:** {{the specific change}}
 - **Effort:** {{1–5 engineering days, including release}}
@@ -131,4 +141,29 @@ Month 2  {{...}}
 ## Human steps (only what genuinely needs a person)
 
 - {{credentials, approvals, business decisions, third-party account access}}
+````
+
+## docs/seo/experiments.md
+
+Not dated and not replaced: one row per test, appended, so a later audit can tell a
+result from a repetition. The rules for designing what goes in it are in
+`experiments.md`; this is only the record.
+
+````markdown
+# Experiment record — {{SITE}}
+
+One row per test. Never delete a row: a reverted test is evidence too, and the
+next audit needs to know it was tried.
+
+| id | hypothesis | cohort (template, n) | control (n) | single variable | start | end | metric | control delta | test delta | significance | verdict | rolled out? |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| E1 | {{...}} | {{...}} | {{...}} | {{...}} | {{YYYY-MM-DD}} | {{YYYY-MM-DD}} | {{...}} | {{...}} | {{...}} | {{...}} | {{win / no effect / loss / invalidated}} | {{yes / no + why}} |
+
+**Verdict values:** `win → rolled out` · `win → not rolled out (why)` ·
+`no effect` · `loss → reverted` ·
+`invalidated (update / seasonality / instrumentation)`.
+
+**Invalidation check before reading any row:** did the run overlap a core or spam
+update? Date-align against `algorithm-updates.md` — a test through a rollout is
+invalidated, not inconclusive.
 ````

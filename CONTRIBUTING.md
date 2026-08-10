@@ -11,7 +11,9 @@ the tier is a promise about what backs the claim:
 
 These four definitions are quoted verbatim from
 `plugins/seo-aeo-audit/skills/seo-aeo-audit/references/evidence-tiers.md`, which
-is their single home. `test/validate.py` fails if the two copies drift.
+is their single home. The vocabulary has **four** homes in all (that reference,
+this file, `SKILL.md`'s inline weights and the Cursor gloss); `test/validate.py`
+reconciles every one of them, and fails if the copies drift.
 
 | Tier | What it means |
 |---|---|

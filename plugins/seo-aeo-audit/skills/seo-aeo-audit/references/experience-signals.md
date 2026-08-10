@@ -78,16 +78,24 @@ click, expressed as layout.
 
 ## H3. CRO and SEO are the same work
 
-Measured across 47 pages over 90 days: bounce −31%, dwell +187%, average position
-+6.2, organic +218%, conversion +134%. Individual levers:
+**Tiering for this section.** Everything below is one agency's before/after
+reporting on its own client work: no control cohort, no held-back group, and the
+CRO change shipped alongside whatever else that team shipped. So it is `FIELD`
+throughout — the *direction* is worth carrying, the magnitudes are the size of a
+bet, and none of it is a forecast. The section used to state these numbers bare,
+which is how "+218% organic" ends up in a client deck as a projection.
 
-| Change | Effect |
-|---|---|
-| Load 4.2s → 1.3s | bounce 67% → 41%, CVR +93%, +8 positions after 6 weeks (FIELD — speed here moved satisfaction signals too; page experience on its own is a tiebreaker between near-equivalent candidates, see ranking-model.md) |
-| Mobile UX rework (tap targets, form simplification, thumb zone) | mobile CVR ×2 |
-| Layout restructure (scannable blocks, multiple CTAs above the fold) | CVR +127%, scroll depth +45%, bounce −23% |
-| Contextual internal links to related content/cases/FAQ | pages per session 1.4 → 3.2 |
-| Trust signals (reviews, security badges, guarantees) | CVR +89%, dwell +2.1 min |
+Reported across 47 pages over 90 days: bounce −31%, dwell +187%, average position
++6.2, organic +218%, conversion +134% (`FIELD`, single agency programme, no
+control). Individual levers, all from the same programme and all `FIELD`:
+
+| Change | Reported effect | Tier |
+|---|---|---|
+| Load 4.2s → 1.3s | bounce 67% → 41%, CVR +93%, +8 positions after 6 weeks — speed here moved satisfaction signals too; page experience on its own is a tiebreaker between near-equivalent candidates (ranking-model.md) | `FIELD` |
+| Mobile UX rework (tap targets, form simplification, thumb zone) | mobile CVR ×2 | `FIELD` |
+| Layout restructure (scannable blocks, multiple CTAs above the fold) | CVR +127%, scroll depth +45%, bounce −23% | `FIELD` |
+| Contextual internal links to related content/cases/FAQ | pages per session 1.4 → 3.2 | `FIELD` |
+| Trust signals (reviews, security badges, guarantees) | CVR +89%, dwell +2.1 min | `FIELD` |
 
 Landing-page specifics with field evidence:
 
@@ -96,7 +104,9 @@ Landing-page specifics with field evidence:
   leaks traffic before anyone reads a word.
 - Aggregated across ~130,000 split tests, generic stock photography above the
   fold cost ~19% conversion; real product screenshots, uniformed staff and
-  branded vehicles beat lifestyle imagery.
+  branded vehicles beat lifestyle imagery (`STUDY` — vendor meta-analysis of its
+  own test corpus, undated; the direction replicates across the corpus, the
+  percentage does not transfer to a single template).
 - **Mobile-only failures hide behind a passing desktop page**: text below legible
   size, tap targets crowded together, horizontal scroll, interstitial popups,
   fixed elements covering the navigation. Mobile-first indexing means the mobile
@@ -104,8 +114,8 @@ Landing-page specifics with field evidence:
   template on a real device profile rather than a narrowed desktop window (FIELD
   — recurring agency-audit finding, 2026-06).
 - Video above the fold cannibalizes attention: session benchmark is 30–60s while
-  the average explainer view is ~16s. Move it below the fold or behind a "See how
-  it works" secondary button, use a static screenshot with a play button, no
+  the average explainer view is ~16s (`FIELD` — practitioner benchmark, undated).
+  Move it below the fold or behind a "See how it works" secondary button, use a static screenshot with a play button, no
   autoplay, always show the duration.
 
 ## H4. Core Web Vitals — triage order that actually works
@@ -145,19 +155,17 @@ enough Chrome traffic (Chrome-only, so no iOS Safari). Compare parity between
 your desktop and mobile experience and against the sites you actually compete
 with, before presenting anything.
 
-Regional reality check: identical technical work produced 25% → 97% good URLs in
-one country and zero movement in another, because CDN proximity, server location
+Regional reality check (`FIELD`, single agency, two markets): identical technical
+work produced 25% → 97% good URLs in one country and zero movement in another, because CDN proximity, server location
 and device quality cap what optimization can achieve. Do not promise uniform CWV
 targets across markets, and never let CWV work outrank an indexing fix.
 
-## Evidence to capture for track H
+## The thresholds you are comparing against
 
-- Per template: CrUX field values (LCP/INP/CLS) by form factor, lab trace of the
-  LCP path, TTFB.
-
-**The thresholds you are comparing against.** A measurement without its cut-off
-is not a finding, and this file spends its length on *how to fix* without ever
-stating *what counts as broken*:
+A measurement without its cut-off is not a finding, and the rest of this file
+spends its length on *how to fix* without stating *what counts as broken*.
+`test/validate.py` compares this table against the bands `scripts/psi_pull.py`
+judges against, so the two copies cannot drift.
 
 | Metric | Good | Needs improvement | Poor |
 |---|---|---|---|
@@ -170,6 +178,11 @@ the "good" band on that metric — the pass is a distribution, not an average, a
 `scripts/psi_pull.py` reports the field percentiles beside the lab score so the
 two are never confused. Lab numbers rank nothing (tooling.md); they explain a
 field failure you have already observed.
+## Evidence to capture for track H
+
+- Per template: CrUX field values (LCP/INP/CLS) by form factor, lab trace of the
+  LCP path, TTFB.
+
 - GSC query-level CTR versus your own site curve (not an industry table), with
   the date the curve was built and the update or layout change that invalidates
   it.

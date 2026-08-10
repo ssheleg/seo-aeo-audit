@@ -12,11 +12,20 @@ rewards, then match it. Four dominant intents, each needing a different page:
 | Commercial | "best SEO tools" | Comparisons, pros/cons, pricing breakdowns, selection criteria |
 | Transactional | "buy ahrefs subscription" | Product detail above the fold, clear CTA, trust signals, frictionless checkout |
 
-Validation is behavioral, not aesthetic: bounce <40% and time on page >2 min
-indicate a match; bounce >70% indicates a mismatch. Documented case: transactional
-PDPs targeting "best [product]" ranked 12–20 with 78% bounce and 0.4% CVR;
-replacing them with comparison pages (commercial intent) interlinked to the PDPs
-moved them to positions 3–7, bounce 34%, CVR 3.2% — an 8× conversion change.
+Validation is behavioral, not aesthetic — but the thresholds below are a triage
+prompt, not a measurement bar. `bounce <40%` with `>2 min` on page reads as a
+match and `bounce >70%` as a mismatch (**practitioner convention, `HYPOTHESIS`,
+undated**; GA4 reports engagement rate rather than bounce rate, and
+experience-signals.md H1 argues there is no universal benchmark for the
+neighbouring metric — the same caution applies here). Use them to decide which
+templates to look at, never as the finding itself; the finding is the SERP-format
+mismatch you can point at.
+
+Documented case (`FIELD`, single site, no control): transactional PDPs targeting
+"best [product]" ranked 12–20 with 78% bounce and 0.4% CVR; replacing them with
+comparison pages (commercial intent) interlinked to the PDPs moved them to
+positions 3–7, bounce 34%, CVR 3.2% — an 8× conversion change. One site, so the
+direction travels and the multiple does not.
 
 Head terms often carry **mixed intent** ("project management software" =
 what/which/where) and need composite pages that resolve all three, or a cluster
@@ -75,7 +84,8 @@ update it.
 ## E1. What actually makes a page worth ranking in 2026
 
 Correlation analysis of 400+ winners and losers from a core update (Spearman vs
-traffic growth):
+traffic growth) — `STUDY`, 400+ sites, one update window, **undated in the source**;
+correlation with traffic growth, not with a ranking function:
 
 | Feature | ρ |
 |---|---|
@@ -85,8 +95,9 @@ traffic growth):
 | Tight topical focus | 0.250 |
 | Strong brand (only when it reflects **navigational** demand) | 0.206 |
 
-The effect is additive: one feature → 13.5–15.4% win rate; four → 68.1%; five →
-69.7%. Examples: a recipe site that sells meal plans beats recipe publishers; an
+The effect is additive in the same dataset: one feature → 13.5–15.4% win rate;
+four → 68.1%; five → 69.7% (`STUDY`, same sample — a description of who won that
+window, not a forecast for a template you change). Examples: a recipe site that sells meal plans beats recipe publishers; an
 education site where users solve interactive problems beats explainer
 publishers; a comparison site loses because the task completes on someone else's
 domain.
@@ -249,9 +260,10 @@ near zero, while the rest of the domain kept ranking. Penalties cascade
 downstream into AI surfaces.
 
 What does work: AI-assisted, human-edited content beat pure generation ~5× across
-Google organic, ChatGPT, AIO and Gemini in a controlled experiment. Keep the
-human share of the final text high and verify every fact — models hallucinate
-sources ~40% of the time on statistics and generate plausible 404 URLs.
+Google organic, ChatGPT, AIO and Gemini in a controlled experiment (`STUDY`;
+figures in benchmarks.md). Keep the human share of the final text high and verify
+every fact — statistics hallucinate ~40% of the time unsupervised (`STUDY`,
+growth-plays P2) and models generate plausible 404 URLs.
 
 ## E5. Freshness is relative, not calendar-based
 

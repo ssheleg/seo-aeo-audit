@@ -3,6 +3,12 @@
 Everything here is a check you run and record, not advice you repeat. Capture the
 observed value and the date for each.
 
+**Sections in this file:** `A0` blockers · `A1` crawl access and rendering · `A2`
+indexation economics · `A3` the mechanical sweep · `B` canonicalization, with `B2`
+for hreflang · plus the migration protocol and the evidence list. The sweep used to
+be numbered `A7` with `A3`–`A6` absent and the section physically placed after the
+B track, which reads as content lost in an edit.
+
 ## A0. Blockers first
 
 If any of these is true, stop and fix it before auditing anything else.
@@ -162,7 +168,7 @@ the body copy, the headings or the navigation. Where SSR is impossible, serving
 the crawler a cached HTML snapshot is allowed *provided the snapshot matches what
 users get* — divergence is cloaking. Give every paginated batch a crawlable URL
 carrying full content in the initial HTML response, and do not add
-`rel=next`/`rel=prev` while doing it (A7: it is unsupported and must not be
+`rel=next`/`rel=prev` while doing it (A3: it is unsupported and must not be
 "fixed" back in).
 
 ### Googlebot does not scroll — it stretches, once
@@ -206,9 +212,14 @@ for months — the desktop status is not the one being read. Two checks follow:
 
 ## A2. Indexation economics
 
-Treat the index as a scarce resource: Google raises the quality bar when it hits
-capacity, so every new page competes for a finite slot (patent *Managing URLs*,
-US7509315B1). Publishing more pages dilutes unless demand grows with them.
+Treat the index as a scarce resource. The architecture for it is described in a
+Google patent (*Managing URLs*, US7509315B1): a capacity-bound index that raises its
+quality bar as it fills, so every new page competes for a finite slot. A patent
+describes architecture, not a confirmed live weight — `STUDY` at best, and only where
+the mechanism matches something observable (evidence-tiers.md rule 5). What *is*
+observable, and what the rest of this section rests on: index coverage plateaus on
+large catalogues regardless of content quality, and publishing more pages dilutes
+unless demand grows with them.
 
 **Split the two GSC exclusion diagnoses — they need opposite fixes:**
 
@@ -598,7 +609,7 @@ curl -s https://example.com/sitemap.xml | grep -oE '<loc>[^<]*&[^a][^m][^p]' | h
 # ^ unescaped ampersands: any hit is a parse failure waiting at the engine
 ```
 
-## A7. The mechanical sweep (completeness list)
+## A3. The mechanical sweep (completeness list)
 
 Run this after the diagnostic work, as a completeness pass. It catches the
 boring failures that quietly cost traffic. Group results by category, record the

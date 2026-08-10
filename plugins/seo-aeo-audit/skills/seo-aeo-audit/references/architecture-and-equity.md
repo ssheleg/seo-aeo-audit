@@ -8,11 +8,19 @@ generators. Equity flows through internal links by four properties — number of
 links on the source page (dilution), position in the source order (higher =
 stronger), contextual relevance, and the authority of the source page.
 
-PageRank decays roughly 85% per hop, so anything more than three clicks from a
-strong node keeps almost nothing. That is why large catalogues plateau around
-partial index coverage regardless of content quality: authority is a
-**prerequisite filter**, and identical content that will not index on a weak site
-often indexes immediately on a strong one.
+Depth costs authority, and the field evidence for that is in "Crawl frequency is
+an architecture output" below (`FIELD`, 2026-06-11): priority pages within three
+clicks, with more than one inbound link from a strong page. What this file does
+**not** claim is a decay percentage per hop. The figure that circulates — "PageRank
+decays ~85% per hop" — inverts the damping factor from the original paper, where
+0.85 is the share modelled as *passing*; benchmarks.md carries the correction and
+the reason it matters (three hops retain ~61% under one reading and 0.34% under the
+other). The depth rule does not depend on it.
+
+What the field evidence does show is that large catalogues plateau at partial index
+coverage regardless of content quality: authority behaves as a **prerequisite
+filter**, and identical content that will not index on a weak site often indexes
+immediately on a strong one.
 
 Two boundaries on this track. PageRank is **not used in Local Search at all**
 (reported in SEJ, *Google Ranking Factors: The 3 That Really Matter* — FIELD), so

@@ -34,14 +34,22 @@ Preferred. Everything is measured.
 1. Pull, for the last 90 days and one earlier comparison window:
    `["query","page"]`, plus `["page"]` and `["query"]` alone. Use
    `scripts/gsc_pull.py`, or any client — the shape matters, not the tool.
+   **The bundled script pulls one window.** It takes `--days` for the recent window
+   and a daily series for the trend; it does not pull a query×page set for an earlier
+   comparison window, so the `gsc-historic-<window>` rows come from a second run with
+   a different `--days`, or from any client that accepts a date range. Say which
+   window each historic row came from — that is what the label is for.
 2. **Split the query set by position before ranking anything.** This is the
    step that decides the whole brief:
    - **position ≤ 20** — already competitive. Small volume, high CTR. Links
      here convert into clicks fastest.
    - **position 21–30** — striking distance. Where links move the needle most.
    - **position > 30** — impressions without rank. Often the biggest raw numbers
-     in the account and worth the least. See `references/myths.md` on why a
-     large impression count at position 50 is not an opportunity.
+     in the account and worth the least: `scripts/gsc_pull.py` prints the position
+     split first for exactly this reason, and SKILL.md step 2 makes it a
+     precondition of rating any finding by impact. (This claim lives there, not in
+     `myths.md` — an earlier version of this line pointed at a myth row that does
+     not exist.)
 3. Pick targets by `clicks × position potential`, never by impressions alone.
 4. For each target, take its top queries by impressions, filtered to
    **≥5 impressions OR position ≤ 20**, capped around 25 per target. Uncapped
@@ -123,9 +131,11 @@ exclusions:
   in-sentence phrases.
 - Give anchors **per target, not per keyword** — a contractor picks from a set;
   a 1:1 keyword→anchor map produces an unnatural profile.
-- Never instruct paid link networks, PBNs or bulk directory placement. See
-  `references/myths.md` and `references/threats-and-defense.md`. A site that has
-  just cleaned its on-site signals should not acquire off-site ones that undo it.
+- Never instruct paid link networks, PBNs or bulk directory placement. The donor
+  and velocity signatures are in `references/threats-and-defense.md` I6 (network
+  footprints, the anchor bands, the disavow triggers); `references/myths.md` owns the
+  adjacent refusal — disavowing on a third-party toxicity score. A site that has just
+  cleaned its on-site signals should not acquire off-site ones that undo it.
 
 **Sponsorship, said honestly.** Sponsoring a local organization is ordinary
 marketing, the coverage is genuinely local, and sponsor pages survive for years

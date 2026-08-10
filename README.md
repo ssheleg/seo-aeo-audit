@@ -143,9 +143,16 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Verified as of 2026-08-05.** Roughly 5,000 lines of distilled, dated
-  reference material across the twenty-one contracts. The update timeline covers
-  March 2025 → July 2026; every benchmark carries its own date and sample size.
+- **Verified as of 2026-08-10.** Roughly 5,000 lines of distilled reference
+  material across the twenty-one contracts. The update timeline covers
+  March 2025 → July 2026, and carries two dates of its own — when the sources were
+  last re-fetched and what its newest row is.
+- **Most benchmarks carry a date and a sample; the ones that do not say so.** The
+  2026-08-10 audit found 36 of 140 rows in `benchmarks.md` undated at both row and
+  section level — the whole "Operational benchmarks" block had a two-column shape
+  with nowhere to put a source. Those rows now name their source and are marked
+  **undated** where the corpus has no date, because a number an audit uses to set a
+  verification window is a promise with an expiry.
   (An exact line count used to sit here. It was wrong four edits later, which is
   the same defect class this skill refuses everywhere else — a number about a
   thing, kept next to the thing, with nothing reconciling them.)

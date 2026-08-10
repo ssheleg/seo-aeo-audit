@@ -138,9 +138,12 @@ spend.
   than all-caps (STUDY, multi-site controlled tests, reported 2026-04). Practical
   read for this track: write the brand name in its canonical case everywhere and
   never lowercase it into ambiguity with a common noun.
-- Entity pages with proper linked-data relations improved answer accuracy ~29% in
-  one presented analysis, while schema alone gave no lift: the moat is the linked
-  data layer, not the markup volume.
+- Entity pages with proper linked-data relations improved answer accuracy ~29%
+  while schema alone gave no lift, in one conference presentation whose sample and
+  method were not published (`HYPOTHESIS` — unnamed source, no method, undated;
+  carried because it points the same way as G3's other rows, and quotable only with
+  that caveat). The reading that survives: the moat is the linked-data layer, not
+  markup volume.
 - `citemap.json` is circulating as a proposed standard that would extend entity
   depth past Schema.org with data provenance, trust level and mis-attribution
   protection. There is no published evidence that any engine reads it — the same
@@ -230,9 +233,10 @@ mechanism behind the community-management point above; it is not an argument for
 seeding threads yourself.
 
 Gen Z is Google's fastest-growing Search demographic and roughly 1 in 10 of their
-searches starts with Google Lens, of which about 1 in 5 carries commercial
-intent — visual and multimodal entry points belong in the audit for consumer
-brands.
+searches starts with Google Lens, of which about 1 in 5 carries commercial intent
+(`CONFIRMED` as an engine statement about its own product, **undated here** —
+re-check before quoting a share). Visual and multimodal entry points belong in the
+audit for consumer brands.
 
 ## G4. Reputation is now a retrieval input
 
@@ -365,8 +369,8 @@ a number to build a target around.
 Three different things — measure them separately:
 
 - **Mention**: the model names the brand in the answer. This is what the buyer
-  actually hears. In field data on 85 mid-market companies, when a brand is named
-  it is in the top-3 in 63% of cases.
+  actually hears. In field data on 85 mid-market companies, when a brand is named it
+  is in the top-3 in 63% of cases (`FIELD`, 85 companies, undated).
 - **Citation**: the model links a source. It may link a parts catalog while
   recommending Audi — citation-only scorecards mark visible brands invisible.
 - **Recommendation**: the model tells the user to choose you. It rides on

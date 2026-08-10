@@ -80,12 +80,20 @@ Inspect first, then act. In order:
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
-`scripts/preflight.py` performs step 2 rather than describing it: it probes every
-source the audit can lean on and reports which of the independent gates a failure
-hit — Search Console, the GSC API and PageSpeed all answer `403` for entirely
-different reasons, and their own messages do not distinguish them. An unreachable
-source comes back as unreachable, never as absent data, because that difference
-decides whether a finding is possible at all.
+`scripts/preflight.py` performs the automatable half of step 2 rather than
+describing it, and reports which of the independent gates a failure hit — Search
+Console, the GSC API and PageSpeed all answer `403` for entirely different reasons,
+and their own messages do not distinguish them. An unreachable source comes back as
+unreachable, never as absent data, because that difference decides whether a finding
+is possible at all.
+
+**What it probes:** the interpreter, `gcloud` ADC, the Search Console property list
+and the named property, `robots.txt`, the sitemap, the homepage, and PageSpeed
+(including whether CrUX has field data for the origin at all).
+**What it cannot probe, so you still test by hand:** Bing and Yandex Webmaster,
+analytics, server logs, a crawl export, and every MCP tool — Ahrefs, GSC-over-MCP,
+Prowl, a crawler MCP. For those, make the one call each source is there for and
+record what came back. A green preflight is not a covered step 2.
 
 ```bash
 python3 scripts/preflight.py --site sc-domain:example.com --origin https://example.com
@@ -151,7 +159,7 @@ coincided with rollouts.
 
 Each track has two halves: the **diagnostic** work (what is wrong and why) and a
 **mechanical sweep** for completeness —
-[technical-checks.md](references/technical-checks.md) §A7 for tracks A/B and
+[technical-checks.md](references/technical-checks.md) §A3 for tracks A/B and
 [onpage-checks.md](references/onpage-checks.md) for D/E. Run the diagnosis first;
 the sweep afterwards catches the boring failures, and only sweep items with an
 observable impact get promoted into the findings table.
@@ -191,6 +199,14 @@ python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
 python3 scripts/gsc_pull.py --site sc-domain:example.com --brand-terms "acme,acme app" --format json
 ```
 
+Both formats print all of it, including the split reporting itself unavailable — the
+text format used to compute four of these and print none of them, so an agent that
+ran the documented command saw no cannibalization section and had nothing to
+distinguish "none found" from "never shown". Two limits travel in the output rather
+than in this file: the cliff detector only fires on a collapse of ~90% or more that
+held for two weeks, and the query set is capped at the API row limit with no
+pagination, which drops the long tail the beyond-30 band is made of.
+
 `scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)
 collects the per-page mechanical evidence for tracks A, B, C and F — canonical
 traps, robots directives, heading and schema inventory, and the answer-engine
@@ -205,7 +221,16 @@ python3 scripts/page_audit.py --url-list urls.txt --format json > audit.json
 
 Its schema inventory reads **server-rendered HTML only**. Where a CMS injects
 JSON-LD with JavaScript, an empty inventory is not evidence of absent markup —
-non-negotiable #8, and the script says so in every report.
+non-negotiable #8, and the script says so in every report. A response cut off by
+`--max-bytes` says so too, and drops every count-based finding rather than
+publishing a fragment as a measurement.
+
+**Every finding a bundled script emits carries an evidence tier as well as a
+severity**, and only the tier enters the triage formula below. Severity is how loud
+a finding is; the tier is what backs it. The mapping is declared in
+`FINDING_TIERS` in `scripts/page_audit.py` and the validator fails if a finding is
+added without one — before that, the scripts emitted severity alone and the number
+the plan is ordered by had to be invented per finding.
 
 `scripts/url_inspection.py` asks the index instead of inferring from a fetch:
 the Google-selected canonical against the declared one, coverage state, robots
@@ -264,17 +289,23 @@ Group the output into four buckets, in this order:
 
 ## Step 4 — Deliverables
 
-Write two files, seeded from the skeletons in
+Write these files, seeded from the skeletons in
 [references/deliverable-templates.md](references/deliverable-templates.md).
 Never overwrite an existing audit or plan silently — write a new dated file, or
 ask first:
 
 - `docs/seo/audit-<YYYY-MM-DD>.md` — findings. Per finding: **Issue · Impact ·
-  Evidence · Cause · Fix · Effort · Evidence tier · Verification**.
+  Evidence · Evidence rung · Cause · Fix · Effort · Evidence tier · Verification**.
+  The rung is which source the observation came from, and it caps the tier
+  ([references/tooling.md](references/tooling.md)).
 - `docs/seo/plan-<YYYY-MM-DD>.md` — the change plan. Per change: exact target
   (`path/file:line`, template name, or URL pattern), the change itself, **why**
   (mechanism + evidence tier), the expected effect and by when, how to verify,
   and how to roll it back.
+
+- `docs/seo/experiments.md` — the running experiment record, one row per test,
+  appended rather than dated because it outlives any single audit. Required as soon
+  as the plan has an Experiments bucket, which anything below CONFIRMED puts there.
 
 Executive summary rules: 5 bullets maximum, the top three blockers, the expected
 size of the prize, and the one thing that must happen first. Write for a

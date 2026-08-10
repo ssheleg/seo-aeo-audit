@@ -231,6 +231,8 @@ jobs:
             sed -i "s/(\"LCP\", 2500, 4000/(\"LCP\", 2000, 4000/" "$S/scripts/psi_pull.py"
           plant "a backticked references/ pointer resolving to nothing" \
             sed -i "s/\`references\/myths.md\`/\`references\/mythz.md\`/" "$S/references/linkbuilding.md"
+          plant "the slash command losing a non-negotiable" \
+            sed -i "/^8\. \*\*Know each instrument/,\$d" plugins/seo-aeo-audit/commands/seo-aeo-audit.md
 
       - name: install.sh syntax check
         run: bash -n install.sh

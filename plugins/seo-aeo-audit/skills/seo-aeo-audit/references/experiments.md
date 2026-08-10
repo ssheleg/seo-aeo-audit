@@ -50,23 +50,32 @@ attribution is weaker.
 
 ## Documented results worth reusing as hypotheses (not as facts)
 
+**Tiering for this list.** Each entry names its tier. A split test with a stated
+significance level on a named client base is `STUDY`; a single before/after on one
+site is `FIELD`; anything confounded is neither, and says so. The heading already
+says "not as facts", and the list used to leave eight entries with no tier at all —
+which is how "+34.7% organic" travels into a plan as a projection.
+
 - **Titles.** Adding the current year to titles: control +2.3%, test +34.7%
-  organic at 98.5% significance, rolled to 1,500 pages for +28% sitewide. Test it
-  — do not assume it.
+  organic at 98.5% significance, rolled to 1,500 pages for +28% sitewide
+  (`STUDY` — controlled split test, one client, significance stated). Test it —
+  do not assume it, and note the effect is market- and query-specific.
 - **Title capitalization.** Across five years of controlled tests, 50% of
   meta-title capitalization tests were positive and **zero** negative — the most
-  consistently winning test type in that dataset. The mechanism appears to be
+  consistently winning test type in that dataset (`STUDY`, multi-site controlled
+  tests, reported 2026-04). The mechanism appears to be
   indexing-side (capitalization as an emphasis/NER signal), not CTR: all-caps
   titles rarely even render in the SERP. Prefer targeted capitalization of key
   terms over full all-caps.
 - **Meta-description promos.** "Save 30%" produced +21.2% organic sessions in one
-  market and exactly nothing in another. Market-specific; always test locally.
+  market and exactly nothing in another (`STUDY`, split test; the null arm is the
+  point). Market-specific; always test locally.
 - **Grid size.** Cutting a category grid from 48 to 36 products was positive at
-  85% confidence (below the usual bar) via page weight and LCP, not content
-  depth.
-- **Title capitalization — the case behind the pattern.** One ecommerce site moved
-  every meta title to upper case and recorded +17.5% organic (mobile +20.4%), yet a
-  live-SERP check found almost no all-caps titles rendering and its PDPs mostly
+  85% confidence — below the 95% bar, so direction only (`FIELD`, 2026-06-23) —
+  via page weight and LCP, not content depth.
+- **Title capitalization — the case behind the pattern** (`FIELD`, one site). It
+  moved every meta title to upper case and recorded +17.5% organic (mobile +20.4%),
+  yet a live-SERP check found almost no all-caps titles rendering and its PDPs mostly
   surface inside product grids where the title text is not read. That is what
   points the mechanism at indexing, not CTR. Test targeted capitalization of key
   terms against full all-caps.
@@ -110,11 +119,12 @@ attribution is weaker.
   hypothesis rather than a layout law, and why it is worth re-running as two
   tests on any template that hides substance behind an interaction (STUDY,
   2026-07).
-- **Web-font weight.** 900KB of preloaded fonts widened the P90 TTFB→FCP gap from
-  ~840ms on fast connections to ~1,488ms on slow ones and correlated with ~18%
-  fewer pageviews per session. Subsetting is a clean one-template test with a
+- **Web-font weight** (`FIELD`, one estate, field data). 900KB of preloaded fonts
+  widened the P90 TTFB→FCP gap from ~840ms on fast connections to ~1,488ms on slow
+  ones and correlated with ~18% fewer pageviews per session. Subsetting is a clean one-template test with a
   field-data readout (CrUX, not lab).
-- **Content refresh on a directory.** 500 high-converting pages got a fresh FAQ
+- **Content refresh on a directory** (`FIELD`, 2026-05-29, and **confounded** —
+  neither tier nor effect size transfers). 500 high-converting pages got a fresh FAQ
   block and retargeted keywords; AI Overviews traffic +80% and the property +10%
   period over period. Confounded — a Markdown pipeline and a template redesign
   shipped in the same window — so reuse it as a hypothesis about refresh scope,
@@ -139,5 +149,5 @@ Verdict values: `win → rolled out`, `win → not rolled out (why)`, `no effect
 
 Do not ask a model to predict which variant will win: in a 48-test comparison the
 best model guessed 62.5% and the worst 48%, inside the noise band for that sample
-size. Use models to generate variants and to analyze results, not to replace the
+size (`STUDY`, 48 tests). Use models to generate variants and to analyze results, not to replace the
 test.

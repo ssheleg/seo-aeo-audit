@@ -137,20 +137,26 @@ with the FIELD tier attached (logged across 10+ accounts, ~June 2026).
 
 ## Operational benchmarks
 
-| Metric | Target/observed |
-|---|---|
-| TTFB | <200ms optimal, <500ms acceptable |
-| Server error rate | <0.5% |
-| Duplicate-group persistence after a fix | up to 2 weeks |
-| Out-of-stock crawl deprioritization | 100+ days after the directive is removed |
-| "Discovered – not indexed" push success | 70–80% indexed within 72h with the full protocol |
-| Migration traffic loss | ~30% average; ~8% with a disciplined protocol; 67% in the documented failure |
-| Recovery after mass accidental `noindex` | 6–12 weeks, staged |
-| PageRank decay per hop | ~85% |
-| Bounce/dwell thresholds for intent match | bounce <40% and >2 min = match; >70% = mismatch |
-| Rich result restored after a markup or content-parity fix | 2–4 weeks |
-| Spam-filter recovery | most domains pushed out of the top 100 stayed out through the following core update (82%, 2026) — do not date a recovery to the next update |
-| Manual-action lag after a hijack | deindexation preceded the manual action by ~24h in the documented case; reconsideration approved in 24h, full recovery 36h |
+The table shape used to be two columns — metric and number — with nowhere to put a
+source or a date, in the file whose own header says **Always cite the date**. These
+are the numbers an audit uses to set verification windows, so an undated one is a
+promise with no expiry. Where the corpus has no date, the row says so rather than
+implying one.
+
+| Metric | Target/observed | Source · as of |
+|---|---|---|
+| TTFB | <200ms optimal, <500ms acceptable | practitioner convention, **undated** — a place to measure, not an engine threshold |
+| Server error rate | <0.5% | practitioner convention, **undated** |
+| Duplicate-group persistence after a fix | up to 2 weeks | Google canonicalization docs, 2026-07-10 (algorithm-updates.md) — `CONFIRMED` |
+| Out-of-stock crawl deprioritization | 100+ days after the directive is removed | technical-checks.md A2, `FIELD`, Jul 2026 |
+| "Discovered – not indexed" push success | 70–80% indexed within 72h with the full protocol | technical-checks.md A2 / growth-plays L10, `FIELD`, **undated field reports** |
+| Migration traffic loss | ~30% average; ~8% with a disciplined protocol; 67% in the documented failure | technical-checks.md Migrations, `FIELD`; the 67% case is the news-network move of Jan 2022 |
+| Recovery after mass accidental `noindex` | 6–12 weeks, staged | technical-checks.md A2, `FIELD`, Jul 2026 |
+| PageRank damping factor | **0.85 is the share a link is modelled as passing on**, not the share lost | Page & Brin, 1998 — an architecture constant from the original paper, `STUDY` at best for live behaviour. It does not license "85% decays per hop": read that way three hops retain 0.34%, read correctly they retain ~61%, and the two prescribe different architectures. The depth rule stands on its own field evidence (architecture-and-equity.md, `FIELD`, 2026-06-11) and does not need this number |
+| Bounce/dwell thresholds for intent match | bounce <40% and >2 min = match; >70% = mismatch | practitioner convention, **undated and untiered elsewhere in this corpus** — treat as a triage prompt, not a threshold. GA4 reports engagement rate rather than bounce rate, and experience-signals.md H1 argues there is no universal benchmark for the neighbouring metric |
+| Rich result restored after a markup or content-parity fix | 2–4 weeks | growth-plays G28, `CONFIRMED` mechanism, **undated** window |
+| Spam-filter recovery | most domains pushed out of the top 100 stayed out through the following core update (82%, 2026) — do not date a recovery to the next update | March-2026 study, threats-and-defense.md I1 |
+| Manual-action lag after a hijack | deindexation preceded the manual action by ~24h in the documented case; reconsideration approved in 24h, full recovery 36h | threats-and-defense.md I2, `FIELD`, single case, **undated** |
 
 ## Rendering ceilings (not the five-second myth)
 

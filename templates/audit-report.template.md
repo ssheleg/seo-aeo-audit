@@ -36,6 +36,7 @@ Repeat this block per finding, most severe first.
 - **Issue:** {{what is wrong}}
 - **Impact:** {{1–5}} — {{traffic/revenue framing}}
 - **Evidence:** {{observation, location, value, date}}
+- **Evidence rung:** {{1 logs | 2 Search Console | 3 crawl | 4 field data | 5 third-party index | 6 manual fetch}} — the rung caps the tier (tooling.md)
 - **Cause:** {{the mechanism, not the symptom}}
 - **Fix:** {{the specific change}}
 - **Effort:** {{1–5 engineering days, including release}}

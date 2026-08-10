@@ -19,10 +19,31 @@ auditor decides what is real. Two rules before anything else:
 | 5 | Third-party indices (Ahrefs, Semrush, [Prowl MCP](prowl-mcp.md)) | Links, keyword estimates, competitor context — estimates, never ground truth |
 | 6 | Manual fetch + browser DevTools | The specific page, the specific header, the specific render |
 
-State in the report which rung each finding rests on. The rung caps the evidence
-tier: a log line or a Search Console screenshot can support `CONFIRMED`; a
-third-party index estimate cannot rise above `STUDY`, and an inference from
-public data alone stays `HYPOTHESIS` until something first-party confirms it.
+State in the report which rung each finding rests on. **The rung caps the evidence
+tier, and the cap is stated for all six** — an earlier version of this paragraph
+mapped three of them and contradicted itself inside one sentence, capping a
+third-party index at `STUDY` and "an inference from public data" at `HYPOTHESIS`
+when a third-party index *is* public data. Between `STUDY` (0.7) and `HYPOTHESIS`
+(0.2) sits a 3.5× difference in computed priority, so the gap changed the order of
+the plan.
+
+| Rung | Ceiling | Why |
+|---|---|---|
+| 1 · server logs | `CONFIRMED` | the fetch happened; the line is the observation |
+| 2 · Search Console / Bing / Yandex Webmaster | `CONFIRMED` | the engine's own answer about your property |
+| 3 · full crawl | `CONFIRMED` for what the crawler *saw* (a directive, a status code, a link) · `STUDY` for anything it *models* (internal PageRank, "orphan candidates") | a crawler observes markup and infers structure; the two are different claims |
+| 4 · field performance (CrUX, RUM) | `CONFIRMED` for the distribution it reports · never for a cause | it measures users, not the reason |
+| 5 · third-party indices | `STUDY`, and no higher — two indices agreeing is a stronger `STUDY`, not a `CONFIRMED` | a panel estimate about someone else's property |
+| 6 · manual fetch + DevTools | `CONFIRMED` for what the response contains (header, source, rendered DOM) · `HYPOTHESIS` for what it implies about indexing | the lowest rung by *breadth*, not by reliability: one page seen exactly |
+
+Rung 6 sitting at the bottom is about coverage, not truth. A `view-source` showing
+`noindex` is `CONFIRMED` — `evidence-tiers.md` names an HTTP response and a
+rendered DOM as CONFIRMED-grade observations — while "therefore the page is not
+indexed" is an inference that rung 2 settles in one call.
+
+**A public-only audit** (no property access at all) is capped at `STUDY` by rung 5,
+which is what `SKILL.md` step 1 says. It cannot answer "why is this page not
+indexed" at any tier, because no rung it can reach observes the index.
 
 **Rung 1 does not exist on most hosted platforms.** Shopify, Wix, Squarespace and
 comparable SaaS hosts expose no raw access logs, so a crawl-budget question there

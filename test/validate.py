@@ -365,6 +365,20 @@ else:
         if _cn != _skill_nn:
             fail(f"cursor/rules/{f}: carries {_cn} non-negotiable(s), SKILL.md has "
                  f"{_skill_nn} — the Cursor channel must ship the whole doctrine")
+    # The slash command is the third channel, and it was the unguarded one: it
+    # restated two non-negotiables and read as a complete list. The Cursor rule was
+    # count-checked from the day it drifted; the command never was.
+    _cmd_nn_re = re.compile(r"^\s*\d+\.\s+\*\*", re.M)
+    _cmd_txt = open(cmd_path, encoding="utf-8").read() if os.path.isfile(cmd_path) else ""
+    _cmd_sec = re.search(r"^##\s+The eight non-negotiables[^\n]*$(.*)", _cmd_txt, re.M | re.S)
+    if not _cmd_sec:
+        fail("the slash command has no non-negotiables section — a command that names "
+             "two of them reads as the whole doctrine, which is how it shipped")
+    else:
+        _cmd_nn = len(_cmd_nn_re.findall(_cmd_sec.group(1)))
+        if _cmd_nn != _skill_nn:
+            fail(f"the slash command carries {_cmd_nn} non-negotiable(s), SKILL.md has "
+                 f"{_skill_nn} — every channel ships the whole doctrine")
 
 # CONTRIBUTING.md tells a contributor what this file enforces, and had fallen four
 # guards behind — the same drift as every other prose summary of a moving thing.
