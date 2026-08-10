@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time. This skill is mostly **knowledge** — twenty-one
+Thanks for taking the time. This skill is mostly **knowledge** — twenty-two
 reference contracts plus a small standard-library auditor. That shapes what a
 good contribution looks like here.
 
@@ -67,12 +67,13 @@ python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 ```
 
-`validate.py` checks structure, the four-way version sync, that all twenty-one
+`validate.py` checks structure, the four-way version sync, that all twenty-two
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that every bundled script is
 standard-library only. It also reconciles the facts this repo keeps duplicating:
 the tier vocabulary across its four homes, the myth count in **all four** of its
-homes plus the size of the two short lists, the play count, the Prowl tool count,
+homes plus the size of the two short lists, the play count, the reference count in
+five prose homes, the Prowl tool count,
 the CWV thresholds against `psi_pull.py`, the gate commands against this file and
 the README, per-finding tier coverage in `page_audit.py`, section-id uniqueness
 across references, the two freshness facts in `algorithm-updates.md`, and

@@ -152,6 +152,15 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | I | Risk & threats | Penalties, hijacks, injections, adversaries, legal takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
 | J | Measurement | Will anyone be able to tell whether the plan worked? | [measurement.md](references/measurement.md) |
 
+**Discover is not one of the ten tracks, and it is not part of track A.** It has
+its own ranking pass, its own gate (two metatags, without which no card renders at
+all) and its own freshness curve, so a site where Discover is a material traffic
+source needs [references/discover.md](references/discover.md) run as an eleventh
+pass — and a site where it is not can skip it entirely. Check the GSC Discover
+report before deciding: the reference shipped reachable only from the list at the
+bottom of this file, which meant an agent working the tracks in order never opened
+it.
+
 **Before any decline diagnosis**, run the date-alignment and update-response
 protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —
 "a core update hit us" is not a finding, and half the documented GSC outages

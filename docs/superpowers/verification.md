@@ -17,7 +17,7 @@ what the whole skill is about.
 A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
-## v0.11.3 — 2026-08-10 fresh-eyes audit
+## v0.13.0 — 2026-08-10 fresh-eyes audit
 
 | REQ | What shipped | Confirmed | Evidence |
 |---|---|---|---|
@@ -40,8 +40,10 @@ standing instruction #2 encodes, written down as a column.
 | R-17 | Tier and date added to ~18 numeric claims across five references | **never** | prose. B-4 on the board is the check that would make this `planted` |
 | R-18 | `CLAUDE.md`, the board and this ledger exist | **observed** | the files are in the tree; their value is only proven by the next run reading them, which is R-19 |
 | R-19 | The next run's stage 0 quotes this ledger's `never` count | **never** | by construction — it can only be confirmed by a later run |
+| R-20 | Discover is reachable from the audit flow, not only from the reference list | **observed** | `SKILL.md` step 2 names it as an eleventh pass with an entry condition; the file was previously listed at line 359 and in no track |
+| R-21 | The reference count is checked in all five prose homes | **planted** + **observed** | caught `v0.12.0`'s five stale counts on the merged tree; planted defect in CI |
 
-**Counts at ship: 4 observed · 6 test-only · 4 planted+observed · 6 never.**
+**Counts at ship: 5 observed · 6 test-only · 5 planted+observed · 6 never.**
 
 Six `never` rows are all prose, and the honest reading is that this release fixed
 the machine-checkable half well and the prose half on inspection alone. B-4 on the
@@ -49,6 +51,6 @@ board is the item that would move R-15 and R-17.
 
 ## Earlier releases
 
-Not reconstructed. Rows before v0.11.3 would be written from the changelog rather
+Not reconstructed. Rows before v0.13.0 would be written from the changelog rather
 than from evidence, and a ledger filled in from memory is the thing it exists to
-replace. Releases from v0.11.3 forward get a row each.
+replace. Releases from v0.13.0 forward get a row each.

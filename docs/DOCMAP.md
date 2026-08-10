@@ -28,7 +28,7 @@ duplicated into commit messages or the changelog — those reference it.
 | Tool → check routing | `references/tooling.md` | SKILL.md names a script; the routing table owns which rung it sits on |
 | A script's contract | its own docstring | README and SKILL.md describe usage; neither is the contract |
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |
-| Reference count | `test/validate.py:REQUIRED_REFERENCES` | README and CONTRIBUTING quote it in prose — the source of truth is the tuple |
+| Reference count | `test/validate.py:REQUIRED_REFERENCES` | README (three places) and CONTRIBUTING (two) quote it in prose, in words or digits — **checked** since 2026-08-10. It was marked *review* on the grounds that it is "a prose number about a tuple", and went stale again the moment a twenty-second reference shipped |
 
 ## Propagation matrix
 
@@ -40,7 +40,7 @@ the reason no check can.
 |---|---|---|
 | Add or edit a non-negotiable in SKILL.md | the same rule in `cursor/rules/seo-aeo-audit.mdc` | `validate.py` compares the counts between channels |
 | Add a bundled script | compile + stdlib checks; a behaviour test; a CI step; README and SKILL.md usage | `validate.py` discovers `scripts/*.py`, so the first two are automatic; the CI step and the prose are **review** — no check can tell a documented script from an undocumented one without parsing prose |
-| Add a reference file | `REQUIRED_REFERENCES`, the SKILL.md reference list, the counts in README and CONTRIBUTING | `validate.py` fails on a missing reference; the counts are **review** — they are prose numbers about a tuple |
+| Add a reference file | `REQUIRED_REFERENCES`, the SKILL.md reference list, the counts in README and CONTRIBUTING | `validate.py` fails on a missing reference **and** on any of the five prose counts disagreeing with the tuple, in words or digits. `v0.12.0` added a reference and left all five stale, which is what promoted this from *review* |
 | Add a finding code that points at a reference anchor | the anchor must exist | `validate.py` resolves every `file.md#anchor` in the scripts |
 | Add a dated claim to any reference | a row in `benchmarks.md` with source and date | **review** — a checker cannot tell a sourced claim from a confident one |
 | Change a deliverable skeleton | `templates/` and `references/deliverable-templates.md` together | `validate.py` fails on drift between the two copies |

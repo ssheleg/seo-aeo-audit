@@ -18,7 +18,10 @@ cold-retirement trigger computable, so it goes first.
   operative sentence now names the failure mode instead of the remedy. **#5 retired**
   (became a check). **#2, #6, #7, #8 fired** — #7 fired on this run's own edit to
   CONTRIBUTING. #1 and #3 did not fire this run and are one and two stamps old
-  respectively; both stay. Eight instructions after the prune, cap is ten.
+  respectively; both stay. **Three added** (#9, #10, #11), one retired, so the list
+  stands at **ten — exactly the cap**. The next run cannot add one without retiring
+  one, which is the cap doing its job: #6 and #7 are the strongest candidates, both
+  being one grep away from becoming checks.
 
 ## 1. Verify a carried number before it enters a reference
 *Written 2026-08-04. Last fired 2026-08-05.*
@@ -211,3 +214,28 @@ the validator resolves every anchor. The check that does not: nothing compares a
 finding's *message* to the section it cites. So when you add or change a finding,
 open the section it points at and read it — if the section argues against the
 finding, one of the two is wrong, and it is usually not the doctrine.
+
+## 11. Fetch before you choose a version number
+*Written 2026-08-10. Last fired 2026-08-10.*
+
+This run branched from a local `main` at `v0.11.2`, did the whole audit, bumped four
+manifests to `v0.11.3`, tagged it and pushed. `origin/main` was at **`v0.12.0`** —
+released four days earlier with a 22nd reference — and the push was rejected for
+non-fast-forward while the *tag* went through. So a tag existed publicly, pointing at
+a commit that was not an ancestor of `main`, carrying a version number below the
+published one.
+
+Nothing in the pipeline's release stage says to fetch first, because every previous
+run happened to be the only writer. The cost was not the rebase — that was clean
+apart from one section-ordering conflict — it was that the version number had already
+been committed to in four manifests, a changelog entry, a tag, a verification ledger
+and two audit documents before the collision was visible.
+
+**`git fetch` and read `origin/main`'s version before the first manifest edit.** The
+number is the last thing to decide, not the first, and a tag is the one artefact in
+this repository that cannot be quietly corrected.
+
+*Also worth keeping: the merged commit was good work, and reading it with the audit's
+own lens found two more defects — a reference wired into the closing list and into no
+track, and five prose counts left stale by the release that added it. An audit that
+stops at the branch point audits a repository nobody is running.*

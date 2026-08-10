@@ -661,6 +661,41 @@ not exist.
 
 ---
 
+## Class 8 — found in the merge, not in the original audit (medium)
+
+This audit was written against `v0.11.2`. `origin/main` had meanwhile shipped
+`v0.12.0`, which adds `references/discover.md` — a 22nd contract. It was rebased in
+and read with the same lens.
+
+### D42 · `discover.md` is reachable from the reference list and from no track
+
+`SKILL.md:359` lists it. `SKILL.md:134-145` — the ten-track table an agent works
+through in step 2 — does not, and no track's reference column names it. Step 2 says
+"Run every track that is in scope", so an agent following the flow in order never
+opens the file. Progressive disclosure cuts both ways: the agent reads what SKILL.md
+points at *for the work it is doing*, and a reference reachable only from a closing
+list is reachable in principle and not in practice.
+
+Fixed by naming Discover as an explicit eleventh pass with its own entry condition
+(is it a material traffic source), rather than folding it into track A — it has its
+own ranking pass and its own binary gate, which is the reason the reference exists.
+
+**The file itself is clean.** It opens with an "Evidence standing, stated up front"
+section that splits `CONFIRMED` engine documentation from `FIELD`
+SDK reverse-engineering and says why the difference changes what a client funds —
+which is the file-level tiering convention this audit recommends elsewhere (D32),
+already applied. Every numeric claim resolves to a tier at row or paragraph level.
+
+### D43 · `v0.12.0` added a 22nd reference and left five prose counts saying twenty-one
+
+`README.md` (three places) and `CONTRIBUTING.md` (two) still said twenty-one.
+`docs/DOCMAP.md` marked the reference count **review** — "a prose number about a
+tuple" — which is the same reasoning that left the myth count unguarded. Third
+occurrence of the class in one repository, so standing instruction #3 applies: it is
+a check now, reading words or digits in all five homes.
+
+---
+
 ## Summary
 
 | Class | Rows | Severity |
@@ -672,8 +707,9 @@ not exist.
 | 5 — provenance and single-home | D28–D30 | medium |
 | 6 — tier and date discipline | D31–D34 | high |
 | 7 — structure, pointers, deliverables | D35–D41 | medium |
+| 8 — found in the merge with v0.12.0 | D42–D43 | medium |
 
-**41 defects.** Nine of them make the skill emit or suppress findings in ordinary
+**43 defects.** Nine of them make the skill emit or suppress findings in ordinary
 use; the repository's four-command gate is green against all forty-one
 (`bash scripts/check-docs.sh` → exit 0, this session).
 

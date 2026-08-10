@@ -579,6 +579,33 @@ if os.path.isfile(_plays):
     elif int(_pm.group(1)) != _play_rows:
         fail(f"README.md says {_pm.group(1)} plays, growth-plays.md carries {_play_rows}")
 
+# The reference count is the oldest instance of this class — CONTRIBUTING said
+# nineteen while the validator enforced twenty-one, in 2026-08-04 — and DOCMAP still
+# marked it **review** on the grounds that it is "a prose number about a tuple".
+# It went stale again the moment a twenty-second reference shipped, in the same tree
+# as the guards written for exactly this. Third occurrence of the class in one file,
+# so it stops being a review item (standing instruction #3).
+_WORDNUM = {19: "nineteen", 20: "twenty", 21: "twenty-one", 22: "twenty-two",
+            23: "twenty-three", 24: "twenty-four", 25: "twenty-five"}
+_ref_n = len(REQUIRED_REFERENCES)
+_ref_word = _WORDNUM.get(_ref_n)
+for _rel, _pats in (("README.md", (r"(\w+(?:-\w+)?) reference contracts ship",
+                                   r"across the (\w+(?:-\w+)?) contracts",
+                                   r"references/\*\.md\s+(\d+) contract files")),
+                    ("CONTRIBUTING.md", (r"mostly \*\*knowledge\*\* — (\w+(?:-\w+)?)",
+                                         r"that all (\w+(?:-\w+)?)\n?references exist",
+                                         r"that all (\w+(?:-\w+)?)"))):
+    _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+    for _pat in _pats:
+        _m = re.search(_pat, _txt)
+        if not _m:
+            continue          # that sentence may not exist in this file
+        _found = _m.group(1).lower()
+        _ok = (_found == str(_ref_n)) or (_ref_word and _found == _ref_word)
+        if not _ok:
+            fail(f"{_rel}: says {_found!r} references, REQUIRED_REFERENCES has {_ref_n} "
+                 f"({_ref_word}) — /{_pat}/")
+
 # Prowl's tool count is a third prose number with several homes: README said ~408
 # while tooling.md and prowl-mcp.md said ~448.
 _prowl_counts = {}

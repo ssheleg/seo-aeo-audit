@@ -4,13 +4,19 @@ Companion to `2026-08-10-defect-ledger.md`. The ledger says what was wrong; this
 says what was done about it, what was deliberately not done, and what to build next
 so the same classes stop recurring.
 
+**Scope note.** The audit read `v0.11.2`. `v0.12.0` had shipped to `origin/main`
+meanwhile, adding a 22nd reference (`discover.md`); it was rebased in and read with
+the same lens, which produced two more rows (D42, D43) and one more guard. The
+release number is `0.13.0`, not the `0.11.3` the audit was originally cut as — the
+correction is recorded at the top of the changelog rather than quietly reused.
+
 Every row names its verification. Where the verification is "prose, read once", the
 row says so — that is the honest label, and it is what the board rows exist to
 change.
 
 ---
 
-## Part 1 — shipped in this pass (v0.11.3)
+## Part 1 — shipped in this pass (v0.13.0)
 
 ### Code, each with a failing test written first
 
