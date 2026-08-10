@@ -12,7 +12,8 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAME = "seo-aeo-audit"
 SKILL_DIR = f"plugins/{NAME}/skills/{NAME}"
-REQUIRED_TEMPLATES = ("audit-report.template.md", "action-plan.template.md")
+REQUIRED_TEMPLATES = ("audit-report.template.md", "action-plan.template.md",
+                      "experiments.template.md")
 REQUIRED_REFERENCES = (
     "technical-checks.md",
     "discover.md",
@@ -391,6 +392,9 @@ _GUARD_FAMILIES = (
     "tier vocabulary",
     "myth count",
     "table integrity",
+    "script reachability",
+    "error flattening",
+    "defect count",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -620,9 +624,11 @@ if len(_seen_prowl) > 1:
     fail(f"the Prowl provider-tool count disagrees across its homes: "
          f"{ {k: sorted(v) for k, v in _prowl_counts.items() if v} }")
 
-# The gate is one fact with four homes: scripts/check-docs.sh runs it, CI repeats
-# it, and CONTRIBUTING and README tell a contributor what to run. CONTRIBUTING
-# named two of the four commands and called CI "the same two".
+# The gate is one fact with five homes: scripts/check-docs.sh runs it, CI repeats
+# it, CONTRIBUTING and README tell a contributor what to run, and the PR template
+# asks them to paste the output. CONTRIBUTING named two of the four commands and
+# called CI "the same two"; the PR template was not counted as a home at all, so it
+# kept asking for two of five long after that was corrected everywhere else.
 _gate_path = os.path.join(ROOT, "scripts", "check-docs.sh")
 if not os.path.isfile(_gate_path):
     fail("missing scripts/check-docs.sh — the documentation gate")
@@ -632,7 +638,8 @@ else:
     if len(_gate_cmds) < 2:
         fail("scripts/check-docs.sh: no `python3 test/*.py` lines found — the gate-parity "
              "check cannot read it")
-    for _rel in ("CONTRIBUTING.md", "README.md"):
+    for _rel in ("CONTRIBUTING.md", "README.md",
+                 os.path.join(".github", "PULL_REQUEST_TEMPLATE.md")):
         _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
         for _cmd in _gate_cmds:
             if _cmd not in _txt:
@@ -643,6 +650,70 @@ else:
     for _cmd in _gate_cmds:
         if _cmd not in _ci:
             fail(f"CI does not run `{_cmd}`, which scripts/check-docs.sh runs")
+
+# Every documented invocation must resolve from where the agent is standing, which
+# is the user's project — not the skill directory. Eleven bash lines read
+# `python3 scripts/<name>.py`, and all eleven failed with "No such file or
+# directory" in the only environment the skill is ever used in. The failure is
+# quiet in the way that matters: the agent falls back to checking by hand, the
+# whole audit drops to the bottom rung of the evidence ladder, and nothing says so.
+_skill_md = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
+_bare = re.findall(r"^python3 (?:\./)?scripts/(\S+\.py)", _skill_md, re.M)
+if _bare:
+    fail(f"SKILL.md invokes {sorted(set(_bare))} by a path relative to the caller's "
+         f"working directory — write it as \"$SKILL_DIR/scripts/<name>.py\" and keep "
+         f"the block that resolves SKILL_DIR")
+if "SKILL_DIR" not in _skill_md:
+    fail("SKILL.md documents no way to resolve the skill directory, so every script "
+         "invocation in it is unreachable from a project root")
+if "${CLAUDE_PLUGIN_ROOT}" not in _skill_md:
+    fail("SKILL.md must name ${CLAUDE_PLUGIN_ROOT} — it is the documented expansion "
+         "for skill content in a Claude Code plugin, and the only channel-native way "
+         "to resolve the scripts")
+
+# `_flat` has one home per script because these ship as standalone files with no
+# shared module. Four renderers interpolated a network error straight into markdown:
+# a Google error page carries newlines, the first one ends the table row, and every
+# row after it stops rendering. Five of preflight's seven rows were being lost.
+_RENDERERS = ("preflight.py", "url_inspection.py", "psi_pull.py", "page_audit.py")
+for _r in _RENDERERS:
+    _src = open(os.path.join(ROOT, SKILL_DIR, "scripts", _r), encoding="utf-8").read()
+    if "def _flat(" not in _src:
+        fail(f"{_r} renders network errors into markdown without _flat() — one "
+             f"newline in an API error ends the row and hides every row after it")
+    for _m in re.finditer(r"lines\.append\(f\"[^\"]*\{r\['(error|detail)'\]\}", _src):
+        fail(f"{_r}: r['{_m.group(1)}'] reaches markdown unflattened at offset "
+             f"{_m.start()} — wrap it in _flat()")
+
+# The 2026-08-10 defect total, stated in six places. It went stale in the release
+# that appended D42-D43 after the v0.12.0 rebase: the ledger's own summary said
+# "43 defects" and "green against all forty-one" in one sentence. Homes are listed
+# as data, with the phrase each one uses, so a reworded home fails loudly rather
+# than dropping out of the check (CLAUDE.md rule 1: count the homes first).
+_LEDGER = os.path.join("docs", "audit", "2026-08-10-defect-ledger.md")
+_DEFECT_COUNT_HOMES = (
+    (_LEDGER, r"\*\*(\S+) defects\.\*\*"),
+    (_LEDGER, r"gate is green against all (\S+)\s"),
+    (os.path.join("docs", "audit", "2026-08-10-improvement-plan.md"), r"ledger's (\S+) rows"),
+    (os.path.join("docs", "superpowers", "retro.md"), r"exited 0 against (\S+) defects"),
+    ("CHANGELOG.md", r"\*\*(\S+) defects\*\*"),
+    ("CHANGELOG.md", r"gate was green against all (\S+)\."),
+)
+_WORD = {41: "forty-one", 42: "forty-two", 43: "forty-three", 44: "forty-four",
+         45: "forty-five"}
+_defect_n = len(re.findall(r"^### D\d+", open(os.path.join(ROOT, _LEDGER),
+                                              encoding="utf-8").read(), re.M))
+_ok_forms = {str(_defect_n), _WORD.get(_defect_n, ""), _WORD.get(_defect_n, "").capitalize()}
+for _rel, _pat in _DEFECT_COUNT_HOMES:
+    _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+    _m = re.search(_pat, _txt)
+    if not _m:
+        fail(f"{_rel}: the defect-count phrase {_pat!r} is gone — a home that is "
+             f"reworded silently leaves the reconciler, which is how this count "
+             f"drifted in the first place")
+    elif _m.group(1) not in _ok_forms:
+        fail(f"{_rel} states the defect total as {_m.group(1)!r}; the ledger "
+             f"enumerates {_defect_n} `### D<n>` rows")
 
 # Every finding page_audit emits must have a tier in FINDING_TIERS. The behaviour
 # test proves the fixtures carry one; this proves the next finding somebody adds

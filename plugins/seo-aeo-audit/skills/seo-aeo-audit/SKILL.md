@@ -95,8 +95,27 @@ analytics, server logs, a crawl export, and every MCP tool — Ahrefs, GSC-over-
 Prowl, a crawler MCP. For those, make the one call each source is there for and
 record what came back. A green preflight is not a covered step 2.
 
+**Where the scripts live — resolve this once, before the first command.** You are
+standing in the user's project; the scripts ship with the skill, somewhere else
+entirely. Every invocation in this file is written against `$SKILL_DIR` for that
+reason, and every one of them fails without it.
+
 ```bash
-python3 scripts/preflight.py --site sc-domain:example.com --origin https://example.com
+# Claude Code plugin: ${CLAUDE_PLUGIN_ROOT} expands inside skill content.
+SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit"
+# Any other channel: the base directory the harness names when it loads this
+# skill — the directory this SKILL.md sits in. Confirm before relying on it:
+ls "$SKILL_DIR/scripts/preflight.py"
+```
+
+`No such file or directory` here is not a missing feature and not a reason to
+proceed quietly. It means the six instruments are unreachable, so every check they
+would have made drops to the bottom rung of the evidence ladder — and a finding's
+rung caps its tier. Say so in the three-line status; an audit that silently becomes
+a manual one has changed what its conclusions are worth (non-negotiable #6).
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --site sc-domain:example.com --origin https://example.com
 ```
 
 Access rules: read-only by default. Never submit forms, request indexing,
@@ -203,9 +222,9 @@ rather than guessing, because a guess there misstates the one metric track F
 leans on.
 
 ```bash
-python3 scripts/gsc_pull.py --list
-python3 scripts/gsc_pull.py --site sc-domain:example.com --quota-project my-proj
-python3 scripts/gsc_pull.py --site sc-domain:example.com --brand-terms "acme,acme app" --format json
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --list
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --site sc-domain:example.com --quota-project my-proj
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --site sc-domain:example.com --brand-terms "acme,acme app" --format json
 ```
 
 Both formats print all of it, including the split reporting itself unavailable — the
@@ -223,10 +242,13 @@ traps, robots directives, heading and schema inventory, and the answer-engine
 run it on a representative URL per template, not on a single page.
 
 ```bash
-python3 scripts/page_audit.py --url https://example.com/pricing --format markdown
-python3 scripts/page_audit.py --file ./saved.html --base-url https://example.com/pricing
-python3 scripts/page_audit.py --url-list urls.txt --format json > audit.json
+python3 "$SKILL_DIR/scripts/page_audit.py" --url https://example.com/pricing --format markdown
+python3 "$SKILL_DIR/scripts/page_audit.py" --file ./saved.html --base-url https://example.com/pricing
+python3 "$SKILL_DIR/scripts/page_audit.py" --url-list urls.txt --format json > audit.json
 ```
+
+`--format json` emits an **array**, one object per page, even for a single URL —
+index it as `data[0]`, not `data`.
 
 Its schema inventory reads **server-rendered HTML only**. Where a CMS injects
 JSON-LD with JavaScript, an empty inventory is not evidence of absent markup —
@@ -251,8 +273,8 @@ property**: sample a representative URL per template plus the specific pages a
 finding is about, exactly as with `page_audit.py`.
 
 ```bash
-python3 scripts/url_inspection.py --site sc-domain:example.com --urls https://example.com/pricing
-python3 scripts/url_inspection.py --site sc-domain:example.com --urls-file urls.txt --format json
+python3 "$SKILL_DIR/scripts/url_inspection.py" --site sc-domain:example.com --urls https://example.com/pricing
+python3 "$SKILL_DIR/scripts/url_inspection.py" --site sc-domain:example.com --urls-file urls.txt --format json
 ```
 
 `scripts/sitemap_audit.py` gives the *published* half of the step-1 count above —
@@ -267,8 +289,8 @@ the lab run explains a failure you have already observed. Where CrUX has no data
 for a URL, that is reported as absent — not as a pass.
 
 ```bash
-python3 scripts/sitemap_audit.py --url https://example.com/sitemap.xml
-python3 scripts/psi_pull.py --url https://example.com/pricing --strategy mobile
+python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml
+python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --strategy mobile
 ```
 
 ## Step 3 — Triage

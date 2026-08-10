@@ -1,5 +1,105 @@
 # Changelog
 
+## v0.14.0 — 2026-08-10
+
+A second audit of the skill, run through the lens the first one did not use: **what
+happens when an agent actually uses this**. Nine findings, one of them a blocker,
+and the four-command gate was green against every one — again, because a guard
+tests the invariant somebody thought to write, and nobody had thought to ask
+whether the documented commands run at all.
+
+Two output contracts change, so this is `0.14.0` and not `0.13.1`:
+`url_inspection.py` and `psi_pull.py` now exit **1** when a run produced nothing
+usable. Anything branching on their exit status needs to know.
+
+### Fixed — the instruments were unreachable from where the agent stands
+
+- **All eleven documented invocations failed in the only environment the skill is
+  used in.** Every bash line read `python3 scripts/<name>.py`, which resolves
+  against the agent's working directory — the user's project, where the scripts
+  are not. Reproduced from a project root: `No such file or directory`, eleven
+  times out of eleven. One sentence in the whole shipped skill admitted the paths
+  were relative, and it did not say to what.
+
+  The failure is quiet in the way that costs: an agent absorbs the error, does the
+  check by hand, and the audit silently drops to the bottom rung of the evidence
+  ladder — which caps every tier it is allowed to claim. Now `SKILL.md` resolves
+  `$SKILL_DIR` once (`${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit` in a Claude Code
+  plugin, the harness-named base directory elsewhere — the placeholder is
+  documented to expand in *skill content*, which was verified before it was relied
+  on), every invocation goes through it, and the validator rejects a bare
+  `scripts/*.py` path.
+- **The Cursor channel shipped non-negotiable #8 — "know each instrument's blind
+  spot" — and named zero instruments.** It mentioned `scripts/` not once, so the
+  rule governed nothing and every Cursor audit was capped at the manual-fetch rung
+  without saying so. It now carries the six, each with what it settles and what it
+  cannot see.
+- **`page_audit.py --format json` emits an array even for one URL**, and said so
+  nowhere; `data["findings"]` raises `AttributeError`, which is what the one-URL
+  example in the docs leads you to write.
+
+### Fixed — a run that measured nothing reported success
+
+- **`url_inspection.py` and `psi_pull.py` returned 0 after total failure**, against
+  their own docstrings, while `page_audit.py` and `sitemap_audit.py` returned 1 in
+  the same situation. Four collectors, two answers. The prose was already honest —
+  a run of 403s prints "supports **no findings at any tier**" — but SKILL.md's own
+  documented invocation redirects stdout to a file, so an agent checking `$?` read
+  success from a page of refusals. The predicate now has one home per script and
+  the report and the status read the same one. An absent-CrUX result still exits 0
+  and is pinned by a test: that call worked, and treating its honest absence as a
+  failure would break the behaviour the script exists for.
+
+### Fixed — the instruments emitted broken markdown
+
+- **Four renderers interpolated raw network errors into generated markdown.** A
+  Google error page arrives with newlines; the first one ends the table row and
+  every row after it stops rendering. On a live preflight run against a 404
+  property, **5 of 7 rows survived** — and `validate.py` already rejects exactly
+  this shape in the repository's own files, but a guard over checked-in markdown
+  cannot see markdown a tool generates. `_flat()` collapses whitespace, escapes
+  pipes and caps length in all four.
+- **`preflight.py`'s coverage denominator shrank when a source failed.** A failed
+  property-list call returned one probe where a successful one returns two, so the
+  headline said "3 of 7" where success says "of 8" — and the probe that silently
+  left is the one that decides the most: whether this account can see this property
+  at all. A reader could not tell a smaller world from an unasked question. The
+  named-property row is now always reported, marked `not attempted`.
+
+### Fixed — claims about the skill that were false
+
+- **`SECURITY.md` described "documentation plus one small Python script"**, listed
+  only `page_audit.py`, documented only its network behaviour, and closed with a
+  verification recipe scoped to that one file under the sentence "No `subprocess`".
+  Six scripts ship and **three execute `gcloud` as a subprocess** — the most
+  security-relevant fact about the bundle, absent from the security document. It
+  now carries a measured per-script table (outbound, subprocess, writes), explains
+  what the `gcloud` token exchange does and does not do, and its grep covers all
+  six: 22 lines, six `open()` calls, every one a file you named.
+- **The PR template asked for two of the gate's commands.** It was never counted as
+  a home, so it kept asking for two long after CONTRIBUTING and the README were
+  corrected. The gate-parity guard now spans five homes.
+- **The third deliverable had no root skeleton.** `deliverable-templates.md`
+  embedded three; `templates/` shipped two, and the README calls that directory the
+  skeletons for non-agent use — while step 4 makes `experiments.md` required as
+  soon as anything sits below `CONFIRMED`.
+- **The 2026-08-10 defect total was wrong in five of its six homes.** The ledger
+  enumerates `D1`–`D43`; the changelog, the retro, the improvement plan and the
+  ledger's *own summary sentence* said forty-one. It went stale in the release that
+  appended `D42`–`D43` after the `v0.12.0` rebase.
+
+### Added — guards, each watched failing on a planted defect
+
+Script reachability, error flattening, the defect count against the rows the ledger
+enumerates, and the PR template as the fifth gate home. `test/test_output_contracts.py`
+holds what all six scripts owe their caller. All **17** negative self-tests were
+re-run after the code changes — a changed line silently disables one, and a disabled
+self-test looks exactly like a passing one.
+
+The gate command count is no longer written down in any living document. It had four
+homes and went stale in three of them the first time a file was added; a count that
+does not exist cannot drift.
+
 ## v0.13.0 — 2026-08-10
 
 **Version note.** This work was written against `v0.11.2` and released as `v0.11.3`
@@ -11,9 +111,9 @@ were `D1`–`E2`, so anything parsing findings or citing those ids needs the new
 The stray `v0.11.3` tag is deleted.
 
 A fresh-eyes audit of the whole skill: every command, every bundled script, all
-twenty-two references and the pipeline around them. **Forty-one defects**, nine of
+twenty-two references and the pipeline around them. **Forty-three defects**, nine of
 which made the skill emit or suppress findings in ordinary use. The four-command
-gate was green against all forty-one.
+gate was green against all forty-three.
 
 Full record: `docs/audit/2026-08-10-defect-ledger.md` (what was wrong, with the
 repro for each) and `docs/audit/2026-08-10-improvement-plan.md` (what was done,

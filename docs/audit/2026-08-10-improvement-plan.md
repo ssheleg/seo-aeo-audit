@@ -98,7 +98,7 @@ gains five entries.
 
 ## Part 2 — the four root causes, and what closes each
 
-The ledger's forty-one rows collapse into four mechanisms. Fixing instances without
+The ledger's forty-three rows collapse into four mechanisms. Fixing instances without
 fixing the mechanism is how this repository arrived at guards that were green while
 the facts they guarded were wrong.
 

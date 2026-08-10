@@ -22,9 +22,11 @@ here too.
 bash scripts/check-docs.sh
 ```
 
-Four commands, and it is the whole gate — `test/validate.py`,
-`test/test_page_audit.py`, `test/test_url_inspection.py`, `test/test_collectors.py`.
-CI runs the same four plus a negative self-test per guard. `test/validate.py`
+That script is the whole gate — `test/validate.py`, `test/test_page_audit.py`,
+`test/test_url_inspection.py`, `test/test_collectors.py` and
+`test/test_output_contracts.py`. CI runs the same set plus a negative self-test
+per guard. The count is deliberately not written down here: it had four homes and
+went stale in three of them the first time a test file was added. `test/validate.py`
 reconciles the counts and cross-file facts this repo keeps re-breaking; CONTRIBUTING
 names each guard family and the validator asserts that paragraph keeps up.
 

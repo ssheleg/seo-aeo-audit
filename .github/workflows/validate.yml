@@ -29,6 +29,62 @@ jobs:
       - name: Collector functional tests
         run: python3 test/test_collectors.py
 
+      - name: Cross-script output contracts
+        run: python3 test/test_output_contracts.py
+
+      - name: Negative self-test (a run that measured nothing must not exit 0)
+        run: |
+          set -eu
+          rm -rf /tmp/exit-copy && cp -R . /tmp/exit-copy
+          sed -i 's/return 0 if answered_rows(rows) else 1/return 0/' \
+            /tmp/exit-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py
+          if python3 /tmp/exit-copy/test/test_output_contracts.py; then
+            echo "ERROR: tests passed while a run of 403s reported success"
+            exit 1
+          else
+            echo "OK: tests reject success claimed for a run the index never answered"
+          fi
+
+      - name: Negative self-test (unflattened error text must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/flat-copy && cp -R . /tmp/flat-copy
+          sed -i "s/{_flat(r\['detail'\])}/{r['detail']}/" \
+            /tmp/flat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/preflight.py
+          if python3 /tmp/flat-copy/test/test_output_contracts.py && \
+             python3 /tmp/flat-copy/test/validate.py; then
+            echo "ERROR: an API error page reached the table raw and nothing objected"
+            exit 1
+          else
+            echo "OK: a newline in a table cell is caught"
+          fi
+
+      - name: Negative self-test (a script path relative to the caller must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/path-copy && cp -R . /tmp/path-copy
+          sed -i 's|python3 "\$SKILL_DIR/scripts/preflight.py"|python3 scripts/preflight.py|' \
+            /tmp/path-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md
+          if python3 /tmp/path-copy/test/validate.py; then
+            echo "ERROR: validator accepted an invocation unreachable from a project root"
+            exit 1
+          else
+            echo "OK: bare scripts/ paths are rejected"
+          fi
+
+      - name: Negative self-test (a stale defect count must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/count-copy && cp -R . /tmp/count-copy
+          sed -i 's/exited 0 against forty-three defects/exited 0 against forty-one defects/' \
+            /tmp/count-copy/docs/superpowers/retro.md
+          if python3 /tmp/count-copy/test/validate.py; then
+            echo "ERROR: validator accepted a defect count the ledger contradicts"
+            exit 1
+          else
+            echo "OK: the count is reconciled against the ledger's own rows"
+          fi
+
       - name: Negative self-test (lab score must never stand in for field data)
         run: |
           set -eu

@@ -303,11 +303,12 @@ install.sh                           POSIX installer for a local clone
 package.json                         npm manifest for the installer CLI
 CONTRIBUTING.md                      evidence discipline, checks, where things go
 SECURITY.md                          what runs, what it touches, how to verify
-scripts/check-docs.sh                the gate — runs the four test files below
+scripts/check-docs.sh                the gate — runs the test files below
 test/validate.py                     structural validator and doctrine guards
 test/test_page_audit.py              page-auditor tests (offline fixtures)
 test/test_url_inspection.py          index-verdict tests (documented API shape)
 test/test_collectors.py              psi / sitemap / gsc / preflight tests
+test/test_output_contracts.py        exit status and markdown safety, all six
 test/fixtures/*.html                 pages the auditor is tested against
 .github/workflows/validate.yml       CI, including negative self-tests
 docs/research/                       provenance behind every claim in the references
@@ -316,11 +317,12 @@ docs/research/                       provenance behind every claim in the refere
 ## Development
 
 ```bash
-bash scripts/check-docs.sh      # the gate: runs exactly the four below, nothing else
+bash scripts/check-docs.sh      # the gate: runs exactly the files below, nothing else
 python3 test/validate.py        # structure, version sync, references, links, anchors, drift
 python3 test/test_page_audit.py # page auditor against offline fixtures
 python3 test/test_url_inspection.py  # index verdicts against the documented API shape
 python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
+python3 test/test_output_contracts.py  # exit status and markdown safety across all six
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```

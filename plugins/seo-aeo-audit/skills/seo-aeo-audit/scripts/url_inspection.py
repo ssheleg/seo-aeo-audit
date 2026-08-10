@@ -27,7 +27,9 @@ Usage:
   url_inspection.py --site https://example.com/ --urls-file urls.txt --format json
   url_inspection.py --site sc-domain:example.com --urls-file urls.txt --max-urls 50
 
-Exit codes: 0 = ran, 1 = usage/auth/API error.
+Exit codes: 0 = the index answered for at least one URL, 1 = usage/auth/API error,
+or no URL was answered. "Ran" is not the useful question: a run of 403s ran, and
+supports nothing. The status and the report read the same predicate (answered_rows).
 """
 from __future__ import annotations
 
@@ -90,6 +92,30 @@ def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
         return {"_error": f"{hint}: {detail}"}
     except Exception as exc:  # noqa: BLE001 - one bad URL must not end the run
         return {"_error": str(exc)[:300]}
+
+
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
+
+
+def answered_rows(rows: list[dict]) -> list[dict]:
+    """The rows the index actually answered for.
+
+    One home, because the report and the exit status must not decide this
+    separately. Printed unconditionally, the CONFIRMED footer once declared a run
+    of 403s to be confirmed evidence; returning 0 unconditionally made the exit
+    status tell an agent the same lie one layer down.
+    """
+    return [r for r in rows if not r.get("error") and r.get("has_index_status")]
 
 
 def _as_dict(v) -> dict:
@@ -195,7 +221,7 @@ def render_markdown(rows: list[dict], dropped: int) -> str:
     for r in rows:
         lines.append(f"## {r['url']}")
         if r.get("error"):
-            lines.append(f"- **could not inspect**: {r['error']}\n")
+            lines.append(f"- **could not inspect**: {_flat(r['error'])}\n")
             continue
         lines.append(f"- verdict: `{r.get('verdict')}` · coverage: "
                      f"`{r.get('coverage_state')}`")
@@ -210,7 +236,7 @@ def render_markdown(rows: list[dict], dropped: int) -> str:
     # The tier belongs to answers that arrived. Printed unconditionally, this line
     # declared a run of 403s to be CONFIRMED evidence — from the one instrument in
     # the skill whose whole justification is that it can legitimately claim the tier.
-    answered = [r for r in rows if not r.get("error") and r.get("has_index_status")]
+    answered = answered_rows(rows)
     if answered:
         lines.append(f"Evidence tier: CONFIRMED for the {len(answered)} of {len(rows)} URL(s) "
                      f"the index answered for — those are the engine's own answers, not "
@@ -276,7 +302,10 @@ def main(argv: list[str]) -> int:
                           "not_inspected": dropped, "results": rows}, indent=2))
     else:
         print(render_markdown(rows, dropped))
-    return 0
+    # The report already says the run supports nothing; the exit status has to say
+    # it too. SKILL.md's own invocation redirects stdout to a file, so an agent that
+    # branches on the status reads "success" from a page of refusals otherwise.
+    return 0 if answered_rows(rows) else 1
 
 
 if __name__ == "__main__":

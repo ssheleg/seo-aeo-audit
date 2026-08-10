@@ -28,6 +28,10 @@ duplicated into commit messages or the changelog — those reference it.
 | Tool → check routing | `references/tooling.md` | SKILL.md names a script; the routing table owns which rung it sits on |
 | A script's contract | its own docstring | README and SKILL.md describe usage; neither is the contract |
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |
+| A script's exit-code contract | its own docstring | asserted in `test_output_contracts.py`. Four scripts had settled it four ways, and two of them returned 0 after measuring nothing — the prose was honest, the machine-readable half was not |
+| How to reach the bundled scripts | the `$SKILL_DIR` block in `SKILL.md` | every invocation in that file uses it, and `validate.py` rejects a bare `scripts/*.py` path. The Cursor rule states the same thing in prose because a `.mdc` may not link out |
+| Whether an error is safe to render | `_flat()` — one copy per script, four in all | these ship as standalone files with no shared module, so the copies are counted rather than imported |
+| The 2026-08-10 defect total | the `### D<n>` rows of `docs/audit/2026-08-10-defect-ledger.md` | six prose homes, each named with its phrase in `validate.py`. Five said forty-one against forty-three rows — including the ledger's own summary sentence, which said both |
 | Reference count | `test/validate.py:REQUIRED_REFERENCES` | README (three places) and CONTRIBUTING (two) quote it in prose, in words or digits — **checked** since 2026-08-10. It was marked *review* on the grounds that it is "a prose number about a tuple", and went stale again the moment a twenty-second reference shipped |
 
 ## Propagation matrix
@@ -55,6 +59,10 @@ the reason no check can.
 | Append a row to `algorithm-updates.md` | the `Newest row in this file` line | `validate.py` compares it to the newest date in the file |
 | Number a new section in a reference | a prefix no other reference uses | `validate.py` fails on a section id defined twice |
 | Cite a claim that lives in another file | the claim must be findable there | **review** — `validate.py` resolves markdown links, anchors and backticked filenames, so a pointer to a file that exists and does not contain the claim still passes. Two of those shipped |
+| Document an invocation in `SKILL.md` | it resolves through `$SKILL_DIR`, never relative to the caller | `validate.py` script-reachability guard. The agent stands in the user's project; a relative path there is not a smaller feature, it is a silent drop to the bottom evidence rung |
+| Render anything an API returned into markdown | `_flat()` around it | `validate.py` error-flattening guard rejects `r['error']`/`r['detail']` reaching a rendered line raw |
+| Change what a script returns on total failure | its docstring, and the assertion in `test_output_contracts.py` | the test; the docstring is **review** — no check reads prose for intent, which is exactly how two contracts drifted from their own documentation |
+| Add a test file to the gate | `check-docs.sh`, CONTRIBUTING, the README, the PR template and CI | `validate.py` gate parity across all five. The PR template was the unguarded fifth home and kept asking for two commands long after that was fixed elsewhere |
 | Add a validator guard | a planted-defect step in CI, and the family name in the CONTRIBUTING summary | `validate.py` asserts the name survives; CI proves the guard can fail. A guard nobody has watched fail is indistinguishable from one that cannot |
 
 ## What proves it
@@ -63,7 +71,7 @@ the reason no check can.
 bash scripts/check-docs.sh
 ```
 
-It runs exactly these four and nothing else, so the gate cannot drift from the
+It runs exactly these and nothing else, so the gate cannot drift from the
 tests — and `validate.py` now requires every command in that script to be named in
 CONTRIBUTING, in the README and in CI, because the docs had fallen two test files
 behind the gate:
@@ -73,6 +81,7 @@ python3 test/validate.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
+python3 test/test_output_contracts.py
 ```
 
 Read its exit status as its own command, not behind a pipe (standing instruction

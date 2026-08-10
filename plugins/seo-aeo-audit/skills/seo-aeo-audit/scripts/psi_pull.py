@@ -24,7 +24,10 @@ Usage:
   psi_pull.py --url https://example.com/ --strategy desktop --format json
   psi_pull.py --urls-file urls.txt --key "$PSI_KEY"
 
-Exit codes: 0 = ran, 1 = usage/API error.
+Exit codes: 0 = at least one URL was measured, 1 = usage error, or every call was
+refused. A URL whose origin has no CrUX data still counts as measured — the call
+worked and the lab half is reportable; absence is this script's honest result, not
+its failure mode.
 """
 from __future__ import annotations
 
@@ -44,6 +47,19 @@ THRESHOLDS = {
     "INTERACTION_TO_NEXT_PAINT": ("INP", 200, 500, "ms"),
     "CUMULATIVE_LAYOUT_SHIFT_SCORE": ("CLS", 0.10, 0.25, ""),
 }
+
+
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
 
 
 def band(metric_key: str, p75) -> str:
@@ -141,7 +157,7 @@ def render_markdown(rows: list[dict]) -> str:
     for r in rows:
         lines.append(f"## {r['url']}")
         if r.get("error"):
-            lines.append(f"- **could not measure**: {r['error']}\n")
+            lines.append(f"- **could not measure**: {_flat(r['error'])}\n")
             continue
         if r.get("field_data"):
             lines.append("| metric | p75 | band | good at or below |")
@@ -201,7 +217,10 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"strategy": args.strategy, "results": rows}, indent=2))
     else:
         print(render_markdown(rows))
-    return 0
+    # A refused call is a failure; CrUX having no data for a URL is not — that call
+    # worked and the lab half of it is reportable. Only the first kind sets the
+    # status, or the honest-absence path this script exists for would read as broken.
+    return 0 if any(not r.get("error") for r in rows) else 1
 
 
 if __name__ == "__main__":

@@ -710,7 +710,7 @@ a check now, reading words or digits in all five homes.
 | 8 — found in the merge with v0.12.0 | D42–D43 | medium |
 
 **43 defects.** Nine of them make the skill emit or suppress findings in ordinary
-use; the repository's four-command gate is green against all forty-one
+use; the repository's four-command gate is green against all forty-three
 (`bash scripts/check-docs.sh` → exit 0, this session).
 
 ### The four root causes underneath them

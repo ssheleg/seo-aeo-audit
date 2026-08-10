@@ -34,6 +34,19 @@ GSC = "https://searchconsole.googleapis.com/v1"
 PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 
 
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
+
+
 def probe(name: str, ok: bool, detail: str, gate: str | None = None,
           blocks: str = "") -> dict:
     return {"source": name, "reachable": ok, "detail": detail,
@@ -95,10 +108,28 @@ def check_gcloud() -> tuple[dict, str | None]:
     return probe("gcloud ADC", True, "access token minted"), out.stdout.strip()
 
 
+def _unattempted_property(site: str | None) -> list[dict]:
+    """The named-property row for a run that never got far enough to try it.
+
+    Emitted on every failure path so the coverage denominator stays fixed. It used
+    to vanish instead: a failed property list produced "N of 7" where a successful
+    one says "of 8", and the probe that silently left is the one that decides the
+    most — whether this account can see this property at all. A reader cannot tell
+    a smaller world from an unasked question, which is non-negotiable #8 applied to
+    preflight's own headline.
+    """
+    if not site:
+        return []
+    return [probe(f"property {site}", False,
+                  "not attempted — the property list call did not succeed, so this "
+                  "check never ran", "unattempted",
+                  "everything first-party for this site")]
+
+
 def check_gsc(token: str | None, site: str | None, quota_project: str | None) -> list[dict]:
     if not token:
         return [probe("Search Console", False, "no token to try with", "login",
-                      "query data, position history, URL Inspection")]
+                      "query data, position history, URL Inspection")] + _unattempted_property(site)
     headers = {"Authorization": f"Bearer {token}"}
     if quota_project:
         headers["x-goog-user-project"] = quota_project
@@ -113,10 +144,10 @@ def check_gsc(token: str | None, site: str | None, quota_project: str | None) ->
                 else "api-not-enabled" if "disabled" in body.lower() or "has not been used" in body.lower()
                 else "permission")
         return [probe("Search Console", False, f"HTTP {e.code}: {body}", gate,
-                      "query data, position history, URL Inspection")]
+                      "query data, position history, URL Inspection")] + _unattempted_property(site)
     except Exception as exc:  # noqa: BLE001
         return [probe("Search Console", False, str(exc)[:160], "network",
-                      "query data, position history, URL Inspection")]
+                      "query data, position history, URL Inspection")] + _unattempted_property(site)
 
     out = [probe("Search Console", True, f"{len(entries)} property/properties visible")]
     if site:
@@ -196,7 +227,7 @@ def render(rows: list[dict]) -> str:
     lines += ["| source | state | detail |", "|---|---|---|"]
     for r in rows:
         mark = "✅" if r["reachable"] else "❌"
-        lines.append(f"| {r['source']} | {mark} | {r['detail']} |")
+        lines.append(f"| {r['source']} | {mark} | {_flat(r['detail'])} |")
     if bad:
         lines += ["", "## What this costs the audit", ""]
         for r in bad:

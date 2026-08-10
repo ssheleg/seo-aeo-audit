@@ -44,6 +44,25 @@ changes, work in this order and keep the evidence rules.
    BigQuery export carries observed data only. Before an instrument's silence
    becomes a finding, establish it could have seen the thing at all.
 
+## The six instruments, and what each one cannot see
+
+They ship inside the skill's own directory, not in the project you are standing
+in — resolve that directory once and run them from it. Non-negotiable 8 is about
+these: each states its own blind spot, and an absence one of them reports becomes
+a finding only after you have established it could have seen the thing at all.
+
+| script | what it settles | what it cannot see |
+|---|---|---|
+| `preflight.py` | which sources this audit can actually observe, and which gate a failure hit | Bing, Yandex, analytics, server logs, a crawl export, every MCP tool — a green preflight is not a covered access step |
+| `page_audit.py` | per-page canonical traps, robots directives, headings, schema inventory, read budget | JSON-LD the CMS injects with JavaScript; a read cut off by `--max-bytes` publishes no counts at all |
+| `url_inspection.py` | Google's own canonical, coverage state and robots verdict — the only source here that earns CONFIRMED | anything, when the index does not answer: those rows support no finding at any tier |
+| `gsc_pull.py` | queries, position split, cannibalization, the property's own CTR curve, branded split | the long tail past the API row cap; a decline shallower than the cliff threshold; the branded split without `--brand-terms`, which it refuses to guess |
+| `sitemap_audit.py` | declared URLs clustered into the template families the site actually ships | orphans — a sitemap holds no link graph, so that needs a crawl |
+| `psi_pull.py` | field (CrUX) and lab (Lighthouse), kept strictly apart | field data where CrUX has none — reported absent, never as a pass, and the lab score never stands in for it |
+
+Absent field data, an unanswered inspection and a capped row set are each a gap in
+the report — never a zero, never a blank.
+
 ## Order of work
 
 These twelve steps are the working order, not the ten audit tracks — several

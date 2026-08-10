@@ -57,7 +57,7 @@ One command runs the gate, and it is the same one CI runs:
 bash scripts/check-docs.sh
 ```
 
-It runs exactly these four, in this order, and nothing else — so the gate cannot
+It runs exactly these, in this order, and nothing else — so the gate cannot
 drift from what it claims to enforce:
 
 ```bash
@@ -65,6 +65,7 @@ python3 test/validate.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
+python3 test/test_output_contracts.py
 ```
 
 `validate.py` checks structure, the four-way version sync, that all twenty-two
@@ -74,11 +75,21 @@ standard-library only. It also reconciles the facts this repo keeps duplicating:
 the tier vocabulary across its four homes, the myth count in **all four** of its
 homes plus the size of the two short lists, the play count, the reference count in
 five prose homes, the Prowl tool count,
-the CWV thresholds against `psi_pull.py`, the gate commands against this file and
-the README, per-finding tier coverage in `page_audit.py`, section-id uniqueness
-across references, the two freshness facts in `algorithm-updates.md`, and
+the CWV thresholds against `psi_pull.py`, the gate commands against this file, the
+README, the PR template and CI, per-finding tier coverage in `page_audit.py`,
+section-id uniqueness across references, the two freshness facts in
+`algorithm-updates.md`, the defect count against the rows the
+2026-08-10 ledger actually enumerates, and
 table integrity — both a blank line inside a table and a row with more cells than
 its header, either of which stops rows rendering as part of the table.
+
+Two guard families are about what the skill does at runtime rather than what the
+repository says. **script reachability**: every invocation in `SKILL.md` must
+resolve from the caller's working directory, which is the user's project and not
+the skill directory — eleven bare `scripts/*.py` paths once failed in the only
+environment the skill is ever used in. **error flattening**: no renderer may
+interpolate a network error into generated markdown unflattened, because a Google
+error page carries newlines and the first one ends the table row.
 
 Those names are not decoration: the validator asserts that this paragraph still
 mentions each guard family it runs, because a prose summary of a checker is a fact
@@ -91,8 +102,11 @@ being rewritten).
 URL-scheme guard, which exists because `urlopen` will happily read
 `file:///etc/passwd` if you let it. `test_url_inspection.py` and
 `test_collectors.py` do the same for the other five bundled scripts.
+`test_output_contracts.py` holds what all six owe their caller: a run that
+measured nothing exits non-zero, and no network error reaches generated markdown
+with its newlines intact.
 
-CI runs the same four plus negative self-tests that prove each guard can fail.
+CI runs the same set plus negative self-tests that prove each guard can fail.
 **Add a guard and you add its negative self-test**: a guard nobody has watched
 fail against a planted defect is indistinguishable from a guard that cannot.
 

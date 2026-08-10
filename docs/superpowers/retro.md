@@ -174,7 +174,7 @@ date is a claim about a source, not decoration.
 ## 9. A green gate is evidence about the gate, not about the repository
 *Written 2026-08-10. Last fired 2026-08-10.*
 
-`bash scripts/check-docs.sh` exited 0 against forty-one defects, nine of which made
+`bash scripts/check-docs.sh` exited 0 against forty-three defects, nine of which made
 the skill emit or suppress findings in ordinary use: a fabricated indexation blocker
 on any page carrying `max-image-preview:none`, a JS-gated-price finding on any page
 using jQuery, a page silently analyzed as a fragment, and a run of 403s declaring its

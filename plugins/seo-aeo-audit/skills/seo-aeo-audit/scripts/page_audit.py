@@ -14,6 +14,10 @@ Usage:
   (--base-url applies to --file only; with --url the fetched URL is used)
   page_audit.py --url-list urls.txt --format json > audit.json
 
+--format json always emits a JSON **array**, one object per page, even for a single
+URL. Index it (`data[0]["findings"]`); `data["findings"]` raises AttributeError,
+which is what an agent reading only the one-URL example above will write first.
+
 Network behavior: plain GETs to the URLs you pass, http(s) only, no cookies or
 credentials, redirects off http(s) refused, non-HTML content types refused,
 response capped by --max-bytes. It writes nothing and phones nothing home.
@@ -64,6 +68,19 @@ READ_BUDGET_BASIS = (
 # really is `noindex, nofollow`, and `max-image-preview:none` really is not — a
 # word-boundary match over the whole string cannot tell them apart, and it
 # reported a track-A blocker on pages that say `index, follow`.
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
+
+
 PARAMETER_DIRECTIVES = frozenset(
     {"max-snippet", "max-image-preview", "max-video-preview", "unavailable_after"}
 )
@@ -817,7 +834,7 @@ def to_markdown(results: list[dict]) -> str:
         lines.append(f"## {r['url'] or '(local file)'}")
         lines.append("")
         if "error" in r:
-            lines.append(f"- **fetch failed**: {r['error']}")
+            lines.append(f"- **fetch failed**: {_flat(r['error'])}")
             lines.append("")
             continue
         rb = r["read_budget"]

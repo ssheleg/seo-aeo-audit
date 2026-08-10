@@ -164,3 +164,46 @@ lived only in the operator's global files, which do not travel with a clone. An
 agent invoked in a fresh checkout was told none of it. The two ledgers close the
 same gap over time: every carry-over recorded on 2026-08-05 existed only in a
 session that had ended.
+
+## 2026-08-10 — An exit status answers "is there anything usable here", not "did the process run"
+
+**Decision.** `url_inspection.py` returns 1 when the index answered for no URL;
+`psi_pull.py` returns 1 when every call was refused. Both docstrings are rewritten
+to say that, and the predicate has one home per script that the renderer and the
+status both read. `preflight.py` keeps returning 0 on failed probes — there, the
+failures *are* the report.
+
+**Why.** Four collectors had settled the same question four ways. `page_audit.py`
+and `sitemap_audit.py` already exited 1 on total failure; the other two returned 0
+while printing a page of refusals, against docstrings that promised 1. SKILL.md's
+own documented invocation redirects stdout to a file, so an agent branching on the
+status read *success* from a file containing nothing. This is the 2026-08-04
+"report absence as absence" decision arriving one layer down: the prose was fixed
+and the machine-readable half was not.
+
+**What this does not license.** Treating an honest absence as a failure. A URL whose
+origin has no CrUX data was measured — the call worked, the lab half is reportable —
+and a test pins that, because the obvious over-correction would break the exact
+behaviour `psi_pull.py` exists for.
+
+## 2026-08-10 — Documented invocations resolve through `$SKILL_DIR`
+
+**Decision.** Every bash line in `SKILL.md` is written as
+`python3 "$SKILL_DIR/scripts/<name>.py"`, preceded by a block that resolves
+`SKILL_DIR` — `${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit` in a Claude Code plugin,
+the harness-named base directory elsewhere. `validate.py` rejects a bare
+`scripts/*.py` path, and the Cursor rule names the six instruments in prose.
+
+**Why.** Eleven invocations were relative, so all eleven resolved against the
+agent's working directory — the user's project, where the scripts are not. Verified
+by running the documented command from a project root: `No such file or directory`,
+every time, in the only environment the skill is ever used in. The cost is not the
+error; it is that an agent absorbs it, checks by hand, and the audit silently drops
+to the bottom rung of the evidence ladder, which caps every tier it can claim.
+`${CLAUDE_PLUGIN_ROOT}` is documented to expand in *skill content*, not only in
+hooks and MCP config — confirmed against the plugins reference before it was relied on.
+
+**Alternative rejected.** Naming the plugin placeholder alone. Three of the four
+shipping channels are not Claude Code plugins and would have received the literal
+string, which fails in a way that looks like the skill is broken rather than
+unresolved.
