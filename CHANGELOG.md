@@ -1,5 +1,185 @@
 # Changelog
 
+## v0.13.0 — 2026-08-10
+
+**Version note.** This work was written against `v0.11.2` and released as `v0.11.3`
+before `origin/main` was fetched — by which time `v0.12.0` had already shipped. The
+number is corrected here rather than quietly reused: `0.13.0` and not `0.12.1`,
+because two output contracts change. The `thin` finding code is now
+`low-extractable-text`, and `onpage-checks.md`'s sections are `O1`–`O5` where they
+were `D1`–`E2`, so anything parsing findings or citing those ids needs the new names.
+The stray `v0.11.3` tag is deleted.
+
+A fresh-eyes audit of the whole skill: every command, every bundled script, all
+twenty-two references and the pipeline around them. **Forty-one defects**, nine of
+which made the skill emit or suppress findings in ordinary use. The four-command
+gate was green against all forty-one.
+
+Full record: `docs/audit/2026-08-10-defect-ledger.md` (what was wrong, with the
+repro for each) and `docs/audit/2026-08-10-improvement-plan.md` (what was done,
+what was not, and what is next).
+
+### Fixed — the auditor was manufacturing findings
+
+- **`max-image-preview:none` was reported as `noindex`.** The directive string was
+  matched with a word-boundary regex, and `none` is a real directive as well as the
+  value of two documented parameters. A page declaring `index, follow` came back
+  carrying a track-A indexation blocker — and SKILL.md makes a track-A blocker a
+  stop condition, so the audit ended there on a fabrication. Directives are parsed
+  as comma-separated tokens now, with `key:value` read as a parameter for the four
+  parameter directives and as a user-agent prefix otherwise, so
+  `X-Robots-Tag: googlebot: noindex` still counts.
+- **jQuery's `$` produced a JS-gated-price finding.** `CURRENCY_RE` was searched
+  against the raw HTML, so any inline script using `$` — or a correct
+  `Product`/`Offer` `priceCurrency` — produced a `high` finding asserting the page
+  hides its price from answer engines and hands it to aggregators. Doing the markup
+  correctly was what triggered the accusation. The check reads markup with script,
+  style, template, noscript and comments removed; a declared JSON-LD price absent
+  from visible text is now its own `jsonld-price-parity` finding, which is the
+  markup-versus-content parity check `onpage-checks.md` already asked for.
+- **A truncated response was analyzed as if it were the page.** The same URL
+  returned 10,001 words at the default `--max-bytes` and 475 at `--max-bytes 3000`,
+  with no warning either time; a page truncated just under the threshold produced a
+  fabricated thin-content finding. `fetch` reads one byte past the cap to tell
+  "fits" from "was cut", the flag travels in the payload and the markdown, and every
+  completeness-dependent finding is dropped. Presence findings survive.
+- **`preflight.py` decided CrUX presence from a 4 KB prefix, and from the wrong
+  key.** PSI returns `loadingExperience` whether or not it has data — the data is in
+  its `metrics` child, which `psi_pull.py` has always read. So the probe reported
+  field data that was not there, and reported absence with a cause it never
+  established ("too little traffic"). Both instruments now answer the question the
+  same way, and the tests pin them to each other.
+- **`url_inspection.py` printed "Evidence tier: CONFIRMED" unconditionally.** A run
+  where every inspection returned 403 ended by declaring its output CONFIRMED, from
+  the one instrument in the skill whose justification is that it can legitimately
+  claim that tier. The footer is scoped to the rows the index answered for and says
+  plainly when there were none. Its not-indexed check was a substring test for
+  "not indexed" — two documented coverage states out of the full set — and now reads
+  the engine's own verdict, so duplicates, canonical alternates, `noindex` and
+  unknown URLs are no longer passed silently. A response with no `indexStatusResult`
+  produced exactly one finding, "no last crawl time recorded", manufactured from a
+  parse miss.
+- **`gsc_pull.py --format text` computed four analyses and printed none of them.**
+  `ctr_curve`, `ctr_gaps`, `cannibalization` and `branded_split` existed only under
+  `--format json`, while `text` is the default and the documented invocation. An
+  agent running the documented command saw no cannibalization section and had
+  nothing to distinguish "none found" from "never shown", and
+  `derive_branded_split`'s refusal to guess never reached anybody. Two silences
+  beside it: the cliff detector fires only on a ~90% drop held for two weeks and
+  never said so, and the query set is capped at the API row limit with no
+  pagination, dropping the long tail the beyond-30 band is made of — the band the
+  report tells the operator to rank the brief by.
+- **`sitemap_audit.py` printed its truncation notice to stderr**, under a comment
+  saying a silent cap reads as "this is the whole site". Any run capturing stdout —
+  which is how the skill's own examples use it — lost the caveat exactly when the
+  count became evidence.
+
+### Fixed — the instruments contradicted the doctrine
+
+- **The auditor emitted the H1-count line `onpage-checks.md` calls a non-finding**,
+  pointing at `intent-and-content.md`, which carries no H1 guidance at all. An agent
+  reading "3 H1 elements" in a findings table writes "consolidate to one H1", which
+  is on the myth list. Both H1 findings point at the owning section now, and the
+  message carries the reason.
+- **The `thin` finding cited a study that refutes its premise.** It fired at a bare
+  300-word floor and pointed at the information-gain section, which says "length
+  barely matters". The threshold appeared nowhere else in the repository. It is
+  `low-extractable-text` now and states what it is not.
+- **`subheads-thin` dropped the qualifier its own doctrine attaches** ("on a long
+  page"), so a four-section pricing page collected a finding the doctrine does not
+  support.
+- **No script finding carried an evidence tier**, and non-negotiable #2 makes the
+  tier the multiplier in `priority = (impact × confidence) / effort`. Severity alone
+  reached the agent, so the number that orders the plan was invented per finding with
+  no documented mapping. Declared in `FINDING_TIERS`, enforced by the validator.
+- **`tooling.md` capped the same evidence at two tiers in one sentence** — a
+  third-party index at `STUDY` and "an inference from public data" at `HYPOTHESIS`,
+  when a third-party index *is* public data — and mapped three of six rungs, leaving
+  the rung `page_audit` and every `view-source` observation sit on undefined. All six
+  carry a stated ceiling, and the reason rung 6 is last (coverage, not reliability)
+  is written down.
+- **`onpage-checks.md` claimed `page_audit.py` automates the starred items.** Three
+  of eight are cross-page or judgement calls it cannot make, so a sweep marked
+  covered on that reading reported an absence as coverage.
+
+### Fixed — claims about the skill that were false
+
+- **The myth count was wrong in three of its four homes** (README's closing pitch
+  29, SKILL.md 30, the Cursor rule 29, against 32 rows) while the guard read the one
+  sentence that had drifted before. The two short lists disagreed too: fourteen items
+  in SKILL.md and thirteen in the Cursor channel, with the tracking-parameter myth
+  missing from the copy that ships to Cursor users.
+- **The play count said 60 against 61 rows**, after an earlier correction from 59.
+- **The Prowl tool count said ~408 in the README** where two references said ~448.
+- **`CONTRIBUTING.md` named two of the four gate commands** and called CI "the same
+  two"; CI runs four. A contributor following the docs ran half the suite. The README
+  repeated the same pair.
+- **The README described a two-script repository.** Six scripts ship, three of them
+  shell out to `gcloud`, and the security posture — the section a reader consults
+  precisely because they will not read the code — understated what runs.
+- **"Every benchmark carries its own date and sample size" was false**: 36 of 140
+  rows were undated at both row and section level, and the whole Operational block
+  had a two-column shape with nowhere to put a source, in the file whose header says
+  "Always cite the date". Those rows name their source or say **undated**.
+- **`evidence-tiers.md` said the validator compares "the two copies"** of the tier
+  vocabulary; it reconciles four homes, which CONTRIBUTING and DOCMAP already said.
+
+### Fixed — provenance
+
+- **"PageRank decays ~85% per hop" inverted the damping factor** in all three of its
+  homes. 0.85 is the share modelled as *passing*: read as loss, three hops retain
+  0.34%; read correctly, ~61%. The two prescribe different architectures, and the
+  claim had no source, date or tier anywhere. The depth rule keeps its own field
+  evidence and never needed it.
+- **A patent asserted live behaviour untiered**, against the rule the same corpus
+  applies correctly elsewhere (`evidence-tiers.md` rule 5).
+- **The read budget was one engine's `FIELD` median presented as the answer-engine
+  first read.** The window's basis travels in the payload and the finding text.
+- **`algorithm-updates.md` was stamped older than its own newest row** (2026-07-28
+  against a row dated 2026-07-30), and the README carried a different stamp for the
+  same corpus. Two facts, stated separately, with the newest-row line checked.
+- ~18 numeric claims across five references gained a tier and a date. The same
+  figure was tiered in one file and bare in another, and the bare copy is the one an
+  agent lifts.
+
+### Fixed — structure
+
+- **Four section ids were defined twice with different content.** `SKILL.md` routes
+  track D to two files and both numbered their sections `D1`, `D2`, `E1`, `E2`, so
+  "run D1" had two answers. The sweep owns `O1`–`O5`.
+- **A misaligned table row silently deleted a play's evidence tier**:
+  `growth-plays.md` P5 had six cells under a five-column header, in the file whose
+  closing rule is "never ship a FIELD or HYPOTHESIS play sitewide".
+- **`technical-checks.md` numbering had four holes and the sweep sat after the B
+  track.** `A3`–`A6` never existed; the sweep is `A3` now and the scheme is stated.
+- **Two `myths.md` pointers pointed at rows that do not exist**, so an agent
+  following them found nothing and improvised the guardrail.
+- **The experiment record was a third deliverable with no skeleton**, and the audit
+  template had no slot for the evidence rung SKILL.md requires.
+- **`experience-signals.md`'s CWV thresholds were inserted mid-list**, splitting the
+  evidence list in two.
+
+### Added — eleven reconciliation guards, each watched failing first
+
+The myth count in all four homes plus both short-list sizes; the play count; the
+Prowl count; the gate commands against CONTRIBUTING, README and CI; per-finding tier
+coverage; the CWV bands against their documented home; the two freshness facts;
+section-id uniqueness; table rows with more cells than their header; backticked
+`references/*.md` pointers; and the slash command's non-negotiable count, since it
+was the third doctrine channel and the only unguarded one. Every one has a
+planted-defect step in CI, and all twelve pre-existing negative self-tests were
+re-run after the code changes and still fail as designed.
+
+### Added — the registers a fresh clone was missing
+
+`CLAUDE.md`, `docs/superpowers/backlog.md` (eight rows, computed priorities) and
+`docs/superpowers/verification.md` (nineteen rows: 4 observed, 6 test-only, 4
+planted-and-observed, 6 never). Every rule the repository runs on lived only in the
+operator's global instruction files, which do not travel with a clone, and there was
+nowhere for a deferred item to survive between runs. `pipeline.json` moves out of the
+root, where a finished run's decisions read as configuration. DOCMAP gains nine
+single-home rows and eight propagation rows; DECISIONS gains five entries.
+
 ## v0.12.0 — 2026-08-06
 
 ### Added

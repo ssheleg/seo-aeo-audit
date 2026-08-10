@@ -225,7 +225,7 @@ unless demand grows with them.
 
 | Status | Meaning | Fix path |
 |---|---|---|
-| Discovered – currently not indexed | Crawl budget/priority exhausted | Importance signals: contextual internal links from your most-crawled pages, a priority sitemap with fresh `lastmod`, one external dofollow link from an indexed page, clean server signals (TTFB <200ms, no 5XX, no redirect chains). 70–80% index within 72h in field reports. |
+| Discovered – currently not indexed | Crawl budget/priority exhausted | Importance signals: contextual internal links from your most-crawled pages, a priority sitemap with fresh `lastmod`, one external dofollow link from an indexed page, clean server signals (TTFB <200ms, no 5XX, no redirect chains). 70–80% index within 72h in field reports (`FIELD`, undated — benchmarks.md, "Operational benchmarks", carries the row and the caveat). |
 | Crawled – currently not indexed | Fetched and **not selected** — read here as a quality rejection, but the cause is disputed (see below) | Discovery signals will not help either way. Step back to page and sitewide quality: unique value, intent match, thin/duplicate clean-up. John Mueller: when systems doubt sitewide quality they crawl less and index less — that is not a technical bug to patch. |
 
 **The cause of "Crawled – currently not indexed" is contested.** This file reads
@@ -269,8 +269,11 @@ tag changed nothing on its own, because Googlebot stops visiting noindexed URLs.
 Recovery is manual: filter the GSC Pages report for `Excluded by 'noindex' tag`,
 resubmit and relink in batches, and budget 6–12 weeks (`FIELD`, Jul 2026).
 
-**Index tiering** (a 50k-page store went from 8k indexed / 2.1k junk to 9.8k
-valuable URLs indexed, −87% zero-traffic pages, +67% organic in 90 days):
+**Index tiering.** The case these numbers come from is owned here rather than in
+benchmarks.md, because it is one narrative rather than a benchmark row, and
+growth-plays L2 defers to this section for it: a 50k-page store went from 8k indexed
+/ 2.1k junk to 9.8k valuable URLs indexed, −87% zero-traffic pages, +67% organic in
+90 days (`FIELD`, single store, undated):
 
 - Tier 1 must index: live products, key service pages, conversion core, brand and
   commercial pages.
@@ -303,9 +306,12 @@ new URLs, and drop-out rate, reviewed monthly (`FIELD` — same case).
    never processed and therefore cannot dilute anything (see A1 above and
    myths.md). Do not treat the two as one bucket, and never unblock the second
    group in order to "clean it up".
-5. Server performance: past ~600ms crawl efficiency measurably degrades, and 5XX
-   responses force re-requests that spend the same allowance twice. Thresholds
-   (TTFB, error rate) are in benchmarks.md, "Operational benchmarks". Audit
+5. Server performance: slow responses cost crawl efficiency, and 5XX responses
+   force re-requests that spend the same allowance twice. The figure practitioners
+   quote for where it starts to bite is ~600ms (`FIELD`, undated, and it does not
+   agree with the <200ms/<500ms convention in the same corpus — benchmarks.md,
+   "Operational benchmarks", holds all three and marks them undated). Treat any of
+   them as a place to measure, not a threshold to report. Audit
    response time **per template** — this is the profile to capture, and it is
    owned here, not repeated elsewhere (a real one: 1.8s home, 2.2s category,
    7.4s product, 5.9s checkout). A single sitewide average hides exactly the
