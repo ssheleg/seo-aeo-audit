@@ -1,5 +1,15 @@
 # Track H — experience, satisfaction signals, CRO × SEO
 
+
+## Contents
+
+- [H1. What the systems actually record](#h1-what-the-systems-actually-record)
+- [H2. Formats that earn the last long click](#h2-formats-that-earn-the-last-long-click)
+- [H3. CRO and SEO are the same work](#h3-cro-and-seo-are-the-same-work)
+- [H4. Core Web Vitals — triage order that actually works](#h4-core-web-vitals--triage-order-that-actually-works)
+- [The thresholds you are comparing against](#the-thresholds-you-are-comparing-against)
+- [Evidence to capture for track H](#evidence-to-capture-for-track-h)
+
 ## H1. What the systems actually record
 
 Leaked internals describe a click-quality system (`QualityNavboostCrapsCrapsData`)

@@ -3,6 +3,14 @@
 The audit is an analysis exercise, not a tool run. Tools flag candidates; the
 auditor decides what is real. Two rules before anything else:
 
+## Contents
+
+- [Ladder — use the highest rung available](#ladder--use-the-highest-rung-available)
+- [Check → tool routing](#check--tool-routing)
+- [Chrome DevTools recipes worth memorising](#chrome-devtools-recipes-worth-memorising)
+- [Where the automation stops](#where-the-automation-stops)
+
+
 1. **A flag is not a finding.** Many tool "issues" are irrelevant on a given
    site; confirm each one against behavior (index status, traffic, revenue).
 2. **When two tools disagree, dig until you know why.** Do not average them and

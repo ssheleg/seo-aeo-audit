@@ -2,6 +2,15 @@
 
 Nothing at FIELD or HYPOTHESIS tier ships sitewide. It ships as a test.
 
+## Contents
+
+- [Rules](#rules)
+- [What cannot be split-tested](#what-cannot-be-split-tested)
+- [Documented results worth reusing as hypotheses (not as facts)](#documented-results-worth-reusing-as-hypotheses-not-as-facts)
+- [The experiment record](#the-experiment-record)
+- [Prediction hygiene](#prediction-hygiene)
+
+
 ## Rules
 
 1. **One variable.** Change titles *or* descriptions, never both — otherwise the

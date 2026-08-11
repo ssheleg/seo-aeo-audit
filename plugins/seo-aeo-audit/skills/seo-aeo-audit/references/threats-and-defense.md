@@ -3,6 +3,17 @@
 Everything here is defensive. The tactics are described so you can **detect and
 withstand** them; none of them belongs in a client plan.
 
+## Contents
+
+- [I1. Penalties and algorithmic suppression](#i1-penalties-and-algorithmic-suppression)
+- [I2. Domain, DNS and infrastructure](#i2-domain-dns-and-infrastructure)
+- [I3. Indirect prompt injection — the new technical-SEO duty](#i3-indirect-prompt-injection--the-new-technical-seo-duty)
+- [I4. Adversarial patterns to detect](#i4-adversarial-patterns-to-detect)
+- [I5. Brand-SERP defense](#i5-brand-serp-defense)
+- [I6. Link risk, in proportion](#i6-link-risk-in-proportion)
+- [Evidence to capture for track I](#evidence-to-capture-for-track-i)
+
+
 ## I1. Penalties and algorithmic suppression
 
 - **Manual actions are binary.** Until lifted, content, technical, trust and link

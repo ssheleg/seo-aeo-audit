@@ -4,6 +4,13 @@ The files the audit produces. Copy these skeletons verbatim into the target
 project; the first two are duplicated at `templates/*.template.md` in the repo for
 non-agent use, and the validator keeps those copies identical.
 
+## Contents
+
+- [docs/seo/audit-<YYYY-MM-DD>.md](#docsseoaudit-yyyy-mm-ddmd)
+- [docs/seo/plan-<YYYY-MM-DD>.md](#docsseoplan-yyyy-mm-ddmd)
+- [docs/seo/experiments.md](#docsseoexperimentsmd)
+
+
 Three files, not two — `experiments.md` was named in `experiments.md` as the place
 to keep one row per test and had no skeleton anywhere, which is how a deliverable
 becomes optional by accident:

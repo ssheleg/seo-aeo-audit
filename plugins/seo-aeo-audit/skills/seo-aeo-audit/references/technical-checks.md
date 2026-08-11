@@ -3,6 +3,18 @@
 Everything here is a check you run and record, not advice you repeat. Capture the
 observed value and the date for each.
 
+## Contents
+
+- [A0. Blockers first](#a0-blockers-first)
+- [A1. Crawl access and rendering](#a1-crawl-access-and-rendering)
+- [A2. Indexation economics](#a2-indexation-economics)
+- [B. Canonicalization and duplication](#b-canonicalization-and-duplication)
+- [Migrations (the most expensive failure mode)](#migrations-the-most-expensive-failure-mode)
+- [Sitemap protocol — the details that make one silently ignored](#sitemap-protocol--the-details-that-make-one-silently-ignored)
+- [A3. The mechanical sweep (completeness list)](#a3-the-mechanical-sweep-completeness-list)
+- [Evidence to capture for tracks A/B](#evidence-to-capture-for-tracks-ab)
+
+
 **Sections in this file:** `A0` blockers · `A1` crawl access and rendering · `A2`
 indexation economics · `A3` the mechanical sweep · `B` canonicalization, with `B2`
 for hreflang · plus the migration protocol and the evidence list. The sweep used to

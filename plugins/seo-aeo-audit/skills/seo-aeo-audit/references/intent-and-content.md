@@ -1,5 +1,18 @@
 # Tracks D & E — intent fit, cannibalization, content value
 
+
+## Contents
+
+- [D1. Intent match is a page-type decision, not a keyword decision](#d1-intent-match-is-a-page-type-decision-not-a-keyword-decision)
+- [D2. Cannibalization](#d2-cannibalization)
+- [E1. What actually makes a page worth ranking in 2026](#e1-what-actually-makes-a-page-worth-ranking-in-2026)
+- [E2. Information gain](#e2-information-gain)
+- [E2b. What users expect to see on the page](#e2b-what-users-expect-to-see-on-the-page)
+- [E3. Zero-click defensibility](#e3-zero-click-defensibility)
+- [E4. Patterns that now hurt](#e4-patterns-that-now-hurt)
+- [E5. Freshness is relative, not calendar-based](#e5-freshness-is-relative-not-calendar-based)
+- [Evidence to capture for D/E](#evidence-to-capture-for-de)
+
 ## D1. Intent match is a page-type decision, not a keyword decision
 
 Read the current top-10 for the target query and classify what format the engine

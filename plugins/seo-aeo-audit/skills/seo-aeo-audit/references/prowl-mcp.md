@@ -7,6 +7,16 @@ solves one specific problem: **getting competitive and demand data in bulk when
 you have no seat on Ahrefs or Semrush**, and getting it in a shape an agent can
 actually work with.
 
+## Contents
+
+- [Where it sits on the ladder](#where-it-sits-on-the-ladder)
+- [When to reach for it](#when-to-reach-for-it)
+- [Discovery — start here, it is free](#discovery--start-here-it-is-free)
+- [The tools that carry an audit](#the-tools-that-carry-an-audit)
+- [Operating notes — learned the hard way](#operating-notes--learned-the-hard-way)
+- [Cost discipline](#cost-discipline)
+
+
 It does **not** solve the ground-truth problem. Read the ladder placement below
 before you let anything from here into a `CONFIRMED` finding.
 

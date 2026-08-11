@@ -81,24 +81,11 @@ Inspect first, then act. In order:
    start. Suggest exactly one next action at the end of every run.
 
 `scripts/preflight.py` performs the automatable half of step 2 rather than
-describing it, and reports which of the independent gates a failure hit — Search
-Console, the GSC API and PageSpeed all answer `403` for entirely different reasons,
-and their own messages do not distinguish them. An unreachable source comes back as
-unreachable, never as absent data, because that difference decides whether a finding
-is possible at all.
-
-**What it probes:** the interpreter, `gcloud` ADC, the Search Console property list
-and the named property, `robots.txt`, the sitemap, the homepage, and PageSpeed
-(including whether CrUX has field data for the origin at all).
-**What it cannot probe, so you still test by hand:** Bing and Yandex Webmaster,
-analytics, server logs, a crawl export, and every MCP tool — Ahrefs, GSC-over-MCP,
-Prowl, a crawler MCP. For those, make the one call each source is there for and
-record what came back. A green preflight is not a covered step 2.
-
-**Where the scripts live — resolve this once, before the first command.** You are
-standing in the user's project; the scripts ship with the skill, somewhere else
-entirely. Every invocation in this file is written against `$SKILL_DIR` for that
-reason, and every one of them fails without it.
+`scripts/preflight.py` runs the automatable half of this step and reports which
+independent gate a failure hit — Search Console, the GSC API and PageSpeed all
+answer `403` for different reasons. Read `references/preflight.md` for exactly
+what it probes and what it leaves to you (Bing/Yandex, analytics, server logs,
+crawl exports and every MCP tool). **A green preflight is not a covered step.**
 
 ```bash
 # Claude Code plugin: ${CLAUDE_PLUGIN_ROOT} expands inside skill content.
@@ -160,16 +147,16 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 
 | # | Track | Answers | Reference |
 |---|---|---|---|
-| A | Access & indexation economics | Can bots fetch, render and afford to index this? Where is crawl budget burned? | [technical-checks.md](references/technical-checks.md) |
-| B | Canonicalization & duplication | Which URL is the one true URL, and does the engine agree — including across locales (hreflang)? | [technical-checks.md](references/technical-checks.md) |
-| C | Architecture & link equity | Do the money pages get authority, depth and crawl frequency? | [architecture-and-equity.md](references/architecture-and-equity.md) |
-| D | Intent & SERP fit | Does each page match what the SERP rewards, and do pages fight each other? | [intent-and-content.md](references/intent-and-content.md) + [onpage-checks.md](references/onpage-checks.md) |
-| E | Content value | Is there a reason to rank this page that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
-| F | Extractability & AEO/GEO | Can an answer engine retrieve, read and quote the answer? | [aeo-geo.md](references/aeo-geo.md) |
-| G | Entity & brand consensus | Do the models know what this brand is, consistently, and name it? | [entity-and-brand.md](references/entity-and-brand.md) |
-| H | Experience, conversion & attribution | Do users complete the task here or bounce back to the SERP? Does it convert, and is the conversion measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
-| I | Risk & threats | Penalties, hijacks, injections, adversaries, legal takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
-| J | Measurement | Will anyone be able to tell whether the plan worked? | [measurement.md](references/measurement.md) |
+| A | Access & indexation economics | Can bots fetch, render and afford this? Where is crawl budget burned? | [technical-checks.md](references/technical-checks.md) |
+| B | Canonicalization & duplication | Which URL is canonical, and does the engine agree — hreflang included? | [technical-checks.md](references/technical-checks.md) |
+| C | Architecture & link equity | Do money pages get authority, depth and crawl frequency? | [architecture-and-equity.md](references/architecture-and-equity.md) |
+| D | Intent & SERP fit | Does each page match the SERP, and do pages cannibalise? | [intent-and-content.md](references/intent-and-content.md) + [onpage-checks.md](references/onpage-checks.md) |
+| E | Content value | A reason to rank that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
+| F | Extractability & AEO/GEO | Can an answer engine retrieve, read and quote it? | [aeo-geo.md](references/aeo-geo.md) |
+| G | Entity & brand consensus | Do models know the brand, consistently, and name it? | [entity-and-brand.md](references/entity-and-brand.md) |
+| H | Experience, conversion & attribution | Task completed here or bounced back? Converted, and measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
+| I | Risk & threats | Penalties, hijacks, injections, takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
+| J | Measurement | Will anyone be able to tell if the plan worked? | [measurement.md](references/measurement.md) |
 
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
 its own ranking pass, its own gate (two metatags, without which no card renders at
@@ -206,93 +193,26 @@ in the report which rung a finding rests on. A public-only audit with no propert
 access is valid work, but its indexation and query findings are inferences, not
 observations, and get tiered accordingly.
 
-`scripts/gsc_pull.py` (stdlib-only, local ADC auth) pulls the half of the picture
-no crawl can see: which queries a property actually surfaces for, at what position,
-and whether a drop is a *cliff that held* rather than a decline. Run it before
-rating any finding by impact — a large impression count at position 50 is not an
-opportunity, and only the position split shows that.
+**The six bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
+`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py` — collect the mechanical
+half of every track. Read `references/scripts.md` for invocation, flags, quotas
+and the per-script limits.
 
-It also derives what a raw export leaves to hand-work: **cannibalization**
-(several URLs competing for one query, with the incumbent named), a **CTR curve
-built from this property's own rows** — never an industry table, which
-[references/measurement.md](references/measurement.md) J6 forbids — the pages
-falling materially below that curve, and the **branded / non-branded split**.
-The split needs `--brand-terms`; without them it reports itself unavailable
-rather than guessing, because a guess there misstates the one metric track F
-leans on.
+**Four traps that decide whether a finding is real:**
 
-```bash
-python3 "$SKILL_DIR/scripts/gsc_pull.py" --list
-python3 "$SKILL_DIR/scripts/gsc_pull.py" --site sc-domain:example.com --quota-project my-proj
-python3 "$SKILL_DIR/scripts/gsc_pull.py" --site sc-domain:example.com --brand-terms "acme,acme app" --format json
-```
-
-Both formats print all of it, including the split reporting itself unavailable — the
-text format used to compute four of these and print none of them, so an agent that
-ran the documented command saw no cannibalization section and had nothing to
-distinguish "none found" from "never shown". Two limits travel in the output rather
-than in this file: the cliff detector only fires on a collapse of ~90% or more that
-held for two weeks, and the query set is capped at the API row limit with no
-pagination, which drops the long tail the beyond-30 band is made of.
-
-`scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)
-collects the per-page mechanical evidence for tracks A, B, C and F — canonical
-traps, robots directives, heading and schema inventory, and the answer-engine
-**read-budget estimate**. Paths below are relative to this skill's own directory;
-run it on a representative URL per template, not on a single page.
-
-```bash
-python3 "$SKILL_DIR/scripts/page_audit.py" --url https://example.com/pricing --format markdown
-python3 "$SKILL_DIR/scripts/page_audit.py" --file ./saved.html --base-url https://example.com/pricing
-python3 "$SKILL_DIR/scripts/page_audit.py" --url-list urls.txt --format json > audit.json
-```
-
-`--format json` emits an **array**, one object per page, even for a single URL —
-index it as `data[0]`, not `data`.
-
-Its schema inventory reads **server-rendered HTML only**. Where a CMS injects
-JSON-LD with JavaScript, an empty inventory is not evidence of absent markup —
-non-negotiable #8, and the script says so in every report. A response cut off by
-`--max-bytes` says so too, and drops every count-based finding rather than
-publishing a fragment as a measurement.
-
-**Every finding a bundled script emits carries an evidence tier as well as a
-severity**, and only the tier enters the triage formula below. Severity is how loud
-a finding is; the tier is what backs it. The mapping is declared in
-`FINDING_TIERS` in `scripts/page_audit.py` and the validator fails if a finding is
-added without one — before that, the scripts emitted severity alone and the number
-the plan is ordered by had to be invented per finding.
-
-`scripts/url_inspection.py` asks the index instead of inferring from a fetch:
-the Google-selected canonical against the declared one, coverage state, robots
-verdict, last crawl. These are the engine's own answers, so a finding built on
-them is `CONFIRMED` rather than an inference — which is what
-[references/evidence-tiers.md](references/evidence-tiers.md) has always required
-and nothing here could previously collect. Quota is **2000/day and 600/minute per
-property**: sample a representative URL per template plus the specific pages a
-finding is about, exactly as with `page_audit.py`.
-
-```bash
-python3 "$SKILL_DIR/scripts/url_inspection.py" --site sc-domain:example.com --urls https://example.com/pricing
-python3 "$SKILL_DIR/scripts/url_inspection.py" --site sc-domain:example.com --urls-file urls.txt --format json
-```
-
-`scripts/sitemap_audit.py` gives the *published* half of the step-1 count above —
-declared URLs clustered into the template families the site actually ships,
-derived from its own URLs. Pair it with the GSC Pages report for
-declared-vs-indexed per template. It does **not** detect orphans: a sitemap holds
-no link graph, so that needs a crawl.
-
-`scripts/psi_pull.py` returns field (CrUX) and lab (Lighthouse) separately and
-refuses to let one stand for the other. The field percentiles are the verdict;
-the lab run explains a failure you have already observed. Where CrUX has no data
-for a URL, that is reported as absent — not as a pass.
-
-```bash
-python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml
-python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --strategy mobile
-```
-
+- `page_audit.py`'s schema inventory reads **server-rendered HTML only**. Where
+  a CMS injects JSON-LD with JavaScript, an empty inventory is not evidence of
+  absent markup (non-negotiable #8).
+- `--format json` emits an **array**, one object per page, even for one URL:
+  index `data[0]`.
+- A response cut off by `--max-bytes` drops every count-based finding rather
+  than publishing a fragment as a measurement.
+- **Every emitted finding carries an evidence tier as well as a severity, and
+  only the tier enters the triage formula.** Severity is how loud a finding is;
+  the tier is what backs it. `url_inspection.py` asks the index rather than
+  inferring from a fetch, which is the only way a finding reaches `CONFIRMED` —
+  at a quota of 2000/day and 600/minute per property, so sample one URL per
+  template plus the pages a finding is actually about.
 ## Step 3 — Triage
 
 Score every finding, then sort. Do not present an unranked list.
@@ -356,7 +276,7 @@ technically literate non-specialist; expand jargon on first use.
 
 ## Myth guard — do not put these in a plan
 
-The fourteen most-requested of the **32** refuted claims. Each is refuted by 2026
+The ten most-requested of the **32** refuted claims. Each is refuted by 2026
 evidence; the full list, with the counter-evidence and the working alternative
 for each, is in [references/myths.md](references/myths.md) — read it before
 answering a tactic question that is not on this short list.
@@ -365,36 +285,33 @@ answering a tactic question that is not on this short list.
   a GEO tactic · "chunk your content for the retriever" · rewriting text
   specifically "for AI" · schema volume as an AI-citation lever · FAQPage markup
   for rich results (retired by Google) · AMP for ranking advantage · updating the
-  publish date as a freshness signal · "just add more pages" · disavowing on a
-  third-party toxicity score · buying an "AI visibility" number as a single KPI ·
-  self-promotional "best [category]" listicles as an AEO play · scaled AI content
-  as a growth strategy · `Disallow`-ing tracking-parameter URLs to protect crawl
-  budget (technical-checks.md A2 owns the mechanism).
+  publish date as a freshness signal · "just add more pages" · scaled AI content
+  as a growth strategy
 
 When the user asks for one of these, say plainly what the evidence shows, offer
 the nearest thing that does work, and move on.
 
 ## References
 
-- [references/ranking-model.md](references/ranking-model.md) — how ranking actually works: systems vs signals, the three that carry weight, E-E-A-T's real status, query-dependent weighting.
-- [references/technical-checks.md](references/technical-checks.md) — tracks A/B: crawl, render, index, canonical, robots, sitemaps, hreflang/international duplication, migrations, plus the mechanical completeness sweep.
-- [references/architecture-and-equity.md](references/architecture-and-equity.md) — track C: internal links, hubs, orphans, depth, read-budget-aware navigation.
-- [references/intent-and-content.md](references/intent-and-content.md) — tracks D/E: intent match, cannibalization, information gain, defensible content types.
-- [references/onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.
-- [references/aeo-geo.md](references/aeo-geo.md) — track F: how answer engines retrieve and cite, per-engine mechanics, the prompt set.
-- [references/entity-and-brand.md](references/entity-and-brand.md) — track G: entity graph, cross-profile consistency, ghost citations, sentiment sources.
-- [references/experience-signals.md](references/experience-signals.md) — track H: CWV/INP/LCP triage, satisfaction signals, CRO × SEO.
-- [references/demand-and-conversion.md](references/demand-and-conversion.md) — track H+: conversion elements, lead capture, call/offline attribution, paid × organic alignment.
-- [references/threats-and-defense.md](references/threats-and-defense.md) — track I: penalties, negative SEO, prompt injection, takedown abuse, hijacks.
-- [references/measurement.md](references/measurement.md) — track J: GSC/Bing/AI reporting surfaces, per-engine metrics, what not to measure.
-- [references/discover.md](references/discover.md) — Google Discover as its own surface: the two tags without which no card renders, image requirements, the metatags that halt the pipeline entirely, freshness, and the evidence tier each claim actually carries.
-- [references/tooling.md](references/tooling.md) — check → tool routing, the evidence ladder, DevTools recipes, where automation stops.
-- [references/prowl-mcp.md](references/prowl-mcp.md) — bulk competitive, demand and AI-surface data through one MCP endpoint: which tools serve which track, the two-index cross-check habit, spam-score filtering on anchors, and the operating gotchas.
-- [references/growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from, with expected effect and evidence tier.
-- [references/experiments.md](references/experiments.md) — split-test design rules for anything below CONFIRMED.
-- [references/evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.
-- [references/myths.md](references/myths.md) — the refuted list, with sources.
-- [references/benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
-- [references/algorithm-updates.md](references/algorithm-updates.md) — dated Google update timeline, platform changes, the update-response protocol, and how to keep the file current.
-- [references/linkbuilding.md](references/linkbuilding.md) — extracting link-building targets, keywords and anchors for any site, with or without Search Console; the measured-vs-candidate rule and the CSV contract.
-- [references/deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.
+- [ranking-model.md](references/ranking-model.md) — how ranking actually works.
+- [technical-checks.md](references/technical-checks.md) — tracks A/B.
+- [architecture-and-equity.md](references/architecture-and-equity.md) — track C.
+- [intent-and-content.md](references/intent-and-content.md) — tracks D/E.
+- [onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.
+- [aeo-geo.md](references/aeo-geo.md) — track F.
+- [entity-and-brand.md](references/entity-and-brand.md) — track G.
+- [experience-signals.md](references/experience-signals.md) — track H.
+- [demand-and-conversion.md](references/demand-and-conversion.md) — track H+.
+- [threats-and-defense.md](references/threats-and-defense.md) — track I.
+- [measurement.md](references/measurement.md) — track J.
+- [discover.md](references/discover.md) — Google Discover as its own surface.
+- [tooling.md](references/tooling.md) — check → tool routing.
+- [prowl-mcp.md](references/prowl-mcp.md) — bulk competitive, demand and AI-surface data through one MCP endpoint.
+- [growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from.
+- [experiments.md](references/experiments.md) — split-test design rules for anything below CONFIRMED.
+- [evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.
+- [myths.md](references/myths.md) — the refuted list.
+- [benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
+- [algorithm-updates.md](references/algorithm-updates.md) — dated Google update timeline.
+- [linkbuilding.md](references/linkbuilding.md) — extracting link-building targets.
+- [deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.

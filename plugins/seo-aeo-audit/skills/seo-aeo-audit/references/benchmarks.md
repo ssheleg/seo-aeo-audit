@@ -4,6 +4,29 @@ Use these to size an opportunity and to keep a report honest. **Always cite the
 date**; this snapshot is April–July 2026 and search surfaces move fast. Re-check
 anything older than ~18 months before it enters a plan.
 
+## Contents
+
+- [Surface reach](#surface-reach)
+- [Click economics](#click-economics)
+- [User self-report (opinion data, not behavior)](#user-self-report-opinion-data-not-behavior)
+- [AI citation mechanics](#ai-citation-mechanics)
+- [What a recommendation is worth, and where the traffic shows up](#what-a-recommendation-is-worth-and-where-the-traffic-shows-up)
+- [Read budget (ChatGPT Deep Research)](#read-budget-chatgpt-deep-research)
+- [Content and ranking correlations](#content-and-ranking-correlations)
+- [Operational benchmarks](#operational-benchmarks)
+- [Rendering ceilings (not the five-second myth)](#rendering-ceilings-not-the-five-second-myth)
+- [Entity extraction — how much of a tool's output is noise](#entity-extraction--how-much-of-a-tools-output-is-noise)
+- [Layout and module split tests](#layout-and-module-split-tests)
+- [Coordinated-generation enforcement](#coordinated-generation-enforcement)
+- [Industry context (practitioner survey, State of SEO 2026)](#industry-context-practitioner-survey-state-of-seo-2026)
+- [AI-surface coverage and device context](#ai-surface-coverage-and-device-context)
+- [Contested metrics — record both figures, pick neither](#contested-metrics--record-both-figures-pick-neither)
+- [Academic benchmarks — the only controlled numbers here](#academic-benchmarks--the-only-controlled-numbers-here)
+- [Machine-readable files — adoption and consumption](#machine-readable-files--adoption-and-consumption)
+- [Title and description rewriting](#title-and-description-rewriting)
+- [Caveats](#caveats)
+
+
 ## Surface reach
 
 | Metric | Value | As of |

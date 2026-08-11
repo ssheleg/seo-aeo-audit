@@ -4,6 +4,17 @@ AEO and GEO describe the same work: being retrievable, readable and quotable by
 systems that answer instead of linking. Google's own position is that this is
 still SEO; treat that as one interested party's opinion and verify per engine.
 
+## Contents
+
+- [F1. How the answer actually gets built](#f1-how-the-answer-actually-gets-built)
+- [F2. What correlates with being cited (ranked evidence)](#f2-what-correlates-with-being-cited-ranked-evidence)
+- [F3. Extractability — the part most audits skip](#f3-extractability--the-part-most-audits-skip)
+- [F4. Per-engine mechanics worth auditing separately](#f4-per-engine-mechanics-worth-auditing-separately)
+- [F5. The prompt set (run it, record verbatim answers)](#f5-the-prompt-set-run-it-record-verbatim-answers)
+- [F6. Experiment results that contradict the vendor pitch](#f6-experiment-results-that-contradict-the-vendor-pitch)
+- [F7. What to put in the plan](#f7-what-to-put-in-the-plan)
+
+
 ## F1. How the answer actually gets built
 
 1. **Query fan-out.** One user query expands into several parallel queries

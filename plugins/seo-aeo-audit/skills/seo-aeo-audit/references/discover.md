@@ -6,6 +6,17 @@ update), its own eligibility gate, and a card that will not render at all if two
 tags are absent. A site can rank well and be structurally ineligible for
 Discover, and nothing in a Search-shaped audit says so.
 
+## Contents
+
+- [Evidence standing, stated up front](#evidence-standing-stated-up-front)
+- [The two tags without which there is no card](#the-two-tags-without-which-there-is-no-card)
+- [Image requirements](#image-requirements)
+- [The two metatags that halt the pipeline entirely](#the-two-metatags-that-halt-the-pipeline-entirely)
+- [Freshness](#freshness)
+- [The audit, in order](#the-audit-in-order)
+- [What not to promise](#what-not-to-promise)
+
+
 Audit it as its own track. The checks below are cheap — they are metatags and
 image dimensions — and the failure mode is binary, which is rare enough in this
 work to be worth spending ten minutes on.

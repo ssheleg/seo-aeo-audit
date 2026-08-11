@@ -3,6 +3,18 @@
 Produce a brief and a CSV a link-building contractor can work from, for any
 site, without inventing a single number.
 
+## Contents
+
+- [The non-negotiable: never blend measured with assumed](#the-non-negotiable-never-blend-measured-with-assumed)
+- [Mode A — Search Console reachable](#mode-a--search-console-reachable)
+- [Mode B — no Search Console](#mode-b--no-search-console)
+- [Choosing targets — the ordering that survives contact](#choosing-targets--the-ordering-that-survives-contact)
+- [What to exclude, explicitly](#what-to-exclude-explicitly)
+- [Anchor discipline](#anchor-discipline)
+- [CSV contract](#csv-contract)
+- [Verification before handing it over](#verification-before-handing-it-over)
+
+
 This is a **deliverable for someone else to execute**, which changes the
 evidence bar rather than relaxing it. An auditor who overstates a finding wastes
 their own time. A brief that overstates one spends a client's budget on a page

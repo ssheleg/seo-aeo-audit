@@ -3,6 +3,15 @@
 **Sources last re-fetched: 2026-07-28.**
 **Newest row in this file: 2026-07-30.**
 
+## Contents
+
+- [Ranking updates, last ~18 months](#ranking-updates-last-18-months)
+- [Platform and policy changes worth dating (not "algorithm updates", still audit-relevant)](#platform-and-policy-changes-worth-dating-not-algorithm-updates-still-audit-relevant)
+- [How to use the timeline in an audit](#how-to-use-the-timeline-in-an-audit)
+- [Protocol when a new update is announced](#protocol-when-a-new-update-is-announced)
+- [Refresh protocol for this file (part of the skill's Definition of Done)](#refresh-protocol-for-this-file-part-of-the-skills-definition-of-done)
+
+
 Two dates, because they are two facts and the file used to state one of them as if
 it covered both. The stamp said 2026-07-28 while a row dated 2026-07-30 had already
 been appended from a dated report — so the copy that travels to every agent claimed

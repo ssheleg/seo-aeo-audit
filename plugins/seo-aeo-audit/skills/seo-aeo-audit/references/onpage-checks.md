@@ -4,6 +4,17 @@ The judgement calls live in intent-and-content.md. This file is the mechanical
 sweep: run it per template (not per page), record the URL list behind every
 failure, and feed the results into the findings table.
 
+## Contents
+
+- [O1. Can crawlers understand what the page is about](#o1-can-crawlers-understand-what-the-page-is-about)
+- [O2. Duplication and consolidation](#o2-duplication-and-consolidation)
+- [O3. Internal linking on the page](#o3-internal-linking-on-the-page)
+- [O4. Content substance (judgement, evidence required)](#o4-content-substance-judgement-evidence-required)
+- [O5. Metadata as a click and citation surface](#o5-metadata-as-a-click-and-citation-surface)
+- [What `page_audit.py` actually covers](#what-page_auditpy-actually-covers)
+- [How to record it](#how-to-record-it)
+
+
 **Why O-numbers and not D/E.** This file is the sweep for tracks D and E, and
 intent-and-content.md is the diagnosis for the same two tracks. Both used to
 number their sections `D1`, `D2`, `E1`, `E2` — four ids defined twice with

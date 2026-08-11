@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.15.0 — 2026-08-11
+
+### Changed
+
+- **The body went 396 lines / 6103 tokens to 313 / 4582** — the cap is 5000
+  tokens and it was 22% over. Measured with `cl100k`, not with
+  `claude plugin details`, which over-reports by roughly 40%.
+
+  Two blocks moved out, neither deleted:
+
+  - Step 2's tail was a **manual for the six bundled scripts** — invocation,
+    flags, quotas, per-script limits — now `references/scripts.md`, with a
+    heading per script so the contents list resolves.
+  - Step 0's "what preflight probes and what it cannot" is now
+    `references/preflight.md`.
+
+  The body keeps the four traps that decide whether a finding is real: the
+  schema inventory reads server-rendered HTML only, `--format json` emits an
+  array even for one URL, a `--max-bytes` truncation drops count-based findings
+  rather than publishing a fragment, and **only the evidence tier enters the
+  triage formula** while severity is merely how loud a finding is. A trap an
+  agent has not hit yet is a trap it cannot know to go read about.
+
+  The myth short list drops from fourteen to ten in both channels — the
+  validator requires `SKILL.md` and the Cursor rule to offer the same list, and
+  caught the attempt to change one of them alone.
+
+- **Every reference over 100 lines now opens with `## Contents`** (19 files).
+  A partial read is what agents actually do with a long reference; without the
+  list it returns an arbitrary slice.
+
 ## v0.14.1 — 2026-08-10
 
 **The acceptance walk found what the requirement table could not**, which is what

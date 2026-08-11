@@ -5,6 +5,17 @@ together they form a cluster whose centroid *is* your brand to the system.
 Retrieval matches queries against centroids **before** ranking, so a distant or
 blurred centroid keeps your pages out of the candidate pool entirely.
 
+## Contents
+
+- [G1. Cross-surface consistency (the cheapest win in this track)](#g1-cross-surface-consistency-the-cheapest-win-in-this-track)
+- [G2. Ghost citations — cited but not recommended](#g2-ghost-citations--cited-but-not-recommended)
+- [G3. Knowledge-graph plumbing](#g3-knowledge-graph-plumbing)
+- [G3b. Discovery is fragmented — audit where the audience actually is](#g3b-discovery-is-fragmented--audit-where-the-audience-actually-is)
+- [G4. Reputation is now a retrieval input](#g4-reputation-is-now-a-retrieval-input)
+- [G5. Mention vs citation vs recommendation](#g5-mention-vs-citation-vs-recommendation)
+- [Evidence to capture for track G](#evidence-to-capture-for-track-g)
+
+
 ## G1. Cross-surface consistency (the cheapest win in this track)
 
 Open, in one sitting: homepage H1 and top-menu services (the reference), then

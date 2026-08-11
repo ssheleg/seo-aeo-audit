@@ -4,6 +4,15 @@ Rankings that do not convert are a reporting artifact. This section audits what
 happens after the impression: whether the page converts, whether the conversion
 is measured, and whether paid and organic pull in the same direction.
 
+## Contents
+
+- [H+1. Does the page convert](#h1-does-the-page-convert)
+- [H+2. Lead capture without value destruction](#h2-lead-capture-without-value-destruction)
+- [H+3. Attribution — stop measuring the last screen](#h3-attribution--stop-measuring-the-last-screen)
+- [H+4. Paid and organic in the same room](#h4-paid-and-organic-in-the-same-room)
+- [What to record](#what-to-record)
+
+
 Survey context (`STUDY`, practitioner survey — opinion, not effect data): 60.4%
 of practitioners say qualified leads and sales are the metric they report on, yet
 only 33.7% plan to invest in conversion-focused SEO. That gap is where most

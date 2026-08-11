@@ -1,5 +1,18 @@
 # Track C — architecture, internal links and equity distribution
 
+
+## Contents
+
+- [The default failure](#the-default-failure)
+- [The audit](#the-audit)
+- [Crawl frequency is an architecture output](#crawl-frequency-is-an-architecture-output)
+- [Read-budget: navigation now costs you twice](#read-budget-navigation-now-costs-you-twice)
+- [The fixes, in the order that usually pays](#the-fixes-in-the-order-that-usually-pays)
+- [Local and multi-location architecture](#local-and-multi-location-architecture)
+- [Internal-link anchor mix](#internal-link-anchor-mix)
+- [What to test rather than ship](#what-to-test-rather-than-ship)
+- [What to record](#what-to-record)
+
 ## The default failure
 
 On most sites the homepage holds ~80% of link equity and the money pages get

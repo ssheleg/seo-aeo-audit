@@ -2,6 +2,17 @@
 
 If nobody can tell whether the plan worked, the plan is a wish list.
 
+## Contents
+
+- [J1. The surfaces that exist in 2026](#j1-the-surfaces-that-exist-in-2026)
+- [J2. Cross-checking before you diagnose](#j2-cross-checking-before-you-diagnose)
+- [J3. Measuring AI visibility honestly](#j3-measuring-ai-visibility-honestly)
+- [J3b. The KPI set has moved](#j3b-the-kpi-set-has-moved)
+- [J4. Cadence](#j4-cadence)
+- [J5. Setting expectations in the report](#j5-setting-expectations-in-the-report)
+- [J6. What not to measure](#j6-what-not-to-measure)
+
+
 Method only. Every dated number this file leans on — effect sizes, samples,
 survey shares, contested figures — lives in benchmarks.md; quote it from there
 with its date.

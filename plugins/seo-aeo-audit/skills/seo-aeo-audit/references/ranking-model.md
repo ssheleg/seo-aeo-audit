@@ -3,6 +3,19 @@
 Read this before writing any recommendation that starts with "Google wants…".
 It sets the vocabulary the rest of the tracks use.
 
+## Contents
+
+- [Systems, signals, factors — and why the argument is a trap](#systems-signals-factors--and-why-the-argument-is-a-trap)
+- [How a change actually ships](#how-a-change-actually-ships)
+- [The stack: retrieval, scoring, re-ranking](#the-stack-retrieval-scoring-re-ranking)
+- [The "200 ranking factors" myth](#the-200-ranking-factors-myth)
+- [The three that carry the most weight](#the-three-that-carry-the-most-weight)
+- ["Content" includes layout and function, not only text](#content-includes-layout-and-function-not-only-text)
+- [E-E-A-T: important, not a factor](#e-e-a-t-important-not-a-factor)
+- [Personalization and locality sit on top of everything](#personalization-and-locality-sit-on-top-of-everything)
+- [How to use this in the report](#how-to-use-this-in-the-report)
+
+
 Tiering: everything here is either engine-documented or a documented industry
 consensus — treat it as `CONFIRMED` for vocabulary and mechanism, and `STUDY` or
 lower for any number attached to it. It never licenses a claim about *your* site
