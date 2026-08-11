@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.15.1 — 2026-08-11
+
+### Fixed
+
+- **The myth short list goes back to fourteen.** Shortening it to ten in
+  v0.15.0 disarmed a negative self-test without touching a line of the check:
+  the plant creates a disagreement by rewriting the literal
+  `The fourteen asked for most often`, and against `ten` the `sed` became a
+  no-op, the validator passed, and CI reported `BROKEN GUARD`. Re-aiming the
+  plant needs a change under `.github/workflows/`, so the list is restored
+  instead — it costs ~60 tokens against a body at 4648 with headroom to 4750,
+  and shortening it was never the point.
+
+  v0.15.0 shipped from a commit whose `validate` was red for this reason. This
+  release is cut from a green one, which is what the pin should point at.
+
 ## v0.15.0 — 2026-08-11
 
 ### Changed
