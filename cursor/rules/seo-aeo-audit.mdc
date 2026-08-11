@@ -131,14 +131,17 @@ optimization, cause before prescription.
 
 ## Never put these in a plan
 
-The ten asked for most often, out of 32 refuted claims the full skill
+The fourteen asked for most often, out of 32 refuted claims the full skill
 carries (install it for the counter-evidence and the working alternative to
 each):
 
 `llms.txt` as a ranking or citation lever · Markdown mirrors of HTML pages ·
 "chunk your content" · rewriting text "for AI" · schema volume as an AI-citation
 lever · FAQPage markup for rich results (retired) · AMP for ranking advantage ·
-date bumps as freshness · "publish more pages" · scaled AI content.
+date bumps as freshness · "publish more pages" · disavowing on a third-party
+toxicity score · a single AI-visibility score as a KPI · self-promotional "best
+[category]" listicles · scaled AI content · `Disallow`-ing tracking-parameter
+URLs to protect crawl budget.
 
 ## Deliverables
 
