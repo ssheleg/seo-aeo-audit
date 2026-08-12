@@ -52,6 +52,7 @@ of optimization-conscious sites, 2026-07-14). Everything else gets swept second.
 | Image `alt` present and factual ★ | missing alt on informative images; keyword-stuffed alt; decorative images with text alt | crawl + page_audit |
 | The subject is named in the structural elements, not only the prose | subheads that would fit any page ("Overview", "Conclusion"); internal anchors reading "read more"; captions and `alt` that never mention what the page is about | crawl + page_audit |
 | Structured data valid and matched to visible content ★ | validation errors; markup claiming ratings/prices the page does not show | Rich Results Test + page_audit |
+| The visible section label **is** the heading | a design that puts a styled eyebrow/chip/kicker above the section and marks it up as a `<div>` or `<span>`, leaving the section with no heading at all — or worse, wrapping the decorative kicker in the `<h2>` and the real title in a `<p>` | crawl + page_audit |
 
 **The H1 count is not one of these checks.** Google states that one H1 and
 several H1s both work, with no penalty for the count (myths.md) — so a "multiple
@@ -137,6 +138,22 @@ SERP for sharing those three strings.
   opening sentence), then answer it plainly in the prose.** Raising phrase
   density in the body is the failure mode — keyword-style manipulation scored
   below baseline in the one controlled benchmark (myths.md).
+- **The heading outline is a design decision, and it is cheapest to get right at
+  design time.** The common failure is not a missing `<h2>` tag but a layout that
+  never had a place for one: a small styled kicker ("HOW IT WORKS") over a
+  paragraph, where the kicker is a `<span>` and the section has no heading. The fix
+  costs nothing if it is made once, in the component. One measured example —
+  `zernio.com`, read 2026-08-12 — wraps the styled chip itself in the `<h2>`:
+
+  ```html
+  <h2><span class="chip">How It Works</span></h2>
+  ```
+
+  The result is a page with one `h1` and one `h2` per section, whose visible
+  section labels and semantic outline are the *same object* and therefore cannot
+  drift apart. Audit the outline against what a reader sees as a section boundary:
+  where those two disagree, the markup is decoration and the crawler is reading a
+  different page than the user.
 
 ## What `page_audit.py` actually covers
 
@@ -154,6 +171,8 @@ starred item:
 | O1 structured data valid and **matched to visible content** | parses JSON-LD, reports invalid blocks, missing structural properties, and a declared price absent from the visible text | every other markup-versus-content parity claim (ratings, availability, review counts) — Rich Results Test plus a read of the page |
 | O2 canonicals used to consolidate near-duplicates | nothing: consolidation is a property of a URL set | a crawl plus URL Inspection |
 | O3 link volume per page kept sane | link totals, links before the first text, and the read-budget share | whether the links point where priority says they should |
+| O1 the visible section label **is** the heading | nothing: the script cannot tell a styled kicker from a title, because that distinction is visual | read the rendered page beside its outline — where a reader's section boundaries and the `h2`s disagree, the markup is decoration |
+| aeo-geo F8 the Q&A block | counts `<dt>`/`<dd>` and `<details>`/`<summary>` pairs, matches an FAQ-announcing heading, and reports the four states apart: answers collapsed, an FAQ heading with no pairing at all, readable pairs with no `FAQPage` node, and an `FAQPage` node with no readable pairs | whether each answer actually answers its question, and whether the declared text still matches the shown text — schema and copy authored separately drift, and nothing flags it |
 
 Two whole-file caveats travel with every run: the parser does not execute
 JavaScript (so an empty schema inventory is not absent schema), and a response cut

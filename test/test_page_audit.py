@@ -493,6 +493,111 @@ check(_dns.get("data_nosnippet_elements") == 1,
 check("nosnippet" in {f["code"] for f in _dns["findings"]},
       "an element-level data-nosnippet must surface, like the page-level directive")
 
+# ── the Q&A block: shape, extractability, and schema parity ──────────────────
+#
+# Four observations people collapse into "add FAQ schema". Each fixture isolates
+# one branch: a fixture that trips three findings at once cannot show which rule
+# fired.
+_FAQ_HEAD = "<h2>Frequently Asked Questions</h2>"
+
+
+def _faq_dl(n: int) -> str:
+    """n question/answer pairs as an always-open definition list."""
+    rows = "".join(
+        f"<div><dt>Question number {i}?</dt>"
+        f'<dd><span aria-hidden="true">&#9492;</span><span>Answer number {i}.</span></dd></div>'
+        for i in range(n)
+    )
+    return f"<dl>{rows}</dl>"
+
+
+def _faq_details(n: int) -> str:
+    """n pairs behind a disclosure widget — an answer one click from a crawler."""
+    return "".join(
+        f"<details><summary>Question number {i}?</summary><p>Answer number {i}.</p></details>"
+        for i in range(n)
+    )
+
+
+_FAQ_LD = (
+    '<script type="application/ld+json">'
+    '{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question",'
+    '"name":"Question number 0?","acceptedAnswer":{"@type":"Answer","text":"Answer number 0."}}]}'
+    "</script>"
+)
+
+# 1. a readable <dl> FAQ with no FAQPage node — extractable, undeclared.
+_qa_open = analyze_html(f"<html><body>{_FAQ_HEAD}{_faq_dl(5)}</body></html>")
+_qa_open_codes = {f["code"] for f in _qa_open["findings"]}
+check(_qa_open["qa_pairs_visible"] == 5,
+      f"five <dt>/<dd> pairs must be counted, got {_qa_open['qa_pairs_visible']}")
+check(_qa_open["qa_pairs_collapsed"] == 0,
+      "a definition list must not be counted as collapsed")
+check("faq-schema-absent" in _qa_open_codes,
+      "a readable FAQ with no FAQPage node must be reported")
+check("faq-collapsed" not in _qa_open_codes,
+      "an always-open definition list must never be reported as collapsed")
+check("faq-unpaired" not in _qa_open_codes,
+      "a <dl>-paired FAQ must not also be reported as unpaired")
+def _finding(result: dict, code: str) -> dict:
+    """The named finding, or an empty dict — so a missing one fails a check with a
+    message instead of raising StopIteration and hiding every check below it."""
+    return next((f for f in result["findings"] if f["code"] == code), {})
+
+
+# The payoff claim is the part most likely to be overstated, so it is pinned.
+_absent = _finding(_qa_open, "faq-schema-absent")
+check("2023" in _absent.get("message", ""),
+      "faq-schema-absent must date Google's FAQ rich-result restriction, not promise stars")
+check(_absent.get("severity") == "low",
+      f"an already-extractable FAQ is a low-severity gap, got {_absent.get('severity')}")
+
+# 2. the same FAQ behind <details> — a click away rather than text on the page.
+_qa_shut = analyze_html(f"<html><body>{_FAQ_HEAD}{_faq_details(5)}</body></html>")
+_qa_shut_codes = {f["code"] for f in _qa_shut["findings"]}
+check(_qa_shut["qa_pairs_collapsed"] == 5,
+      f"five <details>/<summary> pairs must be counted, got {_qa_shut['qa_pairs_collapsed']}")
+check("faq-collapsed" in _qa_shut_codes, "answers behind <details> must be reported")
+check("faq-unpaired" not in _qa_shut_codes,
+      "<details>/<summary> is a pairing; it must not also be called unpaired")
+_collapsed = _finding(_qa_shut, "faq-collapsed")
+check("accessibility tree" in _collapsed.get("message", "")
+      or "can index" in _collapsed.get("message", ""),
+      "faq-collapsed must concede that <details> is indexable, not imply it is invisible")
+
+# 3. an FAQ heading over unpaired prose — nothing marks question from answer.
+_qa_bare = analyze_html(
+    f"<html><body>{_FAQ_HEAD}<p>Is it fast?</p><p>Yes, very.</p></body></html>")
+check("faq-unpaired" in {f["code"] for f in _qa_bare["findings"]},
+      "an FAQ heading with no <dt>/<dd> or <details> pairing must be reported")
+
+# 4. an FAQPage node over answers that are not in the served markup.
+_qa_orphan = analyze_html(f"<html><body>{_FAQ_HEAD}{_FAQ_LD}<p>Nothing here.</p></body></html>")
+_orphan_codes = {f["code"] for f in _qa_orphan["findings"]}
+check("FAQPage" in _qa_orphan["jsonld_types"], "the FAQPage fixture must parse")
+check("faq-schema-orphan" in _orphan_codes,
+      "an FAQPage node with no visible pairing must be reported")
+check("faq-schema-absent" not in _orphan_codes,
+      "a page that declares FAQPage must not also be told its schema is absent")
+
+# A heading is required: a page with a stray <dl> is a glossary, not an FAQ.
+_gloss = analyze_html(
+    "<html><body><h2>Glossary</h2><dl><dt>Term</dt><dd>Sense</dd></dl></body></html>")
+check(_gloss["faq_heading"] is None,
+      f"'Glossary' must not match as an FAQ heading, got {_gloss['faq_heading']!r}")
+check("faq-unpaired" not in {f["code"] for f in _gloss["findings"]},
+      "a non-FAQ heading must not trip the unpaired finding")
+
+# Absence findings must not survive a fragment; positive counts must.
+check("faq-unpaired" in page_audit.COMPLETENESS_DEPENDENT
+      and "faq-schema-orphan" in page_audit.COMPLETENESS_DEPENDENT,
+      "the two findings that assert 'no pairing found' must be completeness-dependent")
+check("faq-collapsed" not in page_audit.COMPLETENESS_DEPENDENT
+      and "faq-schema-absent" not in page_audit.COMPLETENESS_DEPENDENT,
+      "a count of pairs found survives truncation and must not be dropped")
+for _code in ("faq-collapsed", "faq-unpaired", "faq-schema-absent", "faq-schema-orphan"):
+    check(_code in page_audit.FINDING_TIERS, f"{_code} must carry an evidence tier")
+
 # ── exit code: a run where nothing could be fetched is not a success ─────────
 _allfail = subprocess.run(
     [sys.executable, SCRIPT, "--url", "ftp://example.com/x", "--format", "json"],
