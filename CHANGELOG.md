@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.15.2 — 2026-08-12
+
+### Changed
+
+- `references/growth-plays.md` crossed 100 lines and gains the `## Contents` list the
+  canon requires past that mark — generated from its own five headings, so the list
+  cannot disagree with them on the day it was written. It was the last reference here
+  without one.
+
 ## v0.15.1 — 2026-08-11
 
 ### Fixed

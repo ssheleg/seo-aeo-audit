@@ -8,6 +8,14 @@ adversarial material lives in threats-and-defense.md as defense only.
 Tiers: `CONFIRMED` (documented by the engine or reproduced here) · `STUDY`
 (published multi-site data) · `FIELD` (single-case report) · `HYPOTHESIS`.
 
+## Contents
+
+- Blockers — do these before anything else
+- Leaks — stop the bleeding
+- Gains — earn more visibility
+- Editorial and process plays
+- Rules that override the table
+
 ## Blockers — do these before anything else
 
 | # | Trigger | Play | Mechanism | Observed | Tier |
