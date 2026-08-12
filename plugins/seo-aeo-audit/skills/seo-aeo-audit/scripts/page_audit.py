@@ -98,6 +98,10 @@ COMPLETENESS_DEPENDENT = frozenset({
     "low-extractable-text", "subheads-thin", "read-budget", "nav-before-content",
     "link-count", "alt-missing", "canonical-missing", "title-missing",
     "description-missing", "h1-missing", "jsonld-price-parity",
+    # Both assert that no Q&A pairing was found, and a fragment cannot support an
+    # absence. The two positive-count findings (faq-collapsed, faq-schema-absent)
+    # survive truncation, because a count of three found is still three found.
+    "faq-unpaired", "faq-schema-orphan",
 })
 # One home for the severity -> tier mapping, so the two never drift apart.
 FINDING_TIERS = {
@@ -124,6 +128,11 @@ FINDING_TIERS = {
     "alt-missing": "CONFIRMED",
     "price-not-in-text": "CONFIRMED",
     "truncated-read": "CONFIRMED",
+    # The Q&A block. All four are DOM observations, not ranking claims.
+    "faq-collapsed": "STUDY",
+    "faq-unpaired": "CONFIRMED",
+    "faq-schema-absent": "CONFIRMED",
+    "faq-schema-orphan": "CONFIRMED",
 }
 # Only rel and href are safe on a canonical link; anything that changes the
 # semantics of the element makes Google discard the declaration.
@@ -132,6 +141,13 @@ CANONICAL_HARMLESS_PREFIXES = ("data-",)
 CANONICAL_HARMLESS_ATTRS = {"id", "class"}
 SKIP_TEXT_TAGS = {"script", "style", "template", "noscript", "svg"}
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+# A heading that announces a question-and-answer block. Matched against heading
+# text only, so a page merely *mentioning* an FAQ in prose does not trip it.
+FAQ_HEADING_RE = re.compile(
+    r"\b(faq|faqs|frequently\s+asked|common\s+questions|questions\s+(and|&)\s+answers"
+    r"|q\s*(and|&)\s*a)\b",
+    re.I,
+)
 DEFAULT_UA = "seo-aeo-audit (+https://github.com/ssheleg/seo-aeo-audit)"
 CURRENCY_RE = re.compile(r"[$€£¥₽]|\b(usd|eur|gbp|rub)\b", re.I)
 
@@ -156,6 +172,13 @@ class Doc:
         self.hreflang: list[str] = []
         self.meta_refresh: str | None = None
         self.stream: list[tuple[str, str]] = []  # ("text"|"link", payload)
+        # Q&A shape. An answer engine can only quote an answer present in the
+        # served markup, so these four counts are what separate "the page has an
+        # FAQ" from "the page has an FAQ a machine can read".
+        self.dt_count = 0        # <dt> — a question paired with its answer
+        self.dd_count = 0        # <dd> — the answer, flat in the DOM
+        self.details_count = 0   # <details> — an answer behind a click
+        self.summary_count = 0   # <summary> — its label
 
 
 class Parser(HTMLParser):
@@ -224,6 +247,14 @@ class Parser(HTMLParser):
         elif tag in HEADING_TAGS:
             self._heading = tag
             self._heading_buf = []
+        elif tag == "dt":
+            self.doc.dt_count += 1
+        elif tag == "dd":
+            self.doc.dd_count += 1
+        elif tag == "details":
+            self.doc.details_count += 1
+        elif tag == "summary":
+            self.doc.summary_count += 1
         elif tag == "a":
             self._anchor = {
                 "href": a.get("href", "").strip(),
@@ -566,6 +597,14 @@ def analyze(html: str, url: str, headers: dict | None = None,
         "jsonld_types": types,
         "jsonld_errors": jsonld_errors,
         "jsonld_missing_required": _jsonld_required(doc),
+        # The Q&A shape, kept separate from the schema question it feeds. A page
+        # can publish a readable FAQ with no FAQPage node (the common case) or an
+        # FAQPage node over answers no crawler can reach (the worse one), and the
+        # two want opposite fixes — so both halves are reported as observations.
+        "qa_pairs_visible": min(doc.dt_count, doc.dd_count),
+        "qa_pairs_collapsed": min(doc.details_count, doc.summary_count),
+        "faq_heading": next(
+            (t for _, t in doc.headings if FAQ_HEADING_RE.search(t or "")), None),
         # Non-negotiable #8: the instrument states its own blind spot, in the
         # payload, every run — not in documentation somebody may not have read.
         "jsonld_caveat": (
@@ -699,6 +738,50 @@ def findings(r: dict) -> list[dict]:
     if r["jsonld_blocks"] and not r["jsonld_types"] and not r["jsonld_errors"]:
         add("medium", "jsonld-untyped", "JSON-LD present with no @type",
             "entity-and-brand.md#g3-knowledge-graph-plumbing")
+
+    # --- the Q&A block: is there one, can a machine read it, is it declared ---
+    #
+    # Three separate observations that people routinely collapse into "add FAQ
+    # schema". They have different fixes and two of them are about the DOM, not
+    # the markup: an answer behind <details> is a click away from a crawler, and
+    # a page that hides its answers gains nothing from declaring them.
+    qa_visible = r["qa_pairs_visible"]
+    qa_collapsed = r["qa_pairs_collapsed"]
+    has_faq_schema = "FAQPage" in r["jsonld_types"]
+
+    if qa_collapsed >= 3:
+        add("medium", "faq-collapsed",
+            f"{qa_collapsed} answers sit inside <details>/<summary>, so each one is a click "
+            "away rather than text on the page. Browsers do expose <details> content to "
+            "the accessibility tree and Google can index it, but an extracted answer is "
+            "drawn from what renders — a definition list (<dl>/<dt>/<dd>) left open costs "
+            "nothing and removes the question entirely",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+    if r["faq_heading"] and qa_visible == 0 and qa_collapsed == 0:
+        add("medium", "faq-unpaired",
+            f"a heading announces a Q&A block ({_flat(r['faq_heading'], 60)!r}) but no "
+            "<dt>/<dd> or <details>/<summary> pairing was found, so nothing marks which "
+            "text is the question and which is the answer. Pair them structurally before "
+            "declaring them in schema",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+    if qa_visible >= 3 and not has_faq_schema:
+        add("low", "faq-schema-absent",
+            f"{qa_visible} question/answer pairs are readable in the served markup and no "
+            "FAQPage node declares them. The answers are already extractable, so this is a "
+            "declaration gap, not a visibility one — and the payoff is small: Google "
+            "restricted FAQ rich results in August 2023 and then discontinued them, so what "
+            "remains is entity clarity and the non-Google engines that parse schema. Do not "
+            "report this as a rich-result opportunity",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+    if has_faq_schema and qa_visible == 0 and qa_collapsed == 0:
+        add("high", "faq-schema-orphan",
+            "an FAQPage node is declared but no question/answer pairing was found in the "
+            "served markup. Schema must describe content the page actually shows; a node "
+            "whose answers are absent (or injected client-side) is a mismatch, and "
+            "Google's structured-data policy treats invisible marked-up content as a "
+            "violation",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+
     rb = r["read_budget"]
     if rb["content_pct"] < 55:
         add("high", "read-budget",

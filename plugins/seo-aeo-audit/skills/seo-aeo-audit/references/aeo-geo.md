@@ -13,6 +13,7 @@ still SEO; treat that as one interested party's opinion and verify per engine.
 - [F5. The prompt set (run it, record verbatim answers)](#f5-the-prompt-set-run-it-record-verbatim-answers)
 - [F6. Experiment results that contradict the vendor pitch](#f6-experiment-results-that-contradict-the-vendor-pitch)
 - [F7. What to put in the plan](#f7-what-to-put-in-the-plan)
+- [F8. The Q&A block, which is three problems](#f8-the-qa-block-which-is-three-problems)
 
 
 ## F1. How the answer actually gets built
@@ -412,3 +413,73 @@ Two guardrails on the ordering:
   extractability, corroborated sources) land in days to weeks. Training-layer
   changes wait for model releases and take years to influence, so nothing in the
   plan should promise them. Say which layer each recommendation targets.
+
+## F8. The Q&A block, which is three problems
+
+"Add FAQ schema" is the most-repeated recommendation in this space and it
+collapses three separate observations that want three different fixes. The page
+auditor reports them apart (`faq-collapsed`, `faq-unpaired`, `faq-schema-absent`,
+`faq-schema-orphan`), and the order matters: **structure, then extractability,
+then declaration.** Declaring answers a crawler cannot reach fixes nothing.
+
+**1. Is the pairing structural?** A block of `<p>` tags alternating question and
+answer marks nothing. Which text is the question is a visual convention, not a
+machine-readable one. `<dl>`/`<dt>`/`<dd>` states it — one `dt` per question, one
+`dd` per answer, and the pairing survives being stripped of CSS.
+
+**2. Is the answer in the served markup, unhidden?** This is the one that gets
+argued about, so state it precisely rather than as folklore:
+
+- `<details>`/`<summary>` content **is** in the DOM, **is** exposed to the
+  accessibility tree, and Google **does** index it. "Hidden content is not
+  indexed" is false for this element, and an audit that says otherwise is
+  repeating folklore.
+- What changes is *what an extractor is drawn from*. An engine assembling a quote
+  works from what renders, and a closed disclosure widget renders a label.
+  Google has said for years that content behind a tab or accordion may be
+  weighted as less prominent than content on the page.
+- So the honest framing is a **cost**, not a penalty: leaving a definition list
+  open costs nothing, removes the question entirely, and there is no measured
+  upside to the accordion beyond page length. Where the client insists on the
+  accordion for design reasons, that is a defensible trade — record it as one
+  rather than as a defect.
+
+**3. Is it declared, and is the declaration worth anything?** Two things to be
+honest about here, because this is where audits oversell:
+
+- **The `FAQPage` rich result is gone.** Google restricted it in August 2023 to
+  well-known authoritative government and health sites, then discontinued
+  FAQPage/Question/Answer rich results outright — see the first row of myths.md,
+  which is the canonical statement of this in the skill. The SERP payoff is zero,
+  for every site. What remains is entity clarity and the non-Google answer engines
+  that parse schema, which is why `faq-schema-absent` is a **low** severity: it is
+  a small win, and an audit that sells it as a rich-result opportunity is selling
+  a feature that no longer exists.
+- **Schema must describe what the page shows.** An `FAQPage` node over answers
+  that are absent from the served markup — or injected client-side — is a
+  mismatch, and Google's structured-data policy treats marked-up content that
+  users cannot see as a violation. `faq-schema-orphan` is a higher severity than
+  `faq-schema-absent` for exactly this reason: an undeclared readable FAQ is a
+  missed opportunity, a declared invisible one is a policy risk.
+
+**The pattern worth copying.** A page can satisfy all three cheaply, and one
+measured example does: `zernio.com` (read 2026-08-12) ships its FAQ as a `<dl>`
+with zero `<details>` and zero `<summary>` elements, so every answer is flat text
+paired with its question and readable without executing JavaScript. Its
+decorative tree glyph sits in a **separate grid column** rather than as a text
+prefix, so it never lands inside an extracted answer. What it does *not* ship is
+the `FAQPage` node — the exact `faq-schema-absent` case, and the cheap half of
+the work left undone.
+
+The same page shows the mirror-image lesson on coverage: its visible
+"How It Works" section is mirrored 1:1 into a `HowTo` node with three
+`HowToStep`s, while `/pricing` and `/phone-numbers` — both carrying visible FAQ
+sections — ship **no structured data at all**. One page proving the team knows
+how to do it is not coverage. Audit schema per page, never per site.
+
+**Watch the text parity, not just the presence.** On the same page the `HowToStep`
+names read `Connect accounts` and `Start posting` while the visible steps read
+`Connect channels` and `Launch`. Nothing breaks, and no tool flags it, but the
+declared entity and the shown entity have drifted — which is how a schema block
+becomes stale documentation of a page that has since been rewritten. When schema
+and copy are authored separately they drift; generate both from one source.

@@ -1,5 +1,71 @@
 # Changelog
 
+## v0.16.0 — 2026-08-12
+
+Four new page-auditor findings for the Q&A block, and a reference section that
+stops "add FAQ schema" from being one recommendation.
+
+### Added
+
+- **`page_audit.py` reads the Q&A shape.** The parser counts `<dt>`/`<dd>` and
+  `<details>`/`<summary>` pairs and matches an FAQ-announcing heading, and the
+  payload carries `qa_pairs_visible`, `qa_pairs_collapsed` and `faq_heading`.
+  Four findings report the four states apart, because they want different fixes:
+  - `faq-collapsed` (STUDY) — answers behind a disclosure widget. The message
+    **concedes** that `<details>` is in the DOM, is exposed to the accessibility
+    tree and is indexed by Google: the argument is that an open definition list
+    costs nothing, not that the accordion is invisible. An audit that claims
+    otherwise is repeating folklore.
+  - `faq-unpaired` (CONFIRMED) — a heading announces a Q&A block and nothing
+    marks which text is the question.
+  - `faq-schema-absent` (CONFIRMED, **low**) — readable pairs with no `FAQPage`
+    node. Deliberately low: the FAQ rich result was restricted in August 2023 and
+    then discontinued, so the payoff is entity clarity, and the finding says so
+    rather than selling a SERP feature that no longer exists.
+  - `faq-schema-orphan` (CONFIRMED, **high**) — an `FAQPage` node over answers
+    absent from the served markup. Higher than the absent case because marking up
+    content users cannot see is a structured-data policy violation, not a missed
+    opportunity.
+- **`references/aeo-geo.md` F8 — "The Q&A block, which is three problems."**
+  Structure, then extractability, then declaration, in that order, because
+  declaring answers a crawler cannot reach fixes nothing. Carries the measured
+  pattern worth copying (`zernio.com`, read 2026-08-12: an FAQ as a `<dl>` with
+  zero `<details>`, its decorative glyph in a separate grid column so it never
+  lands in an extracted answer) and the same page's coverage failure — the
+  homepage mirrors its visible steps into `HowTo` while `/pricing` and
+  `/phone-numbers` ship no structured data at all. **Audit schema per page, never
+  per site.**
+- **A parity warning with a live example.** On that homepage the `HowToStep`
+  names read `Connect accounts` and `Start posting` while the visible steps read
+  `Connect channels` and `Launch`. Nothing breaks and no tool flags it — which is
+  how a schema block becomes stale documentation of a page since rewritten.
+- **`references/onpage-checks.md`: the visible section label *is* the heading.**
+  A new O1 row and a design-time note: the common failure is not a missing `<h2>`
+  but a layout with no place for one — a styled kicker as a `<span>` over a
+  section with no heading. Wrapping the chip itself in the `<h2>` makes the
+  visible label and the semantic outline the same object, so they cannot drift.
+  The coverage table records honestly that the script **cannot** check this one,
+  because the distinction is visual.
+
+### Changed
+
+- `references/onpage-checks.md`'s "What `page_audit.py` actually covers" table
+  gains rows for the Q&A findings and for the heading check the script cannot do
+  — an absence reported as coverage is the thing that table exists to prevent.
+
+### Fixed
+
+- Two self-inflicted defects, both caught by the repo's own gates during this
+  change and both worth recording:
+  - The four findings first pointed at reference anchors that did not exist
+    (`aeo-geo.md#q1-answer-extractability`). `validate.py`'s anchor check caught
+    it — the gate works.
+  - The new tests used bare `next(...)`, so a regression raised `StopIteration`
+    and hid every check below it instead of reporting. Found by planting a defect
+    and watching the failure mode, not the failure. Now a missing finding fails
+    with a message.
+
+
 ## v0.15.2 — 2026-08-12
 
 ### Changed
