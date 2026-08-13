@@ -8,6 +8,7 @@
 
 ```
 python3 test/validate.py
+python3 test/plant_guard_test.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py

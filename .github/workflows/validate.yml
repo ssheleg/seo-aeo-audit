@@ -19,6 +19,8 @@ jobs:
 
       - name: Structural validator
         run: python3 test/validate.py
+      - name: The plant guard itself (content AND mode, and the incident that named it)
+        run: python3 test/plant_guard_test.py
 
       - name: Auditor functional tests
         run: python3 test/test_page_audit.py
@@ -306,7 +308,13 @@ jobs:
           plant() {
             desc="$1"; shift
             rm -rf /tmp/neg && cp -R . /tmp/neg
+            python3 test/plant_guard.py snap /tmp/neg
             ( cd /tmp/neg && "$@" )
+            # Instruction #6's corollary, once for every call site. The comparison is
+            # `test/plant_guard.py`, not an inline `diff`: five hand-written variants of
+            # this check produced five different bugs, one of them a content-only
+            # comparison against a plant whose whole effect is `chmod`.
+            python3 test/plant_guard.py verify /tmp/neg "$desc"
             if python3 /tmp/neg/test/validate.py >/dev/null 2>&1; then
               echo "BROKEN GUARD: $desc — validator still passes"; exit 1
             fi
@@ -317,38 +325,19 @@ jobs:
           plant "myth count drifting in the Cursor channel" \
             sed -i "s/out of 32 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
           plant "the two myth short lists disagreeing in size" \
-            python3 - <<'PY'
-            p = 'cursor/rules/seo-aeo-audit.mdc'
-            s = open(p, encoding="utf-8").read()
-            old = 'The fourteen asked for most often'
-            assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
-            open(p, "w", encoding="utf-8").write(s.replace(old, 'The thirteen asked for most often', 1))
-            PY
+            python3 -c "p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))"
           plant "play count drifting from the table" \
             sed -i "s/| \*\*Growth plays\*\* | 61 plays/| **Growth plays** | 60 plays/" README.md
           plant "the Prowl tool count disagreeing across homes" \
             sed -i "s/~448 provider tools/~408 provider tools/" README.md
           plant "a table row with more cells than its header" \
-            python3 - <<'PY'
-            import re
-            p = "$S/references/growth-plays.md"
-            s = open(p, encoding="utf-8").read()
-            s2, n = re.subn('^| B1 | Manual action present |', '| B1 | Manual action present | extra |', s, count=1, flags=re.M)
-            assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
-            open(p, "w", encoding="utf-8").write(s2)
-            PY
+            python3 -c "import re,io;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/growth-plays.md';s=open(p,encoding='utf-8').read();s2,n=re.subn('^| B1 | Manual action present |','| B1 | Manual action present | extra |',s,count=1,flags=re.M);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
           plant "CONTRIBUTING naming a subset of the gate" \
             sed -i "/^python3 test\/test_collectors.py$/d" CONTRIBUTING.md
           plant "a section id defined in two references" \
             sed -i "s/^## O1\. Can crawlers/## D1. Can crawlers/" "$S/references/onpage-checks.md"
           plant "a row appended without moving the newest-row line" \
-            python3 - <<'PY'
-            p = "$S/references/algorithm-updates.md"
-            s = open(p, encoding="utf-8").read()
-            old = '**Newest row in this file: 2026-07-30.**'
-            assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
-            open(p, "w", encoding="utf-8").write(s.replace(old, '**Newest row in this file: 2026-07-01.**', 1))
-            PY
+            python3 -c "p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();assert '**Newest row in this file: 2026-07-30.**' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('**Newest row in this file: 2026-07-30.**','**Newest row in this file: 2026-07-01.**',1))"
           plant "a finding emitted with no evidence tier" \
             sed -i "s/^    \"truncated-read\": \"CONFIRMED\",$//" "$S/scripts/page_audit.py"
           plant "the CWV thresholds drifting from their documented home" \
