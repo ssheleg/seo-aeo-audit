@@ -318,6 +318,8 @@ CONTRIBUTING.md                      evidence discipline, checks, where things g
 SECURITY.md                          what runs, what it touches, how to verify
 scripts/check-docs.sh                the gate — runs the test files below
 test/validate.py                     structural validator and doctrine guards
+test/plant_guard_test.py             the plant guard itself: did a negative self-test's
+                                     damage actually land (content AND mode)
 test/test_page_audit.py              page-auditor tests (offline fixtures)
 test/test_url_inspection.py          index-verdict tests (documented API shape)
 test/test_collectors.py              psi / sitemap / gsc / preflight tests

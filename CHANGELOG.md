@@ -1,5 +1,38 @@
 # Changelog
 
+## v0.16.2 — 2026-08-13
+
+Twelve plants could not run on a developer's machine, and none of the nine that edit a
+file could say whether it had. The first attempt to fix that broke a step three times,
+which is why the check is now a script rather than a careful copy.
+
+### Added
+
+- **`test/plant_guard.py`** — one implementation of *did the plant actually land*, called
+  by `plant()` for every row it runs and by the standalone steps around their edits. It
+  compares **content and mode**, ignores `.git` churn, and refuses when handed no tree or
+  no snapshot. `test/plant_guard_test.py` covers nine cases and now runs in
+  `scripts/check-docs.sh`, so a contributor following the docs runs the whole gate —
+  which this repository's own validator insisted on, by name, three surfaces at a time.
+
+### Fixed
+
+- **Twelve `sed -i` plants converted to Python.** BSD sed requires an argument to `-i`,
+  so every one errored and changed nothing on macOS; they could only ever be exercised in
+  CI. That is how a broken plant in a sibling repo kept its `main` red for two days while
+  blaming a guard that worked.
+- **Every plant now proves it landed** — `PLANT DID NOT LAND: <desc>`, naming the row.
+
+### Known residue
+
+Eleven `sed -i` calls remain **inside `plant()`**, where the command is passed as an argv
+and a heredoc cannot go: converting them needs `python3 -c` one-liners, and three
+attempts at that broke the step (a delimiter collision, lost sed escaping, and a heredoc
+read at the wrong indentation — `IndentationError` in CI). They are guarded by
+`plant()`'s call to the helper, which is what B-27 asked for; they are still not runnable
+on macOS, which is portability and is carried as its own row.
+
+
 ## v0.16.1 — 2026-08-13
 
 This project's own pipeline paperwork moved from `docs/superpowers/` to
