@@ -44,6 +44,7 @@ of optimization-conscious sites, 2026-07-14). Everything else gets swept second.
 |---|---|---|
 | Canonical version of the site declared and consistent ★ | http/https and www/non-www both resolve 200; conflicting declarations | crawl + GSC |
 | Title tag present, unique, descriptive ★ | missing, duplicated across templates, multiple `<title>` elements, truncated mid-word | crawl (Screaming Frog / Ahrefs / Semrush) |
+| Title and headings carry no terminal full stop | `<title>` or an `h1`–`h4` ending in `.` — a title is a name, not a statement, and the stop spends a character in a field measured in characters (craft rule, no tier; intent-and-content.md E4b) | crawl + page_audit |
 | H1 present and matching the page's subject ★ | missing, duplicated sitewide, H1 that repeats the nav | crawl + page_audit |
 | H2–H4 structure reflects the content ★ | 0–3 subheads on a long page; headings used for styling; questions never mirrored | crawl + page_audit |
 | One page per query cluster | several pages ranking for the same query (see cannibalization, intent-and-content.md D2) | GSC query→page breakdown |

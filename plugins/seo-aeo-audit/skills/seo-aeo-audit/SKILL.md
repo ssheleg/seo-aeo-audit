@@ -151,7 +151,7 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | B | Canonicalization & duplication | Which URL is canonical, and does the engine agree — hreflang included? | [technical-checks.md](references/technical-checks.md) |
 | C | Architecture & link equity | Do money pages get authority, depth and crawl frequency? | [architecture-and-equity.md](references/architecture-and-equity.md) |
 | D | Intent & SERP fit | Does each page match the SERP, and do pages cannibalise? | [intent-and-content.md](references/intent-and-content.md) + [onpage-checks.md](references/onpage-checks.md) |
-| E | Content value | A reason to rank that AI cannot replicate? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
+| E | Content value | A reason to rank that AI cannot replicate, and does it read as written by one? | [intent-and-content.md](references/intent-and-content.md) + [ranking-model.md](references/ranking-model.md) |
 | F | Extractability & AEO/GEO | Can an answer engine retrieve, read and quote it? | [aeo-geo.md](references/aeo-geo.md) |
 | G | Entity & brand consensus | Do models know the brand, consistently, and name it? | [entity-and-brand.md](references/entity-and-brand.md) |
 | H | Experience, conversion & attribution | Task completed here or bounced back? Converted, and measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
