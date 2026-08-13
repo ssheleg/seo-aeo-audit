@@ -36,8 +36,13 @@ jobs:
         run: |
           set -eu
           rm -rf /tmp/exit-copy && cp -R . /tmp/exit-copy
-          sed -i 's/return 0 if answered_rows(rows) else 1/return 0/' \
-            /tmp/exit-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py
+          python3 - <<'PY'
+          p = '/tmp/exit-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py'
+          s = open(p, encoding="utf-8").read()
+          old = 'return 0 if answered_rows(rows) else 1'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'return 0', 1))
+          PY
           if python3 /tmp/exit-copy/test/test_output_contracts.py; then
             echo "ERROR: tests passed while a run of 403s reported success"
             exit 1
@@ -49,8 +54,13 @@ jobs:
         run: |
           set -eu
           rm -rf /tmp/flat-copy && cp -R . /tmp/flat-copy
-          sed -i "s/{_flat(r\['detail'\])}/{r['detail']}/" \
-            /tmp/flat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/preflight.py
+          python3 - <<'PY'
+          p = '/tmp/flat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/preflight.py'
+          s = open(p, encoding="utf-8").read()
+          old = "{_flat(r['detail'])}"
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, "{r['detail']}", 1))
+          PY
           if python3 /tmp/flat-copy/test/test_output_contracts.py && \
              python3 /tmp/flat-copy/test/validate.py; then
             echo "ERROR: an API error page reached the table raw and nothing objected"
@@ -80,8 +90,13 @@ jobs:
         run: |
           set -eu
           rm -rf /tmp/count-copy && cp -R . /tmp/count-copy
-          sed -i 's/exited 0 against forty-three defects/exited 0 against forty-one defects/' \
-            /tmp/count-copy/docs/evidence/retro.md
+          python3 - <<'PY'
+          p = '/tmp/count-copy/docs/evidence/retro.md'
+          s = open(p, encoding="utf-8").read()
+          old = 'exited 0 against forty-three defects'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'exited 0 against forty-one defects', 1))
+          PY
           if python3 /tmp/count-copy/test/validate.py; then
             echo "ERROR: validator accepted a defect count the ledger contradicts"
             exit 1
@@ -93,8 +108,13 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/psi-copy
-          sed -i 's/"field_data": field or None,/"field_data": field or {"LCP": {"p75": 0, "unit": "ms", "band": "good", "good_at_or_below": 2500, "poor_above": 4000}},/' \
-            /tmp/psi-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/psi_pull.py
+          python3 - <<'PY'
+          p = '/tmp/psi-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/psi_pull.py'
+          s = open(p, encoding="utf-8").read()
+          old = '"field_data": field or None,'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '"field_data": field or {"LCP": {"p75": 0, "unit": "ms", "band": "good", "good_at_or_below": 2500, "poor_above": 4000}},', 1))
+          PY
           if python3 /tmp/psi-copy/test/test_collectors.py; then
             echo "ERROR: tests passed while absent CrUX data was reported as a pass"
             exit 1
@@ -106,8 +126,13 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/canon-copy
-          sed -i 's/idx.get("userCanonical")/idx.get("userDeclaredCanonical")/' \
-            /tmp/canon-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py
+          python3 - <<'PY'
+          p = '/tmp/canon-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py'
+          s = open(p, encoding="utf-8").read()
+          old = 'idx.get("userCanonical")'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'idx.get("userDeclaredCanonical")', 1))
+          PY
           if python3 /tmp/canon-copy/test/test_url_inspection.py; then
             echo "ERROR: tests passed while reading a field the API does not return"
             exit 1
@@ -119,8 +144,13 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/caveat-copy
-          sed -i 's/server-rendered HTML only/redacted/' \
-            /tmp/caveat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py
+          python3 - <<'PY'
+          p = '/tmp/caveat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py'
+          s = open(p, encoding="utf-8").read()
+          old = 'server-rendered HTML only'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'redacted', 1))
+          PY
           if python3 /tmp/caveat-copy/test/validate.py; then
             echo "ERROR: validator accepted a page_audit with no blindness caveat"
             exit 1
@@ -137,8 +167,9 @@ jobs:
           import re
           p = "/tmp/cursor-copy/cursor/rules/seo-aeo-audit.mdc"
           s = open(p, encoding="utf-8").read()
-          s = re.sub(r"\n8\. \*\*Know each instrument's blind spot.*?(?=\n## )", "\n", s, flags=re.S)
-          open(p, "w", encoding="utf-8").write(s)
+          s2, n = re.subn(r"\n8\. \*\*Know each instrument's blind spot.*?(?=\n## )", "\n", s, flags=re.S)
+          assert n == 1, "PLANT DID NOT LAND: non-negotiable 8 is not where this plant reads it"
+          open(p, "w", encoding="utf-8").write(s2)
           PY
           if python3 /tmp/cursor-copy/test/validate.py; then
             echo "ERROR: validator accepted a Cursor rule missing a non-negotiable"
@@ -151,8 +182,14 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/corrupt-copy
-          sed -i 's/"version": "[0-9.]*"/"version": "0.0.0-corrupt"/' \
-            /tmp/corrupt-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json
+          python3 - <<'PY'
+          import re
+          p = '/tmp/corrupt-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json'
+          s = open(p, encoding="utf-8").read()
+          s2, n = re.subn('"version": "[0-9.]*"', '"version": "0.0.0-corrupt"', s, count=1, flags=re.M)
+          assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
+          open(p, "w", encoding="utf-8").write(s2)
+          PY
           if python3 /tmp/corrupt-copy/test/validate.py; then
             echo "ERROR: validator passed on a corrupted copy — it cannot fail"
             exit 1
@@ -200,8 +237,13 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/badscript-copy
-          sed -i 's/if r\["noindex"\]:/if False:/' \
-            /tmp/badscript-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py
+          python3 - <<'PY'
+          p = '/tmp/badscript-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py'
+          s = open(p, encoding="utf-8").read()
+          old = 'if r["noindex"]:'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'if False:', 1))
+          PY
           if python3 /tmp/badscript-copy/test/test_page_audit.py; then
             echo "ERROR: auditor tests passed with the noindex check disabled"
             exit 1
@@ -213,8 +255,14 @@ jobs:
         run: |
           set -eu
           cp -R . /tmp/anchor-copy
-          sed -i 's/^## Read-budget: navigation now costs you twice$/## Read budget/' \
-            /tmp/anchor-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/architecture-and-equity.md
+          python3 - <<'PY'
+          import re
+          p = '/tmp/anchor-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/architecture-and-equity.md'
+          s = open(p, encoding="utf-8").read()
+          s2, n = re.subn('^## Read-budget: navigation now costs you twice$', '## Read budget', s, count=1, flags=re.M)
+          assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
+          open(p, "w", encoding="utf-8").write(s2)
+          PY
           if python3 /tmp/anchor-copy/test/validate.py; then
             echo "ERROR: validator passed while page_audit.py points at a renamed heading"
             exit 1
@@ -269,22 +317,38 @@ jobs:
           plant "myth count drifting in the Cursor channel" \
             sed -i "s/out of 32 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
           plant "the two myth short lists disagreeing in size" \
-            sed -i "s/The fourteen asked for most often/The thirteen asked for most often/" \
-              cursor/rules/seo-aeo-audit.mdc
+            python3 - <<'PY'
+            p = 'cursor/rules/seo-aeo-audit.mdc'
+            s = open(p, encoding="utf-8").read()
+            old = 'The fourteen asked for most often'
+            assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+            open(p, "w", encoding="utf-8").write(s.replace(old, 'The thirteen asked for most often', 1))
+            PY
           plant "play count drifting from the table" \
             sed -i "s/| \*\*Growth plays\*\* | 61 plays/| **Growth plays** | 60 plays/" README.md
           plant "the Prowl tool count disagreeing across homes" \
             sed -i "s/~448 provider tools/~408 provider tools/" README.md
           plant "a table row with more cells than its header" \
-            sed -i "s/^| B1 | Manual action present |/| B1 | Manual action present | extra |/" \
-              "$S/references/growth-plays.md"
+            python3 - <<'PY'
+            import re
+            p = "$S/references/growth-plays.md"
+            s = open(p, encoding="utf-8").read()
+            s2, n = re.subn('^| B1 | Manual action present |', '| B1 | Manual action present | extra |', s, count=1, flags=re.M)
+            assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
+            open(p, "w", encoding="utf-8").write(s2)
+            PY
           plant "CONTRIBUTING naming a subset of the gate" \
             sed -i "/^python3 test\/test_collectors.py$/d" CONTRIBUTING.md
           plant "a section id defined in two references" \
             sed -i "s/^## O1\. Can crawlers/## D1. Can crawlers/" "$S/references/onpage-checks.md"
           plant "a row appended without moving the newest-row line" \
-            sed -i "s/\*\*Newest row in this file: 2026-07-30\.\*\*/**Newest row in this file: 2026-07-01.**/" \
-              "$S/references/algorithm-updates.md"
+            python3 - <<'PY'
+            p = "$S/references/algorithm-updates.md"
+            s = open(p, encoding="utf-8").read()
+            old = '**Newest row in this file: 2026-07-30.**'
+            assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+            open(p, "w", encoding="utf-8").write(s.replace(old, '**Newest row in this file: 2026-07-01.**', 1))
+            PY
           plant "a finding emitted with no evidence tier" \
             sed -i "s/^    \"truncated-read\": \"CONFIRMED\",$//" "$S/scripts/page_audit.py"
           plant "the CWV thresholds drifting from their documented home" \

@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.16.2 — 2026-08-13
+
+Twelve plants could not run on a developer's machine, and none of the nine that edit a
+file could say whether it had.
+
+### Fixed
+
+- **Twelve `sed -i` plants converted to Python.** BSD sed requires an argument to `-i`,
+  so every one of them errored and changed nothing on macOS; they could only ever be
+  exercised in CI. That is how a broken plant in a sibling repo kept its `main` red for
+  two days while blaming a guard that worked.
+- **Every file-editing plant now asserts that it landed** — `PLANT DID NOT LAND: <why>`,
+  naming the pattern and the file. Standing instruction #6's corollary: verify the file
+  actually changed before believing the result.
+- Verified by running all nine locally, which was impossible before this change: each
+  lands and each makes its checker fail — the exit-code contract, the flattening guard,
+  the defect-count reconciler, the field-data honesty check, the canonical field name,
+  the blindness caveat, version sync, the auditor's own tests, the finding anchors, and
+  the Cursor channel's doctrine parity.
+
+The conversion was mechanical and the assert is what makes that safe: a mistranslated
+pattern cannot no-op quietly, it fails naming itself.
+
 ## v0.16.1 — 2026-08-13
 
 This project's own pipeline paperwork moved from `docs/superpowers/` to
