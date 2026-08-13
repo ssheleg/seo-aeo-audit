@@ -81,7 +81,7 @@ jobs:
           set -eu
           rm -rf /tmp/count-copy && cp -R . /tmp/count-copy
           sed -i 's/exited 0 against forty-three defects/exited 0 against forty-one defects/' \
-            /tmp/count-copy/docs/superpowers/retro.md
+            /tmp/count-copy/docs/evidence/retro.md
           if python3 /tmp/count-copy/test/validate.py; then
             echo "ERROR: validator accepted a defect count the ledger contradicts"
             exit 1

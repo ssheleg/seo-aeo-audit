@@ -41,9 +41,9 @@ past a gate that never ran.
 |---|---|
 | What is the single home of a fact, and what does changing it oblige? | `docs/DOCMAP.md` |
 | Why was something decided this way? | `docs/DECISIONS.md` |
-| What binds the next run? | `docs/superpowers/retro.md` — standing instructions, read in full |
-| What is open? | `docs/superpowers/backlog.md` |
-| Which shipped requirement has never been confirmed? | `docs/superpowers/verification.md` |
+| What binds the next run? | `docs/evidence/retro.md` — standing instructions, read in full |
+| What is open? | `docs/evidence/backlog.md` |
+| Which shipped requirement has never been confirmed? | `docs/evidence/verification.md` |
 | What was wrong on 2026-08-10 and what was done about it? | `docs/audit/2026-08-10-defect-ledger.md` |
 | Where does a contribution go? | `CONTRIBUTING.md` |
 

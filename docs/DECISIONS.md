@@ -144,7 +144,7 @@ which carries no H1 guidance at all.
 
 ## 2026-08-10 — A per-run artefact does not live in the repository root
 
-**Decision.** `pipeline.json` moves to `docs/superpowers/pipeline/<date>.json`,
+**Decision.** `pipeline.json` moves to `docs/evidence/pipeline/<date>.json`,
 with a README saying what those files are.
 
 **Why.** A file called `pipeline.json` in the root reads as configuration. It
@@ -156,7 +156,7 @@ policy.
 ## 2026-08-10 — The repository carries its own instruction file
 
 **Decision.** Add `CLAUDE.md`, plus the two pipeline ledgers
-(`docs/superpowers/backlog.md`, `docs/superpowers/verification.md`).
+(`docs/evidence/backlog.md`, `docs/evidence/verification.md`).
 
 **Why.** Every rule this repo depends on — DOCMAP as the propagation matrix, the
 retro's standing instructions, the four-command gate, one channel per agent —
