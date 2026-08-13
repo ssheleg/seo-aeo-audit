@@ -711,7 +711,7 @@ _DEFECT_COUNT_HOMES = (
     (_LEDGER, r"\*\*(\S+) defects\.\*\*"),
     (_LEDGER, r"gate is green against all (\S+)\s"),
     (os.path.join("docs", "audit", "2026-08-10-improvement-plan.md"), r"ledger's (\S+) rows"),
-    (os.path.join("docs", "superpowers", "retro.md"), r"exited 0 against (\S+) defects"),
+    (os.path.join("docs", "evidence", "retro.md"), r"exited 0 against (\S+) defects"),
     ("CHANGELOG.md", r"\*\*(\S+) defects\*\*"),
     ("CHANGELOG.md", r"gate was green against all (\S+)\."),
 )
