@@ -399,6 +399,37 @@ on every URL scored 100%.
 | K-B4 | Nothing compares a JSON-LD `Offer`/`AggregateOffer` price against the page's own rendered price. `page_audit.py` has `jsonld-price-parity` for the page; the equivalent for a flat agent file (`llms.txt` restating a price) has no instrument at all — §4.4 was found by reading |
 | K-B5 | The contradiction check finds two `User-agent: *` records. It does not detect the more common CDN case: a managed block whose rules contradict the origin's for a **named** agent |
 
+### Coverage after v0.19.0 — what the skill still cannot answer mechanically
+
+The operator's goal is that this skill can close a scan like this one on its own.
+Of the 53 items, **41 are now produced by a bundled script**, 6 are answered by a
+track's reasoning without a script (and should stay that way), and **6 need an
+instrument the skill does not have**. The residue, with where each is tracked:
+
+| Grader item(s) | Why no script answers it | Tracked as |
+|---|---|---|
+| D1 developer-resource discoverability | A SERP observation. `tooling.md` routes it to a SERP source (Prowl / SearchAPI); scripting it would mean shipping a search vendor | Not a gap — route, don't script |
+| D2 Wikipedia / Wikidata | `entity-and-brand.md` owns it and it is not a fetch: notability is the constraint | Not a gap |
+| D5, D6, D7, U9 npm / PyPI / plugin.json / skills.sh / SDKs | Three third-party registry APIs, each rate-limited, and the answer is a business decision either way. Worth a `--registries` opt-in flag rather than a default probe | gap doc §4 **A4** |
+| U1, U10, U14 MCP server, product-vs-docs coverage, MCP error shapes | Needs a protocol client and a transport; the bundled scripts are stdlib-only single files by design. The server **card** is probed; the server is not | gap doc §4 **C2** (deliberate) |
+| U5 WebMCP in-page tools | Needs same-origin bundle discovery, a size cap, and a regex over the bundles. Shipping it half-done returns "not found" on every code-split site | gap doc §4 **A2** |
+| U12 NLWeb `/ask` and SSE | Two probes, cheap. Not written because the spec's adoption is thin enough that a false "absent" costs more than the check earns — revisit if adoption moves | **new, unassigned** |
+| U8 `/auth.md` structure grading | Presence is probed; the seven-section structure is not. The draft is moving, and a structural check against a moving draft produces false findings on a compliant file | gap doc §4 **A5** |
+| U6 Web Bot Auth key shapes | Presence is probed; whether the JWKs are `kty=OKP`, `crv=Ed25519` with `kid`/`nbf`/`exp` is not | gap doc §4 **A3** |
+| — advertised-URI reachability | K2's stale-file rule ("do not publish a file you cannot keep true") is doctrine enforced by nothing | gap doc §4 **A6** |
+| A5 `?mode=agent` | One scanner's convention with no specification. Adopting it would mean rewarding a site for guessing the same convention | gap doc §4 **C1** (deliberate) |
+
+Plus the five this audit added: **B-11** (`agent_traffic.py` — the missing half of
+K1, and the reason every Experiments row here is unrankable), **B-12** (near-miss
+probing beyond root files), **B-13** (does the documented API answer, not just
+exist), **B-14** (a price restated in a flat agent file), **B-15** (a managed
+robots block contradicting the origin for a *named* agent).
+
+**The honest summary: the skill can now produce every finding on this scan that is
+worth producing, plus six the scan could not.** What it cannot yet do is *size*
+any of them, because B-11 does not exist — and that, not the unprobed draft specs,
+is the gap that matters.
+
 ## 8. What could not be checked
 
 - **Agent and AI-crawler traffic.** No server-log access. This is the gap that
