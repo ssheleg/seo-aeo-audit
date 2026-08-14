@@ -149,6 +149,42 @@ jobs:
             echo "OK: tests catch the userDeclaredCanonical mis-spelling"
           fi
 
+      - name: Negative self-test (a redirect credited as the page asked for must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/redir-copy && cp -R . /tmp/redir-copy
+          python3 - <<'PY'
+          p = '/tmp/redir-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    return "root" if fin == "/" else "elsewhere"'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '    return "same"', 1))
+          PY
+          if python3 /tmp/redir-copy/test/test_agent_surface.py; then
+            echo "ERROR: a 301 to the homepage passed as the page that was requested"
+            exit 1
+          else
+            echo "OK: a redirect is not the page you asked for"
+          fi
+
+      - name: Negative self-test (HTML comments counted as visible prose must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/cmt-copy && cp -R . /tmp/cmt-copy
+          python3 - <<'PY'
+          p = '/tmp/cmt-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    body = re.sub(r"<!--.*?-->", " ", body, flags=re.S)\n'
+          assert old in s, "PLANT DID NOT LAND: the comment stripper is not where this plant reads it"
+          open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+          PY
+          if python3 /tmp/cmt-copy/test/test_agent_surface.py; then
+            echo "ERROR: a trust page graded on the length of its HTML comments"
+            exit 1
+          else
+            echo "OK: comments are not prose"
+          fi
+
       - name: Negative self-test (presence dressed up as effect must fail)
         run: |
           set -eu

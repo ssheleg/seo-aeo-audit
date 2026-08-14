@@ -8,6 +8,7 @@ blurred centroid keeps your pages out of the candidate pool entirely.
 ## Contents
 
 - [G1. Cross-surface consistency (the cheapest win in this track)](#g1-cross-surface-consistency-the-cheapest-win-in-this-track)
+- [G1b. The brand-name collision test — two queries, run them before anything else](#g1b-the-brand-name-collision-test--two-queries-run-them-before-anything-else)
 - [G2. Ghost citations — cited but not recommended](#g2-ghost-citations--cited-but-not-recommended)
 - [G3. Knowledge-graph plumbing](#g3-knowledge-graph-plumbing)
 - [G3b. Discovery is fragmented — audit where the audience actually is](#g3b-discovery-is-fragmented--audit-where-the-audience-actually-is)
@@ -46,6 +47,55 @@ that collapse as one consistent statement. Labs do not publish how live search
 engines rank and select sources, so this is inference from dataset papers, not a
 measured effect (HYPOTHESIS, 2026-06). Never sell it as a mechanism; the
 retrieval-layer arguments above stand on their own.
+
+## G1b. The brand-name collision test — two queries, run them before anything else
+
+G1 assumes the models have the wrong description of you. This test asks a prior
+question: **do they think you are someone else?** It costs two searches and it
+decides which half of this track is worth doing at all.
+
+Run both, in an incognito or API context, with the locale and date recorded:
+
+| Query | What it establishes |
+|---|---|
+| the unqualified brand name (`Acme`) | whether the brand string resolves to you at all |
+| the exact domain (`acme.com`) | whether the site is indexed and ranks for its own address |
+
+Four outcomes, and they need four different plans:
+
+| Unqualified | Exact domain | Diagnosis | What to do |
+|---|---|---|---|
+| ranks | ranks | the brand is yours | ordinary G1 consistency work |
+| **absent** | **ranks** | **name collision** — indexation is fine, identity is not | the ladder below; do not spend on indexation |
+| absent | absent | an indexation or penalty problem, not a brand one | back to tracks A and I before anything here |
+| ranks, wrong entity described | ranks | the models merged you with a same-named entity | G1, plus `sameAs` and one qualified name |
+
+**The second row is the one audits misread**, because every technical signal looks
+healthy. A site can be perfectly indexed, ranked #1 for its own domain, and
+entirely absent from its own brand name — because older companies share the string
+on other TLDs. No file fixes that, and every hour spent on discovery documents
+while it is true is an hour spent on the wrong problem.
+
+When a collision is confirmed, record **who owns the name** before proposing
+anything: for each result in the top ten, the domain, whether it is a competitor
+or an aggregator, and how old and how linked it is. That inventory decides whether
+the name is contestable at all. Usually it is not, and the honest plan says so:
+
+1. **Qualify the name and use one form everywhere** — the site's own `<h1>`,
+   `Organization.name`, the app-store listing, review profiles, social bios.
+   Consistency is what lets a model treat those surfaces as one entity (G1).
+2. **Corroborate it** — `sameAs` to profiles that are genuinely yours (G3), then a
+   Wikidata item once there is external evidence to cite. A `sameAs` carrying one
+   entry corroborates nothing.
+3. **Stop paying for the unqualified query.** Against older operators on the same
+   string it is not winnable, and the demand that converts is non-branded anyway.
+   Say that in the report rather than filing a ticket nobody can close.
+
+Not scriptable in the bundled tools — it needs a search API — so it is a **manual
+step with a recorded date and locale**, and its output is the result list in the
+audit, not a claim about it. Rung 5 (third-party index): `CONFIRMED` that the
+domain was absent from that SERP on that date, `HYPOTHESIS` for any remedy's
+effect.
 
 ## G2. Ghost citations — cited but not recommended
 

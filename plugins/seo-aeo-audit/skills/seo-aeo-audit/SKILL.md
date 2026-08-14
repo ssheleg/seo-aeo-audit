@@ -170,6 +170,16 @@ A third-party "agent-readiness score" is a checklist generator, never a target â
 misleads, and where such a grader contradicts `references/myths.md`, the myth
 guard wins.
 
+Its highest-value check is also its cheapest, and it belongs to tracks C and F as
+much as to K: **read the server-rendered root and ask which conventional entry
+points it links to.** On a client-rendered site the API docs, the sign-up and the
+contact page are in the navigation, work perfectly in a browser, and are absent
+from the document every crawler, answer engine and agent actually reads (K2b).
+Before any of it, run the two-query brand-collision test in
+[entity-and-brand.md](references/entity-and-brand.md) G1b: a site that is absent
+from its own brand name while ranking #1 for its own domain has an identity
+problem that no file in this track fixes.
+
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
 its own ranking pass, its own gate (two metatags, without which no card renders at
 all) and its own freshness curve, so a site where Discover is a material traffic

@@ -40,7 +40,7 @@ deliberately not covered, with the reason in §4.
 | D1 | Developer resource discoverability (name-based search finds your API docs) | partial — tracks D/G own query coverage and brand, not the developer subset | K2 + track D. Not scriptable: it is a SERP observation |
 | D2 | Wikipedia / Wikidata entity, P856 → the domain | **covered** — `entity-and-brand.md` sizes both, including Wikidata at ~half a Wikipedia article's pull at a far lower bar | unchanged |
 | D3 | ARD catalog at `/.well-known/ai-catalog.json` | absent | K2 · script |
-| D4 | Brand-name search returns the domain | **covered** — `entity-and-brand.md` | unchanged |
+| D4 | Brand-name search returns the domain | **covered** — `entity-and-brand.md` | **G1b** — the two-query collision test, added because the covered version had no procedure |
 | D5 | Listed in the ChatGPT app / connector directory | absent | K9 bucket 3 — a submission, not a ticket |
 | D6 | `robots.txt` AI-crawler policy | partial — `technical-checks.md` owns robots syntax; the three-way AI split was missing | K2a · script |
 | D7 | npm / PyPI SDK package | absent | K8 `K-15` — a maintenance commitment |
@@ -52,14 +52,14 @@ deliberately not covered, with the reason in §4.
 
 | # | Grader check | Before | Now |
 |---|---|---|---|
-| A1 | Developer portal at `/developers` | partial — `architecture-and-equity.md` owns hubs, not this one | K5 |
+| A1 | Developer portal at `/developers` | partial — `architecture-and-equity.md` owns hubs, not this one | K5 + **K2b · script** (probes `/developers`, `/docs`, `/api`, `/api-docs`) |
 | A2 | Agent instruction / "when to use this" in `llms.txt` | absent | K2 · script (it greps for the section, not just the file) |
 | A3 | Agent Skills index `/.well-known/agent-skills/index.json` | absent | K2 · script |
 | A4 | A2A agent card `/.well-known/agent-card.json` | absent | K2 · script |
 | A5 | MCP well-known discovery | absent | K2 · script |
 | A6 | `?mode=agent` view | absent | **out** — §4 |
 | A7 | Markdown URL fallback (`/index.md`) | **refuted** — `myths.md` row 2 | K3, bounded: the myth stands for *being found*, the twin is for *being read* |
-| A8 | API docs linked from the homepage | partial — internal linking is track C, but not "does the SSR HTML carry the link" | K2 + track C |
+| A8 | API docs linked from the homepage | partial — internal linking is track C, but not "does the SSR HTML carry the link" | **K2b · script** — generalized to every conventional entry point, read from the server-rendered root |
 | A9 | skills.sh skill quality | absent | K9 bucket 3 |
 | A10 | JSON-LD `sameAs` entity linking | **covered** — `entity-and-brand.md` | unchanged + script probes it |
 | A11 | Schema type breadth | **covered** — `aeo-geo.md`, `onpage-checks.md` | unchanged + script probes it, **with the one-url caveat** |
@@ -70,7 +70,7 @@ deliberately not covered, with the reason in §4.
 | A16 | Sitemap `lastmod` freshness | **covered** — `technical-checks.md` | unchanged + script reports the percentage |
 | A17 | Speakable markup | partial — `aeo-geo.md` mentions it | script probes it; tier stays `HYPOTHESIS` |
 | A18 | Organization schema completeness (address, contactPoint) | **covered** — `entity-and-brand.md` | unchanged + script probes it |
-| A19 | Trust anchor pages (`/about`, `/contact`, `/privacy`) | **covered** — `entity-and-brand.md`, `demand-and-conversion.md` | unchanged |
+| A19 | Trust anchor pages (`/about`, `/contact`, `/privacy`) | **covered** — `entity-and-brand.md`, `demand-and-conversion.md` | unchanged + **K2b · script** measures each one's server-rendered length with comments stripped |
 | A20 | `rel="alternate" type="text/markdown"` advertisement | absent | K3 · script — including whether the advertised URL *actually* serves markdown |
 | A21 | Markdown agent docs at a root path | **refuted** as a GEO tactic | K3, bounded |
 | A22 | Markdown content negotiation + `Vary: Accept` | absent | K3 · script. The `Vary` half is `CONFIRMED`: without it a CDN serves the wrong variant |
@@ -164,6 +164,7 @@ Ordered by whether the skill can close it at all.
 | A5 | **`/auth.md` structure grading** — check the seven WorkOS sections and the spec anchor keywords are present, not just that the file exists | Cheap, but the draft is moving; a structural check against a moving draft produces false findings on a compliant file |
 | A6 | **Reachability sweep for advertised URIs** — `OPTIONS` every URI found in `agent_auth`, an agent card or an MCP server card, and fail the ones that 404 | K2's stale-file rule is stated as doctrine and enforced by nothing. This is the check that makes "do not publish a file you cannot keep true" real |
 | A7 | **A `--page` sweep** — accept a URL list so the markup checks run per template in one invocation | Today the one-url caveat is stated; the ergonomics still push toward running it once on the homepage, which is exactly the mistake the caveat warns about |
+| A8 | **Redirect-chain reporting for every probe, not just entry points** — the `.well-known` and markdown checks still credit a followed redirect | The entry-point probe now compares final vs requested URL; the other probes do not. Same defect class, narrower blast radius, so it is listed rather than rushed |
 
 ### B. Should cover, and nothing does yet
 

@@ -168,6 +168,67 @@ check(ag.looks_like_markdown("# Title\n\ntext", "text/plain") is True,
 check(ag.looks_like_markdown("<!doctype html><html>", "text/plain") is False,
       "an app shell is not a markdown twin, whatever the advertisement says")
 
+# ── entry points: the link that only exists after hydration ─────────────────
+ROOT = """<html><body>
+<a href="/pricing">Pricing</a>
+<a href="/de/api">API</a>
+<a href="https://example.com/terms">Terms</a>
+<a href="https://elsewhere.test/api">Their API</a>
+<a href="#top">Top</a><a href="mailto:a@b.c">Mail</a>
+<a href="relative/thing">Relative</a>
+<a href="/blog/?utm=x#frag">Blog</a>
+</body></html>"""
+links = ag.same_origin_links(ROOT, "https://example.com")
+check("/pricing" in links, "a plain absolute-path link must be collected")
+check("/api" in links,
+      "a locale-prefixed link must count as a link to the unprefixed path — otherwise a "
+      "nine-locale site reports a false gap per locale")
+check("/terms" in links, "a same-origin absolute URL must be collected")
+check(not any("elsewhere" in x for x in links), "off-site links say nothing about reachability")
+check("/blog" in links, "query and fragment must be stripped before comparison")
+check("#top" not in links and not any("mailto" in x for x in links),
+      "in-page and mailto links are not navigation")
+check(not any(x.startswith("relative") for x in links),
+      "a page-relative link cannot be resolved from the root document alone")
+
+# ── visible text: the comment trap ──────────────────────────────────────────
+# The measurement that produced a wrong number in a real audit: a page whose HTML
+# comments carried 1,666 characters read as 772 characters of prose against a real
+# 482. A trust-page length check that counts comments grades boilerplate.
+# The `>` in the middle is the whole mechanism: a naive `<[^>]+>` sweep swallows a
+# comment only while the comment contains no `>` of its own. One arrow in one build
+# note is enough for the rest to leak into the word count as prose — which is what
+# happened on the real page (three comments, 1,666 characters, 290 of them leaking).
+commented = ("<html><body><!-- fetch as print media -> then promote it to all media "
+             + ("boilerplate " * 40) + "--><p>Short.</p></body></html>")
+check(ag.visible_text_length(commented) < 20,
+      f"HTML comments must not count as visible text; got {ag.visible_text_length(commented)}. "
+      f"A trust-page length check that counts build notes grades boilerplate")
+check(ag.visible_text_length("<style>p{color:red}</style><script>var a=1</script><p>Hi there</p>") == 8,
+      "script and style contents are not visible text")
+
+# ── a 301 to the homepage is not a page ─────────────────────────────────────
+# urlopen follows redirects, so a probe can report "200, 1,564 characters" while
+# describing the homepage. /about-us did exactly that on a live site, and the
+# instrument reported an About page that does not exist.
+bounced = ag.Probe("https://example.com/about-us", 200, "text/html", "<html/>",
+                   final_url="https://example.com/")
+check(ag.landed_where(bounced, "https://example.com") == "root",
+      "a redirect to the site root must be reported as root, never as the requested page")
+straight = ag.Probe("https://example.com/api", 200, "text/html", "<html/>",
+                    final_url="https://example.com/api")
+check(ag.landed_where(straight, "https://example.com") == "same", "a direct 200 lands on itself")
+moved = ag.Probe("https://example.com/docs", 200, "text/html", "<html/>",
+                 final_url="https://example.com/api")
+check(ag.landed_where(moved, "https://example.com") == "elsewhere",
+      "a redirect to another path is neither the page asked for nor the root")
+trailing = ag.Probe("https://example.com/api", 200, "text/html", "<html/>",
+                    final_url="https://example.com/api/")
+check(ag.landed_where(trailing, "https://example.com") == "same",
+      "a trailing slash is not a redirect to somewhere else")
+check(ag.Probe("u", 200).final_url == "u",
+      "a probe with no recorded final url reports the url it asked for, never empty")
+
 # ── a probe that never answered is not a measurement ─────────────────────────
 dead = ag.Probe("https://nope.invalid/", None, error="dns failure")
 check(dead.answered is False, "a probe with no status must not read as answered")
@@ -197,6 +258,12 @@ for code in ("wellknown-absent", "llms-txt-absent", "markdown-no-negotiation",
 # ...and the converse: a soft 404 is broken for every consumer, agent or not.
 check(ag.FINDING_TIERS["agent-404-soft"] == "CONFIRMED",
       "a 200 for a missing page is a defect, not a hypothesis")
+for code in ("entry-point-unlinked", "entry-point-bounces-to-root"):
+    check(ag.FINDING_TIERS[code] == "CONFIRMED",
+          f"{code} is an observation about this site's own HTML, not a bet on agent "
+          f"behaviour — it must not be discounted in the triage formula")
+check(ag.FINDING_TIERS["trust-anchor-thin"] == "HYPOTHESIS",
+      "the 500-character bar is a convention, not a measured threshold")
 
 # ── the report must state its own blind spots ────────────────────────────────
 rendered = ag.render({"origin": "https://e.com", "checks": [], "findings": []})

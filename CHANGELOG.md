@@ -51,6 +51,36 @@ never probed. Two blind spots travel in every report: **one url is not a site**
 product templates carry `Product`, `Offer`, `FAQPage` and `HowTo` — reproduced
 live), and server-rendered HTML only, the same blindness `page_audit.py` carries.
 
+**The check that turned out to matter most is also the cheapest, and it is the
+one no scanner had run: read the SERVER-RENDERED root and list which conventional
+entry points it links to.** On a client-rendered site the API docs, the sign-up
+and the contact page sit in the navigation, work in every browser, and are absent
+from the document a crawler, an answer engine or an agent actually reads. On the
+site that triggered this release the developer surface — an OpenAPI spec, a
+copy-paste agent skill, a full documentation page — was reachable from the root by
+nothing that does not execute JavaScript. K2b owns the reasoning, `agent_surface.py`
+prints the table, and locale prefixes are normalized so a nine-locale site does not
+report the same gap nine times.
+
+**And the instrument produced a false finding on its first live run, which is now
+its own guard.** `urlopen` follows redirects, so probing `/about-us` returned
+`200` with a title and 1,564 characters — all of it the homepage, because the path
+is a `301` to `/`. The About page does not exist and the check said it did. Every
+entry-point probe now compares the final URL against the requested path: a
+redirect to the site root reads as *the page does not exist*, which is what it
+means, and `entry-point-bounces-to-root` is `CONFIRMED` rather than a guess. The
+same run found the trust-page length check counting HTML comments as prose —
+1,666 comment characters inflated one page's 482 real characters to 772, turning a
+page that fails the 500-character convention into one that passes it.
+
+**`entity-and-brand.md` G1b — the two-query brand-collision test**, added because
+the largest finding on that site was not in the agent surface at all. A clean
+search for the brand name returned four other operators and not the domain; the
+exact-domain query returned it first. Those two facts together are a *name
+collision*, not an indexation problem, and they need opposite plans — the table in
+G1b routes all four outcomes, and says plainly when the unqualified brand query is
+not winnable and the honest recommendation is to stop paying for it.
+
 **One confirmed defect, found by running the skill rather than by reading it.**
 `preflight.py` probed `https://searchconsole.googleapis.com/v1/sites` for the
 property list. That path does not exist — `sites` lives under `/webmasters/v3`,

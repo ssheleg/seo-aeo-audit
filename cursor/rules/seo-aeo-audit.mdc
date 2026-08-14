@@ -130,9 +130,15 @@ optimization, cause before prescription. Step 13 is conditional and runs last.
     citations alone; cross-check GSC against analytics, logs and an independent
     tracker before calling anything an algorithmic hit.
 13. **Agent surface** — only if the site sells something an agent could buy, call
-    or automate; skip it for a content site. Ship the parts that are true whether
-    or not agents ever arrive: a real 404 status for unknown paths (a `200` app
-    shell tells every consumer that every path exists), a unique `operationId` and
+    or automate; skip it for a content site. Start with the check that is cheapest
+    and most often missed: **read the SERVER-RENDERED root and list which
+    conventional entry points it links to** (`/api`, `/register`, `/about`,
+    `/contact`). On a client-rendered site those links are added at hydration, work
+    in every browser, and are absent from the document a crawler or an agent reads.
+    A `301` to the homepage is not a page, however green a redirect-following
+    scanner reports it. Then ship the parts that are true whether or not agents
+    ever arrive: a real 404 status for unknown paths (a `200` app shell tells every
+    consumer that every path exists), a unique `operationId` and
     a description on every OpenAPI operation (that is the function schema an LLM
     generates), rate-limit headers with `Retry-After`, and a `401` carrying
     `WWW-Authenticate: Bearer resource_metadata="…"` pointing at RFC 9728

@@ -113,13 +113,17 @@ python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --str
 
 ## agent_surface.py
 
-`scripts/agent_surface.py` collects track K in one pass: the `.well-known`
-discovery set, `robots.txt` read as three separate decisions, Markdown content
-negotiation and its `Vary` header, RFC 8288 `Link` headers, the 404 shape,
-`<lastmod>` coverage, the JSON-LD a verifier looks for (`sameAs`, address,
-extended types, `speakable`), the OpenAPI properties that decide whether an LLM
-can generate a working function schema, and the auth-discovery chain on the host
-that actually serves the API.
+`scripts/agent_surface.py` collects track K in one pass: the **entry points a
+machine tries and whether the server-rendered root links to them**, the
+`.well-known` discovery set, `robots.txt` read as three separate decisions,
+Markdown content negotiation and its `Vary` header, RFC 8288 `Link` headers, the
+404 shape, `<lastmod>` coverage, the JSON-LD a verifier looks for (`sameAs`,
+address, extended types, `speakable`), the OpenAPI properties that decide whether
+an LLM can generate a working function schema, and the auth-discovery chain on the
+host that actually serves the API.
+
+`--expect /status,/changelog` adds project-specific paths to the entry-point set;
+locale prefixes are normalized, so `/de/api` counts as a link to `/api`.
 
 ```bash
 python3 "$SKILL_DIR/scripts/agent_surface.py" --origin https://example.com
@@ -143,6 +147,12 @@ finding the moment it is forgotten:
   anything sitewide. This is the single most common false finding third-party
   agent-readiness scanners produce (K7).
 - **Server-rendered HTML only**, the same blindness `page_audit.py` carries.
+
+**A redirect that answers 200 is not the page you asked for.** `urlopen` follows
+redirects, so a probe of `/about-us` can report `200` with a title and a word count
+while describing the homepage — this script did exactly that on a live site before
+the check compared the final URL against the requested path. A `301` to the site
+root now reads as *the page does not exist*, which is what it means.
 
 A run where every request failed at the network layer exits `1`: that report
 measures the connection, not the site.

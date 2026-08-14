@@ -93,6 +93,11 @@ FINDING_TIERS = {
     "jsonld-no-address": "STUDY",
     "jsonld-narrow-types": "STUDY",
     "jsonld-no-speakable": "HYPOTHESIS",
+    "entry-point-unlinked": "CONFIRMED",
+    "entry-point-missing": "STUDY",
+    "trust-anchor-missing": "STUDY",
+    "trust-anchor-thin": "HYPOTHESIS",
+    "entry-point-bounces-to-root": "CONFIRMED",
 }
 
 # The three uses a robots.txt has to tell apart (agent-readiness.md K2a).
@@ -120,6 +125,28 @@ WELL_KNOWN = (
 BASELINE_TYPES = {"organization", "website", "webpage", "imageobject", "breadcrumblist",
                   "listitem", "contactpoint", "country"}
 
+# The addresses a machine tries before it asks anyone (agent-readiness.md K2b).
+# Alternates per role, most conventional first — the role is what matters, not the
+# spelling. A role is PRESENT if any alternate answers 200; probing stops there.
+#
+# `anchor` marks the roles a verifier reads to decide the business is real, which
+# is why they carry a length check as well as a status check.
+ENTRY_POINTS = (
+    ("developer docs", ("/api", "/docs", "/developers", "/api-docs", "/developer"), False),
+    ("sign-up", ("/register", "/signup", "/sign-up", "/join"), False),
+    ("pricing", ("/pricing", "/plans", "/plans-and-pricing"), False),
+    ("about", ("/about", "/about-us", "/company"), True),
+    ("contact", ("/contact", "/contact-us", "/support"), True),
+    ("privacy", ("/privacy", "/privacy-policy"), True),
+    ("terms", ("/terms", "/terms-of-service", "/tos"), True),
+)
+
+# The conventional bar third-party verifiers apply to a trust page. It is a
+# CONVENTION, not a measured threshold — the finding says so, and its tier is set
+# accordingly. The mechanism underneath it is real (entity-and-brand.md G3: brand
+# pages are the minimum viable entity definition); the number is not.
+TRUST_ANCHOR_MIN_CHARS = 500
+
 
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
@@ -142,13 +169,21 @@ class Probe:
     """One request and what came back. A probe that never ran is not evidence."""
 
     def __init__(self, url: str, status, ctype: str = "", body: str = "",
-                 headers=None, error: str = ""):
+                 headers=None, error: str = "", final_url: str = ""):
         self.url = url
         self.status = status
         self.ctype = ctype
         self.body = body
         self.headers = {k.lower(): v for k, v in (headers or {}).items()}
         self.error = error
+        # Where the request ACTUALLY landed. urlopen follows redirects, so a probe
+        # that reports 200 may be describing a completely different page — and it
+        # will describe it convincingly, with a title and a word count. Found by
+        # running this script against a live site: /about-us answered "200, 1564
+        # characters" and was a 301 to the homepage. An instrument that credits a
+        # redirect as the page you asked for manufactures the finding it exists to
+        # measure (non-negotiable #8).
+        self.final_url = final_url or url
 
     @property
     def answered(self) -> bool:
@@ -167,7 +202,8 @@ def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
         with urlopen(req, timeout=TIMEOUT) as r:
             raw = r.read(MAX_BYTES)
             return Probe(url, r.status, r.headers.get("Content-Type", ""),
-                         raw.decode("utf-8", "replace"), dict(r.headers))
+                         raw.decode("utf-8", "replace"), dict(r.headers),
+                         final_url=getattr(r, "url", "") or url)
     except HTTPError as e:
         raw = b""
         try:
@@ -327,6 +363,63 @@ def negotiation_verdict(probe: Probe) -> dict:
     }
 
 
+def same_origin_links(html: str, origin: str) -> set:
+    """Every same-origin path the SERVER-RENDERED html links to, normalized.
+
+    This is the whole point of the check it feeds: a link a framework adds during
+    hydration is not in this set, and a crawler, an answer engine and an agent all
+    read the document before that happens. Locale prefixes are stripped so
+    `/de/api` counts as a link to `/api` — otherwise a nine-locale site reports
+    seven false gaps.
+    """
+    origin = (origin or "").rstrip("/")
+    out = set()
+    for href in re.findall(r'<a\b[^>]*?href=["\']([^"\']+)["\']', html, re.I):
+        href = href.strip()
+        if href.startswith(("#", "mailto:", "tel:", "javascript:")):
+            continue
+        if href.startswith("http"):
+            if not origin or not href.startswith(origin):
+                continue          # off-site links say nothing about reachability
+            href = href[len(origin):] or "/"
+        elif not href.startswith("/"):
+            continue              # relative-to-page links: not resolvable here
+        path = href.split("?")[0].split("#")[0].rstrip("/") or "/"
+        # /de/api and /api are the same destination for this question.
+        m = re.match(r"^/([a-z]{2}(?:-[a-z]{2})?)(/.*)$", path)
+        if m:
+            out.add(m.group(2).rstrip("/") or "/")
+        out.add(path)
+    return out
+
+
+def landed_where(probe: Probe, origin: str) -> str:
+    """Did the probe land on the page it asked for? Returns a verdict string.
+
+    `same` — the final URL is the requested path.
+    `root` — it redirected to the site root. The page does NOT exist: a 301 to the
+             homepage is how a site says "no such page" while answering 200, and
+             every content measurement taken after that describes the homepage.
+    `elsewhere` — it redirected to some other path; a human decides whether that
+             still serves the role.
+    """
+    origin = (origin or "").rstrip("/")
+    req = urlparse(probe.url).path.rstrip("/") or "/"
+    fin = urlparse(probe.final_url or probe.url).path.rstrip("/") or "/"
+    if req == fin:
+        return "same"
+    return "root" if fin == "/" else "elsewhere"
+
+
+def visible_text_length(html: str) -> int:
+    """Characters a reader sees, script/style stripped. Server-rendered only."""
+    body = re.sub(r"<script\b.*?</script>", " ", html, flags=re.S | re.I)
+    body = re.sub(r"<style\b.*?</style>", " ", body, flags=re.S | re.I)
+    body = re.sub(r"<!--.*?-->", " ", body, flags=re.S)
+    text = re.sub(r"<[^>]+>", " ", body)
+    return len(re.sub(r"\s+", " ", text).strip())
+
+
 def looks_like_markdown(body: str, ctype: str) -> bool:
     """A markdown body leads with a heading; an app shell leads with a doctype."""
     if "text/markdown" in (ctype or "").lower():
@@ -341,7 +434,9 @@ def looks_like_markdown(body: str, ctype: str) -> bool:
 
 
 def collect(origin: str, api_origin: str = "", page: str = "",
-            spec_url: str = "", spec_obj: dict | None = None) -> dict:
+            spec_url: str = "", spec_obj: dict | None = None,
+            expect: tuple = ()) -> dict:
+    """`expect` adds project-specific entry points as (role, (paths,), is_anchor)."""
     origin = origin.rstrip("/") if origin else ""
     checks: list = []
     findings: list = []
@@ -407,6 +502,82 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                     "agent-readiness.md#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins")
         out["bot_ua_bytes"] = {"default": len(home.body) if home.answered else None,
                                "claudebot": len(bot.body) if bot.answered else None}
+
+        # --- 2b. entry points, and the link that only exists after hydration --
+        # The highest-value check in this script and the cheapest to get wrong:
+        # a link the framework adds during hydration is invisible to everything
+        # that reads the document, and it looks present to every human who opens
+        # the page in a browser. Reachability, not equity — track C owns equity.
+        if home.answered and home.body:
+            linked = same_origin_links(home.body, origin)
+            out["root_links"] = sorted(linked)
+            roles = []
+            for role, alternates, is_anchor in ENTRY_POINTS + tuple(expect):
+                found_path, found_probe, last = "", None, None
+                bounced = []          # alternates that 200'd by redirecting to the root
+                for alt in alternates:
+                    last = fetch(origin + alt)
+                    if not (last.answered and last.status == 200):
+                        continue
+                    where = landed_where(last, origin)
+                    if where == "root":
+                        # A 301 to the homepage is not a page. Counting it is how a
+                        # checklist reports an About page that does not exist.
+                        bounced.append(alt)
+                        continue
+                    found_path, found_probe = alt, last
+                    note(f"entry point: {role}", last,
+                         "" if where == "same" else f"redirected to {_flat(last.final_url, 80)}")
+                    break
+                if not found_path:
+                    detail = (f"{', '.join(bounced)} → 301 to the site root, which is not a page"
+                              if bounced else
+                              f"none of {', '.join(alternates) or '(no paths given)'} answered 200")
+                    note(f"entry point: {role}",
+                         last or Probe(origin + (alternates[0] if alternates else "/"), None),
+                         detail)
+                rec = {"role": role, "path": found_path or None,
+                       "redirects_to_root": bounced or None,
+                       "linked_from_root": found_path in linked if found_path else None,
+                       "chars": visible_text_length(found_probe.body) if found_probe else None}
+                roles.append(rec)
+
+                if bounced and not found_path:
+                    add("medium", "entry-point-bounces-to-root",
+                        f"{role}: {_flat(', '.join(bounced))} answers 200 only by redirecting "
+                        "to the site root. The page does not exist, and any scanner that "
+                        "follows redirects will report that it does",
+                        "agent-readiness.md#k2b-the-entry-points-a-machine-tries-and-the-link-that-only-exists-after-hydration")
+
+                if not found_path:
+                    if is_anchor:
+                        add("medium", "trust-anchor-missing",
+                            f"no {role} page — tried {_flat(', '.join(alternates))}. A verifier "
+                            "deciding whether this business is real has nothing to read",
+                            "entity-and-brand.md")
+                    else:
+                        add("low", "entry-point-missing",
+                            f"no {role} page at any conventional address "
+                            f"({_flat(', '.join(alternates))}) — an agent guessing has nowhere "
+                            "to guess",
+                            "agent-readiness.md#k2b-the-entry-points-a-machine-tries-and-the-link-that-only-exists-after-hydration")
+                    continue
+
+                if not rec["linked_from_root"]:
+                    add("high", "entry-point-unlinked",
+                        f"{role} lives at {found_path} and answers 200, but the "
+                        "SERVER-RENDERED homepage links to it nowhere. If it is in the "
+                        "navigation, that navigation is client-rendered — a crawler, an "
+                        "answer engine and an agent all read the document before hydration",
+                        "agent-readiness.md#k2b-the-entry-points-a-machine-tries-and-the-link-that-only-exists-after-hydration")
+                if is_anchor and rec["chars"] is not None and rec["chars"] < TRUST_ANCHOR_MIN_CHARS:
+                    add("low", "trust-anchor-thin",
+                        f"{found_path} carries {rec['chars']} characters of server-rendered "
+                        f"text, under the {TRUST_ANCHOR_MIN_CHARS}-character bar verifiers "
+                        "conventionally apply. The bar is a convention, not a measured "
+                        "threshold; the mechanism under it is entity resolution",
+                        "entity-and-brand.md")
+            out["entry_points"] = roles
 
         # --- 3. RFC 8288 Link headers ---------------------------------------
         link = home.headers.get("link", "") if home.answered else ""
@@ -586,6 +757,23 @@ def render(data: dict) -> str:
                          f"{_flat(c['status'], 20)} | {_flat(c.get('content_type') or '-', 40)} |")
         lines.append("")
 
+    eps = data.get("entry_points")
+    if eps:
+        lines += ["## Entry points, read from the server-rendered root", "",
+                  "| role | path | answers 200 | linked from the root | visible chars |",
+                  "|---|---|---|---|---|"]
+        for e in eps:
+            linked = ("—" if e["linked_from_root"] is None
+                      else ("yes" if e["linked_from_root"] else "**NO**"))
+            path = e["path"] or (f"{', '.join(e['redirects_to_root'])} → 301 to /"
+                                 if e.get("redirects_to_root") else "(none found)")
+            lines.append(f"| {_flat(e['role'], 24)} | {_flat(path, 46)} | "
+                         f"{'yes' if e['path'] else 'no'} | {linked} | "
+                         f"{e['chars'] if e['chars'] is not None else '—'} |")
+        lines += ["", "\"Linked from the root\" reads the HTML as delivered. A link a "
+                      "framework adds during hydration is **not** in that document, and "
+                      "every non-browser consumer stops there.", ""]
+
     api = data.get("api_behaviour")
     if api:
         lines += ["## API response contract", "",
@@ -637,6 +825,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--origin", help="site origin, e.g. https://example.com")
     ap.add_argument("--api-origin", default="", help="host that serves the API")
     ap.add_argument("--page", default="", help="url to read markup from (default: origin root)")
+    ap.add_argument("--expect", default="",
+                    help="comma-separated extra paths that must be reachable from the "
+                         "server-rendered root, e.g. /status,/changelog")
     ap.add_argument("--openapi", default="", help="url of an OpenAPI document")
     ap.add_argument("--openapi-file", default="", help="local OpenAPI document (offline)")
     ap.add_argument("--api-probe", default="",
@@ -647,7 +838,9 @@ def main(argv: list[str]) -> int:
     if not (args.origin or args.openapi or args.openapi_file):
         ap.error("nothing to probe: pass --origin, --openapi or --openapi-file")
 
-    data = collect(args.origin or "", args.api_origin, args.page)
+    expect = tuple((p.strip(), (p.strip(),), False)
+                   for p in args.expect.split(",") if p.strip().startswith("/"))
+    data = collect(args.origin or "", args.api_origin, args.page, expect=expect)
 
     spec_obj = None
     if args.openapi_file:

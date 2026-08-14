@@ -18,6 +18,7 @@ ignore the whole track.
 
 - [K1. The rule that keeps this track honest](#k1-the-rule-that-keeps-this-track-honest)
 - [K2. Discovery — the well-known set, and what each spec actually says](#k2-discovery--the-well-known-set-and-what-each-spec-actually-says)
+- [K2b. The entry points a machine tries, and the link that only exists after hydration](#k2b-the-entry-points-a-machine-tries-and-the-link-that-only-exists-after-hydration)
 - [K3. Markdown representations — where the myth ends and the contract begins](#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins)
 - [K4. The API contract an LLM has to call through](#k4-the-api-contract-an-llm-has-to-call-through)
 - [K5. Agent authentication — the discovery chain, not the login page](#k5-agent-authentication--the-discovery-chain-not-the-login-page)
@@ -115,6 +116,63 @@ about training data as a technical finding.
 `Schemamap` / NLWeb schema feeds (`schemamap:` directive in `robots.txt`, pointing
 at an XML map of JSONL/RSS structured-data feeds) sit in the same file and are
 `HYPOTHESIS`-tier: the spec exists, adoption is thin.
+
+### K2b. The entry points a machine tries, and the link that only exists after hydration
+
+Before an agent reads any of the files above, it does what a person does: it opens
+the root and looks for the obvious address. Two failures live here, and both are
+invisible to anyone testing in a browser.
+
+**Failure one — the hydration gap.** On a client-rendered site the header and
+footer are assembled by JavaScript. The link to the API docs is in the navigation,
+it works, every human sees it — and it is **not in the document the server sent**.
+A crawler, an answer engine and an agent all read that document and stop. The
+symptom is a page that is in the sitemap, returns 200, is linked from the site's
+own menu, and is reachable from nothing.
+
+Check it by reading the **server-rendered** root HTML and extracting same-origin
+`<a href>` values, then asking which conventional entry points are missing from
+that set. `scripts/agent_surface.py` does this and prints the table. Note two
+mechanics that decide whether the result is trustworthy:
+
+- **Normalize locale prefixes.** `/de/api` is a link to `/api` for this question.
+  Without that, a nine-locale site reports the same gap nine times.
+- **This is reachability, not equity.** How much authority flows through a link
+  is track C ([architecture-and-equity.md](architecture-and-equity.md)). Whether
+  the link exists in the delivered bytes at all is this check, and a page can pass
+  one and fail the other.
+
+**Failure two — the redirect that answers 200.** `/about-us` returns `301` to the
+homepage. Any probe that follows redirects — `curl -L`, `urllib.urlopen`, most
+scanners — then reports `200`, a title, and a healthy word count, all describing
+the homepage. The About page does not exist and the check says it does.
+
+> A redirect to the site root is how a site says "no such page" while answering
+> 200. Compare the **final** URL against the requested path before believing any
+> measurement taken from the body. This instrument had the bug and reported an
+> About page with 1,564 characters that was never there.
+
+The same rule covers `elsewhere` redirects: `/docs → /api` is fine and worth
+recording, but the finding must name where it landed rather than silently
+crediting the address that was asked for.
+
+**The roles worth probing**, each with its conventional alternates — the role
+matters, the spelling does not:
+
+| Role | Tried | Why an agent wants it |
+|---|---|---|
+| developer docs | `/api`, `/docs`, `/developers`, `/api-docs` | the contract |
+| sign-up | `/register`, `/signup`, `/join` | the credential |
+| pricing | `/pricing`, `/plans` | can it afford the call |
+| about · contact · privacy · terms | `/about`, `/about-us`; `/contact`, `/support`; `/privacy`; `/terms` | is this business real |
+
+The last row is the **trust-anchor** set, and it carries a length check as well as
+a status check: a page that exists and says forty words defines no entity
+([entity-and-brand.md](entity-and-brand.md) G3 owns the mechanism). The
+500-character bar third-party verifiers apply is a **convention, not a measured
+threshold** — report it as one, and measure the text with HTML comments stripped.
+Counting comments is not a hypothetical: it inflated a real trust-page measurement
+by 60% and turned a page that fails the bar into one that passes it.
 
 ## K3. Markdown representations — where the myth ends and the contract begins
 
@@ -273,6 +331,9 @@ column is the honest tier of "shipping this changes an outcome".
 |---|---|---|---|---|
 | K-01 | Real `404` status for unknown paths | one request | `CONFIRMED` — an agent that believes every path exists is broken by it | 1 |
 | K-02 | `operationId` + description on every operation | parse the spec | `CONFIRMED` — function generation fails without it | 1 |
+| K-02a | Every conventional entry point linked from the **server-rendered** root | read the root HTML | `CONFIRMED` — a link added at hydration is absent for every non-browser consumer | 1 |
+| K-02b | No entry point that answers 200 only by redirecting to the root | compare final vs requested URL | `CONFIRMED` — the page does not exist | 1 |
+| K-02c | Trust anchors present, and their server-rendered text measured with comments stripped | one request each | `STUDY` for presence · `HYPOTHESIS` for the 500-char convention | 2 |
 | K-03 | Rate-limit headers + `Retry-After` | one request | `STUDY` — documented client behaviour across API vendors | 2 |
 | K-04 | `WWW-Authenticate` with `resource_metadata` on `401` | one request | `STUDY` — the discovery chain is specified | 1 |
 | K-05 | RFC 9728 protected-resource metadata | one request | `STUDY` | 1 |
@@ -294,7 +355,7 @@ column is the honest tier of "shipping this changes an outcome".
 Three buckets, in this order, and the order is the argument:
 
 1. **Gains — specified, cheap, and true regardless of agent traffic.** K-01 to
-   K-05 and K-07. These are correctness fixes wearing an agent-readiness label: a
+   K-05 (including K-02a/b/c) and K-07. These are correctness fixes wearing an agent-readiness label: a
    `200` for a missing page is a bug for search engines too, an operation with no
    `operationId` is a defect in your own documentation, and a `401` that says
    nothing is a support ticket waiting to happen. Ship them without waiting for a
