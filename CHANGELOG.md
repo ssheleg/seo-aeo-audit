@@ -1,5 +1,83 @@
 # Changelog
 
+## v0.18.0 — 2026-08-14
+
+An external agent-readiness scanner graded a site this skill had already audited
+twice and returned 58 findings across four layers. Roughly half of them named
+things none of the ten tracks looks at: `.well-known` discovery documents, OAuth
+metadata an agent reads before it ever sees a login screen, `WWW-Authenticate`
+pointing at RFC 9728, rate-limit headers, whether an OpenAPI operation carries the
+`operationId` an LLM turns into a function name. The skill was not wrong about
+those; it had nothing to say.
+
+**Track K — the agent surface — is the answer, and it arrives with the rule that
+keeps it from becoming a checklist.** Tracks A–J ask whether a retrieval system
+can fetch, read and quote a site. K asks whether an agent acting for a user can
+discover it, get a credential, call it, and recover when a call fails. It is
+**conditional**: run it only when the site sells something an agent could
+plausibly buy, call or automate.
+
+The rule, in `references/agent-readiness.md` K1: **presence is `CONFIRMED`, effect
+is mostly `HYPOTHESIS`.** One request proves a file is absent. Nothing here proves
+that publishing it brings anyone. So the cheap, specified fixes ship as Gains —
+a real 404 status, `operationId`s, rate-limit headers, a `401` that says where to
+look — while the draft-spec set ships as one Experiments batch whose success
+metric is *requests to those exact paths in 90 days*, and MCP servers, OAuth
+deployments and SDK fleets are written as business decisions with a trigger rather
+than as tickets. `test_agent_surface.py` enforces the split by name: five codes are
+required to be `HYPOTHESIS`, and a plant that promotes one to `CONFIRMED` fails CI.
+
+**Where a grader contradicts `myths.md`, the myth guard wins.** Scanners award
+points for `llms.txt` and Markdown mirrors, which rows 1–2 refute with the numbers.
+Both rows keep their entries, and both now carry a boundary that names the one
+non-myth use precisely: they do not help a page get **found**; they can let an
+agent that **already arrived** read the canonical facts for fewer tokens. That is
+a serving decision, honest only when the Markdown is generated from the same
+source as the HTML, `Vary: Accept` is set wherever negotiation is on, and an
+advertised `rel="alternate"` actually resolves to Markdown. A full `.md` twin of
+every page is still the refuted version. K7 adds the reading protocol for such a
+score: absence findings are a to-do list to verify, the number is noise, and the
+prescriptions are claims to check.
+
+`scripts/agent_surface.py` collects the mechanical half in one pass — the
+`.well-known` set, `robots.txt` read as three separate decisions, Markdown
+negotiation and its `Vary`, RFC 8288 `Link` headers, the 404 shape, `<lastmod>`
+coverage, JSON-LD `sameAs` / address / extended types / `speakable`, the four
+OpenAPI properties function calling needs, and the auth-discovery chain on the
+host that actually serves the API. It prints the URL and status behind every
+check, because the failure it exists to prevent is a scanner reporting absence it
+never probed. Two blind spots travel in every report: **one url is not a site**
+(the "no extended schema types" verdict that means *on the homepage* while the
+product templates carry `Product`, `Offer`, `FAQPage` and `HowTo` — reproduced
+live), and server-rendered HTML only, the same blindness `page_audit.py` carries.
+
+**One confirmed defect, found by running the skill rather than by reading it.**
+`preflight.py` probed `https://searchconsole.googleapis.com/v1/sites` for the
+property list. That path does not exist — `sites` lives under `/webmasters/v3`,
+and only URL Inspection lives under `/v1` — so the API answered with a Google 404
+HTML page, and the gate classifier, written for the three ways this API says
+`403`, read it as `permission`. The check reported *no Search Console access* on a
+property the same credentials read perfectly through `gsc_pull.py`, which had the
+right base all along. It had been failing that way for every site, and a previous
+audit had already worked around it by hand with the wrong cause written down.
+Fixed, with a fifth gate — `quota-project` — because local ADC is refused by this
+API until a quota project is bound, and reading that as `permission` sends an
+auditor to a screen where no grant can help.
+
+Two guards were generalized in the same pass, both instances of the class the
+2026-08-10 audit named: a guard written against one home of a fact that lives in
+several. The reference-anchor check and the `FINDING_TIERS` coverage check now
+read every bundled script instead of `page_audit.py` alone, and the second one
+learned the inline-dict emitter shape as well as `add(sev, code, …)`.
+
+Also in this release: SKILL.md's step-0 paragraph lost a duplicated line that had
+survived a merge, and `references/preflight.md` lost the same botched split plus
+the orphaned sentence fragment its first section opened with.
+
+Gates, each run alone: `validate.py`, `plant_guard_test.py`, `test_page_audit.py`,
+`test_url_inspection.py`, `test_collectors.py`, `test_agent_surface.py`,
+`test_output_contracts.py`.
+
 ## v0.17.0 — 2026-08-14
 
 The pack had no guidance on how a sentence reads. `E4` priced machine-drafted

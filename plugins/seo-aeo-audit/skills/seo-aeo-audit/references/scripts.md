@@ -12,6 +12,7 @@ run.
 - [url_inspection.py](#url_inspectionpy) — the index's own answers, so a finding is CONFIRMED
 - [sitemap_audit.py](#sitemap_auditpy) — declared URLs clustered into template families
 - [psi_pull.py](#psi_pullpy) — field and lab, kept apart on purpose
+- [agent_surface.py](#agent_surfacepy) — track K: what a machine finds when it arrives alone
 
 ## gsc_pull.py
 
@@ -109,4 +110,40 @@ for a URL, that is reported as absent — not as a pass.
 python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml
 python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --strategy mobile
 ```
+
+## agent_surface.py
+
+`scripts/agent_surface.py` collects track K in one pass: the `.well-known`
+discovery set, `robots.txt` read as three separate decisions, Markdown content
+negotiation and its `Vary` header, RFC 8288 `Link` headers, the 404 shape,
+`<lastmod>` coverage, the JSON-LD a verifier looks for (`sameAs`, address,
+extended types, `speakable`), the OpenAPI properties that decide whether an LLM
+can generate a working function schema, and the auth-discovery chain on the host
+that actually serves the API.
+
+```bash
+python3 "$SKILL_DIR/scripts/agent_surface.py" --origin https://example.com
+python3 "$SKILL_DIR/scripts/agent_surface.py" --origin https://example.com \
+  --api-origin https://api.example.com --openapi https://example.com/openapi.json \
+  --api-probe https://api.example.com/v1/me
+python3 "$SKILL_DIR/scripts/agent_surface.py" --openapi-file ./spec.json --format json
+```
+
+`--format json` emits **one object**, not an array: the surface is a property of a
+site rather than of a list of pages. `data["findings"]` is the list.
+
+Three limits travel in every report, because each of them turns into a false
+finding the moment it is forgotten:
+
+- **Presence is `CONFIRMED`; effect is mostly `HYPOTHESIS`.** Every probe answers
+  "is it there", and that is all it answers. The tier that enters the triage
+  formula is the one on the *effect* — [agent-readiness.md](agent-readiness.md) K1.
+- **One URL is not a site.** Markup checks run against the URL you name. "No
+  extended types" means *on that page*; pass `--page` per template before writing
+  anything sitewide. This is the single most common false finding third-party
+  agent-readiness scanners produce (K7).
+- **Server-rendered HTML only**, the same blindness `page_audit.py` carries.
+
+A run where every request failed at the network layer exits `1`: that report
+measures the connection, not the site.
 

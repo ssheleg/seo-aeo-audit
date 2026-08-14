@@ -29,7 +29,7 @@ the instruments follow.
 
 `_flat` is duplicated in each script rather than imported, because the scripts are
 distributed as standalone files with no shared module. That makes it a fact with
-four homes, so `validate.py` counts them (CLAUDE.md rule 1).
+five homes, so `validate.py` counts them (CLAUDE.md rule 1).
 """
 from __future__ import annotations
 
@@ -68,6 +68,7 @@ pre = load("preflight")
 ui = load("url_inspection")
 psi = load("psi_pull")
 pa = load("page_audit")
+ags = load("agent_surface")
 
 # A Google error page: the thing that actually arrives, not a synthetic string.
 HOSTILE = (
@@ -78,7 +79,8 @@ HOSTILE = (
 
 # ── 1. every renderer flattens before it interpolates ────────────────────────
 for name, mod in (("preflight", pre), ("url_inspection", ui),
-                  ("psi_pull", psi), ("page_audit", pa)):
+                  ("psi_pull", psi), ("page_audit", pa),
+                  ("agent_surface", ags)):
     fn = getattr(mod, "_flat", None)
     if fn is None:
         failures.append(f"{name}.py must define _flat() — error text reaches its markdown raw")
@@ -159,5 +161,5 @@ if failures:
     for f in failures:
         print("  -", f)
     raise SystemExit(1)
-print("PASS: output contracts (flattening in 4 renderers, preflight table + stable "
+print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
       "denominator, exit status from the same predicate the report uses)")

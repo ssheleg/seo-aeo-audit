@@ -35,6 +35,9 @@ jobs:
       - name: Collector functional tests
         run: python3 test/test_collectors.py
 
+      - name: Agent-surface functional tests
+        run: python3 test/test_agent_surface.py
+
       - name: Cross-script output contracts
         run: python3 test/test_output_contracts.py
 
@@ -144,6 +147,43 @@ jobs:
             exit 1
           else
             echo "OK: tests catch the userDeclaredCanonical mis-spelling"
+          fi
+
+      - name: Negative self-test (presence dressed up as effect must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/tier-copy && cp -R . /tmp/tier-copy
+          python3 - <<'PY'
+          p = '/tmp/tier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '"wellknown-absent": "HYPOTHESIS",'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '"wellknown-absent": "CONFIRMED",', 1))
+          PY
+          if python3 /tmp/tier-copy/test/test_agent_surface.py; then
+            echo "ERROR: a draft spec's absence passed as a CONFIRMED defect"
+            exit 1
+          else
+            echo "OK: presence is not effect, and the suite says so"
+          fi
+
+      - name: Negative self-test (a finding with no declared tier must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/notier-copy && cp -R . /tmp/notier-copy
+          python3 - <<'PY'
+          p = '/tmp/notier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    "openapi-batch": "STUDY",\n'
+          assert old in s, "PLANT DID NOT LAND: openapi-batch tier not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+          PY
+          if python3 /tmp/notier-copy/test/validate.py && \
+             python3 /tmp/notier-copy/test/test_agent_surface.py; then
+            echo "ERROR: a finding shipped with no entry in FINDING_TIERS"
+            exit 1
+          else
+            echo "OK: the tier-coverage guard reads the second emitter shape too"
           fi
 
       - name: Negative self-test (dropping the blindness caveat must fail)

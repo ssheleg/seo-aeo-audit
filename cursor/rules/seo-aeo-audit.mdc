@@ -59,15 +59,16 @@ a finding only after you have established it could have seen the thing at all.
 | `gsc_pull.py` | queries, position split, cannibalization, the property's own CTR curve, branded split | the long tail past the API row cap; a decline shallower than the cliff threshold; the branded split without `--brand-terms`, which it refuses to guess |
 | `sitemap_audit.py` | declared URLs clustered into the template families the site actually ships | orphans — a sitemap holds no link graph, so that needs a crawl |
 | `psi_pull.py` | field (CrUX) and lab (Lighthouse), kept strictly apart | field data where CrUX has none — reported absent, never as a pass, and the lab score never stands in for it |
+| `agent_surface.py` | the agent surface: `.well-known` set, markdown negotiation and its `Vary`, `Link` headers, 404 shape, JSON-LD `sameAs`, OpenAPI function-calling readiness, the auth-discovery chain | effect — every probe answers *is it there*, which is not *does it work*; and one url is not a site |
 
 Absent field data, an unanswered inspection and a capped row set are each a gap in
 the report — never a zero, never a blank.
 
 ## Order of work
 
-These twelve steps are the working order, not the ten audit tracks — several
+These thirteen steps are the working order, not the eleven audit tracks — several
 steps serve the same track, and the point is the sequence: blockers before
-optimization, cause before prescription.
+optimization, cause before prescription. Step 13 is conditional and runs last.
 
 1. **Blockers**: manual action; `noindex` in the pre-render source (it wins even
    when the rendered DOM is clean, and a `meta refresh` + `noindex` combination
@@ -128,6 +129,20 @@ optimization, cause before prescription.
 12. **Measurement**: per engine, per persona; mentions and recommendations, not
     citations alone; cross-check GSC against analytics, logs and an independent
     tracker before calling anything an algorithmic hit.
+13. **Agent surface** — only if the site sells something an agent could buy, call
+    or automate; skip it for a content site. Ship the parts that are true whether
+    or not agents ever arrive: a real 404 status for unknown paths (a `200` app
+    shell tells every consumer that every path exists), a unique `operationId` and
+    a description on every OpenAPI operation (that is the function schema an LLM
+    generates), rate-limit headers with `Retry-After`, and a `401` carrying
+    `WWW-Authenticate: Bearer resource_metadata="…"` pointing at RFC 9728
+    protected-resource metadata on the host that serves the API. Everything else —
+    the `.well-known` set, `/auth.md`, markdown twins — is a draft spec or a vendor
+    convention: **presence is confirmed by one request, effect is a hypothesis**,
+    so it belongs in the Experiments bucket until the server log shows agent
+    traffic. A third-party "agent-readiness score" is a checklist generator, never
+    a target, and where it contradicts the refuted list below, the refuted list
+    wins.
 
 ## Never put these in a plan
 
@@ -142,6 +157,16 @@ date bumps as freshness · "publish more pages" · disavowing on a third-party
 toxicity score · a single AI-visibility score as a KPI · self-promotional "best
 [category]" listicles · scaled AI content · `Disallow`-ing tracking-parameter
 URLs to protect crawl budget.
+
+The first two have one narrow non-myth use, and confusing it with the myth is how
+the myth returns: `llms.txt` and markdown twins do not help a page get **found** —
+that is the refuted claim, and it stays refuted — but they can let an agent that
+**already arrived** read your canonical facts for fewer tokens. That is a serving
+decision, not a ranking one. It is only honest when the markdown is generated from
+the same source as the HTML, `Vary: Accept` is set wherever negotiation is on (or a
+CDN hands the cached HTML to an agent asking for markdown), and any advertised
+`rel="alternate"` actually resolves to markdown. A full `.md` twin of every page is
+the refuted version.
 
 ## Deliverables
 

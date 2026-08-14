@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time. This skill is mostly **knowledge** — twenty-two
+Thanks for taking the time. This skill is mostly **knowledge** — twenty-three
 reference contracts plus a small standard-library auditor. That shapes what a
 good contribution looks like here.
 
@@ -66,10 +66,11 @@ python3 test/plant_guard_test.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
+python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
 ```
 
-`validate.py` checks structure, the four-way version sync, that all twenty-two
+`validate.py` checks structure, the four-way version sync, that all twenty-three
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that every bundled script is
 standard-library only. It also reconciles the facts this repo keeps duplicating:
@@ -102,8 +103,9 @@ being rewritten).
 `test_page_audit.py` runs the auditor against offline fixtures — including the
 URL-scheme guard, which exists because `urlopen` will happily read
 `file:///etc/passwd` if you let it. `test_url_inspection.py` and
-`test_collectors.py` do the same for the other five bundled scripts.
-`test_output_contracts.py` holds what all six owe their caller: a run that
+`test_collectors.py` do the same for the other four bundled scripts, and
+`test_agent_surface.py` for the track-K collector.
+`test_output_contracts.py` holds what all seven owe their caller: a run that
 measured nothing exits non-zero, and no network error reaches generated markdown
 with its newlines intact.
 
@@ -138,7 +140,7 @@ npx --yes sshlg-skills@latest list   # the new number must appear here
 | A tactic worth trying | `growth-plays.md`, with a tier and an effort estimate |
 | A tactic with counter-evidence | `myths.md`, with the counter-evidence |
 | A Google update | `algorithm-updates.md`, with start and completion dates |
-| Auditor behavior | the script in `skills/*/scripts/` **and** a fixture-backed test (`test_page_audit.py` for the page auditor, `test_url_inspection.py` for the index checker, `test_collectors.py` for psi / sitemap / gsc / preflight) |
+| Auditor behavior | the script in `skills/*/scripts/` **and** a fixture-backed test (`test_page_audit.py` for the page auditor, `test_url_inspection.py` for the index checker, `test_collectors.py` for psi / sitemap / gsc / preflight, `test_agent_surface.py` for the agent surface) |
 
 Adding a reference file means wiring it into `SKILL.md` and into
 `REQUIRED_REFERENCES` in the validator. A reference nothing links to is never

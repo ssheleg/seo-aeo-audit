@@ -20,6 +20,7 @@ REQUIRED_REFERENCES = (
     "architecture-and-equity.md",
     "intent-and-content.md",
     "aeo-geo.md",
+    "agent-readiness.md",
     "entity-and-brand.md",
     "experience-signals.md",
     "threats-and-defense.md",
@@ -247,15 +248,22 @@ for _script in _bundled:
     if re.search(r"\bimport requests\b|\bimport bs4\b|\bfrom google\.", _src):
         fail(f"{_rel}: third-party import — bundled scripts must stay stdlib-only")
 
-# Every finding the auditor emits points a reader at a reference section. Those
+# Every finding a script emits points a reader at a reference section. Those
 # pointers are plain strings, so nothing else catches a heading rename.
 # (Compilation and the stdlib rule are covered for every script by the loop above.)
-script_rel = f"{SKILL_DIR}/scripts/page_audit.py"
-script_path = os.path.join(ROOT, script_rel)
-if os.path.isfile(script_path):
+#
+# Written for page_audit.py alone until 2026-08-14, when a second script started
+# emitting findings with anchors — the same "guard written against one home of a
+# fact that lives in several" shape the 2026-08-10 audit named. Discovered rather
+# than listed, for the same reason the compile loop is.
+ref_dir = os.path.join(ROOT, SKILL_DIR, "references")
+slug_cache: dict = {}
+for _script in _bundled:
+    script_rel = f"{SKILL_DIR}/scripts/{_script}"
+    script_path = os.path.join(ROOT, script_rel)
+    if not os.path.isfile(script_path):
+        continue
     src = open(script_path, encoding="utf-8").read()
-    ref_dir = os.path.join(ROOT, SKILL_DIR, "references")
-    slug_cache: dict = {}
     for ref_file, anchor in sorted(set(re.findall(r"\b([a-z0-9-]+\.md)#([\w-]+)", src))):
         ref_path = os.path.join(ref_dir, ref_file)
         if not os.path.isfile(ref_path):
@@ -323,6 +331,21 @@ _needles(
     (("server-rendered HTML only", "the JS-blind caveat on the schema inventory"),
      ("jsonld_caveat", "the machine-readable caveat field in the report payload")),
     "the page_audit blindness caveat",
+)
+
+# agent_surface.py carries a third blind spot of its own, and it is the one a
+# checklist-shaped instrument loses first: it measures PRESENCE, and presence is
+# not effect. Without that sentence in the report, a draft specification's absence
+# reads as a confirmed defect and the triage formula multiplies by the wrong
+# number. The one-url caveat is the same class as page_audit's JS blindness —
+# absence on the page you probed is not absence on the site.
+_needles(
+    f"{SKILL_DIR}/scripts/agent_surface.py",
+    (("Presence is not effect", "the presence-vs-effect blind spot in the docstring"),
+     ("Presence is `CONFIRMED`", "the same statement in the rendered report"),
+     ("ONE url", "the one-url caveat, which is the false finding graders produce most"),
+     ("server-rendered HTML only", "the JS-blind caveat inherited from page_audit")),
+    "the agent_surface blindness caveats",
 )
 
 # GA4 blends modelled with observed behind one number. An audit that sizes a
@@ -727,7 +750,8 @@ if "${CLAUDE_PLUGIN_ROOT}" not in _skill_md:
 # shared module. Four renderers interpolated a network error straight into markdown:
 # a Google error page carries newlines, the first one ends the table row, and every
 # row after it stops rendering. Five of preflight's seven rows were being lost.
-_RENDERERS = ("preflight.py", "url_inspection.py", "psi_pull.py", "page_audit.py")
+_RENDERERS = ("preflight.py", "url_inspection.py", "psi_pull.py", "page_audit.py",
+              "agent_surface.py")
 for _r in _RENDERERS:
     _src = open(os.path.join(ROOT, SKILL_DIR, "scripts", _r), encoding="utf-8").read()
     if "def _flat(" not in _src:
@@ -767,20 +791,28 @@ for _rel, _pat in _DEFECT_COUNT_HOMES:
         fail(f"{_rel} states the defect total as {_m.group(1)!r}; the ledger "
              f"enumerates {_defect_n} `### D<n>` rows")
 
-# Every finding page_audit emits must have a tier in FINDING_TIERS. The behaviour
-# test proves the fixtures carry one; this proves the next finding somebody adds
+# Every finding a script emits must have a tier in FINDING_TIERS. The behaviour
+# tests prove the fixtures carry one; this proves the next finding somebody adds
 # cannot ship without one, which is the case a fixture cannot cover.
-_pa = os.path.join(ROOT, SKILL_DIR, "scripts", "page_audit.py")
-if os.path.isfile(_pa):
-    _pasrc = open(_pa, encoding="utf-8").read()
+#
+# Every script that declares FINDING_TIERS is checked, not page_audit.py alone: the
+# emitters have two shapes now — `add("high", "code", …)` and an inline dict with a
+# `"code":` key — and a check that knows one shape exempts the other silently.
+for _script in _bundled:
+    _sp = os.path.join(ROOT, SKILL_DIR, "scripts", _script)
+    _ssrc = open(_sp, encoding="utf-8").read()
+    if "FINDING_TIERS" not in _ssrc:
+        continue
     _declared = set(re.findall(r'^\s+"([a-z0-9-]+)": "(?:CONFIRMED|STUDY|FIELD|HYPOTHESIS)",',
-                               _pasrc, re.M))
-    _emitted = set(re.findall(r'add\(\s*"[a-z]+",\s*"([a-z0-9-]+)"', _pasrc))
+                               _ssrc, re.M))
+    _emitted = set(re.findall(r'add\(\s*"[a-z]+",\s*"([a-z0-9-]+)"', _ssrc))
+    _emitted |= set(re.findall(r'"code":\s*"([a-z0-9-]+)"', _ssrc))
     for _code in sorted(_emitted - _declared):
-        fail(f"page_audit.py emits finding {_code!r} with no entry in FINDING_TIERS — "
+        fail(f"{_script} emits finding {_code!r} with no entry in FINDING_TIERS — "
              f"non-negotiable #2 makes the tier the multiplier in the triage formula")
     if not _emitted:
-        fail("page_audit.py: no finding codes found — the tier-coverage check is blind")
+        fail(f"{_script}: declares FINDING_TIERS but no finding codes were found — the "
+             f"tier-coverage check is blind")
 
 # The CWV thresholds live in psi_pull.py and in experience-signals.md. Two homes,
 # and the numbers decide whether a page passes.

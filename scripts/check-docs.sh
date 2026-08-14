@@ -9,5 +9,6 @@ python3 test/plant_guard_test.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
+python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
 echo "OK: structure, doctrine guards and behaviour tests all pass"

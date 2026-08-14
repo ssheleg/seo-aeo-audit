@@ -121,7 +121,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 
 ## What knowledge is packed inside
 
-Twenty-two reference contracts ship *inside* the skill, so they travel to every
+Twenty-three reference contracts ship *inside* the skill, so they travel to every
 agent, not just Claude Code. This is the substance:
 
 | Area | What it holds | Why it is worth having |
@@ -131,6 +131,7 @@ agent, not just Claude Code. This is the substance:
 | **Architecture & equity** | Equity distribution, hub-and-cluster, orphans, depth, anchor practice, and the answer-engine **read budget** | Explains why money pages starve while the homepage hoards authority — and why navigation now costs twice |
 | **Intent & content value** | The four intents and the page types they reward, cannibalization mechanics, information-gain findings, the content types that survive zero-click, and the AI-content patterns that now hurt | Turns "write better content" into a specific, testable page-level decision |
 | **AEO / GEO mechanics** | How an answer is actually built (fan-out → retrieval → grounding → arbitration), what correlates with citation, per-engine retrieval paths, extractability rules, and a ready prompt set for measuring brand presence | The part most audits either skip or fill with vendor folklore |
+| **Agent surface** | The `.well-known` discovery set with each spec's real status, the Markdown boundary the myth guard stops at, the OpenAPI properties that decide whether an LLM can call you, the agent auth-discovery chain, and how to read a third-party "agent-readiness" score without being led by it | Separates what is specified from what is scored, so an agent-readiness push does not become a checklist nobody measures |
 | **Entity & brand consensus** | Cross-profile consistency, the entity graph, ghost citations (cited but not recommended), and how review sentiment drives AI verdicts | Explains why a technically perfect site still gets no recommendation |
 | **Experience & conversion** | CWV triage order, satisfaction-signal mechanics, CRO × SEO evidence, conversion elements per template, lead capture, the attribution gaps (calls, offline, AI referrals, cross-device), paid × organic alignment | The post-click half of the funnel that audits usually leave on the table |
 | **Risk & defense** | Penalty behavior, subdomain and registrar risk, indirect prompt injection, takedown abuse, canonical hijacking, behavioral poisoning, proportionate link-risk handling | Turns "we got hit" into a specific, checkable hypothesis |
@@ -144,7 +145,7 @@ agent, not just Claude Code. This is the substance:
 ### Data freshness
 
 - **Verified as of 2026-08-10.** Roughly 5,000 lines of distilled reference
-  material across the twenty-two contracts. The update timeline covers
+  material across the twenty-three contracts. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
   last re-fetched and what its newest row is.
 - **Most benchmarks carry a date and a sample; the ones that do not say so.** The
@@ -306,9 +307,10 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            22 contract files (shipped on every channel)
-      └── scripts/                   6 stdlib-only scripts: page_audit, gsc_pull,
-                                     url_inspection, psi_pull, sitemap_audit, preflight
+      ├── references/*.md            23 contract files (shipped on every channel)
+      └── scripts/                   7 stdlib-only scripts: page_audit, gsc_pull,
+                                     url_inspection, psi_pull, sitemap_audit, preflight,
+                                     agent_surface
 cursor/rules/seo-aeo-audit.mdc       Cursor rule (contracts inlined)
 templates/*.template.md              deliverable skeletons for non-agent use
 bin/seo-aeo-audit.js                 npx installer (zero dependencies)
@@ -323,7 +325,8 @@ test/plant_guard_test.py             the plant guard itself: did a negative self
 test/test_page_audit.py              page-auditor tests (offline fixtures)
 test/test_url_inspection.py          index-verdict tests (documented API shape)
 test/test_collectors.py              psi / sitemap / gsc / preflight tests
-test/test_output_contracts.py        exit status and markdown safety, all six
+test/test_agent_surface.py           track-K collector: parsers, tiers, blind spots
+test/test_output_contracts.py        exit status and markdown safety, all seven
 test/fixtures/*.html                 pages the auditor is tested against
 .github/workflows/validate.yml       CI, including negative self-tests
 docs/research/                       provenance behind every claim in the references
@@ -337,7 +340,8 @@ python3 test/validate.py        # structure, version sync, references, links, an
 python3 test/test_page_audit.py # page auditor against offline fixtures
 python3 test/test_url_inspection.py  # index verdicts against the documented API shape
 python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
-python3 test/test_output_contracts.py  # exit status and markdown safety across all six
+python3 test/test_agent_surface.py   # the track-K collector, offline
+python3 test/test_output_contracts.py  # exit status and markdown safety across all seven
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```
@@ -387,8 +391,9 @@ Issues and pull requests are welcome — see
 [CONTRIBUTING.md](CONTRIBUTING.md). The short version: every claim carries an
 evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
 `bash scripts/check-docs.sh` must pass — it runs `python3 test/validate.py`,
-`python3 test/test_page_audit.py`, `python3 test/test_url_inspection.py` and
-`python3 test/test_collectors.py`.
+`python3 test/plant_guard_test.py`, `python3 test/test_page_audit.py`,
+`python3 test/test_url_inspection.py`, `python3 test/test_collectors.py`,
+`python3 test/test_agent_surface.py` and `python3 test/test_output_contracts.py`.
 Everyone taking part is expected to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 

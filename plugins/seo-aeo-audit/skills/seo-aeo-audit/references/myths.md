@@ -37,6 +37,30 @@ Say this plainly when asked, offer the nearest thing that works, move on.
 | "Google gives JavaScript about five seconds to render" | The Web Rendering Service runs on a **virtual clock** it controls, and pauses it while a resource request is in flight — so wall-clock waiting does not spend the budget. A test page whose two server-delayed API calls took 6–12 seconds rendered and indexed, and both calls reported back as 0.02s. Rendering ends when the event loop goes idle, not when a timer expires. The real ceiling is a page that never idles: a page fetching in a loop was cut off after 16–18 chained calls (48–54s) in live testing and after ~10 (~30s) for indexing, with the exact point drifting (`STUDY`, published method and test pages, 2026-07-23) | Stop budgeting render work against a stopwatch. Check that content does not depend on a chain that never settles, then verify what actually rendered — the stored render in *View crawled page* against the raw source (technical-checks.md A1) |
 | "Multiple H1s hurt rankings" | Google states that one H1 and several both work for Search, with no penalty attached to the count. The one-H1 rule is an HTML/accessibility convention: HTML5's sectioned outline was never implemented by browsers, which is why the convention survived. Two responsive H1s are not cloaking while both carry the same meaning, and Google evaluates the mobile render, so the mobile H1 is the one with weight | Keep the count tidy for screen readers, not for rankings. Audit the **meaning**: if the mobile variant drops a subject-bearing word, that is the real loss. Prefer one H1 with the desktop-only tail inside a `span` over two H1s swapped by display classes (onpage-checks.md) |
 
+## The boundary two of these have, and why it is not an escape hatch
+
+Rows 1 and 2 — `llms.txt` and Markdown mirrors — are refuted **as ways to be
+found**. They are not refuted as ways to be **read cheaply by an agent that has
+already arrived**, and those are different jobs resting on different evidence:
+
+| The claim | Verdict | Why |
+|---|---|---|
+| "Publish `llms.txt` / Markdown and AI will rank or cite us" | **Myth.** Rows 1–2 hold, with the numbers | It is a retrieval claim, and retrieval was measured |
+| "An agent already on our site can read our facts in Markdown for a fraction of the tokens" | **Not a myth — and not a ranking claim either** | It is a serving decision, measured in tokens and in requests to that path |
+
+The second is only honest under three conditions, and `references/agent-readiness.md`
+K3 owns them: the Markdown is generated from the same source as the HTML, so it
+cannot drift into a second set of facts; `Vary: Accept` is set wherever negotiation
+is on, or a CDN serves the wrong variant to everyone; and a `rel="alternate"`
+advertisement actually resolves to Markdown. A **full `.md` twin of every page** is
+the refuted version — it doubles the surface you must keep true and the measured
+return is zero.
+
+**Third-party "agent-readiness" scores award points for both files.** That is not
+new evidence; it is a scanner checking presence. "A grader gave us points" does not
+move a claim off this list — agent-readiness.md K7 is the reading protocol, and
+buying such a number as a single KPI is itself on the list above.
+
 ## How to say it
 
 Short, factual, no lecture, then the alternative:
