@@ -3,3 +3,9 @@ node_modules/
 __pycache__/
 *.py[cod]
 graphify-out/
+
+# agent-sync run state — leases and claims are per-machine, never shared
+.agent-sync/
+
+# agent-sync — local credentials and run state, never committed
+.env.agent-sync

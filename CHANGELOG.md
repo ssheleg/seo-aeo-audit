@@ -191,6 +191,32 @@ Gates, each run alone: `validate.py`, `plant_guard_test.py`, `test_page_audit.py
 `test_url_inspection.py`, `test_collectors.py`, `test_agent_surface.py`,
 `test_output_contracts.py`.
 
+## v0.17.1 — eleven plants that could only ever run in CI now run anywhere
+
+`plant()` takes its command as an argv, and every substituting plant reached for
+`sed -i`. BSD sed needs an **argument** to `-i`, so all eleven were no-ops on macOS: the
+guard they were meant to disarm stayed armed, the validator honestly passed, and the step
+would report a healthy guard as broken. Elsewhere in this family that exact shape hid a
+broken plant for two days.
+
+### Added
+
+- **`test/plant_edit.py`** — three verbs (`sub`, `delline`, `truncate`), anchors
+  **literal** rather than regular expressions, and each one **refuses by name** when its
+  anchor is absent. Half the sed calls it replaces spent their length escaping `**` and
+  `/`, and an escape wrong in one direction silently matches nothing. `plant_guard.py`
+  would still catch a plant that did nothing; this says *which* anchor moved, which is
+  the difference between a five-minute fix and a hunt.
+- **A guard against the return of `sed -i`**, because the failure it causes is silent on
+  one platform and invisible on the other. Watched failing on a plant that turns one
+  `plant_edit` call back into a sed.
+- **`truncate` keeps the trailing newline.** Found by the fixture, not by reading:
+  `sed '/x/,$d'` leaves one, and a plant that also strips it damages the file in a second
+  way its own description never claimed.
+
+All fourteen plants in this workflow now run on the machine they were written on, and
+were watched doing so.
+
 ## v0.17.0 — 2026-08-14
 
 The pack had no guidance on how a sentence reads. `E4` priced machine-drafted
