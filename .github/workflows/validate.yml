@@ -389,7 +389,7 @@ jobs:
           plant "a backticked references/ pointer resolving to nothing" \
             sed -i "s/\`references\/myths.md\`/\`references\/mythz.md\`/" "$S/references/linkbuilding.md"
           plant "a prose reference count going stale" \
-            sed -i "s/mostly \*\*knowledge\*\* — twenty-two/mostly **knowledge** — twenty-one/" CONTRIBUTING.md
+            sed -i "s/mostly \*\*knowledge\*\* — twenty-three/mostly **knowledge** — twenty-two/" CONTRIBUTING.md
           plant "the slash command losing a non-negotiable" \
             sed -i "/^8\. \*\*Know each instrument/,\$d" plugins/seo-aeo-audit/commands/seo-aeo-audit.md
 
