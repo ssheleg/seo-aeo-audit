@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.17.0 — 2026-08-14
+
+The pack had no guidance on how a sentence reads. `E4` priced machine-drafted
+content by volume and template, which catches a thousand generated glossary
+pages and says nothing about the one honest page written in the generated
+register.
+
+**`E4b` adds it, and opens with the limit rather than burying it.** There is
+no measured ranking penalty for an em dash, nothing in `benchmarks.md` prices
+punctuation, and a style note sitting in the same table as a crawl finding is
+broken tier discipline. Register carries no tier and is reported separately.
+
+Three mechanisms justify auditing it anyway:
+
+- A "Scaled content abuse" manual action is applied by a person reading
+  pages, so a useful page written in the generated register is being asked to
+  survive that read having volunteered the surface signal. A risk argument,
+  worth what a risk argument is worth.
+- Extraction is priced by track F. A sentence whose two halves are joined
+  only by a dash loses the relationship when an engine lifts it out of its
+  paragraph; a comma, a colon and a full stop each survive the lift because
+  each names the relationship.
+- A `<title>` ending in a full stop spends a character in a field measured in
+  characters. That one is mechanical and now sits in `onpage-checks.md`
+  beside `O1`.
+
+**The markers are not forked here.** They stay in super-ux's `ai-tells.md` as
+`AT-01`..`AT-15` with their grades, density threshold and change-rate guard;
+three are deterministic there as `B060`, `B062` and `B063`. A second copy of
+a marker list drifts from the first inside one release, which is the failure
+the family's propagation rules exist to prevent.
+
+The non-English case is called out explicitly, because getting it wrong
+discredits the rest of the report: the rule bans the **rhetorical** dash and
+keeps the **grammatical** one, and in Russian the dash between subject and
+predicate is orthography rather than style.
+
+Gates, each run alone: `validate.py`, `plant_guard_test.py`,
+`test_page_audit.py`, `test_url_inspection.py`, `test_collectors.py`,
+`test_output_contracts.py`. All pass.
 ## v0.16.3 — 2026-08-14
 
 A red `validate` could not stop a publish anywhere in this family, and one member

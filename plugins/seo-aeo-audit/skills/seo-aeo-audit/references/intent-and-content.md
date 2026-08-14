@@ -10,6 +10,7 @@
 - [E2b. What users expect to see on the page](#e2b-what-users-expect-to-see-on-the-page)
 - [E3. Zero-click defensibility](#e3-zero-click-defensibility)
 - [E4. Patterns that now hurt](#e4-patterns-that-now-hurt)
+- [E4b. Register, and what it is not evidence of](#e4b-register-and-what-it-is-not-evidence-of)
 - [E5. Freshness is relative, not calendar-based](#e5-freshness-is-relative-not-calendar-based)
 - [Evidence to capture for D/E](#evidence-to-capture-for-de)
 
@@ -277,6 +278,56 @@ Google organic, ChatGPT, AIO and Gemini in a controlled experiment (`STUDY`;
 figures in benchmarks.md). Keep the human share of the final text high and verify
 every fact — statistics hallucinate ~40% of the time unsupervised (`STUDY`,
 growth-plays P2) and models generate plausible 404 URLs.
+
+## E4b. Register, and what it is not evidence of
+
+E4 prices machine-drafted content by **volume and template**. This section is
+about the sentence, and it opens with the thing an audit must not claim: there
+is **no measured ranking penalty for an em dash**, a bolded phrase or a
+paragraph that opens "Here's the thing:". No study in `benchmarks.md` prices
+punctuation, and any report that puts a style note in the same table as a
+crawl finding has broken tier discipline. Register is a **craft rule**, carries
+no tier, and is reported separately from anything with a number attached.
+
+It still belongs in the audit, for three mechanisms that are real:
+
+1. **Indistinguishability from the pattern E4 already prices.** A "Scaled
+   content abuse" manual action is applied by a person reading pages. A
+   genuinely useful page written in the generated register is being asked to
+   survive that read on its substance alone, having volunteered the surface
+   signal. This is a risk argument, not a ranking argument, and it is worth
+   exactly what a risk argument is worth.
+2. **Extractability, which track F does price.** An answer engine lifts a
+   sentence out of its paragraph. A sentence whose two halves are joined by a
+   dash loses the relationship when the dash is the only thing stating it;
+   a comma, a colon and a full stop each survive the lift because each names
+   the relationship. E3's "quotable standalone sentence" is the same property
+   from the other end.
+3. **Fields that truncate.** A `<title>` ending in a full stop spends a
+   character in a field measured in characters, and reads as generated in a
+   result. This one is mechanical and belongs in `onpage-checks.md` (O1).
+
+**The rules themselves are not forked here.** They live in super-ux's
+`ai-tells.md` as `AT-01`..`AT-15` with severity grades, a density threshold, a
+change-rate guard and a semantic-preservation checklist, and its `brand_lint.py`
+turns three of them into deterministic checks (`B060` vocabulary, `B062` the
+rhetorical dash, `B063` the full-stopped title). A second copy of a marker list
+would drift from the first within one release, which is the failure this
+family's propagation rules exist to prevent.
+
+The distinction that matters most when auditing a non-English site: the dash
+rule bans the **rhetorical** dash and keeps the **grammatical** one. In Russian
+and Ukrainian the dash between subject and predicate is orthography, not style
+(«Москва — столица»), as are numeric ranges and direct speech. An auditor who
+flags those has produced a finding that is simply wrong, and the client is
+right to discount everything else in the report.
+
+**What to actually do.** Sample the same page cohort the E-track already
+sampled, run the marker list over it, and report one line: the naturalness
+grade, the marker density per 500 words, and the two or three markers doing the
+most work. Recommend a rewrite only where density is above the threshold
+`ai-tells.md` sets, because below it the edit costs more than it returns and
+the change-rate guard is likely to fire.
 
 ## E5. Freshness is relative, not calendar-based
 
