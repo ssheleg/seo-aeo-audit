@@ -80,12 +80,12 @@ Inspect first, then act. In order:
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
-`scripts/preflight.py` performs the automatable half of step 2 rather than
 `scripts/preflight.py` runs the automatable half of this step and reports which
-independent gate a failure hit — Search Console, the GSC API and PageSpeed all
-answer `403` for different reasons. Read `references/preflight.md` for exactly
-what it probes and what it leaves to you (Bing/Yandex, analytics, server logs,
-crawl exports and every MCP tool). **A green preflight is not a covered step.**
+independent gate a failure hit — `login`, `quota-project`, `api-not-enabled`,
+`scope` and `permission` fail for different reasons and most of them say `403`.
+Read `references/preflight.md` for exactly what it probes and what it leaves to
+you (Bing/Yandex, analytics, server logs, crawl exports and every MCP tool).
+**A green preflight is not a covered step.**
 
 ```bash
 # Claude Code plugin: ${CLAUDE_PLUGIN_ROOT} expands inside skill content.
@@ -157,6 +157,28 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | H | Experience, conversion & attribution | Task completed here or bounced back? Converted, and measured? | [experience-signals.md](references/experience-signals.md) + [demand-and-conversion.md](references/demand-and-conversion.md) |
 | I | Risk & threats | Penalties, hijacks, injections, takedowns. | [threats-and-defense.md](references/threats-and-defense.md) |
 | J | Measurement | Will anyone be able to tell if the plan worked? | [measurement.md](references/measurement.md) |
+| K | Agent surface | Can a machine discover, authenticate and transact here? | [agent-readiness.md](references/agent-readiness.md) |
+
+**Track K is conditional, and its bar is a product question, not a technical one.**
+Run it when the site sells something an agent could plausibly buy, call or
+automate — an API, a SaaS product, a booking or purchasing flow. Skip it for a
+content site with no programmable surface. It also carries a rule the other ten
+do not need: **presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**, so most
+of it belongs in the Experiments bucket until first-party logs show agent traffic.
+A third-party "agent-readiness score" is a checklist generator, never a target —
+[agent-readiness.md](references/agent-readiness.md) K7 has the four ways one
+misleads, and where such a grader contradicts `references/myths.md`, the myth
+guard wins.
+
+Its highest-value check is also its cheapest, and it belongs to tracks C and F as
+much as to K: **read the server-rendered root and ask which conventional entry
+points it links to.** On a client-rendered site the API docs, the sign-up and the
+contact page are in the navigation, work perfectly in a browser, and are absent
+from the document every crawler, answer engine and agent actually reads (K2b).
+Before any of it, run the two-query brand-collision test in
+[entity-and-brand.md](references/entity-and-brand.md) G1b: a site that is absent
+from its own brand name while ranking #1 for its own domain has an identity
+problem that no file in this track fixes.
 
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
 its own ranking pass, its own gate (two metatags, without which no card renders at
@@ -193,10 +215,10 @@ in the report which rung a finding rests on. A public-only audit with no propert
 access is valid work, but its indexation and query findings are inferences, not
 observations, and get tiered accordingly.
 
-**The six bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py` — collect the mechanical
-half of every track. Read `references/scripts.md` for invocation, flags, quotas
-and the per-script limits.
+**The seven bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
+`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py`, `agent_surface.py` —
+collect the mechanical half of every track. Read `references/scripts.md` for
+invocation, flags, quotas and the per-script limits.
 
 **Four traps that decide whether a finding is real:**
 
@@ -276,7 +298,7 @@ technically literate non-specialist; expand jargon on first use.
 
 ## Myth guard — do not put these in a plan
 
-The fourteen most-requested of the **32** refuted claims. Each is refuted by
+The fourteen most-requested of the **33** refuted claims. Each is refuted by
 2026 evidence; the full list, with the counter-evidence and the working
 alternative for each, is in [references/myths.md](references/myths.md) — read it before
 answering a tactic question that is not on this short list.
@@ -294,6 +316,15 @@ answering a tactic question that is not on this short list.
 When the user asks for one of these, say plainly what the evidence shows, offer
 the nearest thing that does work, and move on.
 
+**Two of them have a narrow non-myth use, and confusing the two is how the myth
+gets re-sold.** `llms.txt` and Markdown twins do not help a page get **found** —
+that claim stays refuted, with the numbers, in
+[references/myths.md](references/myths.md). They can help an agent that has
+**already arrived** read the site cheaply, which is a serving decision measured in
+tokens rather than a ranking one. The boundary, the conditions and the `Vary:
+Accept` trap live in [references/agent-readiness.md](references/agent-readiness.md)
+K3. Anything sold as "publish Markdown to rank in AI" is still the myth.
+
 ## References
 
 - [ranking-model.md](references/ranking-model.md) — how ranking actually works.
@@ -302,6 +333,7 @@ the nearest thing that does work, and move on.
 - [intent-and-content.md](references/intent-and-content.md) — tracks D/E.
 - [onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.
 - [aeo-geo.md](references/aeo-geo.md) — track F.
+- [agent-readiness.md](references/agent-readiness.md) — track K, the agent surface.
 - [entity-and-brand.md](references/entity-and-brand.md) — track G.
 - [experience-signals.md](references/experience-signals.md) — track H.
 - [demand-and-conversion.md](references/demand-and-conversion.md) — track H+.

@@ -17,7 +17,11 @@ Follow the skill exactly.
 2. Establish the baseline with dates before forming any opinion.
 3. Run the in-scope tracks (A access · B canonicalization · C architecture ·
    D intent · E content value · F extractability/AEO · G entity consensus ·
-   H experience · I risk · J measurement), blockers first.
+   H experience · I risk · J measurement), blockers first. **K agent surface** is
+   conditional: run it only when the site sells something an agent could buy, call
+   or automate, run it last, and hold its own rule — presence is `CONFIRMED`,
+   effect is mostly `HYPOTHESIS`, so most of it lands in Experiments rather than
+   in Gains.
 4. Triage with `priority = (impact × confidence) / effort`, where confidence is the
    evidence tier (CONFIRMED 1.0 · STUDY 0.7 · FIELD 0.4 · HYPOTHESIS 0.2), and group
    into Blockers / Leaks / Gains / Experiments.

@@ -92,6 +92,9 @@ jobs:
       - name: Collector functional tests
         run: python3 test/test_collectors.py
 
+      - name: Agent-surface functional tests
+        run: python3 test/test_agent_surface.py
+
       - name: Cross-script output contracts
         run: python3 test/test_output_contracts.py
 
@@ -201,6 +204,79 @@ jobs:
             exit 1
           else
             echo "OK: tests catch the userDeclaredCanonical mis-spelling"
+          fi
+
+      - name: Negative self-test (a redirect credited as the page asked for must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/redir-copy && cp -R . /tmp/redir-copy
+          python3 - <<'PY'
+          p = '/tmp/redir-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    return "root" if fin == "/" else "elsewhere"'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '    return "same"', 1))
+          PY
+          if python3 /tmp/redir-copy/test/test_agent_surface.py; then
+            echo "ERROR: a 301 to the homepage passed as the page that was requested"
+            exit 1
+          else
+            echo "OK: a redirect is not the page you asked for"
+          fi
+
+      - name: Negative self-test (HTML comments counted as visible prose must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/cmt-copy && cp -R . /tmp/cmt-copy
+          python3 - <<'PY'
+          p = '/tmp/cmt-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    body = re.sub(r"<!--.*?-->", " ", body, flags=re.S)\n'
+          assert old in s, "PLANT DID NOT LAND: the comment stripper is not where this plant reads it"
+          open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+          PY
+          if python3 /tmp/cmt-copy/test/test_agent_surface.py; then
+            echo "ERROR: a trust page graded on the length of its HTML comments"
+            exit 1
+          else
+            echo "OK: comments are not prose"
+          fi
+
+      - name: Negative self-test (presence dressed up as effect must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/tier-copy && cp -R . /tmp/tier-copy
+          python3 - <<'PY'
+          p = '/tmp/tier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '"wellknown-absent": "HYPOTHESIS",'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '"wellknown-absent": "CONFIRMED",', 1))
+          PY
+          if python3 /tmp/tier-copy/test/test_agent_surface.py; then
+            echo "ERROR: a draft spec's absence passed as a CONFIRMED defect"
+            exit 1
+          else
+            echo "OK: presence is not effect, and the suite says so"
+          fi
+
+      - name: Negative self-test (a finding with no declared tier must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/notier-copy && cp -R . /tmp/notier-copy
+          python3 - <<'PY'
+          p = '/tmp/notier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '    "openapi-batch": "STUDY",\n'
+          assert old in s, "PLANT DID NOT LAND: openapi-batch tier not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
+          PY
+          if python3 /tmp/notier-copy/test/validate.py && \
+             python3 /tmp/notier-copy/test/test_agent_surface.py; then
+            echo "ERROR: a finding shipped with no entry in FINDING_TIERS"
+            exit 1
+          else
+            echo "OK: the tier-coverage guard reads the second emitter shape too"
           fi
 
       - name: Negative self-test (dropping the blindness caveat must fail)
@@ -381,10 +457,16 @@ jobs:
             fi
             echo "ok: $desc"
           }
+          # These two plants name the current myth count, which makes this file a
+          # fifth home for it beside myths.md, README, SKILL.md and the Cursor
+          # rule. Adding row 33 in v0.19.0 stopped both plants landing, and
+          # plant_guard refused rather than reporting a pass — which is the guard
+          # working, and also the reminder: bump the numbers here in the same
+          # commit that adds a myth row.
           plant "myth count drifting in SKILL.md (not the README home)" \
-            python3 test/plant_edit.py sub "$S/SKILL.md" "most-requested of the **32**" "most-requested of the **30**"
+            python3 test/plant_edit.py sub "$S/SKILL.md" "most-requested of the **33**" "most-requested of the **30**"
           plant "myth count drifting in the Cursor channel" \
-            python3 test/plant_edit.py sub cursor/rules/seo-aeo-audit.mdc "out of 32 refuted claims" "out of 29 refuted claims"
+            python3 test/plant_edit.py sub cursor/rules/seo-aeo-audit.mdc "out of 33 refuted claims" "out of 29 refuted claims"
           plant "the two myth short lists disagreeing in size" \
             python3 -c "p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))"
           plant "play count drifting from the table" \
@@ -406,7 +488,7 @@ jobs:
           plant "a backticked references/ pointer resolving to nothing" \
             python3 test/plant_edit.py sub "$S/references/linkbuilding.md" '`references/myths.md`' '`references/mythz.md`'
           plant "a prose reference count going stale" \
-            python3 test/plant_edit.py sub CONTRIBUTING.md "mostly **knowledge** — twenty-two" "mostly **knowledge** — twenty-one"
+            python3 test/plant_edit.py sub CONTRIBUTING.md "mostly **knowledge** — twenty-three" "mostly **knowledge** — twenty-two"
           plant "the slash command losing a non-negotiable" \
             python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md "8. **Know each instrument"
 

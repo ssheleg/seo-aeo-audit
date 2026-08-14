@@ -30,6 +30,15 @@ import urllib.parse
 import urllib.request
 
 UA = "seo-aeo-audit/preflight (+https://github.com/ssheleg/seo-aeo-audit)"
+# The Search Console API is TWO surfaces on one host and they are not
+# interchangeable. `/webmasters/v3` carries the property list (`sites`) and Search
+# Analytics; `/v1` carries only URL Inspection. Probing `/v1/sites` returns a
+# Google 404 HTML page, which this script then classified as gate "permission" —
+# so a property the account can see was reported unreachable, in the one file
+# whose whole job is to say what the audit can observe. Found 2026-08-14 by
+# running it against a property the same credentials read fine through
+# `gsc_pull.py`, which had the right base all along (D44).
+GSC_SITES = "https://searchconsole.googleapis.com/webmasters/v3"
 GSC = "https://searchconsole.googleapis.com/v1"
 PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 
@@ -133,15 +142,22 @@ def check_gsc(token: str | None, site: str | None, quota_project: str | None) ->
     headers = {"Authorization": f"Bearer {token}"}
     if quota_project:
         headers["x-goog-user-project"] = quota_project
-    req = urllib.request.Request(f"{GSC}/sites", headers=headers)
+    req = urllib.request.Request(f"{GSC_SITES}/sites", headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             entries = json.loads(r.read().decode()).get("siteEntry", [])
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", "replace")[:200]
-        # The three gates fail independently and all say "403".
-        gate = ("scope" if "insufficient" in body.lower() or "scope" in body.lower()
-                else "api-not-enabled" if "disabled" in body.lower() or "has not been used" in body.lower()
+        # The gates fail independently and most of them say "403". `quota-project`
+        # is the one that has to be named separately: local Application Default
+        # Credentials are refused by this API until a quota project is bound, and
+        # the fix is `gcloud auth application-default set-quota-project <id>` or
+        # `--quota-project`, not a permission grant on the property. Read as
+        # "permission", it sends an auditor to the wrong screen entirely.
+        low = body.lower()
+        gate = ("quota-project" if "quota project" in low or "serviceusage" in low
+                else "scope" if "insufficient" in low or "scope" in low
+                else "api-not-enabled" if "disabled" in low or "has not been used" in low
                 else "permission")
         return [probe("Search Console", False, f"HTTP {e.code}: {body}", gate,
                       "query data, position history, URL Inspection")] + _unattempted_property(site)

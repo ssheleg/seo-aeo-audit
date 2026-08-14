@@ -101,7 +101,7 @@ COMPLETENESS_DEPENDENT = frozenset({
     # Both assert that no Q&A pairing was found, and a fragment cannot support an
     # absence. The two positive-count findings (faq-collapsed, faq-schema-absent)
     # survive truncation, because a count of three found is still three found.
-    "faq-unpaired", "faq-schema-orphan",
+    "faq-unpaired", "faq-schema-orphan", "faq-schema-partial", "faq-schema-unreadable",
 })
 # One home for the severity -> tier mapping, so the two never drift apart.
 FINDING_TIERS = {
@@ -128,11 +128,16 @@ FINDING_TIERS = {
     "alt-missing": "CONFIRMED",
     "price-not-in-text": "CONFIRMED",
     "truncated-read": "CONFIRMED",
-    # The Q&A block. All four are DOM observations, not ranking claims.
+    # The Q&A block. All of these are DOM observations, not ranking claims.
     "faq-collapsed": "STUDY",
     "faq-unpaired": "CONFIRMED",
     "faq-schema-absent": "CONFIRMED",
     "faq-schema-orphan": "CONFIRMED",
+    "faq-schema-partial": "CONFIRMED",
+    # The one FAQ finding that is deliberately NOT confirmed: it fires where the
+    # node could not be read, and "I could not read it" is the opposite of a
+    # confirmed absence (non-negotiable #8).
+    "faq-schema-unreadable": "HYPOTHESIS",
 }
 # Only rel and href are safe on a canonical link; anything that changes the
 # semantics of the element makes Google discard the declaration.
@@ -179,6 +184,15 @@ class Doc:
         self.dd_count = 0        # <dd> — the answer, flat in the DOM
         self.details_count = 0   # <details> — an answer behind a click
         self.summary_count = 0   # <summary> — its label
+        # The third pairing, and the one this parser used to read as no pairing at
+        # all: the WAI-ARIA disclosure pattern. A button carrying aria-expanded +
+        # aria-controls and a panel carrying aria-labelledby is the accessible
+        # accordion every component library ships, its answer text is in the
+        # served HTML, and counting only <dt>/<dd> and <details> reported those
+        # answers as absent — a `high`/`CONFIRMED` finding about markup that was
+        # right there. Reproduced on a live site on 2026-08-14.
+        self.aria_disclosure = 0   # aria-expanded + aria-controls — the question
+        self.aria_panel = 0        # aria-labelledby — the answer it points at
 
 
 class Parser(HTMLParser):
@@ -209,6 +223,14 @@ class Parser(HTMLParser):
         # claimed to cover and never checked.
         if "data-nosnippet" in a:
             self.doc.data_nosnippet += 1
+        # Counted on any element, not inside the tag dispatch below: the ARIA
+        # disclosure pattern is attributes on whatever the component library
+        # chose, and dispatching on tag name is exactly how this pairing went
+        # unseen.
+        if "aria-controls" in a and "aria-expanded" in a:
+            self.doc.aria_disclosure += 1
+        if "aria-labelledby" in a:
+            self.doc.aria_panel += 1
         if tag in SKIP_TEXT_TAGS:
             if tag == "script" and a.get("type", "").lower() == "application/ld+json":
                 self._in_jsonld = True
@@ -513,6 +535,56 @@ def _jsonld_required(doc: Doc) -> list[str]:
     return missing
 
 
+def _faq_declared_vs_served(doc: Doc) -> dict:
+    """Do the answers an FAQPage declares appear in the text that was served?
+
+    The policy question is whether the markup describes content the page shows,
+    and until 2026-08-14 this module answered a proxy for it — "did I see <dt>,
+    <dd> or <details>" — then reported the proxy's silence as `high` /
+    `CONFIRMED` "answers are absent". On an ARIA accordion, which renders the
+    answer and hides it with CSS, that was a false finding about markup sitting in
+    the response.
+
+    Matching is on a normalized prefix rather than the whole string: an answer is
+    routinely split across elements, and requiring the full text back would swap
+    one false positive for another.
+    """
+    answers: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            raw_t = node.get("@type")
+            names = [raw_t] if isinstance(raw_t, str) else [
+                x for x in (raw_t or []) if isinstance(x, str)]
+            if "Question" in names:
+                acc = node.get("acceptedAnswer") or {}
+                text = acc.get("text") if isinstance(acc, dict) else None
+                if isinstance(text, str) and text.strip():
+                    answers.append(text)
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for raw in doc.jsonld_raw:
+        try:
+            walk(json.loads(raw))
+        except Exception:  # noqa: BLE001 - reported by _jsonld_types
+            continue
+
+    if not answers:
+        return {"faq_declared": 0, "faq_declared_served": 0}
+    served = " ".join(re.sub(r"<[^>]+>", " ", p) for kind, p in doc.stream if kind == "text")
+    served = " ".join(served.split()).lower()
+    found = 0
+    for a in answers:
+        probe = " ".join(re.sub(r"<[^>]+>", " ", a).split()).lower()[:60]
+        if len(probe) >= 20 and probe in served:
+            found += 1
+    return {"faq_declared": len(answers), "faq_declared_served": found}
+
+
 def analyze(html: str, url: str, headers: dict | None = None,
             truncated: bool = False) -> dict:
     parser = Parser()
@@ -603,6 +675,13 @@ def analyze(html: str, url: str, headers: dict | None = None,
         # two want opposite fixes — so both halves are reported as observations.
         "qa_pairs_visible": min(doc.dt_count, doc.dd_count),
         "qa_pairs_collapsed": min(doc.details_count, doc.summary_count),
+        "qa_pairs_aria": min(doc.aria_disclosure, doc.aria_panel),
+        # The question the pairing counts were standing in for, asked directly:
+        # of the answers an FAQPage node declares, how many are in the text this
+        # response actually served? That is the structured-data policy question —
+        # markup must describe content the page shows — and counting element
+        # names only ever approximated it.
+        **_faq_declared_vs_served(doc),
         "faq_heading": next(
             (t for _, t in doc.headings if FAQ_HEADING_RE.search(t or "")), None),
         # Non-negotiable #8: the instrument states its own blind spot, in the
@@ -747,7 +826,10 @@ def findings(r: dict) -> list[dict]:
     # a page that hides its answers gains nothing from declaring them.
     qa_visible = r["qa_pairs_visible"]
     qa_collapsed = r["qa_pairs_collapsed"]
+    qa_aria = r["qa_pairs_aria"]
+    qa_any = qa_visible or qa_collapsed or qa_aria
     has_faq_schema = "FAQPage" in r["jsonld_types"]
+    declared, declared_served = r["faq_declared"], r["faq_declared_served"]
 
     if qa_collapsed >= 3:
         add("medium", "faq-collapsed",
@@ -757,11 +839,12 @@ def findings(r: dict) -> list[dict]:
             "drawn from what renders — a definition list (<dl>/<dt>/<dd>) left open costs "
             "nothing and removes the question entirely",
             "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
-    if r["faq_heading"] and qa_visible == 0 and qa_collapsed == 0:
+    if r["faq_heading"] and not qa_any and declared_served == 0:
         add("medium", "faq-unpaired",
             f"a heading announces a Q&A block ({_flat(r['faq_heading'], 60)!r}) but no "
-            "<dt>/<dd> or <details>/<summary> pairing was found, so nothing marks which "
-            "text is the question and which is the answer. Pair them structurally before "
+            "<dt>/<dd>, <details>/<summary> or ARIA disclosure pairing was found and no "
+            "declared answer text appears in the served body, so nothing marks which text "
+            "is the question and which is the answer. Pair them structurally before "
             "declaring them in schema",
             "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
     if qa_visible >= 3 and not has_faq_schema:
@@ -773,13 +856,32 @@ def findings(r: dict) -> list[dict]:
             "remains is entity clarity and the non-Google engines that parse schema. Do not "
             "report this as a rich-result opportunity",
             "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
-    if has_faq_schema and qa_visible == 0 and qa_collapsed == 0:
+    # An orphan is a node whose ANSWERS are missing from the response, and that is
+    # now what gets checked. The pairing counts stay as the fallback for a node
+    # this parser could not read answers out of; they are no longer allowed to
+    # assert absence on their own, which is what made this fire at `high` /
+    # `CONFIRMED` on an ARIA accordion whose answers were in the HTML.
+    if has_faq_schema and declared and declared_served == 0:
         add("high", "faq-schema-orphan",
-            "an FAQPage node is declared but no question/answer pairing was found in the "
-            "served markup. Schema must describe content the page actually shows; a node "
-            "whose answers are absent (or injected client-side) is a mismatch, and "
+            f"an FAQPage node declares {declared} answer(s) and none of them appears in "
+            "the served body text. Schema must describe content the page actually shows; "
+            "a node whose answers are absent (or injected client-side) is a mismatch, and "
             "Google's structured-data policy treats invisible marked-up content as a "
             "violation",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+    elif has_faq_schema and declared and declared_served < declared:
+        add("medium", "faq-schema-partial",
+            f"{declared - declared_served} of {declared} declared answers are not in the "
+            "served body text. The rest are — so this is a drift between the node and the "
+            "page rather than a client-rendered block, and the usual cause is an answer "
+            "edited in one of the two places",
+            "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
+    elif has_faq_schema and not declared and not qa_any:
+        add("medium", "faq-schema-unreadable",
+            "an FAQPage node is declared, no acceptedAnswer text could be read out of it, "
+            "and no Q&A pairing was found in the markup. Absence is not established here — "
+            "the node may be malformed or assembled client-side; confirm with a rendering "
+            "check before reporting it as a mismatch",
             "aeo-geo.md#f8-the-qa-block-which-is-three-problems")
 
     rb = r["read_budget"]

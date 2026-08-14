@@ -419,13 +419,29 @@ Two guardrails on the ordering:
 "Add FAQ schema" is the most-repeated recommendation in this space and it
 collapses three separate observations that want three different fixes. The page
 auditor reports them apart (`faq-collapsed`, `faq-unpaired`, `faq-schema-absent`,
-`faq-schema-orphan`), and the order matters: **structure, then extractability,
-then declaration.** Declaring answers a crawler cannot reach fixes nothing.
+`faq-schema-orphan`, `faq-schema-partial`, `faq-schema-unreadable`), and the order
+matters: **structure, then extractability, then declaration.** Declaring answers a
+crawler cannot reach fixes nothing.
 
 **1. Is the pairing structural?** A block of `<p>` tags alternating question and
 answer marks nothing. Which text is the question is a visual convention, not a
 machine-readable one. `<dl>`/`<dt>`/`<dd>` states it — one `dt` per question, one
 `dd` per answer, and the pairing survives being stripped of CSS.
+
+**There is a third pairing, and reading only for the first two produced a false
+finding on a live page.** The WAI-ARIA disclosure pattern — a control carrying
+`aria-expanded` + `aria-controls`, and a panel carrying `aria-labelledby` (usually
+`role="region"`) — is what every component library ships, and it states the
+question/answer relationship as explicitly as a definition list does. Its answers
+are in the served HTML; the accordion hides them with CSS, not by withholding
+them. `page_audit.py` counted `<dt>`/`<dd>` and `<details>`/`<summary>` and
+nothing else until v0.19.0, so on such a page it reported `high` / `CONFIRMED`
+"no question/answer pairing was found in the served markup" about text sitting in
+the response it had just parsed. **Reproduced and refuted on 2026-08-14** — and
+the lesson generalizes past this check: *a proxy for a question is not the
+question*. The question was never "did I see a `<dl>`", it was "are the answers
+in what was served", and it is now asked directly by comparing each declared
+`acceptedAnswer` against the body text.
 
 **2. Is the answer in the served markup, unhidden?** This is the one that gets
 argued about, so state it precisely rather than as folklore:
@@ -461,6 +477,17 @@ honest about here, because this is where audits oversell:
   users cannot see as a violation. `faq-schema-orphan` is a higher severity than
   `faq-schema-absent` for exactly this reason: an undeclared readable FAQ is a
   missed opportunity, a declared invisible one is a policy risk.
+- **And the case between them: the node and the page have drifted.** Some declared
+  answers are served and some are not, which is almost never a rendering problem
+  and almost always two renderers of one string. Observed on 2026-08-14: a
+  homepage's visible accordion passed a values object to the translator and the
+  JSON-LD emitter — a different component, same message key — did not, so the
+  machine-readable pricing answer went out as `"Plans start at ${seat}/month …"`
+  while the page showed real figures. The answer engine's copy of the answer was
+  a template literal. `faq-schema-partial` names this apart from an orphan
+  because the fix is different: not "render the block", but "give the fact one
+  home", and then extend whatever test enumerates the renderers to name the
+  emitter too (agent-readiness.md K3a).
 
 **The pattern worth copying.** A page can satisfy all three cheaply, and one
 measured example does: `zernio.com` (read 2026-08-12) ships its FAQ as a `<dl>`

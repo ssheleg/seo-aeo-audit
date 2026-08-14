@@ -18,7 +18,8 @@ duplicated into commit messages or the changelog — those reference it.
 | The play count | the rows of `references/growth-plays.md` | README's knowledge table — checked |
 | The Prowl provider-tool count | `references/prowl-mcp.md` | `tooling.md` and README quote it — all three compared |
 | The gate commands | `scripts/check-docs.sh` | CONTRIBUTING, README and CI — `validate.py` requires every command in the script to appear in all three |
-| A finding's evidence tier | `FINDING_TIERS` in `scripts/page_audit.py` | the script's docstring explains the mapping; `validate.py` fails on a finding with no entry |
+| A finding's evidence tier | `FINDING_TIERS` in the script that emits it (`page_audit.py`, `agent_surface.py`) | the script's docstring explains the mapping; `validate.py` reads **every** script that declares the table, and both emitter shapes — `add(sev, code, …)` and an inline `"code":` key. Written against `page_audit.py` alone until a second emitter shipped |
+| Whether a track-K check is a defect or a bet | `FINDING_TIERS` in `scripts/agent_surface.py`, and the K8 table in `references/agent-readiness.md` | the two must agree: K8 publishes the effect tier a reader plans against, the script multiplies by it. A draft specification's absence may never carry `CONFIRMED` — `test_agent_surface.py` names the five codes it checks |
 | The CWV pass bands | `THRESHOLDS` in `scripts/psi_pull.py` | `references/experience-signals.md` publishes them as a table — compared numerically, in either unit |
 | A reference's section ids | the reference that defines them | globally unique across `references/` — two files defined `D1`, `D2`, `E1`, `E2` with different content, so the sweep now owns `O1`–`O5` |
 | When `algorithm-updates.md` was last refreshed | its `Sources last re-fetched` line | its `Newest row in this file` line is a **second, separate** fact; one used to stand in for both |
@@ -31,7 +32,7 @@ duplicated into commit messages or the changelog — those reference it.
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |
 | A script's exit-code contract | its own docstring | asserted in `test_output_contracts.py`. Four scripts had settled it four ways, and two of them returned 0 after measuring nothing — the prose was honest, the machine-readable half was not |
 | How to reach the bundled scripts | the `$SKILL_DIR` block in `SKILL.md` | every invocation in that file uses it, and `validate.py` rejects a bare `scripts/*.py` path. The Cursor rule states the same thing in prose because a `.mdc` may not link out |
-| Whether an error is safe to render | `_flat()` — one copy per script, four in all | these ship as standalone files with no shared module, so the copies are counted rather than imported |
+| Whether an error is safe to render | `_flat()` — one copy per script, five in all | these ship as standalone files with no shared module, so the copies are counted rather than imported |
 | The 2026-08-10 defect total | the `### D<n>` rows of `docs/audit/2026-08-10-defect-ledger.md` | six prose homes, each named with its phrase in `validate.py`. Five said forty-one against forty-three rows — including the ledger's own summary sentence, which said both |
 | Reference count | `test/validate.py:REQUIRED_REFERENCES` | README (three places) and CONTRIBUTING (two) quote it in prose, in words or digits — **checked** since 2026-08-10. It was marked *review* on the grounds that it is "a prose number about a tuple", and went stale again the moment a twenty-second reference shipped |
 
