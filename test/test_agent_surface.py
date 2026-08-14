@@ -306,6 +306,20 @@ check("#top" not in links and not any("mailto" in x for x in links),
 check(not any(x.startswith("relative") for x in links),
       "a page-relative link cannot be resolved from the root document alone")
 
+# The alternates list is a claim about how sites are named, and a missing plural
+# is enough to invert a finding: on a live site (2026-08-14) the footer linked
+# `/contacts`, the list carried only `/contact`, and `/support` — an in-product
+# route that answers 200 — was reported as the contact page AND as unlinked from
+# the homepage. Two wrong statements out of one missing letter.
+_alts = {role: paths for role, paths, _ in ag.ENTRY_POINTS}
+check("/contacts" in _alts["contact"],
+      f"the plural spelling must be probed; got {_alts['contact']}")
+check(_alts["contact"].index("/contacts") < _alts["contact"].index("/support"),
+      "a public contact page must be tried before an in-product one — /support "
+      "answers 200 on plenty of sites where it is not the contact page")
+for _role, _paths in _alts.items():
+    check(len(set(_paths)) == len(_paths), f"{_role} lists a path twice")
+
 # ── visible text: the comment trap ──────────────────────────────────────────
 # The measurement that produced a wrong number in a real audit: a page whose HTML
 # comments carried 1,666 characters read as 772 characters of prose against a real

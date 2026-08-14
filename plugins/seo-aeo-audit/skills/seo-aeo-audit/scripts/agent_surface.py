@@ -202,8 +202,13 @@ ENTRY_POINTS = (
     ("developer docs", ("/api", "/docs", "/developers", "/api-docs", "/developer"), False),
     ("sign-up", ("/register", "/signup", "/sign-up", "/join"), False),
     ("pricing", ("/pricing", "/plans", "/plans-and-pricing"), False),
-    ("about", ("/about", "/about-us", "/company"), True),
-    ("contact", ("/contact", "/contact-us", "/support"), True),
+    ("about", ("/about", "/about-us", "/company", "/about-company"), True),
+    # `/contacts` is here because leaving it out produced a false finding on a
+    # live site: the footer linked `/contacts`, the list did not carry it, and
+    # `/support` — an in-product route that answers 200 — was reported as the
+    # contact page and as unlinked. An alternates list is a claim about how sites
+    # are named, and a missing plural is enough to invert a finding.
+    ("contact", ("/contact", "/contacts", "/contact-us", "/support", "/help"), True),
     ("privacy", ("/privacy", "/privacy-policy"), True),
     ("terms", ("/terms", "/terms-of-service", "/tos"), True),
 )
@@ -717,10 +722,23 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                         # checklist reports an About page that does not exist.
                         bounced.append(alt)
                         continue
-                    found_path, found_probe = alt, last
-                    note(f"entry point: {role}", last,
-                         "" if where == "same" else f"redirected to {_flat(last.final_url, 80)}")
-                    break
+                    # Prefer an alternate the served homepage actually links to,
+                    # and only fall back to the first that merely answers.
+                    # Stopping at the first 200 reported a live site's contact
+                    # page as unlinked (2026-08-14): `/support` answered — it is
+                    # an in-product route — and `/contacts`, which the footer
+                    # links, was never reached because the loop had already
+                    # broken. A wrong path makes the *finding* wrong, not just
+                    # the label.
+                    if not found_path:
+                        found_path, found_probe = alt, last
+                    if alt in linked:
+                        found_path, found_probe = alt, last
+                        break
+                if found_probe is not None:
+                    note(f"entry point: {role}", found_probe,
+                         "" if landed_where(found_probe, origin) == "same"
+                         else f"redirected to {_flat(found_probe.final_url, 80)}")
                 if not found_path:
                     detail = (f"{', '.join(bounced)} → 301 to the site root, which is not a page"
                               if bounced else

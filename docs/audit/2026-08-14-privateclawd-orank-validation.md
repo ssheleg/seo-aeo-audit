@@ -256,13 +256,23 @@ scores this 100%; a crawler asking "which of these changed" is told "none, since
 March". Present and uninformative is worse than absent — absent asks the crawler
 to decide.
 
-### 4.6 `/support` answers 200 and the served homepage links to it nowhere
+### 4.6 The homepage links to `/login` and `/register`, and `robots.txt` forbids both
 
-The contact entry point exists, returns 200, and appears in **no** `href` of the
-server-rendered homepage — the navigation that carries it is client-rendered.
-It also carries 56 characters of server-rendered text. Separately, the homepage
-links to `/login` and `/register`, both `Disallow`ed by the `*` record
-(`robots.ts:48–50`).
+**Retracted, same day, by this skill's own defect:** an earlier revision of this
+section reported that the contact page "answers 200 at `/support` and appears in
+no `href` of the served homepage". Both halves were wrong. The site's contact
+page is `/contacts` — plural — it is linked from the footer, and it is in the
+served HTML. `agent_surface.py`'s alternates list for the contact role carried
+`/contact`, `/contact-us`, `/support` and stopped at the first path that answered
+200; `/support` is an in-product route that answers 200, so the check named the
+wrong page and then correctly observed that *that* page was unlinked. One missing
+plural produced two confident false statements. Fixed in the same release: the
+list carries `/contacts`, and the selection now prefers an alternate the homepage
+actually links to over the first that merely answers. The `/about` half stands —
+there is no about page at `/about`, `/about-us`, `/company` or `/about-company`.
+
+What survives, and it is the part that matters: the homepage links to `/login`
+and `/register`, both `Disallow`ed by the `*` record (`robots.ts:48–50`).
 
 That last pair is the mechanism behind an earlier observation the operator
 recorded: an agent asked to walk through account creation on privateclawd.com
@@ -296,7 +306,7 @@ server-rendered text, one `H1`, ten subheads.)
 | L4 | Homepage `openGraph` override drops `og:image` and `og:type` (§3 A16) | 2 | CONFIRMED 1.0 | 1 | **2.0** |
 | L5 | `<lastmod>` frozen at two March dates across 160 URLs (§4.5) | 2 | CONFIRMED 1.0 | 1 | **2.0** |
 | L6 | Contradictory `Content-Signal` on the docs host (§4.2) | 2 | CONFIRMED 1.0 | 1 | **2.0** |
-| L7 | `/support` unlinked in server-rendered HTML; 56 chars of text (§4.6) | 2 | CONFIRMED 1.0 | 2 | **1.0** |
+| L7 | ~~`/support` unlinked in server-rendered HTML~~ — **retracted**, the contact page is `/contacts` and it is linked (§4.6). No `/about` page anywhere | 2 | CONFIRMED 1.0 | 2 | **1.0** |
 | L8 | 13 URLs competing for `privateclawd`, incl. a UTM URL; 9 for `privateclawd company`, four of them fragments (§1) | 3 | CONFIRMED 1.0 | 3 | **1.0** |
 | L9 | `/api/<unknown>` returns a 404 HTML app shell instead of JSON (§3 U3) | 2 | CONFIRMED 1.0 | 1 | **2.0** |
 
@@ -361,6 +371,7 @@ in the skill, all fixed in v0.19.0.
 | D49 | `agent_surface.py`'s `parse_robots` collected which AI agents were **named** and never what was **decided** about them. A site naming seventeen AI crawlers and blocking all seventeen produced **no robots finding at all** | Silence read as a pass. The doctrine was already right — `growth-plays.md` B9 is this exact play, and `agent-readiness.md` K2a said to report the decision "whichever way it was answered" — so this is standing instruction #10 again: doctrine and instrument are two homes of one fact, and nothing compared them |
 | D50 | The same module's `ANSWER_ENGINE_UAS` listed `GPTBot`, `ClaudeBot` and `Google-Extended` as answer-engine retrieval crawlers. All three are training or grounding crawlers on their vendors' own documentation, and the retrieval agents (`OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`) were absent or incomplete | The buckets were assembled from the **shape of the names**. `technical-checks.md` had carried the correct statement (`OAI-SearchBot` ≠ `GPTBot`) since before this module existed. Had the fix for D49 shipped without this one, the first site it ran on would have been told it had blocked its own citations in sixteen places, fourteen of them wrong |
 | D51 | Nothing checked whether an OpenAPI document describes the product being audited. Every K4 property is structural, and a documentation platform's sample spec satisfies all of them | It needs one non-structural question, and the module was built entirely out of structural ones. The grader made the same error, which is the tell: this is a class, not an oversight |
+| D52 | The entry-point check named the wrong contact page and then reported it unlinked. Its alternates list held `/contact`, `/contact-us`, `/support` — not `/contacts` — and it stopped at the first path that answered 200 | Two defects in one line. The list is a claim about how sites are named, and a missing plural is enough to invert a finding; the early break then guaranteed the wrong page won whenever an in-product route answered first. **Found by continuing to work after the report was written** — the finding was already in §4.6 and in the triage table before it was refuted, which is the argument for `git mv`-ing nothing and re-running everything after a fix |
 
 Also fixed: `sitemap-lastmod` was measured as coverage only, so a hard-coded date
 on every URL scored 100%.
