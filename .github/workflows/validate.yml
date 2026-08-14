@@ -400,10 +400,16 @@ jobs:
             fi
             echo "ok: $desc"
           }
+          # These two plants name the current myth count, which makes this file a
+          # fifth home for it beside myths.md, README, SKILL.md and the Cursor
+          # rule. Adding row 33 in v0.19.0 stopped both plants landing, and
+          # plant_guard refused rather than reporting a pass — which is the guard
+          # working, and also the reminder: bump the numbers here in the same
+          # commit that adds a myth row.
           plant "myth count drifting in SKILL.md (not the README home)" \
-            sed -i "s/most-requested of the \*\*32\*\*/most-requested of the **30**/" "$S/SKILL.md"
+            sed -i "s/most-requested of the \*\*33\*\*/most-requested of the **30**/" "$S/SKILL.md"
           plant "myth count drifting in the Cursor channel" \
-            sed -i "s/out of 32 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
+            sed -i "s/out of 33 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
           plant "the two myth short lists disagreeing in size" \
             python3 -c "p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))"
           plant "play count drifting from the table" \

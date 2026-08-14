@@ -580,6 +580,30 @@ else:
         elif int(_m.group(1)) != _myth_rows:
             fail(f"{_rel}: {_what} says {_m.group(1)} myths, myths.md carries {_myth_rows}")
 
+    # The fifth home, and the one that only announces itself in CI: the negative
+    # self-tests plant a WRONG myth count over the right one, so both numbers are
+    # written into the workflow. Add a myth row without touching them and the
+    # plants stop landing — `plant_guard` then refuses, correctly, and the first
+    # anyone hears of it is a red pipeline on a green local gate. That happened on
+    # v0.19.0. The `from` side of each plant is the current count, so it is
+    # checkable here, where it costs one run of the gate instead of one of CI.
+    _wf = os.path.join(ROOT, ".github", "workflows", "validate.yml")
+    if not os.path.isfile(_wf):
+        fail("missing .github/workflows/validate.yml for the myth-plant check")
+    else:
+        _wft = open(_wf, encoding="utf-8").read()
+        for _pat, _what in (
+            (r"most-requested of the \\\*\\\*(\d+)\\\*\\\*/", "the SKILL.md myth plant"),
+            (r"out of (\d+) refuted claims/", "the Cursor-rule myth plant"),
+        ):
+            _m = re.search(_pat, _wft)
+            if not _m:
+                fail(f"validate.yml: {_what} changed shape, so nothing checks that it "
+                     f"still matches the tree (expected /{_pat}/)")
+            elif int(_m.group(1)) != _myth_rows:
+                fail(f"validate.yml: {_what} plants over {_m.group(1)}, myths.md carries "
+                     f"{_myth_rows} — the plant will not land and CI will refuse it")
+
     # The two short lists must also agree on their own size, and with each other's
     # claim about it: SKILL.md said "fourteen" and listed 14, the Cursor rule said
     # "thirteen" and listed 13, and nothing compared the two channels.
