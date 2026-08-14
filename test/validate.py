@@ -987,6 +987,39 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
             if anchor and tpath.endswith(".md") and anchor not in heading_slugs(tpath):
                 fail(f"broken anchor in {rel}: {target} — no heading with that slug")
 
+
+# --------------------------------------------------------------------------- portability
+# A plant that cannot run on the machine where it is written is a plant nobody watches
+# fail. BSD sed needs an ARGUMENT to `-i`, so `sed -i "s/a/b/" f` is a no-op on macOS —
+# and every one of this workflow's eleven sed plants was dead there until 2026-08-14,
+# exercisable only in CI. Elsewhere in this family that is exactly how a broken plant hid
+# for two days: the step reported a healthy guard as broken because the damage it was
+# meant to do never happened.
+#
+# The replacement is `test/plant_edit.py`, whose verbs refuse BY NAME when their anchor is
+# absent. This guard keeps sed from coming back, because the failure it causes is silent
+# on one platform and invisible on the other.
+_wf = os.path.join(ROOT, ".github", "workflows", "validate.yml")
+if os.path.isfile(_wf):
+    with open(_wf, encoding="utf-8") as fh:
+        _wf_text = fh.read()
+    # A CALL, not a mention. The first draft matched `\bsed -i\b` anywhere on the line and
+    # flagged four lines the moment it shipped: a step name, a code comment, an `echo`, and
+    # the payload string of the plant that deliberately writes one. That is standing
+    # instruction #7 — a mechanical sweep cannot tell a path used from a path discussed —
+    # so the pattern anchors on command position instead.
+    _sed_call = re.compile(r"(?:^|&&|\|\||;)\s*sed\s+-i\b")
+    _seds = [i + 1 for i, l in enumerate(_wf_text.split("\n")) if _sed_call.search(l)]
+    if _seds:
+        errors.append(
+            f".github/workflows/validate.yml: `sed -i` at line(s) {_seds} — BSD sed needs an "
+            f"argument to -i, so this is a no-op on macOS and the plant can only ever run in "
+            f"CI. Use `python3 test/plant_edit.py`, which refuses by name when its anchor moved")
+    if not os.path.isfile(os.path.join(ROOT, "test", "plant_edit.py")):
+        errors.append("test/plant_edit.py is missing — the workflow's plants name it, so "
+                      "every plant in this repository would fail to run at all")
+
+
 if errors:
     print(f"FAIL: {NAME} structure invalid")
     for e in errors:

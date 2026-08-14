@@ -23,6 +23,63 @@ jobs:
 
       - name: Structural validator
         run: python3 test/validate.py
+      - name: Negative self-test (sed -i must not come back)
+        run: |
+          set -eu
+          rm -rf /tmp/sedback && cp -R . /tmp/sedback
+          python3 - <<'PY'
+          # The failure this prevents is invisible on the platform where it happens: a
+          # `sed -i` plant is a no-op on macOS, so the guard it was meant to disarm stays
+          # armed, the validator honestly passes, and the step blames a healthy guard.
+          # Eleven of this workflow's plants were in that state until 2026-08-14.
+          p = "/tmp/sedback/.github/workflows/validate.yml"
+          s = open(p, encoding="utf-8").read()
+          # Search AFTER the plant() definition. The first draft anchored on a literal
+          # that this very step also contains, so `replace(..., 1)` rewrote the step's own
+          # source text and left every real call intact — a plant planting into itself.
+          # rindex, not index, and no anchor literal either: every string this step
+          # names also EXISTS in this step, so the first draft rewrote its own source
+          # text twice over — a plant planting into itself, once per attempt to fix it.
+          # The last occurrence in the file is always a real call site.
+          old = "python3 test/plant_edit.py sub"
+          i = s.rindex(old)
+          s2 = s[:i] + 'sed -i "s/x/y/" #' + s[i + len(old):]
+          assert s2 != s, "PLANT DID NOT LAND: no plant_edit call after plant()"
+          assert s2.rstrip().endswith(s[i + len(old):].rstrip()), "PLANT DID NOT LAND: the tail moved"
+          open(p, "w", encoding="utf-8").write(s2)
+          PY
+          if python3 /tmp/sedback/test/validate.py; then
+            echo "ERROR: validator accepted a sed -i plant that is dead on macOS"
+            exit 1
+          else
+            echo "OK: validator refuses a plant that can only run on one platform"
+          fi
+
+      - name: plant_edit refuses by name when its anchor moved
+        run: |
+          set -eu
+          rm -rf /tmp/pe && mkdir -p /tmp/pe && cp test/plant_edit.py /tmp/pe/
+          printf 'alpha\nbeta\ngamma\n' > /tmp/pe/f.txt
+          cd /tmp/pe
+          python3 plant_edit.py sub f.txt beta BETA
+          grep -q BETA f.txt || { echo "ERROR: sub did not land"; exit 1; }
+          python3 plant_edit.py delline f.txt alpha
+          grep -q alpha f.txt && { echo "ERROR: delline did not land"; exit 1; }
+          python3 plant_edit.py truncate f.txt gamma
+          test "$(cat f.txt)" = "BETA" || { echo "ERROR: truncate did not land"; exit 1; }
+          test "$(wc -l < f.txt)" -eq 1 || { echo "ERROR: truncate ate the trailing newline"; exit 1; }
+          set +e
+          out=$(python3 plant_edit.py sub f.txt "an anchor that moved" x 2>&1); code=$?
+          set -e
+          # The whole reason this file exists rather than eleven shell quotings: it says
+          # WHICH anchor moved, which is a five-minute fix instead of a hunt.
+          if [ "$code" != "0" ] && printf '%s' "$out" | grep -q 'PLANT DID NOT LAND'; then
+            echo "OK: all three verbs land, and a missing anchor refuses by name"
+          else
+            echo "ERROR: a missing anchor exited $code — $out"
+            exit 1
+          fi
+
       - name: The plant guard itself (content AND mode, and the incident that named it)
         run: python3 test/plant_guard_test.py
 
@@ -325,33 +382,33 @@ jobs:
             echo "ok: $desc"
           }
           plant "myth count drifting in SKILL.md (not the README home)" \
-            sed -i "s/most-requested of the \*\*32\*\*/most-requested of the **30**/" "$S/SKILL.md"
+            python3 test/plant_edit.py sub "$S/SKILL.md" "most-requested of the **32**" "most-requested of the **30**"
           plant "myth count drifting in the Cursor channel" \
-            sed -i "s/out of 32 refuted claims/out of 29 refuted claims/" cursor/rules/seo-aeo-audit.mdc
+            python3 test/plant_edit.py sub cursor/rules/seo-aeo-audit.mdc "out of 32 refuted claims" "out of 29 refuted claims"
           plant "the two myth short lists disagreeing in size" \
             python3 -c "p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))"
           plant "play count drifting from the table" \
-            sed -i "s/| \*\*Growth plays\*\* | 61 plays/| **Growth plays** | 60 plays/" README.md
+            python3 test/plant_edit.py sub README.md "| **Growth plays** | 61 plays" "| **Growth plays** | 60 plays"
           plant "the Prowl tool count disagreeing across homes" \
-            sed -i "s/~448 provider tools/~408 provider tools/" README.md
+            python3 test/plant_edit.py sub README.md "~448 provider tools" "~408 provider tools"
           plant "a table row with more cells than its header" \
             python3 -c "import re,io;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/growth-plays.md';s=open(p,encoding='utf-8').read();s2,n=re.subn('^| B1 | Manual action present |','| B1 | Manual action present | extra |',s,count=1,flags=re.M);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
           plant "CONTRIBUTING naming a subset of the gate" \
-            sed -i "/^python3 test\/test_collectors.py$/d" CONTRIBUTING.md
+            python3 test/plant_edit.py delline CONTRIBUTING.md "python3 test/test_collectors.py"
           plant "a section id defined in two references" \
-            sed -i "s/^## O1\. Can crawlers/## D1. Can crawlers/" "$S/references/onpage-checks.md"
+            python3 test/plant_edit.py sub "$S/references/onpage-checks.md" "## O1. Can crawlers" "## D1. Can crawlers"
           plant "a row appended without moving the newest-row line" \
             python3 -c "p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();assert '**Newest row in this file: 2026-07-30.**' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('**Newest row in this file: 2026-07-30.**','**Newest row in this file: 2026-07-01.**',1))"
           plant "a finding emitted with no evidence tier" \
-            sed -i "s/^    \"truncated-read\": \"CONFIRMED\",$//" "$S/scripts/page_audit.py"
+            python3 test/plant_edit.py sub "$S/scripts/page_audit.py" '    "truncated-read": "CONFIRMED",' ""
           plant "the CWV thresholds drifting from their documented home" \
-            sed -i "s/(\"LCP\", 2500, 4000/(\"LCP\", 2000, 4000/" "$S/scripts/psi_pull.py"
+            python3 test/plant_edit.py sub "$S/scripts/psi_pull.py" '("LCP", 2500, 4000' '("LCP", 2000, 4000'
           plant "a backticked references/ pointer resolving to nothing" \
-            sed -i "s/\`references\/myths.md\`/\`references\/mythz.md\`/" "$S/references/linkbuilding.md"
+            python3 test/plant_edit.py sub "$S/references/linkbuilding.md" '`references/myths.md`' '`references/mythz.md`'
           plant "a prose reference count going stale" \
-            sed -i "s/mostly \*\*knowledge\*\* — twenty-two/mostly **knowledge** — twenty-one/" CONTRIBUTING.md
+            python3 test/plant_edit.py sub CONTRIBUTING.md "mostly **knowledge** — twenty-two" "mostly **knowledge** — twenty-one"
           plant "the slash command losing a non-negotiable" \
-            sed -i "/^8\. \*\*Know each instrument/,\$d" plugins/seo-aeo-audit/commands/seo-aeo-audit.md
+            python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md "8. **Know each instrument"
 
       - name: install.sh syntax check
         run: bash -n install.sh
