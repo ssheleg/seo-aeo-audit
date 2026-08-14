@@ -46,6 +46,7 @@ past a gate that never ran.
 | Which shipped requirement has never been confirmed? | `docs/evidence/verification.md` |
 | What was wrong on 2026-08-10 and what was done about it? | `docs/audit/2026-08-10-defect-ledger.md` |
 | Where does a contribution go? | `CONTRIBUTING.md` |
+| How is coordination wired, and what does it NOT guarantee? | `docs/AGENT_SYNC.md` — **generated** from `.claude/agent-sync.json`; read it before editing a guarded file, and regenerate it in the same change that alters the config |
 
 ## Four rules this repository learned the expensive way
 
