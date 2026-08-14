@@ -1,5 +1,88 @@
 # Changelog
 
+## v0.19.0 — 2026-08-14
+
+A second agent-readiness scan, on a second live site, was reproduced line by line.
+It returned 53 items and missed the one finding that was costing the product
+answers on a live engine — and reproducing it found four defects in this skill,
+one of them a `high` / `CONFIRMED` false positive.
+
+**The taxonomy was wrong, and the instrument was silent.** `agent_surface.py`
+listed `GPTBot`, `ClaudeBot` and `Google-Extended` as answer-engine retrieval
+crawlers. All three are training or grounding crawlers on their vendors' own
+documentation, read on 2026-08-14; the retrieval agents are `OAI-SearchBot`,
+`ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot` and
+`Perplexity-User`, and each is controlled independently. Separately, `parse_robots`
+collected which agents a file **named** and never what it **decided** about them,
+so a site naming seventeen AI crawlers and disallowing all seventeen produced no
+robots finding at all. On the audited site those two defects compounded into
+silence about a `Disallow: /` for `PerplexityBot` — a search crawler sitting in a
+constant named `AI_TRAINING_BOTS`, where nobody reviewing the name reads the
+members. Fixing only the second defect would have produced sixteen confident false
+findings on the first site it ran against.
+
+- **robots.txt is now parsed as records with verdicts** (`_robots_groups`,
+  `_blocks_root`) across four buckets, each retrieval entry carrying the vendor
+  sentence that put it there. New findings: `robots-retrieval-blocked` (high,
+  `CONFIRMED` — the effect is documented by the engine doing the excluding),
+  `robots-training-decided` (an answered business decision, recorded and not
+  counted against the site), `robots-contradictory` (two `User-agent: *` records,
+  or two disagreeing `Content-Signal` lines — the shape a CDN-managed block
+  prepended to an origin file produces), `robots-blocks-linked-page` (the homepage
+  links where the `*` record forbids).
+- **`agent-file-misnamed`** — before reporting `/llms.txt` absent, probe
+  `/llm.txt`, `/llms-full.txt`, `/llm-full.txt`, `/ai.txt` and
+  `/.well-known/llms.txt`. The audited site had written, linked and maintained its
+  agent manual at `/llm.txt`; every client that follows the convention got a 404,
+  and "absent" would have sent the team to write a file they already had.
+- **`openapi_provenance()`** — ask whose API a spec describes **before** grading
+  its structure. `openapi-template-spec` (blocker) and `openapi-foreign-servers`.
+  The audited site published Mintlify's sample — `"OpenAPI Plant Store"`,
+  `servers: http://sandbox.mintlify.com` — at its public api-reference URL, listed
+  it in its own `llms.txt`, and the scanner scored it as "schema found (3
+  operations)" while docking a point for the sample's missing `operationId`s.
+- **`sitemap-lastmod-frozen`** — coverage answers "is the field there"; a crawler
+  asks "which of these changed". 160 URLs, 100% coverage, two distinct dates five
+  months old passed the old check exactly.
+
+**`page_audit.py` stops reporting an absence it never established.**
+`faq-schema-orphan` fired at `high` / `CONFIRMED` — "no question/answer pairing
+was found in the served markup" — on a page whose answers were in the served
+markup, because the check counted `<dt>`/`<dd>` and `<details>`/`<summary>` and
+the page used the WAI-ARIA disclosure pattern every component library ships. The
+proxy was never the question: the question is whether the declared answers are in
+what was served, and it is now asked directly.
+
+- ARIA disclosure pairing (`aria-expanded` + `aria-controls` → `aria-labelledby`)
+  counted as pairing; `_faq_declared_vs_served()` compares every declared
+  `acceptedAnswer` against the body text.
+- `faq-schema-orphan` re-scoped to a node whose answers are genuinely absent.
+  `faq-schema-partial` added for drift between the node and the page — which found
+  a real one on the first page it ran on: a homepage whose visible accordion
+  passed a values object to the translator while the JSON-LD emitter, a different
+  component reading the same key, did not, so the machine-readable pricing answer
+  shipped as `"Plans start at ${seat}/month …"`. `faq-schema-unreadable` added at
+  `HYPOTHESIS`, because "I could not read it" is the opposite of a confirmed
+  absence.
+
+**Doctrine.** K2a rewritten with the verified taxonomy, the list-under-the-wrong-
+label failure mode, the two-`User-agent: *` case and the linked-but-disallowed
+case. **K3a** added — publish an agent file at the name clients probe, and put any
+fact it restates under the same guard that protects the page. **K4a** added —
+a document at a conventional path is evidence that something is published there,
+never that it describes this product. K7 gains reasons 5 and 6: a grader scores
+what a site publishes and never what it forbids, and cannot ask whose API a spec
+describes. `aeo-geo.md` F8 gains the ARIA pairing and the drift case.
+`myths.md` **row 33** — "raise our agent-readiness score", which is row 11 in
+agent-readiness costume and more expensive, because its remediation list is
+specific enough to read as engineering.
+
+Full validation, all 53 items with verdicts and the change plan:
+[docs/audit/2026-08-14-privateclawd-orank-validation.md](docs/audit/2026-08-14-privateclawd-orank-validation.md).
+Five items carried to the backlog as B-11…B-15; B-11 (`agent_traffic.py`) is now
+the highest-priority open item in the repository, because two consecutive audits
+have hit the same ceiling: nothing in track K can be sized without it.
+
 ## v0.18.0 — 2026-08-14
 
 An external agent-readiness scanner graded a site this skill had already audited

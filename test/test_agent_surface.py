@@ -59,12 +59,18 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 """
 rob = ag.parse_robots(ROBOTS)
-check("gptbot" in rob["answer_engines_named"], "GPTBot group not detected")
-check("claudebot" in rob["answer_engines_named"], "ClaudeBot group not detected")
-check("perplexitybot" in rob["answer_engines_missing"],
-      "an answer engine with no group must be reported as missing")
-check(rob["training_named"] == ["ccbot"],
+check("gptbot" in rob["training_named"],
+      "GPTBot is a TRAINING crawler on OpenAI's own words ('content that may be used in "
+      "training our generative AI foundation models'). It sat in the retrieval bucket "
+      "until 2026-08-14, which made blocking it read as a lost citation")
+check("claudebot" in rob["training_named"],
+      "ClaudeBot is a training crawler on Anthropic's own words; Claude-SearchBot and "
+      "Claude-User are the retrieval pair")
+check("perplexitybot" in rob["retrieval_missing"],
+      "a retrieval crawler with no group must be reported as missing")
+check("ccbot" in rob["training_named"],
       f"the training-crawler decision must be read separately; got {rob['training_named']}")
+check(rob["retrieval_blocked"] == [], "nothing is disallowed in this fixture")
 check(rob["has_schemamap"] is False, "no schemamap: directive here")
 check(rob["sitemaps"] == ["https://example.com/sitemap.xml"], "sitemap line not read")
 
@@ -73,6 +79,70 @@ check(rob["sitemaps"] == ["https://example.com/sitemap.xml"], "sitemap line not 
 # stops the skill from smuggling a business decision in as a technical finding.
 check(ag.parse_robots("User-agent: CCBot\nDisallow: /\n")["training_named"] == ["ccbot"],
       "Disallow must count as the training question being answered too")
+
+# ── the verdict, not the roll call ───────────────────────────────────────────
+# The defect this replaced: parse_robots read WHICH agents were named and never
+# WHAT was decided about them, so a site that named every AI crawler and blocked
+# all of them produced no finding at all. Silence, on the file that had shut the
+# site out of Perplexity's answers.
+BLOCKING = """User-agent: *
+Allow: /
+Disallow: /register
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+"""
+blk = ag.parse_robots(BLOCKING)
+check(blk["retrieval_blocked"] == ["perplexitybot"],
+      f"a blocked retrieval crawler must be named; got {blk['retrieval_blocked']}")
+check(blk["training_blocked"] == ["gptbot"],
+      f"a blocked training crawler is recorded apart; got {blk['training_blocked']}")
+check(blk["grounding_blocked"] == ["google-extended"],
+      "Google-Extended is grounding, not retrieval: blocking it does not touch Google "
+      "Search, and filing it as a lost citation is a false finding")
+check(blk["wildcard_disallow"] == ["/register"],
+      f"the * record's disallow list must survive for the linked-page check; got "
+      f"{blk['wildcard_disallow']}")
+check(blk["wildcard_groups"] == 1, "one * record here")
+
+# `Allow: /` inside the same record must beat `Disallow: /` — otherwise every site
+# with a permissive root reads as blocked, which is the loudest false positive
+# this check could possibly produce.
+permissive = ag.parse_robots("User-agent: PerplexityBot\nAllow: /\nDisallow: /admin/\n")
+check(permissive["retrieval_blocked"] == [],
+      "a record that allows the root does not block the site")
+
+# Two `User-agent: *` records with disagreeing Content-Signal — the shape a
+# CDN-managed block prepended to the origin's own file produces.
+CONTRADICTORY = """User-agent: *
+Content-Signal: search=yes,ai-train=no
+Allow: /
+
+User-agent: *
+Content-Signal: ai-train=yes, search=yes
+Disallow: /cdn-cgi/
+"""
+con = ag.parse_robots(CONTRADICTORY)
+check(con["wildcard_groups"] == 2, f"both * records must be seen; got {con['wildcard_groups']}")
+check(len(con["content_signals"]) == 2,
+      f"two disagreeing Content-Signal lines must not collapse into one; got "
+      f"{con['content_signals']}")
+
+# ── a link the crawler may see and may not follow ────────────────────────────
+check(ag.robots_blocks_linked('<a href="/register">Sign up</a><a href="/pricing">P</a>',
+                              ["/register", "/admin/"]) == ["/register"],
+      "a homepage link into a disallowed path is a fact neither the robots check nor the "
+      "page check could see alone")
+check(ag.robots_blocks_linked('<a href="/pricing">P</a>', ["/admin/"]) == [],
+      "a page that links nowhere disallowed must produce nothing")
+check(ag.robots_blocks_linked('<a href="/admin/users">u</a>', ["/admin/"]) == ["/admin/users"],
+      "a prefix disallow covers what sits under it")
 
 # ── sitemap: absence is absence ──────────────────────────────────────────────
 SM = """<?xml version="1.0"?><urlset>
@@ -85,6 +155,18 @@ st = ag.lastmod_stats(SM)
 check(st["urls"] == 4 and st["with_lastmod"] == 2, f"lastmod count wrong: {st}")
 check(st["pct"] == 50, f"coverage percentage wrong: {st}")
 check(st["newest"] == "2026-08-01", f"newest lastmod wrong: {st}")
+
+check(st["distinct_days"] == 2, f"distinct lastmod days wrong: {st}")
+
+# Coverage answers "is the field there"; a crawler asks "which of these changed".
+# A build that stamps one hard-coded date on every URL scores 100% on the first
+# and says nothing to the second — observed on a live site whose 160 entries
+# carried two dates, both five months old, while the site deployed daily.
+frozen = ag.lastmod_stats("<urlset>" + "".join(
+    f"<url><loc>https://e.com/{i}</loc><lastmod>2026-03-15</lastmod></url>"
+    for i in range(25)) + "</urlset>")
+check(frozen["pct"] == 100 and frozen["distinct_days"] == 1,
+      f"a frozen sitemap must read as full coverage AND one date; got {frozen}")
 
 empty = ag.lastmod_stats("<urlset></urlset>")
 check(empty["pct"] is None,
@@ -149,6 +231,39 @@ check(sp["security_schemes"] == ["bearerAuth"], "security scheme not read")
 batchy = ag.analyze_openapi({"paths": {"/v1/batch": {"post": {"responses": {"202": {}}}}}})
 check(batchy["has_batch_path"] and batchy["has_async_202"],
       "a /batch path returning 202 must set both flags")
+
+# ── whose API is this? ───────────────────────────────────────────────────────
+# Every structural check above passes a documentation platform's starter file
+# exactly as it passes a real spec. A live product shipped the Mintlify sample
+# ("OpenAPI Plant Store", servers http://sandbox.mintlify.com) at its public
+# api-reference URL, a third-party grader scored it as "schema found (3
+# operations)", and nothing here had a word to say about it.
+DEMO = {"openapi": "3.1.0", "info": {"title": "OpenAPI Plant Store"},
+        "servers": [{"url": "http://sandbox.mintlify.com"}],
+        "paths": {"/plants": {"get": {"responses": {"200": {}}}}}}
+prov = ag.openapi_provenance(DEMO, "https://acme.com", "")
+check(prov["template_fingerprints"],
+      "a starter-template spec must be recognised before its structure is graded")
+check(prov["foreign_servers"] == ["http://sandbox.mintlify.com"],
+      f"a servers[] host unrelated to the site must be named; got {prov}")
+
+own = ag.openapi_provenance({"servers": [{"url": "https://api.acme.com/v1"}]},
+                            "https://acme.com", "https://api.acme.com")
+check(own["foreign_servers"] == [] and own["template_fingerprints"] == [],
+      f"a subdomain of the audited site is not a foreign host; got {own}")
+
+# With no origin to compare against there is nothing to be foreign TO, and
+# guessing would turn every offline --openapi-file run into a false blocker.
+blind = ag.openapi_provenance({"servers": [{"url": "https://api.acme.com"}]}, "", "")
+check(blind["foreign_servers"] == [],
+      "with no origin passed, an unknown host is unknown — not wrong")
+
+mixed = ag.openapi_provenance(
+    {"servers": [{"url": "https://api.acme.com"}, {"url": "https://cdn.other.test"}]},
+    "https://acme.com", "")
+check(mixed["foreign_servers"] == [],
+      "one foreign entry beside a matching one is a staging or CDN host, not a foreign "
+      "spec — the finding requires ALL of them to point away")
 
 # ── content negotiation: Vary is the load-bearing half ──────────────────────
 md_ok = ag.negotiation_verdict(ag.Probe("u", 200, "text/markdown; charset=utf-8", "# x",
@@ -264,6 +379,32 @@ for code in ("entry-point-unlinked", "entry-point-bounces-to-root"):
           f"behaviour — it must not be discounted in the triage formula")
 check(ag.FINDING_TIERS["trust-anchor-thin"] == "HYPOTHESIS",
       "the 500-character bar is a convention, not a measured threshold")
+# The retrieval block is the one track-K finding whose EFFECT the blocked party
+# documents itself, which is why it is CONFIRMED where most of K is not.
+check(ag.FINDING_TIERS["robots-retrieval-blocked"] == "CONFIRMED",
+      "Perplexity documents that allowing PerplexityBot is what makes a site appear in "
+      "its results — the effect of the block is stated by the engine, not modelled here")
+check(ag.FINDING_TIERS["robots-training-decided"] == "CONFIRMED",
+      "recording an answered business decision is an observation; it is not discounted "
+      "and it is not a defect")
+check(ag.FINDING_TIERS["openapi-template-spec"] == "CONFIRMED",
+      "a spec whose servers point at a vendor sandbox describes another product — a fact "
+      "about the document, not a bet")
+
+# The taxonomy is load-bearing enough to be asserted where a reader will see it
+# fail: three buckets, no member in two of them.
+overlap = (set(ag.RETRIEVAL_UAS) & set(ag.TRAINING_UAS)) | \
+          (set(ag.RETRIEVAL_UAS) & set(ag.GROUNDING_UAS)) | \
+          (set(ag.TRAINING_UAS) & set(ag.GROUNDING_UAS)) | \
+          (set(ag.RETRIEVAL_UAS) & set(ag.OTHER_AI_UAS))
+check(not overlap, f"a user agent in two buckets makes the finding ambiguous: {overlap}")
+check(all(ag.RETRIEVAL_UAS[u] for u in ag.RETRIEVAL_UAS),
+      "every retrieval agent carries the vendor sentence that put it in this bucket — "
+      "without it the bucket is an opinion, and this module held a wrong one for a "
+      "version and a half")
+check("google-extended" not in ag.RETRIEVAL_UAS,
+      "Google-Extended governs Gemini and Vertex grounding, not Google Search or AI "
+      "Overviews — technical-checks.md says Googlebot cannot be split by purpose at all")
 
 # ── the report must state its own blind spots ────────────────────────────────
 rendered = ag.render({"origin": "https://e.com", "checks": [], "findings": []})

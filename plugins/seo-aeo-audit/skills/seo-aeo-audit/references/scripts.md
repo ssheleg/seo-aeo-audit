@@ -115,12 +115,25 @@ python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --str
 
 `scripts/agent_surface.py` collects track K in one pass: the **entry points a
 machine tries and whether the server-rendered root links to them**, the
-`.well-known` discovery set, `robots.txt` read as three separate decisions,
-Markdown content negotiation and its `Vary` header, RFC 8288 `Link` headers, the
-404 shape, `<lastmod>` coverage, the JSON-LD a verifier looks for (`sameAs`,
-address, extended types, `speakable`), the OpenAPI properties that decide whether
-an LLM can generate a working function schema, and the auth-discovery chain on the
-host that actually serves the API.
+`.well-known` discovery set, `robots.txt` read as separate decisions **with the
+verdict for each**, Markdown content negotiation and its `Vary` header, RFC 8288
+`Link` headers, the 404 shape, `<lastmod>` coverage **and its distinct-date
+count**, the JSON-LD a verifier looks for (`sameAs`, address, extended types,
+`speakable`), the OpenAPI properties that decide whether an LLM can generate a
+working function schema — preceded by the question of **whose API the spec
+describes** — and the auth-discovery chain on the host that actually serves the
+API.
+
+Three of those exist because reading the roll call is not reading the decision.
+Until v0.19.0 the script reported which AI agents a `robots.txt` *named*, so a
+site that named seventeen and disallowed all seventeen produced no finding at all;
+it graded an OpenAPI document's structure without asking whether the document
+belonged to this site, so a documentation platform's sample petstore scored as an
+API; and it reported `/llms.txt` absent without looking one character away, where
+a written, linked, maintained `/llm.txt` was answering 200. The first is
+`robots-retrieval-blocked` and its siblings, the second `openapi-template-spec`,
+the third `agent-file-misnamed` — and the third is a rename, not a writing task,
+which is why it is worth telling apart from absence.
 
 `--expect /status,/changelog` adds project-specific paths to the entry-point set;
 locale prefixes are normalized, so `/de/api` counts as a link to `/api`.

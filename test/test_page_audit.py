@@ -580,6 +580,62 @@ check("faq-schema-orphan" in _orphan_codes,
 check("faq-schema-absent" not in _orphan_codes,
       "a page that declares FAQPage must not also be told its schema is absent")
 
+# 5. THE FALSE POSITIVE THIS SECTION EXISTS TO PREVENT, reproduced on a live
+# page on 2026-08-14. An ARIA disclosure accordion renders every answer into the
+# HTML and hides it with CSS. Counting only <dt>/<dd> and <details> read that as
+# "no pairing", and the module then reported `high` / `CONFIRMED` "the answers
+# are absent" about text sitting in the response it had just parsed.
+_ARIA_FAQ = "".join(
+    f'<div><button aria-expanded="false" aria-controls="p{i}" id="b{i}">Is it fast?</button>'
+    f'<div id="p{i}" role="region" aria-labelledby="b{i}">'
+    f'<p>Yes. It answers in well under one second on the median request.</p></div></div>'
+    for i in range(3))
+_ARIA_LD = ('<script type="application/ld+json">{"@context":"https://schema.org",'
+            '"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is it fast?",'
+            '"acceptedAnswer":{"@type":"Answer","text":"Yes. It answers in well under one '
+            'second on the median request."}}]}</script>')
+_aria = analyze_html(f"<html><body>{_FAQ_HEAD}{_ARIA_LD}{_ARIA_FAQ}</body></html>")
+_aria_codes = {f["code"] for f in _aria["findings"]}
+check(_aria["qa_pairs_aria"] == 3,
+      f"the ARIA disclosure pattern must count as pairing; got {_aria['qa_pairs_aria']}")
+check("faq-schema-orphan" not in _aria_codes,
+      "answers that ARE in the served HTML must never be reported as absent — this is the "
+      "false positive the whole check was rewritten for")
+check("faq-unpaired" not in _aria_codes,
+      "an accessible accordion is a pairing; only <dt>/<dd> and <details> were being counted")
+check(_aria["faq_declared"] == 1 and _aria["faq_declared_served"] == 1,
+      f"the declared answer must be found in the served body; got {_aria}")
+
+# 6. and the partial case — some declared answers served, some not. The usual
+# cause is an unsubstituted template in one of the two renderers, which is
+# exactly what the live page turned out to be doing.
+_DRIFT_LD = ('<script type="application/ld+json">{"@context":"https://schema.org",'
+             '"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is it fast?",'
+             '"acceptedAnswer":{"@type":"Answer","text":"Yes. It answers in well under one '
+             'second on the median request."}},{"@type":"Question","name":"Cost?",'
+             '"acceptedAnswer":{"@type":"Answer","text":"Plans start at ${seat} per month '
+             'with credits included."}}]}</script>')
+_drift = analyze_html(f"<html><body>{_FAQ_HEAD}{_DRIFT_LD}{_ARIA_FAQ}</body></html>")
+_drift_codes = {f["code"] for f in _drift["findings"]}
+check(_drift["faq_declared"] == 2 and _drift["faq_declared_served"] == 1,
+      f"one of two declared answers is on the page; got {_drift}")
+check("faq-schema-partial" in _drift_codes,
+      "an answer declared but not served is drift between the node and the page, and it "
+      "is a different finding from an orphan node")
+check("faq-schema-orphan" not in _drift_codes,
+      "a node with SOME answers served is not an orphan")
+
+# 7. a node whose answers cannot be read at all: absence is not established, so
+# the tier drops. Asserting CONFIRMED here is the mistake this file is about.
+_UNREADABLE = ('<script type="application/ld+json">{"@context":"https://schema.org",'
+               '"@type":"FAQPage","mainEntity":[]}</script>')
+_unread = analyze_html(f"<html><body>{_FAQ_HEAD}{_UNREADABLE}<p>Nothing.</p></body></html>")
+check("faq-schema-unreadable" in {f["code"] for f in _unread["findings"]},
+      "an FAQPage node with no readable answers and no pairing must say so rather than "
+      "claim the answers are absent")
+check(page_audit.FINDING_TIERS["faq-schema-unreadable"] == "HYPOTHESIS",
+      "'I could not read it' is the opposite of a confirmed absence — non-negotiable #8")
+
 # A heading is required: a page with a stray <dl> is a glossary, not an FAQ.
 _gloss = analyze_html(
     "<html><body><h2>Glossary</h2><dl><dt>Term</dt><dd>Sense</dd></dl></body></html>")

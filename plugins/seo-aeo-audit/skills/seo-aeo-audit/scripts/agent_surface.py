@@ -83,7 +83,23 @@ FINDING_TIERS = {
     "bot-ua-divergence": "CONFIRMED",
     "robots-ai-undeclared": "HYPOTHESIS",
     "robots-training-undecided": "HYPOTHESIS",
+    # CONFIRMED on the vendors' own documentation, not on a model of ranking:
+    # Perplexity says allowing PerplexityBot is what makes a site "appear in
+    # search results", and OpenAI says each of its three agents is controlled
+    # independently. The effect of the block is documented by the party doing the
+    # blocking-out, which is the strongest evidence this skill admits.
+    "robots-retrieval-blocked": "CONFIRMED",
+    "robots-training-decided": "CONFIRMED",
+    "robots-contradictory": "CONFIRMED",
+    "robots-blocks-linked-page": "CONFIRMED",
     "robots-no-schemamap": "HYPOTHESIS",
+    "sitemap-lastmod-frozen": "STUDY",
+    # The claim is reachability, not ranking: a manual at a non-conventional name
+    # 404s for every client that follows the convention. Publishing llms.txt at
+    # all remains what myths.md says it is.
+    "agent-file-misnamed": "CONFIRMED",
+    "openapi-foreign-servers": "CONFIRMED",
+    "openapi-template-spec": "CONFIRMED",
     "llms-txt-absent": "HYPOTHESIS",
     "llms-txt-no-when-to-use": "HYPOTHESIS",
     "wellknown-absent": "HYPOTHESIS",
@@ -100,10 +116,61 @@ FINDING_TIERS = {
     "entry-point-bounces-to-root": "CONFIRMED",
 }
 
-# The three uses a robots.txt has to tell apart (agent-readiness.md K2a).
-ANSWER_ENGINE_UAS = ("gptbot", "oai-searchbot", "chatgpt-user", "claudebot",
-                     "claude-user", "perplexitybot", "google-extended")
-TRAINING_ONLY_UAS = ("ccbot", "bytespider")
+# The uses a robots.txt has to tell apart (agent-readiness.md K2a).
+#
+# The buckets carry different consequences, which is the whole reason to keep them
+# apart: blocking a RETRIEVAL agent removes the site from that engine's answers,
+# and blocking a TRAINING agent costs no retrieval at all. One list that mixes
+# them — especially one named for the training half — is how a site blocks its own
+# citations while believing it opted out of a training corpus. Every retrieval
+# entry carries the vendor's own sentence, read from the vendor's documentation on
+# 2026-08-14; nothing here is bucketed from the shape of the name.
+RETRIEVAL_UAS = {
+    "oai-searchbot": "OpenAI: 'used to surface websites in search results in "
+                     "ChatGPT's search features'",
+    "chatgpt-user": "OpenAI: used 'for certain user actions in ChatGPT and Custom GPTs'",
+    "claude-searchbot": "Anthropic: 'navigates the web to improve search result "
+                        "quality for users'",
+    "claude-user": "Anthropic: 'When individuals ask questions to Claude, it may "
+                   "access websites using a Claude-User agent'",
+    "perplexitybot": "Perplexity: 'designed to surface and link websites in search "
+                     "results on Perplexity. It is not used to crawl content for AI "
+                     "foundation models'",
+    "perplexity-user": "Perplexity: visits a page 'when users ask Perplexity a question'",
+}
+# Training-corpus collection. GPTBot and ClaudeBot sit here on their vendors' own
+# words: OpenAI documents GPTBot as crawling 'content that may be used in training
+# our generative AI foundation models', and Anthropic documents ClaudeBot as
+# 'collecting web content that could potentially contribute to their training'.
+# Both were in this script's retrieval list until 2026-08-14, which made a site
+# that blocked them read as having blocked its own citations.
+TRAINING_UAS = ("gptbot", "claudebot", "ccbot", "bytespider")
+# Model grounding, which is neither. Blocking Google-Extended removes the site
+# from Gemini and Vertex AI grounding; it does not touch Google Search or AI
+# Overviews, which are Googlebot's and cannot be separated from Search at all —
+# technical-checks.md.
+GROUNDING_UAS = ("google-extended", "applebot-extended")
+# Named in real robots.txt files (Cloudflare's managed block ships several) with
+# no vendor purpose statement read here. Reported as blocked, never as a retrieval
+# loss: an unverified purpose cannot support that claim.
+OTHER_AI_UAS = ("meta-externalagent", "facebookbot", "amazonbot", "ai2bot",
+                "diffbot", "omgilibot", "omgili", "imagesiftbot", "anthropic-ai",
+                "cohere-ai")
+
+# Root paths a client probes for an agent manual, and the near-misses a presence
+# check reads as absence. A file served one character off the convention is
+# invisible to every client that follows it, and "absent" is the wrong finding for
+# it — agent-readiness.md K2.
+AGENT_FILE_NEAR_MISSES = ("/llm.txt", "/llms-full.txt", "/llm-full.txt",
+                          "/ai.txt", "/.well-known/llms.txt")
+
+# Fingerprints of the starter specs documentation platforms ship. Every structural
+# check passes them, which is how a demo spec survives into production and gets
+# scored as an API — agent-readiness.md K4.
+OPENAPI_TEMPLATE_FINGERPRINTS = (
+    "sandbox.mintlify.com", "petstore.swagger.io", "openapi plant store",
+    "swagger petstore", "api.example.com", "your-api.example",
+)
 
 # Draft/vendor discovery documents. `required` is never True: none of these is a
 # standard a site is obliged to serve, and a checklist that says otherwise is the
@@ -219,19 +286,137 @@ def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
 # --- pure analysis (tested offline) ------------------------------------------
 
 
+def _robots_groups(text: str) -> list[dict]:
+    """robots.txt as records, per RFC 9309: agent lines, then their rules.
+
+    Consecutive `User-agent` lines share one rule set; the next `User-agent` after
+    a rule opens a new record. Reading the file as a flat list of names — which is
+    what this module did until 2026-08-14 — answers *whether an agent is named*
+    and never *what the site decided about it*, so a site that named every AI
+    crawler and blocked all of them read as fully declared.
+    """
+    groups: list[dict] = []
+    cur: dict | None = None
+    open_for_agents = False
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].strip()
+        if not line or ":" not in line:
+            continue
+        field, _, value = line.partition(":")
+        field, value = field.strip().lower(), value.strip()
+        if field == "user-agent":
+            if cur is None or not open_for_agents:
+                cur = {"agents": [], "allow": [], "disallow": [], "signals": []}
+                groups.append(cur)
+                open_for_agents = True
+            cur["agents"].append(value.lower())
+        elif field in ("allow", "disallow", "content-signal") and cur is not None:
+            open_for_agents = False
+            key = {"allow": "allow", "disallow": "disallow",
+                   "content-signal": "signals"}[field]
+            cur[key].append(value)
+    return groups
+
+
+def _blocks_root(group: dict) -> bool:
+    """Does this record shut the whole site? `Disallow: /` with no `Allow: /`."""
+    return any(d == "/" for d in group["disallow"]) and not any(
+        a == "/" for a in group["allow"])
+
+
 def parse_robots(text: str) -> dict:
-    """Which AI groups a robots.txt names, and whether it decided about training."""
-    named = set()
-    for m in re.finditer(r"^\s*user-agent:\s*(\S+)", text, re.I | re.M):
-        named.add(m.group(1).strip().lower())
+    """What a robots.txt DECIDED about each class of AI crawler, not who it names.
+
+    The three classes have different consequences (RETRIEVAL_UAS / TRAINING_UAS /
+    GROUNDING_UAS above), so they are returned apart. Blocking is reported for all
+    of them and called a loss for none: which blocks cost citations is a claim the
+    caller makes with the vendor sentence in hand.
+    """
+    groups = _robots_groups(text)
+    named: set[str] = {a for g in groups for a in g["agents"]}
+    blocked: set[str] = {a for g in groups if _blocks_root(g) for a in g["agents"]}
+    wildcard = [g for g in groups if "*" in g["agents"]]
+    signals = []
+    for g in groups:
+        for s in g["signals"]:
+            norm = " ".join(s.lower().replace(" ", "").split(","))
+            if norm not in signals:
+                signals.append(norm)
     return {
-        "answer_engines_named": sorted(u for u in ANSWER_ENGINE_UAS if u in named),
-        "answer_engines_missing": sorted(u for u in ANSWER_ENGINE_UAS if u not in named),
-        "training_named": sorted(u for u in TRAINING_ONLY_UAS if u in named),
-        "has_content_signal": bool(re.search(r"^\s*content-signal:", text, re.I | re.M)),
+        "retrieval_named": sorted(u for u in RETRIEVAL_UAS if u in named),
+        "retrieval_missing": sorted(u for u in RETRIEVAL_UAS if u not in named),
+        "retrieval_blocked": sorted(u for u in RETRIEVAL_UAS if u in blocked),
+        "training_named": sorted(u for u in TRAINING_UAS if u in named),
+        "training_blocked": sorted(u for u in TRAINING_UAS if u in blocked),
+        "grounding_blocked": sorted(u for u in GROUNDING_UAS if u in blocked),
+        "other_ai_blocked": sorted(u for u in OTHER_AI_UAS if u in blocked),
+        "wildcard_groups": len(wildcard),
+        "wildcard_disallow": [d for g in wildcard for d in g["disallow"] if d],
+        "content_signals": signals,
+        "has_content_signal": bool(signals),
         "has_schemamap": bool(re.search(r"^\s*schemamap:", text, re.I | re.M)),
         "sitemaps": re.findall(r"^\s*sitemap:\s*(\S+)", text, re.I | re.M),
     }
+
+
+def _registrable(host: str) -> str:
+    """Last two labels of a host — enough to tell `api.acme.com` from `acme.io`.
+
+    Deliberately not a public-suffix implementation: this decides whether to ask a
+    human, and asking about a `co.uk` pair costs one glance. Getting it wrong the
+    other way — silently calling a foreign host familiar — is what this exists to
+    prevent.
+    """
+    labels = [p for p in (host or "").lower().split(".") if p]
+    return ".".join(labels[-2:]) if len(labels) >= 2 else (labels[0] if labels else "")
+
+
+def openapi_provenance(spec: dict, origin: str = "", api_origin: str = "") -> dict:
+    """Does this spec describe the site being audited, or the platform's sample?
+
+    Every structural check in K4 — operationIds, descriptions, typed responses —
+    passes a documentation platform's starter file exactly as it passes a real
+    spec, so a demo petstore left at `/api-reference/openapi.json` is scored as an
+    API. Observed on a live product on 2026-08-14, where a third-party grader
+    awarded points for it and this script had nothing to say.
+    """
+    servers = [s.get("url", "") for s in (spec.get("servers") or [])
+               if isinstance(s, dict) and s.get("url")]
+    own = {_registrable(urlparse(u).hostname or "") for u in (origin, api_origin) if u}
+    own.discard("")
+    foreign = [u for u in servers
+               if (urlparse(u).hostname or "") and _registrable(urlparse(u).hostname) not in own]
+    haystack = " ".join(servers + [str(spec.get("info", {}).get("title", "")),
+                                   " ".join(list(spec.get("paths", {}) or {})[:20])]).lower()
+    prints = sorted({f for f in OPENAPI_TEMPLATE_FINGERPRINTS if f in haystack})
+    return {
+        "servers": servers,
+        # Only claim "foreign" when there was something to compare against: with
+        # no origin passed, every host is unknown rather than wrong.
+        "foreign_servers": foreign if (own and servers and len(foreign) == len(servers)) else [],
+        "template_fingerprints": prints,
+    }
+
+
+def robots_blocks_linked(html: str, disallowed: list[str]) -> list[str]:
+    """Same-origin paths the page links to that the `*` record disallows.
+
+    A link a crawler can see pointing at a page it may not fetch. Harmless on a
+    login form and a real finding on anything the site wants read — either way it
+    is a fact about the site nobody was reading, because it needs the page and the
+    robots file in the same hand and no single check held both.
+    """
+    prefixes = [p for p in disallowed if p.startswith("/")]
+    if not prefixes:
+        return []
+    hrefs = {h.split("#")[0].split("?")[0]
+             for h in re.findall(r'href=["\'](/[^"\']*)["\']', html)}
+    hit = set()
+    for href in hrefs:
+        for p in prefixes:
+            if href == p or href == p.rstrip("/") or href.startswith(p if p.endswith("/") else p + "/"):
+                hit.add(href)
+    return sorted(hit)
 
 
 def lastmod_stats(sitemap_xml: str) -> dict:
@@ -241,9 +426,16 @@ def lastmod_stats(sitemap_xml: str) -> dict:
         return {"urls": 0, "with_lastmod": 0, "pct": None, "newest": None}
     with_lm = sum(1 for u in urls if "<lastmod>" in u)
     dates = sorted(re.findall(r"<lastmod>\s*([0-9T:+\-]{10,})", sitemap_xml))
+    days = sorted({d[:10] for d in dates})
     return {"urls": len(urls), "with_lastmod": with_lm,
             "pct": round(with_lm * 100 / len(urls)),
-            "newest": dates[-1][:10] if dates else None}
+            "newest": dates[-1][:10] if dates else None,
+            # Coverage answers "is the field there". This answers the question a
+            # crawler actually asks — "which of these changed" — and a build that
+            # stamps one hard-coded date on every URL answers 100% to the first
+            # and nothing to the second.
+            "distinct_days": len(days),
+            "oldest": days[0] if days else None}
 
 
 def scan_jsonld(html: str) -> dict:
@@ -644,18 +836,69 @@ def collect(origin: str, api_origin: str = "", page: str = "",
         if rp.answered and rp.status == 200:
             rob = parse_robots(rp.body)
             out["robots"] = rob
-            if rob["answer_engines_missing"] and not rob["has_content_signal"]:
+            # The decided-against case, which this script reported for a version
+            # and a half by saying nothing at all. Silence where a site has shut
+            # out its own citations reads exactly like a pass.
+            if rob["retrieval_blocked"]:
+                add("high", "robots-retrieval-blocked",
+                    "retrieval crawlers disallowed at the root: "
+                    f"{_flat(', '.join(rob['retrieval_blocked']))}. These are the agents "
+                    "that put a page in an answer with a link, not the ones that build a "
+                    "training corpus — "
+                    + _flat(RETRIEVAL_UAS[rob["retrieval_blocked"][0]], 160)
+                    + ". Blocking them removes the site from those answers; confirm the "
+                      "block was the intention and not a training decision that swept "
+                      "them up",
+                    "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
+            # The other blocks are recorded as answered decisions, never as
+            # defects: which corpora a company feeds is its call, and a scanner
+            # that scores one answer is scoring a preference (K7).
+            decided = (rob["training_blocked"] + rob["grounding_blocked"]
+                       + rob["other_ai_blocked"])
+            if decided:
+                add("info", "robots-training-decided",
+                    f"{len(decided)} non-retrieval AI crawler(s) disallowed at the root: "
+                    f"{_flat(', '.join(decided))}. Recorded, not counted against the site — "
+                    "training and grounding access is a business decision with no retrieval "
+                    "cost, and Google-Extended in particular does not touch Google Search",
+                    "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
+            if rob["retrieval_missing"] and not rob["has_content_signal"]:
                 add("info", "robots-ai-undeclared",
-                    "answer-engine crawlers with no explicit group: "
-                    f"{_flat(', '.join(rob['answer_engines_missing']))} — they fall to the "
+                    "retrieval crawlers with no explicit group: "
+                    f"{_flat(', '.join(rob['retrieval_missing']))} — they fall to the "
                     "* group, which is a default rather than a decision",
                     "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
             if not rob["training_named"] and not rob["has_content_signal"]:
                 add("info", "robots-training-undecided",
-                    "no group for training-only crawlers (CCBot, Bytespider) and no "
-                    "Content-Signal — the training-corpus question has not been answered "
-                    "either way. This is a business decision, not a defect",
+                    "no group for training crawlers and no Content-Signal — the "
+                    "training-corpus question has not been answered either way. This is a "
+                    "business decision, not a defect",
                     "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
+            # Two records for the same agent, or two Content-Signal lines that
+            # disagree. The usual cause is a CDN-managed block prepended to the
+            # origin's own file, and the result is a machine-readable reservation
+            # of rights that says both yes and no.
+            if rob["wildcard_groups"] > 1 or len(rob["content_signals"]) > 1:
+                add("medium", "robots-contradictory",
+                    f"{rob['wildcard_groups']} separate `User-agent: *` record(s) and "
+                    f"{len(rob['content_signals'])} distinct Content-Signal line(s) "
+                    f"({_flat('; '.join(rob['content_signals']) or 'none')}). RFC 9309 "
+                    "leaves a crawler free to merge or to take the first, so the file "
+                    "states a policy it cannot be held to — and Content-Signal is written "
+                    "as a reservation of rights, which makes a contradiction a legal "
+                    "statement rather than a formatting slip",
+                    "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
+            if home.answered and home.body and rob["wildcard_disallow"]:
+                shut = robots_blocks_linked(home.body, rob["wildcard_disallow"])
+                out["linked_but_disallowed"] = shut
+                if shut:
+                    add("medium", "robots-blocks-linked-page",
+                        f"the homepage links to {len(shut)} path(s) the * record disallows: "
+                        f"{_flat(', '.join(shut))}. A crawler sees the invitation and may "
+                        "not accept it, so an agent asked how to do the thing behind that "
+                        "link answers from someone else's page. Intended for a private "
+                        "area; a finding for anything the site wants read",
+                        "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
             if not rob["has_schemamap"]:
                 add("info", "robots-no-schemamap",
                     "no schemamap: directive (NLWeb schema feeds)",
@@ -676,14 +919,49 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                             f"{stats['pct']}% of {stats['urls']} sitemap entries carry "
                             "<lastmod> — a crawler cannot prioritize what changed",
                             "technical-checks.md")
+                    # 100% coverage and two dates is the shape a hard-coded map
+                    # produces, and it passes a coverage check exactly. The field
+                    # is then present and uninformative, which is worse than
+                    # absent: absent asks the crawler to decide, a frozen date
+                    # tells it nothing has changed.
+                    elif (stats["urls"] >= 20 and stats["distinct_days"]
+                          and stats["distinct_days"] <= 2):
+                        add("medium", "sitemap-lastmod-frozen",
+                            f"{stats['urls']} sitemap entries carry <lastmod> and only "
+                            f"{stats['distinct_days']} distinct date(s) "
+                            f"({_flat(stats['oldest'])}–{_flat(stats['newest'])}). Coverage "
+                            "is 100% and the information content is zero — check whether "
+                            "the value is written by the build or by hand, and compare the "
+                            "newest date against the last deploy before believing it",
+                            "technical-checks.md")
 
         # --- 6. llms.txt and the well-known set -----------------------------
         lp = note("llms.txt", fetch(f"{origin}/llms.txt"))
         if not (lp.answered and lp.status == 200):
-            add("info", "llms-txt-absent",
-                "no /llms.txt. Not a ranking or citation lever (myths.md) — publish it "
-                "only if agentic browsers are a target",
-                "agent-readiness.md#k2-discovery--the-well-known-set-and-what-each-spec-actually-says")
+            # Before reporting absence, look one character away. A manual served
+            # at /llm.txt is written, linked and maintained — and invisible to
+            # every client that probes the conventional name, which is all of
+            # them. "Absent" sends the team to write a file they already have.
+            near = []
+            for path in AGENT_FILE_NEAR_MISSES:
+                np_ = fetch(origin + path)
+                if np_.answered and np_.status == 200 and np_.body.strip() \
+                        and "html" not in (np_.ctype or "").lower():
+                    note(f"near-miss agent file {path}", np_)
+                    near.append(path)
+            out["agent_file_near_misses"] = near
+            if near:
+                add("medium", "agent-file-misnamed",
+                    f"no /llms.txt, but {_flat(', '.join(near))} answers 200 with a "
+                    "non-HTML body. The file exists and is one character off the name "
+                    "every client probes, so the work is done and none of it is reachable. "
+                    "This is a rename plus a redirect, not a writing task",
+                    "agent-readiness.md#k2-discovery--the-well-known-set-and-what-each-spec-actually-says")
+            else:
+                add("info", "llms-txt-absent",
+                    "no /llms.txt. Not a ranking or citation lever (myths.md) — publish it "
+                    "only if agentic browsers are a target",
+                    "agent-readiness.md#k2-discovery--the-well-known-set-and-what-each-spec-actually-says")
         elif not re.search(r"when to use|use this (when|if)|best for", lp.body, re.I):
             add("info", "llms-txt-no-when-to-use",
                 "llms.txt lists pages but never says when an agent should reach for this "
@@ -864,6 +1142,33 @@ def main(argv: list[str]) -> int:
     if spec_obj is not None:
         spec = analyze_openapi(spec_obj)
         data["openapi"] = spec
+        # Before grading the spec, ask whether it describes THIS product. Every
+        # structural check below passes a documentation platform's starter file,
+        # and a scanner that reports "schema found (3 operations)" for a demo
+        # petstore has awarded points for an API that does not exist. Cheap to
+        # check, and nothing else in this script would ever notice.
+        prov = openapi_provenance(spec_obj, args.origin, args.api_origin)
+        data["openapi"]["provenance"] = prov
+        if prov["template_fingerprints"]:
+            data["findings"].append({
+                "severity": "blocker", "code": "openapi-template-spec",
+                "message": "the OpenAPI document carries a starter-template fingerprint "
+                           f"({_flat(', '.join(prov['template_fingerprints']))}) — this is "
+                           "the sample spec a documentation platform ships, not this "
+                           "product's API. An agent that reads it will call somebody "
+                           "else's host, and every structural check on it is measuring "
+                           "the template",
+                "reference": "agent-readiness.md#k4-the-api-contract-an-llm-has-to-call-through",
+                "tier": FINDING_TIERS["openapi-template-spec"]})
+        elif prov["foreign_servers"]:
+            data["findings"].append({
+                "severity": "high", "code": "openapi-foreign-servers",
+                "message": "every servers[] entry points at a host unrelated to the site: "
+                           f"{_flat(', '.join(prov['foreign_servers']))}. Either the spec "
+                           "belongs to another product or the base URL was never changed "
+                           "from the example",
+                "reference": "agent-readiness.md#k4-the-api-contract-an-llm-has-to-call-through",
+                "tier": FINDING_TIERS["openapi-foreign-servers"]})
         n = spec["operations"]
         if n:
             missing_id = n - spec["with_operation_id"]

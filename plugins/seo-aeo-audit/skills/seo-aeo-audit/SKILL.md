@@ -298,7 +298,7 @@ technically literate non-specialist; expand jargon on first use.
 
 ## Myth guard — do not put these in a plan
 
-The fourteen most-requested of the **32** refuted claims. Each is refuted by
+The fourteen most-requested of the **33** refuted claims. Each is refuted by
 2026 evidence; the full list, with the counter-evidence and the working
 alternative for each, is in [references/myths.md](references/myths.md) — read it before
 answering a tactic question that is not on this short list.

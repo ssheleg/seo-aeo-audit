@@ -98,20 +98,62 @@ is the cheap check, and it belongs in the verification column of the plan.
 
 ### K2a. Crawler policy is two decisions, not one
 
-`robots.txt` groups AI user agents into three uses, and a single `Allow: /` for
-everything answers only the first:
+`robots.txt` groups AI user agents by **what blocking one costs**, and a single
+`Allow: /` for everything answers only the first question. Each row below is the
+vendor's own purpose statement, read from the vendor's documentation on
+2026-08-14 — because the previous version of this table was assembled from the
+shape of the names and got three of them wrong:
 
-| Use | Agents (2026) | The decision |
+| Use | Agents (verified 2026-08-14) | What blocking costs |
 |---|---|---|
-| Answer-engine retrieval | `GPTBot`, `OAI-SearchBot`, `ChatGPT-User`, `ClaudeBot`, `Claude-User`, `PerplexityBot`, `Google-Extended` | Allow, if you want to be cited |
-| Training-corpus collection | `CCBot`, `Bytespider` | A business decision, not a technical one — allowing it feeds models that may answer without linking |
+| Answer-engine retrieval | `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User` | The site stops appearing in that engine's answers. Perplexity states it plainly: allow `PerplexityBot` "to ensure your site appears in search results" |
+| Training-corpus collection | `GPTBot`, `ClaudeBot`, `CCBot`, `Bytespider` | Nothing in retrieval. OpenAI documents `GPTBot` as crawling "content that may be used in training our generative AI foundation models"; Anthropic documents `ClaudeBot` as "collecting web content that could potentially contribute to their training" |
+| Model grounding | `Google-Extended`, `Applebot-Extended` | Gemini / Vertex AI grounding and Apple's model training. **Not Google Search and not AI Overviews** — those are Googlebot's, and Googlebot cannot be split by purpose at all (technical-checks.md) |
 | Everything else | unnamed agents | The `*` group already covers them |
+
+**Three corrections this table carries, and the reason it is worth reading twice.**
+`GPTBot` and `ClaudeBot` are training crawlers, not retrieval ones — their
+retrieval siblings are `OAI-SearchBot`/`ChatGPT-User` and
+`Claude-SearchBot`/`Claude-User`, and OpenAI states outright that "each setting is
+independent of the others". `Google-Extended` is neither. Getting these wrong in
+either direction produces a confident false finding: call a training block a lost
+citation and the report demands a business reversal for nothing; call a retrieval
+block a training decision and the site stays out of an engine's answers while the
+audit says it is fine.
+
+**The failure mode this is really about is a list under the wrong label.** The
+observed shape — a real site, 2026-08-14 — is a constant named `AI_TRAINING_BOTS`
+holding seventeen user agents, sixteen of them genuinely training or grounding
+crawlers and one of them `PerplexityBot`. Nobody reviewing "block the training
+bots" reads the members; the name has already answered the question. So the site
+disappeared from one answer engine as a side effect of a decision it never made,
+and the third-party agent-readiness grader that scanned it did not notice either,
+because the grader scores what a site *publishes* and not what it *forbids*.
+Read the list, not the label — `scripts/agent_surface.py` now reports the verdict
+per bucket, where until v0.19.0 it reported only which agents were named.
 
 Cloudflare's Content Signals policy (`Content-Signal: search=yes, ai-train=no`)
 expresses the same split in one line and is machine-readable. **Neither choice is
 a defect.** What is a defect is not having made the choice: an audit reports the
 current state and names the trade-off, it does not smuggle in a business decision
 about training data as a technical finding.
+
+**Two `User-agent: *` records is a third state, and it is not "both".** A CDN that
+manages robots.txt prepends its own block to the origin's file, so the served
+document carries two wildcard records and, where both set `Content-Signal`, two
+contradictory reservations of rights. RFC 9309 lets a crawler merge the records or
+take the first; the site does not get to know which. Observed on a live pair of
+hosts where the apex declared `ai-train=no` and its documentation subdomain
+declared `ai-train=yes` two records apart, in the same file. Whichever answer is
+intended, the file has to give one.
+
+**A link a crawler may see and may not follow** is the same file read against the
+page. A homepage that links to `/register` while the `*` record disallows it is
+not necessarily wrong — private areas belong in that list — but it decides where
+the answer to "how do I sign up for this" comes from. Blocked, the page cannot be
+quoted, and an agent asked that question answers from whatever third party wrote
+about the product instead. That is a routine and near-invisible way a site hands
+its own onboarding narrative to a review aggregator.
 
 `Schemamap` / NLWeb schema feeds (`schemamap:` directive in `robots.txt`, pointing
 at an XML map of JSONL/RSS structured-data feeds) sit in the same file and are
@@ -213,6 +255,50 @@ faithful representation of the same content — same facts, same prices, same
 availability — and it is never worth the risk on a site with a manual-action
 history. `references/threats-and-defense.md` owns that boundary.
 
+### K3a. Publish it at the name clients probe, and put it under the same guard as the page
+
+Two failures show up on every agent surface that restates something the site also
+says in HTML, and both are cheap to find once you know to look.
+
+**The name is the whole interface.** A file at `/llm.txt` is not a file at
+`/llms.txt`. Observed on a live site on 2026-08-14: an agent manual written,
+maintained, linked from the footer and explicitly allowed in the middleware — at
+`/llm.txt` and `/llm-full.txt`, one character off the convention every client
+probes, so every client 404s. A presence check reports that as *absent* and sends
+the team to write a file they already have. The finding is a rename plus a
+redirect, and it is worth separating from absence for exactly that reason:
+`agent_surface.py` probes the near-misses (`/llm.txt`, `/llms-full.txt`,
+`/llm-full.txt`, `/ai.txt`, `/.well-known/llms.txt`) before reporting nothing is
+there. **None of this makes `llms.txt` a ranking lever** — `myths.md` row 1 stands.
+It makes the file you decided to publish reachable, which is a separate question
+from whether publishing it was worth doing.
+
+**A second surface for the same fact needs the same test.** Any machine-readable
+representation that quotes a price, a limit or a plan is a second home for a fact
+whose first home is a page — and standing repository doctrine on duplicated facts
+applies to it: give the fact one home, or add the check that compares the copies.
+Two shapes of this were on one site on the same day:
+
+- `/llm.txt` and `/llm-full.txt` stated "Annual plans save 30%" in three places.
+  The product's own pricing tables give **17**, the discrepancy had already been
+  found and fixed across ten locale dictionaries and three HTML renderers, and a
+  test was written to keep it fixed. The test enumerated four rendering files.
+  The two agent-facing text files were not among them, so the surface built for
+  machines kept serving the number the humans' surface had been corrected for.
+- The homepage's `FAQPage` JSON-LD emitted the answer template **unsubstituted** —
+  `"Plans start at ${seat}/month … ${included}/mo in AI credits"` — because the
+  visible accordion passed the values object to the translator and the JSON-LD
+  emitter, a different component reading the same message key, did not. The
+  answer engine's copy of the pricing answer was a template literal.
+
+The rule: **when a fact reaches an agent surface, it inherits the guard that
+protects the page, or the surface is unguarded.** In practice that is one line in
+whatever test already enumerates the renderers — and the reason it gets missed is
+that the enumeration was written before the agent surface existed. `page_audit.py`
+catches the JSON-LD half by comparing every declared `acceptedAnswer` against the
+served body text; the flat-file half needs the project's own claims test to name
+the file.
+
 ## K4. The API contract an LLM has to call through
 
 An OpenAPI document is not a document to an agent — it is the tool definition it
@@ -242,6 +328,42 @@ Agents integrate against the second one. Versioning without a deprecation signal
 is half the promise.
 
 `scripts/agent_surface.py --openapi <url>` reports all of these per operation.
+
+### K4a. Before grading the spec, ask whose API it describes
+
+Every property above is a **structural** check, and a structural check cannot tell
+a product's API from the sample file its documentation platform shipped. Both have
+operations, both have (or lack) `operationId`s, both parse. So the starter spec
+survives launch, sits at the address a developer would guess, and gets read as
+evidence that an API exists.
+
+Observed on a live product on 2026-08-14: `docs.<domain>/api-reference/openapi.json`
+served Mintlify's demo — `"title": "OpenAPI Plant Store"`, `servers:
+http://sandbox.mintlify.com`, three operations on `/plants` — and it was listed in
+that site's own `llms.txt` under "OpenAPI Specs". A third-party agent-readiness
+grader scanned the domain, found "REST: schema found (3 operations)", and marked
+the product's API *present* while docking a point for missing `operationId`s. It
+had graded the quality of somebody else's petstore. The product has no public API
+at all.
+
+Two cheap questions settle it, and neither is structural:
+
+1. **Do the `servers[]` hosts belong to this site?** All of them pointing somewhere
+   unrelated is the finding. One of them pointing at a CDN or a staging host beside
+   a matching one is normal, so the check requires *all* to point away before it
+   speaks — a rule the script implements rather than states.
+2. **Does the document carry a template fingerprint?** `sandbox.mintlify.com`,
+   `petstore.swagger.io`, `api.example.com`, a title containing "Plant Store" or
+   "Petstore". These are conclusive rather than suggestive: nobody names their
+   production API after the sample.
+
+`agent_surface.py` runs both before the per-operation grading and reports the
+template case at `blocker` severity, because grading a demo spec's `operationId`s
+is worse than silence — it produces a plausible remediation list for an API that
+does not exist. **The general rule, which is not only about OpenAPI: a document
+found at a conventional path is evidence that something is published there, never
+evidence that it describes this product.** The same question is worth asking of an
+`agent-card.json`, an MCP server card and an `auth.md` copied from a spec draft.
 
 ## K5. Agent authentication — the discovery chain, not the login page
 
@@ -316,11 +438,26 @@ site:
    of the plan, not in an engineering ticket that will sit open forever.
 4. **A grader's advice can contradict measured evidence.** Where it does — most
    often on `llms.txt` and Markdown mirrors — `references/myths.md` wins, and the
-   plan says why. Buying a number is on the myth list for this reason.
+   plan says why. Buying a number is on the myth list for this reason (row 33).
+5. **They score what a site publishes, never what it forbids.** This is the
+   structural blind spot, and it is the expensive one. A second live scan on
+   2026-08-14 returned 58 line items — SDK packages, an MCP server, `auth.md`,
+   `pricing.md`, an `ai-catalog.json` — and said nothing at all about the site's
+   `robots.txt` disallowing a retrieval crawler, because a scanner asks what is
+   *there*. The one finding that was costing the product answers on a live engine
+   appeared on no line of the report, above or below the ones that did.
+6. **A document at the conventional path is scored as the thing it names.** The
+   same scan reported "REST: schema found (3 operations)" for a documentation
+   platform's untouched sample spec (K4a). It graded the sample's `operationId`s.
+   A grader cannot ask whether a document describes this product; that question
+   only occurs to a reader who knows what the product is.
 
 The productive reading: take the grader's **absence findings** as a to-do list to
 verify, its **score** as noise, and its **prescriptions** as claims to check
-against the myth guard.
+against the myth guard — and remember that the findings it cannot produce are
+where a real audit earns its keep. Two scans of two different sites have now each
+returned a long list of missing draft-spec files while missing a `CONFIRMED`
+retrieval-side defect that one `curl` of `robots.txt` shows.
 
 ## K8. The check table, with tiers
 
