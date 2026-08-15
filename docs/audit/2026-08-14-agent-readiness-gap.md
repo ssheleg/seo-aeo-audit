@@ -9,18 +9,22 @@
   Roughly half the grader's findings named things **none of the ten tracks looks
   at**. That is a coverage gap, not a disagreement, and a coverage gap that a
   third party found first is worth writing down in full.
-- **What shipped from it:** v0.18.0 — track K, `references/agent-readiness.md`,
+- **What shipped from it:** **v0.19.0** — track K, `references/agent-readiness.md`,
   `scripts/agent_surface.py`, a myth-guard boundary, one confirmed `preflight.py`
   defect and two generalized guards.
 - **Status of the backlog below:** open. Items are ordered by whether the skill
   can close them at all.
+- **Version note.** The work below was written under a `v0.18.0` CHANGELOG
+  heading and **released as v0.19.0**; `v0.18.0` was never tagged and is not on
+  npm. Where this document said "v0.18.0 ships X", it now says the release does.
+  Corrected 2026-08-15 during a re-audit of this work.
 
 ## Contents
 
 - [1. The mapping — all 58 grader checks against the skill](#1-the-mapping--all-58-grader-checks-against-the-skill)
 - [2. What the grader got wrong, and what that taught the design](#2-what-the-grader-got-wrong-and-what-that-taught-the-design)
 - [3. Defects in this repository found by running it](#3-defects-in-this-repository-found-by-running-it)
-- [4. Backlog — what v0.18.0 does not close](#4-backlog--what-v0180-does-not-close)
+- [4. Backlog — what this release does not close](#4-backlog--what-this-release-does-not-close)
 - [5. The design rule this whole episode produced](#5-the-design-rule-this-whole-episode-produced)
 
 ## 1. The mapping — all 58 grader checks against the skill
@@ -113,7 +117,7 @@ this skill. That is a shared blind spot rather than a pass — see §4, item B1.
 
 **Totals**, counted off the rows above rather than stated beside them: **58**
 grader checks — **7 already covered** by tracks A, D, F and G · **6 partial** ·
-**2 already refuted** by `myths.md` · **43 absent**. Of the 43, v0.18.0 gives
+**2 already refuted** by `myths.md` · **43 absent**. Of the 43, this release gives
 **32** a home in track K, routes **10** to business decisions (a public repo, a
 package registry, a directory submission, an MCP deployment), and leaves **1**
 deliberately out — `?mode=agent`, §4 C1.
@@ -140,7 +144,7 @@ says outright that a grader's prescriptions are claims to check, not instruction
 ## 3. Defects in this repository found by running it
 
 Running the skill on a live site — rather than reading it — surfaced four defects
-in the skill itself. All four are fixed in v0.18.0.
+in the skill itself. All four are fixed in v0.19.0.
 
 | # | Defect | How it hid |
 |---|---|---|
@@ -149,13 +153,13 @@ in the skill itself. All four are fixed in v0.18.0.
 | D46 | `SKILL.md` step 0 and `references/preflight.md` each carried a duplicated, half-overwritten sentence from a merge — `preflight.md`'s first section opened mid-sentence with the word "describing it," | Prose defects survive every structural guard in `validate.py`. Nothing checks that a paragraph is a paragraph |
 | D47 | The reference-anchor guard and the `FINDING_TIERS` coverage guard were both written against `page_audit.py` by path | The moment a second script emitted findings, both guards exempted it silently — the exact class the 2026-08-10 audit named as "a guard written against one home of a fact that lives in several". Both now iterate `_bundled`, and the tier guard reads both emitter shapes |
 
-## 4. Backlog — what v0.18.0 does not close
+## 4. Backlog — what this release does not close
 
 Ordered by whether the skill can close it at all.
 
 ### A. Can close — deferred with a reason
 
-| id | Item | Why it is not in v0.18.0 |
+| id | Item | Why it is not in this release |
 |---|---|---|
 | A1 | **`agent_traffic.py`** — parse a server-log export and count AI/agent user agents, forward-confirming reverse DNS to drop spoofers | This is the missing half of K1. Track K tells the auditor to measure agent demand before sizing the prize, and then hands them no instrument. Everything else in K stays `HYPOTHESIS` until this exists, which makes it the highest-value item on this list |
 | A2 | **WebMCP bundle scan** — fetch same-origin script bundles and look for `document.modelContext.registerTool` and `toolname` / `tooldescription` form attributes | Feasible in stdlib (fetch + regex over the bundle), but it needs a bundle-discovery step and a size cap, and shipping it half-done would produce "not found" on every code-split site |
@@ -164,6 +168,7 @@ Ordered by whether the skill can close it at all.
 | A5 | **`/auth.md` structure grading** — check the seven WorkOS sections and the spec anchor keywords are present, not just that the file exists | Cheap, but the draft is moving; a structural check against a moving draft produces false findings on a compliant file |
 | A6 | **Reachability sweep for advertised URIs** — `OPTIONS` every URI found in `agent_auth`, an agent card or an MCP server card, and fail the ones that 404 | K2's stale-file rule is stated as doctrine and enforced by nothing. This is the check that makes "do not publish a file you cannot keep true" real |
 | A7 | **A `--page` sweep** — accept a URL list so the markup checks run per template in one invocation | Today the one-url caveat is stated; the ergonomics still push toward running it once on the homepage, which is exactly the mistake the caveat warns about |
+| A9 | **A guard that every CHANGELOG section has a tag** — `validate.py` enforces the four-way sync between the manifests and the CHANGELOG *top* entry, and nothing asks whether the sections below it were ever released | Found by re-auditing this work: the `v0.18.0` section reads as a release and no `v0.18.0` exists in git or on npm. One `git tag -l` per section, in the same file that already reconciles six other prose counts |
 | A8 | **Redirect-chain reporting for every probe, not just entry points** — the `.well-known` and markdown checks still credit a followed redirect | The entry-point probe now compares final vs requested URL; the other probes do not. Same defect class, narrower blast radius, so it is listed rather than rushed |
 
 ### B. Should cover, and nothing does yet

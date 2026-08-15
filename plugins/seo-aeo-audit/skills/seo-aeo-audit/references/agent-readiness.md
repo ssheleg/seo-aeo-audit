@@ -198,6 +198,23 @@ The same rule covers `elsewhere` redirects: `/docs → /api` is fine and worth
 recording, but the finding must name where it landed rather than silently
 crediting the address that was asked for.
 
+**A third failure this check invites, and it is the auditor's not the site's.**
+Three of the things this track measures are *artifacts* — a `lastmod` percentage,
+a robots group, an unlinked path — and an artifact cannot tell you whether its
+shape is a defect or a decision. Two live cases, one each way:
+
+| Observation | Looked like | Was |
+|---|---|---|
+| `/register` unlinked from the served root | a hole in the link graph | deliberate: an auth route, `noindex, nofollow`, absent from the sitemap by design |
+| 47% of sitemap URLs carry `<lastmod>` | a freshness gap | deliberate: the site had shipped a deploy-date `lastmod`, measured it restamping 3,582 of 3,582 URLs as "modified today", and **deleted the claim rather than fake it** |
+
+Both were found by opening the generator that produces the artifact. Neither was
+visible in the artifact. So: **before a track-K observation becomes a finding,
+read the code that emits it.** A fabricated `lastmod` is worse than none — Google
+ignores a `lastmod` it finds unreliable — and a checklist that scores coverage
+cannot see the difference between 235 URLs with no date and 235 URLs lying about
+one.
+
 **The roles worth probing**, each with its conventional alternates — the role
 matters, the spelling does not:
 
