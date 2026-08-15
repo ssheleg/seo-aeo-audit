@@ -364,6 +364,51 @@ check(dead.answered is False, "a probe with no status must not read as answered"
 live404 = ag.Probe("https://e.com/x", 404)
 check(live404.answered is True, "a 404 is an answer — the server spoke")
 
+# ── robots precedence: the most specific rule wins, Allow breaks the tie ────
+# The live record that produced a `medium` / `CONFIRMED` false positive on
+# 2026-08-15. `/api` is permitted by an anchored Allow and forbidden by nothing:
+# `Disallow: /api/` requires the trailing slash. The old check compared
+# `href == pattern.rstrip("/")` and never collected Allow lines at all, so it
+# reported the homepage as linking to a path the site forbids — against a path the
+# site had gone out of its way to permit.
+PRECEDENCE = """User-agent: *
+Allow: /
+Allow: /api$
+Disallow: /api/
+Disallow: /admin/
+"""
+pr = ag.parse_robots(PRECEDENCE)
+check(pr["wildcard_allow"] == ["/", "/api$"],
+      f"the Allow rules must reach the caller; got {pr.get('wildcard_allow')}. Without "
+      f"them the more specific rule cannot win, because it is not in the room")
+check(pr["wildcard_disallow"] == ["/api/", "/admin/"], "disallow rules not collected")
+
+for path, want in (("/api", "allow"), ("/api/", "disallow"), ("/api/v1", "disallow"),
+                   ("/admin/", "disallow"), ("/pricing", "allow"), ("/", "allow")):
+    got = ag.robots_path_verdict(path, pr["wildcard_allow"], pr["wildcard_disallow"])
+    check(got == want, f"robots verdict for {path}: expected {want}, got {got}")
+
+check(ag.robots_blocks_linked(
+        '<a href="/api">a</a><a href="/api/v1/x">b</a><a href="/admin/p">c</a>'
+        '<a href="/pricing">d</a>',
+        pr["wildcard_disallow"], pr["wildcard_allow"]) == ["/admin/p", "/api/v1/x"],
+      "only genuinely forbidden links may be reported; /api is permitted here")
+
+# `$` anchors, `*` spans, and a bare prefix still behaves like a prefix.
+check(ag._robots_pattern_matches("/api$", "/api") is True, "$ must match exactly")
+check(ag._robots_pattern_matches("/api$", "/api/v1") is False, "$ must not match a longer path")
+check(ag._robots_pattern_matches("/a*/c", "/abc/c") is True, "* must span characters")
+check(ag._robots_pattern_matches("/admin", "/admin/panel") is True,
+      "an unanchored rule is a prefix rule")
+check(ag._robots_pattern_matches("api", "/api") is False,
+      "a pattern that does not start with / is not a path rule")
+
+# Ties go to Allow — the documented rule, and the one that decides real files.
+check(ag.robots_path_verdict("/x", ["/x"], ["/x"]) == "allow",
+      "on an equal-length match Allow wins; that is the published rule")
+check(ag.robots_path_verdict("/private/a", [], ["/private/"]) == "disallow",
+      "a longer Disallow with no competing Allow still forbids")
+
 # ── every emitted finding carries a declared tier ────────────────────────────
 src = open(os.path.join(SCRIPTS, "agent_surface.py"), encoding="utf-8").read()
 emitted = set(__import__("re").findall(r'"code":\s*"([a-z0-9-]+)"', src))
