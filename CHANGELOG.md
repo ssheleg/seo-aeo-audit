@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.19.1 — 2026-08-15
+
+Two false findings and one false claim, all found by running v0.19.0 against a
+site that had just acted on its own report — which is the only way any of them
+would have surfaced.
+
+**A `medium` / `CONFIRMED` false positive told a site its own link was
+forbidden.** The record was `Allow: /` · `Allow: /api$` · `Disallow: /api/` ·
+`Disallow: /admin/`. `/api` is permitted by an anchored Allow and forbidden by
+nothing — `Disallow: /api/` requires the trailing slash. Two causes in one
+function: `href == pattern.rstrip("/")` let a trailing-slash Disallow cover the
+slashless path, and `parse_robots` never collected `Allow` lines at all, so the
+more specific rule could not win **because it was not in the room**. Acting on
+that finding means deleting a good link or loosening a good `robots.txt`.
+Replaced with the documented rule — most specific pattern wins, `Allow` breaks
+the tie — with `*` and `$` handled, the live record pinned as a fixture, and a CI
+plant that flips the comparison and must fail.
+
+**A false negative in the same run** reported "no markdown recovery" against a
+site that had shipped exactly the recommended implementation the day before. The
+recommendation is a markdown body served to a client that *asked* for markdown;
+the probe fetched with the default `Accept`. It now asks the way the fix is meant
+to be reached, and checks `Vary: Accept` when it finds one. An instrument that
+does not request the fix the way the fix is reached cannot see it.
+
+**`v0.18.0` never existed.** The CHANGELOG carried a section that reads like a
+release; there is no tag and no npm publish — the registry goes `0.17.1` →
+`0.19.0`. The gap document said six times that track K shipped in a version
+nobody can install. Corrected to name the release that carries it, with the
+substitution stated rather than applied silently.
+
+**K2b gained the rule underneath all of it:** an artifact cannot say whether its
+shape is a defect or a decision. Two live cases pointing opposite ways —
+`/register` unlinked (an auth route, `noindex` by design) and 47% `<lastmod>`
+coverage (a deploy-date stamp that had been measured restamping 3,582 of 3,582
+URLs, then deliberately deleted) — and neither reason was visible in the
+artifact. Both took one read of the generator. `sitemap-lastmod-thin` now says so
+at the point of use.
+
+Gates, each run alone: `validate.py`, `plant_guard_test.py`, `test_page_audit.py`,
+`test_url_inspection.py`, `test_collectors.py`, `test_agent_surface.py`,
+`test_output_contracts.py`.
+
 ## v0.19.0 — 2026-08-14
 
 A second agent-readiness scan, on a second live site, was reproduced line by line.
