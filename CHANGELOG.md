@@ -85,6 +85,17 @@ have hit the same ceiling: nothing in track K can be sized without it.
 
 ## v0.18.0 — 2026-08-14
 
+> **Never released on its own.** There is no `v0.18.0` tag and no `0.18.0` on
+> npm: the registry goes `0.17.1` → `0.19.0`. This section describes work that
+> shipped **inside v0.19.0**, which was cut two commits later on the same day.
+> The note is here because the section reads as a release, and `npm install
+> @ssheleg/seo-aeo-audit@0.18.0` fails. Install `0.19.0` or later to get track K.
+>
+> Nothing checks this. `validate.py` enforces the four-way version sync between
+> the manifests and the CHANGELOG top entry; it does not ask whether every
+> CHANGELOG section corresponds to a tag that exists. That guard is in the
+> backlog (`docs/audit/2026-08-14-agent-readiness-gap.md`, §4 A9).
+
 An external agent-readiness scanner graded a site this skill had already audited
 twice and returned 58 findings across four layers. Roughly half of them named
 things none of the ten tracks looks at: `.well-known` discovery documents, OAuth
