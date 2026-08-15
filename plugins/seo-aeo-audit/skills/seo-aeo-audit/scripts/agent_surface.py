@@ -935,7 +935,10 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                     if stats["pct"] is not None and stats["pct"] < 50:
                         add("low", "sitemap-lastmod-thin",
                             f"{stats['pct']}% of {stats['urls']} sitemap entries carry "
-                            "<lastmod> — a crawler cannot prioritize what changed",
+                            "<lastmod>. Read the generator before calling this a defect: "
+                            "a date the site cannot compute truthfully is better omitted "
+                            "than faked, and a deploy date restamping every URL is the "
+                            "more expensive failure",
                             "technical-checks.md")
                     # 100% coverage and two dates is the shape a hard-coded map
                     # produces, and it passes a coverage check exactly. The field
