@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.20.0 — 2026-08-16
+
+### Added
+
+- **The ten tracks are checked against each other before they become one plan.** Each track
+  runs independently and produces findings that never saw the others; step 3 then sorts them
+  into a single prioritised list, which treats them as one answer. That is a convergence, and
+  a convergence trusts its inputs because they arrived — sorting an unranked list is not the
+  same as noticing that two of its rows cannot both be executed.
+
+  Four things to look for before any score is computed: two recommendations that cannot both
+  be done (D says merge the cannibalising pair, C says the deeper page is where the equity
+  lands); one root cause wearing three track names and splitting its own priority; two rows
+  about one URL at CONFIRMED and HYPOTHESIS, which is a fact about the instruments; and a
+  track that found nothing where a neighbour implies it should have.
+
+  `Cross-track: clean` is the answer most audits will write, and writing it is the point — a
+  check whose silence is indistinguishable from not having run is not evidence, and this is
+  the one most easily skipped because every track individually went green.
+
+  The model is one home away, in `agent-stack`'s
+  `agent-orchestrator/references/graph-engineering.md`; this is its application to an audit
+  whose shape is a fan-out.
+
 ## v0.19.1 — 2026-08-15
 
 Two false findings and one false claim, all found by running v0.19.0 against a

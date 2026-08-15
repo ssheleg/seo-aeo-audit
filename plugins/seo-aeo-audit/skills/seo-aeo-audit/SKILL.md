@@ -237,7 +237,34 @@ invocation, flags, quotas and the per-script limits.
   template plus the pages a finding is actually about.
 ## Step 3 — Triage
 
-Score every finding, then sort. Do not present an unranked list.
+**First, check the tracks against each other. They ran independently and they are about
+to become one plan.** Ten tracks produce ten sets of findings that never saw one another,
+and the plan below treats them as a single answer — which is a convergence, and a
+convergence trusts its inputs because they arrived. Sorting an unranked list is not the
+same as noticing that two of its rows cannot both be done.
+
+Four things to look for, before any score is computed:
+
+1. **Two recommendations that cannot both be executed.** D says two pages cannibalise and
+   should merge; C says the deeper one is where the internal equity lands. E says expand
+   the thin page; A says it burns crawl budget and should be pruned. Name the pair, decide
+   which governs, and say why in the plan — a reader who meets both later cannot.
+2. **One root cause wearing two track names.** A render-blocked template shows up as an A
+   finding, an F finding and an H finding. Three rows, one fix, and three rows inflate the
+   plan and split its priority.
+3. **A finding whose evidence rung contradicts a neighbour's.** Two rows about the same URL
+   at CONFIRMED and HYPOTHESIS is a fact about the instruments, not about the site; the
+   lower rung defers to the higher one or the disagreement is stated.
+4. **A track that returned nothing where a neighbour implies it should have.** Track F
+   found no extractability problem on pages track E called thin. One of the two did not
+   look properly, and which one is worth a minute now rather than a contradiction in the
+   report.
+
+Write the answer either way: `Cross-track: clean` or the pairs with their rulings. A check
+whose silence is indistinguishable from not having run is not evidence — and this is the
+check most easily skipped, because every track individually went green.
+
+Then score every finding and sort. Do not present an unranked list.
 
 ```
 priority = (impact × confidence) / effort
