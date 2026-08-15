@@ -206,6 +206,26 @@ jobs:
             echo "OK: tests catch the userDeclaredCanonical mis-spelling"
           fi
 
+      - name: Negative self-test (robots Allow precedence must fail if dropped)
+        run: |
+          set -eu
+          rm -rf /tmp/robots-copy && cp -R . /tmp/robots-copy
+          python3 - <<'PY'
+          p = '/tmp/robots-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
+          s = open(p, encoding="utf-8").read()
+          old = '            if n > best_len:'
+          assert old in s, "PLANT DID NOT LAND: the precedence comparison is not where this plant reads it"
+          # Disallow now wins every tie AND every equal-length match: the exact
+          # shape that reported a permitted /api as forbidden.
+          open(p, "w", encoding="utf-8").write(s.replace(old, '            if n >= best_len:', 1))
+          PY
+          if python3 /tmp/robots-copy/test/test_agent_surface.py; then
+            echo "ERROR: a path the site explicitly Allows passed as forbidden"
+            exit 1
+          else
+            echo "OK: the most specific rule wins and Allow breaks the tie"
+          fi
+
       - name: Negative self-test (a redirect credited as the page asked for must fail)
         run: |
           set -eu

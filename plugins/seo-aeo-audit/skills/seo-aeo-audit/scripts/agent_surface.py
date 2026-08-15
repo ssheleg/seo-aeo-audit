@@ -357,6 +357,7 @@ def parse_robots(text: str) -> dict:
         "other_ai_blocked": sorted(u for u in OTHER_AI_UAS if u in blocked),
         "wildcard_groups": len(wildcard),
         "wildcard_disallow": [d for g in wildcard for d in g["disallow"] if d],
+        "wildcard_allow": [a for g in wildcard for a in g["allow"] if a],
         "content_signals": signals,
         "has_content_signal": bool(signals),
         "has_schemamap": bool(re.search(r"^\s*schemamap:", text, re.I | re.M)),
@@ -403,25 +404,69 @@ def openapi_provenance(spec: dict, origin: str = "", api_origin: str = "") -> di
     }
 
 
-def robots_blocks_linked(html: str, disallowed: list[str]) -> list[str]:
-    """Same-origin paths the page links to that the `*` record disallows.
+def _robots_pattern_matches(pattern: str, path: str) -> bool:
+    """RFC 9309 path matching: `*` is any run of characters, `$` anchors the end."""
+    if not pattern.startswith("/"):
+        return False
+    anchored = pattern.endswith("$")
+    body = pattern[:-1] if anchored else pattern
+    rx = "".join(".*" if ch == "*" else re.escape(ch) for ch in body)
+    return re.match(rx + ("$" if anchored else ""), path) is not None
+
+
+def robots_path_verdict(path: str, allow: list[str], disallow: list[str]) -> str:
+    """`allow` or `disallow` for one path, by the documented precedence rule.
+
+    **The most specific rule wins, and Allow beats Disallow on a tie** — that is
+    the rule Google and RFC 9309 both publish, and skipping it is how this module
+    produced a `medium` / `CONFIRMED` false positive on a live site (2026-08-15).
+
+    The record was:
+
+        Allow: /            Allow: /api$        Disallow: /api/     Disallow: /admin/
+
+    `/api` is matched by `Allow: /api$` (5 characters of pattern) and by nothing
+    that forbids it: `Disallow: /api/` requires the trailing slash. The check that
+    was here compared `href == p.rstrip("/")`, so a `Disallow: /api/` silently
+    covered `/api` as well, and `Allow` lines were never collected at all — the
+    more specific rule could not win because it was not in the room.
+
+    The finding it produced said the homepage linked to a path the site forbids,
+    against a path the site had gone out of its way to permit with an anchored
+    rule. Acting on it means deleting a good link or loosening a good robots.txt.
+    """
+    best_len, verdict = -1, "allow"
+    for rules, name in ((allow, "allow"), (disallow, "disallow")):
+        for pattern in rules:
+            if not _robots_pattern_matches(pattern, path):
+                continue
+            n = len(pattern)
+            # Strictly longer wins; on an exact tie Allow wins, and Allow is
+            # evaluated first, so `>` rather than `>=` implements both.
+            if n > best_len:
+                best_len, verdict = n, name
+    return verdict
+
+
+def robots_blocks_linked(html: str, disallowed: list[str],
+                         allowed: list[str] | None = None) -> list[str]:
+    """Same-origin paths the page links to that the `*` record actually forbids.
 
     A link a crawler can see pointing at a page it may not fetch. Harmless on a
     login form and a real finding on anything the site wants read — either way it
     is a fact about the site nobody was reading, because it needs the page and the
     robots file in the same hand and no single check held both.
+
+    `allowed` is not optional in spirit: without the Allow rules this cannot apply
+    the precedence rule and will over-report. It defaults to empty only so an old
+    caller keeps working, and passing the group's `allow` list is the correct use.
     """
-    prefixes = [p for p in disallowed if p.startswith("/")]
-    if not prefixes:
+    if not [p for p in disallowed if p.startswith("/")]:
         return []
     hrefs = {h.split("#")[0].split("?")[0]
              for h in re.findall(r'href=["\'](/[^"\']*)["\']', html)}
-    hit = set()
-    for href in hrefs:
-        for p in prefixes:
-            if href == p or href == p.rstrip("/") or href.startswith(p if p.endswith("/") else p + "/"):
-                hit.add(href)
-    return sorted(hit)
+    return sorted(h for h in hrefs
+                  if robots_path_verdict(h, allowed or [], disallowed) == "disallow")
 
 
 def lastmod_stats(sitemap_xml: str) -> dict:
@@ -658,17 +703,35 @@ def collect(origin: str, api_origin: str = "", page: str = "",
 
     if origin:
         # --- 1. does a missing path say so ----------------------------------
-        p = note("404 shape", fetch(f"{origin}/agent-surface-probe-404-check"))
+        missing = f"{origin}/agent-surface-probe-404-check"
+        p = note("404 shape", fetch(missing))
         if p.answered:
             if p.status == 200:
                 add("blocker", "agent-404-soft",
                     "an unknown path answers HTTP 200 — every path looks real to an agent",
                     "agent-readiness.md#k6-runtime-behaviour-an-agent-depends-on")
             elif not looks_like_markdown(p.body, p.ctype):
-                add("low", "agent-404-no-recovery",
-                    f"HTTP {p.status} for unknown paths (correct) but the body is not a "
-                    "short markdown recovery pointing at the sitemap or docs index",
-                    "agent-readiness.md#k6-runtime-behaviour-an-agent-depends-on")
+                # Ask the way the fix is meant to be reached before reporting it
+                # missing. The recommendation is a markdown body served to a client
+                # that ASKED for markdown — serving it to everyone would hand a
+                # browser a text file. Probing only with the default Accept
+                # therefore reports the recommended implementation as absent, which
+                # is what this check did to a site that had just shipped it
+                # (2026-08-15).
+                md404 = note("404 shape (Accept: text/markdown)",
+                             fetch(missing, accept="text/markdown"))
+                if not (md404.answered and looks_like_markdown(md404.body, md404.ctype)):
+                    add("low", "agent-404-no-recovery",
+                        f"HTTP {p.status} for unknown paths (correct) but no short markdown "
+                        "recovery, with or without Accept: text/markdown — an agent that "
+                        "mistyped a path gets no route back",
+                        "agent-readiness.md#k6-runtime-behaviour-an-agent-depends-on")
+                elif not re.search(r"(^|,)\s*accept\s*(,|$)", md404.headers.get("vary", ""), re.I):
+                    add("high", "markdown-no-vary",
+                        "the 404 serves markdown by negotiation but its Vary header does "
+                        f"not list Accept ({_flat(md404.headers.get('vary') or 'absent')}) "
+                        "— a CDN will hand one variant to everyone",
+                        "agent-readiness.md#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins")
 
         # --- 2. the homepage, three ways ------------------------------------
         home = note("homepage (default UA)", fetch(origin + "/"))
@@ -907,7 +970,8 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                     "statement rather than a formatting slip",
                     "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
             if home.answered and home.body and rob["wildcard_disallow"]:
-                shut = robots_blocks_linked(home.body, rob["wildcard_disallow"])
+                shut = robots_blocks_linked(home.body, rob["wildcard_disallow"],
+                                          rob.get("wildcard_allow", []))
                 out["linked_but_disallowed"] = shut
                 if shut:
                     add("medium", "robots-blocks-linked-page",
