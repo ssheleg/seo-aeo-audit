@@ -820,6 +820,16 @@ because two output contracts change. The `thin` finding code is now
 were `D1`–`E2`, so anything parsing findings or citing those ids needs the new names.
 The stray `v0.11.3` tag is deleted.
 
+> **The tag is gone; the package is not** (noted 2026-08-17, umbrella `B-71`).
+> `npm view @ssheleg/seo-aeo-audit@0.11.3` still returns `0.11.3`, published
+> 2026-08-10 — so `npm install @ssheleg/seo-aeo-audit@0.11.3` succeeds and serves
+> code this file documents as a mistake, with no tag to read it at and no section
+> of its own. The sentence above is true about the tag and silent about the
+> artifact, which is the half a user actually gets. Unpublishing is not available
+> at this age; `npm deprecate` would put a warning on install and is an outward
+> change to a published package, so it is the operator's call rather than a
+> documentation fix.
+
 A fresh-eyes audit of the whole skill: every command, every bundled script, all
 twenty-two references and the pipeline around them. **Forty-three defects**, nine of
 which made the skill emit or suppress findings in ordinary use. The four-command
