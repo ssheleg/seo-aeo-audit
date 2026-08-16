@@ -1,5 +1,46 @@
 # Changelog
 
+## v0.22.0 — 2026-08-16
+
+### The body was 18% over budget, and Step 2 was carrying two other files
+
+**5885 tokens against a 5000 budget → 4996.** Step 2 alone was 6762 chars, 2.2x the
+next-largest section, and most of what followed its ten-track table belonged to two
+files that already ship:
+
+| Moved | To | Why there |
+|---|---|---|
+| Track K's conditionality and its cheapest check | `agent-readiness.md` | the file track K points at |
+| The seven-script inventory and the four traps | `scripts.md` | every invocation was already documented there |
+
+No new reference file, so the **twenty-five** the three documents restate — and
+that `test/validate.py` now reconciles against the directory in both directions —
+does not move.
+
+The rest is compression, not deletion: the `$SKILL_DIR` resolution boilerplate
+gives way to the consequence that matters (an unreachable instrument drops every
+check it would have made to the bottom rung, and a rung caps a tier); the
+References list stops repeating the track letters the Step 2 table already
+carries; Step 3's cross-track block keeps one example per rule instead of two.
+
+**What was deliberately not cut.** The eight non-negotiables, and the confidence
+weights inline in the triage maths — `test/validate.py:1019` *requires* those
+weights in `SKILL.md` because the maths quotes them, and the same guard watches
+them against `evidence-tiers.md`. Trimming either would have hit the number by
+removing the thing the number is for.
+
+**Still 246 tokens over the 4750 house working limit**, and that is recorded rather
+than met: the remaining candidates are the doctrine list and a guarded constant.
+The next section added here needs a split, not a trim.
+
+### Fixed
+
+- The Track-K block took its `references/…` links with it when it moved **into**
+  `references/`, where that prefix resolves to nothing. The gate caught both.
+
+Found by the nine-repository audit of 2026-08-16 (umbrella `B-66`;
+`F-seo-aeo-audit-02`).
+
 ## v0.21.0 — 2026-08-16
 
 ### The Cloudflare row said "stalled" thirty days before a default that blocks Googlebot

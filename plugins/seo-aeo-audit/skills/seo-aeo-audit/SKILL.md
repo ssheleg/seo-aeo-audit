@@ -60,50 +60,38 @@ Inspect first, then act. In order:
 
 1. Read `docs/seo/` (or the path the user names). If a previous audit exists,
    this run is a **re-audit**: diff against it and lead with what changed.
-2. Establish what you can reach: the live site, a staging URL, `robots.txt`,
-   `sitemap.xml`, Search Console / Bing Webmaster / analytics access, a crawl
-   export (Screaming Frog, Sitebulb), server logs, any MCP tools connected
-   (Ahrefs, GSC, analytics, a crawler MCP, or the
-   [Prowl MCP](references/prowl-mcp.md) for bulk competitive and demand data
-   without a per-vendor seat).
-   **Test the access, do not assume it.** A connected server is not a working
-   one: API tiers gate endpoints, and tokens carry narrower scopes than the
-   dashboard suggests. Probe the one call each source is there for before you
-   plan around it, and record what came back — "connected but returns
-   `Insufficient plan`" is a finding the next audit needs.
-3. Pick the scope with the user only if the answer changes the work: whole site,
-   one template/section, one question ("why did traffic drop in May"), or a
-   **link-building extraction** — targets, keywords and anchors for a contractor.
-   That one is a deliverable rather than a diagnosis: read
-   [references/linkbuilding.md](references/linkbuilding.md) when it is the ask.
-   It works with or without Search Console.
+2. Establish what you can reach — live site, staging, `robots.txt`, `sitemap.xml`,
+   Search Console / Bing / analytics, a crawl export, server logs, and any MCP
+   connected ([Prowl](references/prowl-mcp.md) covers bulk competitive and demand
+   data without a per-vendor seat).
+   **Test the access, do not assume it.** A connected server is not a working one:
+   tiers gate endpoints and tokens carry narrower scopes than the dashboard
+   suggests. Probe the one call each source is there for, and record what came
+   back — *"connected but returns `Insufficient plan`"* is a finding the next
+   audit needs.
+3. Pick the scope with the user **only if the answer changes the work**: whole
+   site, one template, one question, or a **link-building extraction** — which is
+   a deliverable rather than a diagnosis, works with or without Search Console,
+   and has its own file ([linkbuilding.md](references/linkbuilding.md)).
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
-`scripts/preflight.py` runs the automatable half of this step and reports which
-independent gate a failure hit — `login`, `quota-project`, `api-not-enabled`,
-`scope` and `permission` fail for different reasons and most of them say `403`.
-Read `references/preflight.md` for exactly what it probes and what it leaves to
-you (Bing/Yandex, analytics, server logs, crawl exports and every MCP tool).
+`scripts/preflight.py` runs the automatable half and names **which** gate a failure
+hit — `login`, `quota-project`, `api-not-enabled`, `scope` and `permission` fail
+for different reasons and most of them say `403`. What it probes, and the large
+half it leaves to you: [preflight.md](references/preflight.md).
 **A green preflight is not a covered step.**
 
-```bash
-# Claude Code plugin: ${CLAUDE_PLUGIN_ROOT} expands inside skill content.
-SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit"
-# Any other channel: the base directory the harness names when it loads this
-# skill — the directory this SKILL.md sits in. Confirm before relying on it:
-ls "$SKILL_DIR/scripts/preflight.py"
-```
+Resolve `$SKILL_DIR` and confirm it before relying on it —
+`${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit` under the Claude Code plugin, the
+directory this file sits in anywhere else; [scripts.md](references/scripts.md)
+has both forms and every invocation.
 
-`No such file or directory` here is not a missing feature and not a reason to
-proceed quietly. It means the six instruments are unreachable, so every check they
-would have made drops to the bottom rung of the evidence ladder — and a finding's
-rung caps its tier. Say so in the three-line status; an audit that silently becomes
-a manual one has changed what its conclusions are worth (non-negotiable #6).
-
-```bash
-python3 "$SKILL_DIR/scripts/preflight.py" --site sc-domain:example.com --origin https://example.com
-```
+**`No such file or directory` is not a missing feature and not a reason to proceed
+quietly.** It means the instruments are unreachable, so every check they would have
+made drops to the bottom rung of the evidence ladder — and a rung caps a tier. Say
+so in the three-line status: an audit that silently becomes a manual one has
+changed what its conclusions are worth (non-negotiable #6).
 
 Access rules: read-only by default. Never submit forms, request indexing,
 disavow links, or change a live property without explicit approval in this
@@ -127,13 +115,12 @@ Record, with dates, so every later claim can be measured against it:
   [references/algorithm-updates.md](references/algorithm-updates.md) before
   forming any hypothesis about a cause.
 
-**When there is no first-party access at all**, say so in the three-line status
-and fall back to what a third-party index can establish: what the domain ranks
-for today, how large its link profile is against a sized competitive set, and
-whether its target phrases carry measurable demand
-([references/prowl-mcp.md](references/prowl-mcp.md)). That baseline is capped at
-`STUDY` and cannot answer "why is this page not indexed" — but it is enough to
-tell a cold start from a decline, and those need opposite plans.
+**With no first-party access at all**, say so in the three-line status and fall
+back to what a third-party index establishes — current rankings, link profile
+against a sized competitive set, whether the target phrases carry demand
+([prowl-mcp.md](references/prowl-mcp.md)). That baseline caps at `STUDY` and
+cannot answer *"why is this page not indexed"*, but it tells a cold start from a
+decline, and those need opposite plans.
 
 If the site claims a traffic drop, **first separate reporting failure from
 ranking failure**: a frozen GSC report pins clicks at one date while a real hit
@@ -142,8 +129,8 @@ an independent rank tracker before diagnosing an algorithmic cause.
 
 ## Step 2 — The ten tracks
 
-Run every track that is in scope. Each has its own reference file with the
-concrete checks, the 2026-current gotchas, and the evidence to capture.
+Run every track in scope. Each has its own file with the concrete checks, the
+2026-current gotchas, and the evidence to capture.
 
 | # | Track | Answers | Reference |
 |---|---|---|---|
@@ -159,110 +146,79 @@ concrete checks, the 2026-current gotchas, and the evidence to capture.
 | J | Measurement | Will anyone be able to tell if the plan worked? | [measurement.md](references/measurement.md) |
 | K | Agent surface | Can a machine discover, authenticate and transact here? | [agent-readiness.md](references/agent-readiness.md) |
 
-**Track K is conditional, and its bar is a product question, not a technical one.**
-Run it when the site sells something an agent could plausibly buy, call or
-automate — an API, a SaaS product, a booking or purchasing flow. Skip it for a
-content site with no programmable surface. It also carries a rule the other ten
-do not need: **presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**, so most
-of it belongs in the Experiments bucket until first-party logs show agent traffic.
-A third-party "agent-readiness score" is a checklist generator, never a target —
-[agent-readiness.md](references/agent-readiness.md) K7 has the four ways one
-misleads, and where such a grader contradicts `references/myths.md`, the myth
-guard wins.
-
-Its highest-value check is also its cheapest, and it belongs to tracks C and F as
-much as to K: **read the server-rendered root and ask which conventional entry
-points it links to.** On a client-rendered site the API docs, the sign-up and the
-contact page are in the navigation, work perfectly in a browser, and are absent
-from the document every crawler, answer engine and agent actually reads (K2b).
-Before any of it, run the two-query brand-collision test in
-[entity-and-brand.md](references/entity-and-brand.md) G1b: a site that is absent
-from its own brand name while ranking #1 for its own domain has an identity
-problem that no file in this track fixes.
+**Track K is conditional.** Run it when the site sells something an agent could
+plausibly buy, call or automate; skip it for a content site with no programmable
+surface. It carries a rule the other ten do not need — **presence is `CONFIRMED`,
+effect is mostly `HYPOTHESIS`** — so most of it belongs in Experiments until
+first-party logs show agent traffic. When to run it, its cheapest check, and why a
+third-party "agent-readiness score" is a checklist generator rather than a target:
+[agent-readiness.md](references/agent-readiness.md).
 
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
 its own ranking pass, its own gate (two metatags, without which no card renders at
 all) and its own freshness curve, so a site where Discover is a material traffic
-source needs [references/discover.md](references/discover.md) run as an eleventh
-pass — and a site where it is not can skip it entirely. Check the GSC Discover
-report before deciding: the reference shipped reachable only from the list at the
-bottom of this file, which meant an agent working the tracks in order never opened
-it.
+source needs [discover.md](references/discover.md) run as an eleventh pass — and a
+site where it is not can skip it entirely. Check the GSC Discover report before
+deciding.
 
 **Before any decline diagnosis**, run the date-alignment and update-response
 protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —
 "a core update hit us" is not a finding, and half the documented GSC outages
 coincided with rollouts.
 
-Each track has two halves: the **diagnostic** work (what is wrong and why) and a
-**mechanical sweep** for completeness —
-[technical-checks.md](references/technical-checks.md) §A3 for tracks A/B and
-[onpage-checks.md](references/onpage-checks.md) for D/E. Run the diagnosis first;
-the sweep afterwards catches the boring failures, and only sweep items with an
-observable impact get promoted into the findings table.
+Each track has two halves: the **diagnostic** work and a **mechanical sweep** for
+completeness — [technical-checks.md](references/technical-checks.md) §A3 for A/B,
+[onpage-checks.md](references/onpage-checks.md) for D/E. Diagnose first; the sweep
+catches the boring failures afterwards, and only sweep items with an observable
+impact reach the findings table.
 
 **Order matters.** A track-A blocker (site not fetchable, noindex in the
 pre-render source, manual action) makes every other finding moot — a manual
 action is a binary multiplier: nothing you improve counts until it is lifted.
 Work A → B → C before spending time on F/G.
 
-**Evidence ladder** — the full routing lives in
-[references/tooling.md](references/tooling.md); it is ordered by **evidence
-strength**, not convenience: server logs → Search Console / Bing / Yandex →
-full crawl → field performance data → third-party indices → manual fetch and
-DevTools. Use the highest rung you can actually reach for each check, and state
-in the report which rung a finding rests on. A public-only audit with no property
-access is valid work, but its indexation and query findings are inferences, not
-observations, and get tiered accordingly.
+**Evidence ladder** — ordered by **evidence strength, not convenience**, from
+server logs down to a manual fetch; the rungs and their routing are in
+[tooling.md](references/tooling.md). Use the highest rung you can actually reach
+and state which one a finding rests on. A public-only audit with no property
+access is valid work, but its indexation and query findings are inferences rather
+than observations, and get tiered accordingly.
 
-**The seven bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py`, `agent_surface.py` —
-collect the mechanical half of every track. Read `references/scripts.md` for
-invocation, flags, quotas and the per-script limits.
+**Seven scripts ship with the skill** — `preflight.py`, `gsc_pull.py`,
+`page_audit.py`, `url_inspection.py`, `agent_surface.py`, `psi_pull.py` and
+`sitemap_pull.py`. Their invocations, and the **four traps that decide whether a
+finding is real** — rendered vs server HTML, the JSON array shape, truncation
+dropping count-based findings, and the evidence tier that enters triage where
+severity does not — are in [scripts.md](references/scripts.md).
 
-**Four traps that decide whether a finding is real:**
-
-- `page_audit.py`'s schema inventory reads **server-rendered HTML only**. Where
-  a CMS injects JSON-LD with JavaScript, an empty inventory is not evidence of
-  absent markup (non-negotiable #8).
-- `--format json` emits an **array**, one object per page, even for one URL:
-  index `data[0]`.
-- A response cut off by `--max-bytes` drops every count-based finding rather
-  than publishing a fragment as a measurement.
-- **Every emitted finding carries an evidence tier as well as a severity, and
-  only the tier enters the triage formula.** Severity is how loud a finding is;
-  the tier is what backs it. `url_inspection.py` asks the index rather than
-  inferring from a fetch, which is the only way a finding reaches `CONFIRMED` —
-  at a quota of 2000/day and 600/minute per property, so sample one URL per
-  template plus the pages a finding is actually about.
 ## Step 3 — Triage
 
-**First, check the tracks against each other. They ran independently and they are about
-to become one plan.** Ten tracks produce ten sets of findings that never saw one another,
-and the plan below treats them as a single answer — which is a convergence, and a
-convergence trusts its inputs because they arrived. Sorting an unranked list is not the
-same as noticing that two of its rows cannot both be done.
+**First, check the tracks against each other.** Ten tracks produce ten sets of
+findings that never saw one another, and the plan treats them as one answer — a
+convergence that trusts its inputs because they arrived. Sorting an unranked list
+is not the same as noticing that two of its rows cannot both be done.
 
 Four things to look for, before any score is computed:
 
-1. **Two recommendations that cannot both be executed.** D says two pages cannibalise and
-   should merge; C says the deeper one is where the internal equity lands. E says expand
-   the thin page; A says it burns crawl budget and should be pruned. Name the pair, decide
-   which governs, and say why in the plan — a reader who meets both later cannot.
-2. **One root cause wearing two track names.** A render-blocked template shows up as an A
-   finding, an F finding and an H finding. Three rows, one fix, and three rows inflate the
+1. **Two recommendations that cannot both be executed.** D says two pages
+   cannibalise and should merge; C says the deeper one is where the equity lands.
+   Name the pair, decide which governs, and say why — a reader who meets both
+   later cannot.
+2. **One root cause wearing two track names.** A render-blocked template surfaces
+   as an A, an F and an H finding: three rows, one fix, and the three inflate the
    plan and split its priority.
-3. **A finding whose evidence rung contradicts a neighbour's.** Two rows about the same URL
-   at CONFIRMED and HYPOTHESIS is a fact about the instruments, not about the site; the
-   lower rung defers to the higher one or the disagreement is stated.
-4. **A track that returned nothing where a neighbour implies it should have.** Track F
-   found no extractability problem on pages track E called thin. One of the two did not
-   look properly, and which one is worth a minute now rather than a contradiction in the
-   report.
+3. **A finding whose evidence rung contradicts a neighbour's.** Two rows about one
+   URL at `CONFIRMED` and `HYPOTHESIS` is a fact about the instruments, not the
+   site; the lower rung defers or the disagreement is stated.
+4. **A track that returned nothing where a neighbour implies it should have.** F
+   found no extractability problem on pages E called thin — one of the two did not
+   look properly, and which is worth a minute now rather than a contradiction in
+   the report.
 
-Write the answer either way: `Cross-track: clean` or the pairs with their rulings. A check
-whose silence is indistinguishable from not having run is not evidence — and this is the
-check most easily skipped, because every track individually went green.
+Write the answer either way: `Cross-track: clean`, or the pairs with their
+rulings. A check whose silence is indistinguishable from not having run is not
+evidence — and this is the one most easily skipped, because every track
+individually went green.
 
 Then score every finding and sort. Do not present an unranked list.
 
@@ -294,18 +250,16 @@ Write these files, seeded from the skeletons in
 Never overwrite an existing audit or plan silently — write a new dated file, or
 ask first:
 
-- `docs/seo/audit-<YYYY-MM-DD>.md` — findings. Per finding: **Issue · Impact ·
-  Evidence · Evidence rung · Cause · Fix · Effort · Evidence tier · Verification**.
-  The rung is which source the observation came from, and it caps the tier
-  ([references/tooling.md](references/tooling.md)).
-- `docs/seo/plan-<YYYY-MM-DD>.md` — the change plan. Per change: exact target
-  (`path/file:line`, template name, or URL pattern), the change itself, **why**
-  (mechanism + evidence tier), the expected effect and by when, how to verify,
-  and how to roll it back.
+- `docs/seo/audit-<YYYY-MM-DD>.md` — findings, each carrying its **evidence rung**,
+  which is the source the observation came from and caps its tier
+  ([tooling.md](references/tooling.md)).
+- `docs/seo/plan-<YYYY-MM-DD>.md` — the change plan: an exact target per change,
+  the mechanism and tier behind it, the expected effect, and how to roll it back.
+- `docs/seo/experiments.md` — appended rather than dated, because it outlives any
+  single audit. Required as soon as the plan has an Experiments bucket, which
+  anything below `CONFIRMED` puts there.
 
-- `docs/seo/experiments.md` — the running experiment record, one row per test,
-  appended rather than dated because it outlives any single audit. Required as soon
-  as the plan has an Experiments bucket, which anything below CONFIRMED puts there.
+The field list for each is in the skeletons, which is the point of having them.
 
 Executive summary rules: 5 bullets maximum, the top three blockers, the expected
 size of the prize, and the one thing that must happen first. Write for a
@@ -344,36 +298,36 @@ When the user asks for one of these, say plainly what the evidence shows, offer
 the nearest thing that does work, and move on.
 
 **Two of them have a narrow non-myth use, and confusing the two is how the myth
-gets re-sold.** `llms.txt` and Markdown twins do not help a page get **found** —
-that claim stays refuted, with the numbers, in
-[references/myths.md](references/myths.md). They can help an agent that has
-**already arrived** read the site cheaply, which is a serving decision measured in
-tokens rather than a ranking one. The boundary, the conditions and the `Vary:
-Accept` trap live in [references/agent-readiness.md](references/agent-readiness.md)
-K3. Anything sold as "publish Markdown to rank in AI" is still the myth.
+gets re-sold.** `llms.txt` and Markdown twins do not help a page get **found**;
+they can help an agent that has **already arrived** read the site cheaply, which
+is a serving decision rather than a ranking one. The boundary and its conditions:
+[agent-readiness.md](references/agent-readiness.md) K3. Anything sold as "publish
+Markdown to rank in AI" is still the myth.
 
 ## References
 
-- [ranking-model.md](references/ranking-model.md) — how ranking actually works.
-- [technical-checks.md](references/technical-checks.md) — tracks A/B.
-- [architecture-and-equity.md](references/architecture-and-equity.md) — track C.
-- [intent-and-content.md](references/intent-and-content.md) — tracks D/E.
-- [onpage-checks.md](references/onpage-checks.md) — the on-page completeness sweep per template.
-- [aeo-geo.md](references/aeo-geo.md) — track F.
-- [agent-readiness.md](references/agent-readiness.md) — track K, the agent surface.
-- [entity-and-brand.md](references/entity-and-brand.md) — track G.
-- [experience-signals.md](references/experience-signals.md) — track H.
-- [demand-and-conversion.md](references/demand-and-conversion.md) — track H+.
-- [threats-and-defense.md](references/threats-and-defense.md) — track I.
-- [measurement.md](references/measurement.md) — track J.
-- [discover.md](references/discover.md) — Google Discover as its own surface.
-- [tooling.md](references/tooling.md) — check → tool routing.
-- [prowl-mcp.md](references/prowl-mcp.md) — bulk competitive, demand and AI-surface data through one MCP endpoint.
-- [growth-plays.md](references/growth-plays.md) — the ranked play list the plan draws from.
-- [experiments.md](references/experiments.md) — split-test design rules for anything below CONFIRMED.
-- [evidence-tiers.md](references/evidence-tiers.md) — the tier definitions and how they gate recommendations.
-- [myths.md](references/myths.md) — the refuted list.
-- [benchmarks.md](references/benchmarks.md) — dated 2026 numbers to size opportunities and set expectations.
-- [algorithm-updates.md](references/algorithm-updates.md) — dated Google update timeline.
-- [linkbuilding.md](references/linkbuilding.md) — extracting link-building targets.
-- [deliverable-templates.md](references/deliverable-templates.md) — the audit-report and change-plan skeletons.
+Every track's file is named in the Step 2 table; this is the whole set.
+
+**Per track** — [technical-checks.md](references/technical-checks.md) A/B ·
+[architecture-and-equity.md](references/architecture-and-equity.md) C ·
+[intent-and-content.md](references/intent-and-content.md) D/E ·
+[aeo-geo.md](references/aeo-geo.md) F · [entity-and-brand.md](references/entity-and-brand.md) G ·
+[experience-signals.md](references/experience-signals.md) H ·
+[demand-and-conversion.md](references/demand-and-conversion.md) H+ ·
+[threats-and-defense.md](references/threats-and-defense.md) I ·
+[measurement.md](references/measurement.md) J ·
+[agent-readiness.md](references/agent-readiness.md) K.
+
+**Sweeps and surfaces** — [onpage-checks.md](references/onpage-checks.md) (per-template
+completeness) · [discover.md](references/discover.md) (its own surface, its own gate) ·
+[linkbuilding.md](references/linkbuilding.md).
+
+**How to judge and what to run** — [ranking-model.md](references/ranking-model.md) ·
+[evidence-tiers.md](references/evidence-tiers.md) (the tiers, and how they gate a
+recommendation) · [tooling.md](references/tooling.md) (check → tool) ·
+[experiments.md](references/experiments.md) (anything below `CONFIRMED`) ·
+[myths.md](references/myths.md) · [benchmarks.md](references/benchmarks.md) (dated 2026
+numbers) · [algorithm-updates.md](references/algorithm-updates.md) (dated timeline) ·
+[prowl-mcp.md](references/prowl-mcp.md) (bulk data through one MCP endpoint) ·
+[growth-plays.md](references/growth-plays.md) ·
+[deliverable-templates.md](references/deliverable-templates.md).

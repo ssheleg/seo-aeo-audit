@@ -527,3 +527,32 @@ Three buckets, in this order, and the order is the argument:
 
 Never let this track outrank a track-A blocker. A site that is not indexable does
 not need an agent card.
+
+---
+
+## When to run track K at all, and its cheapest check
+
+**Track K is conditional, and its bar is a product question, not a technical one.**
+Run it when the site sells something an agent could plausibly buy, call or
+automate — an API, a SaaS product, a booking or purchasing flow. Skip it for a
+content site with no programmable surface. It also carries a rule the other ten
+do not need: **presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**, so most
+of it belongs in the Experiments bucket until first-party logs show agent traffic.
+A third-party "agent-readiness score" is a checklist generator, never a target —
+[agent-readiness.md](agent-readiness.md) K7 has the four ways one
+misleads, and where such a grader contradicts `references/myths.md`, the myth
+guard wins.
+
+Its highest-value check is also its cheapest, and it belongs to tracks C and F as
+much as to K: **read the server-rendered root and ask which conventional entry
+points it links to.** On a client-rendered site the API docs, the sign-up and the
+contact page are in the navigation, work perfectly in a browser, and are absent
+from the document every crawler, answer engine and agent actually reads (K2b).
+Before any of it, run the two-query brand-collision test in
+[entity-and-brand.md](entity-and-brand.md) G1b: a site that is absent
+from its own brand name while ranking #1 for its own domain has an identity
+problem that no file in this track fixes.
+
+Moved out of `SKILL.md` on 2026-08-16: the body was 5885 tokens against a
+< 5000 budget, and this is the file track K points at.
+

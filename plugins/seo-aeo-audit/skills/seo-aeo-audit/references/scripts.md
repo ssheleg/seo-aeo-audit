@@ -170,3 +170,31 @@ root now reads as *the page does not exist*, which is what it means.
 A run where every request failed at the network layer exits `1`: that report
 measures the connection, not the site.
 
+---
+
+## The inventory, and the four traps that decide whether a finding is real
+
+**The seven bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
+`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py`, `agent_surface.py` —
+collect the mechanical half of every track. Read `references/scripts.md` for
+invocation, flags, quotas and the per-script limits.
+
+**Four traps that decide whether a finding is real:**
+
+- `page_audit.py`'s schema inventory reads **server-rendered HTML only**. Where
+  a CMS injects JSON-LD with JavaScript, an empty inventory is not evidence of
+  absent markup (non-negotiable #8).
+- `--format json` emits an **array**, one object per page, even for one URL:
+  index `data[0]`.
+- A response cut off by `--max-bytes` drops every count-based finding rather
+  than publishing a fragment as a measurement.
+- **Every emitted finding carries an evidence tier as well as a severity, and
+  only the tier enters the triage formula.** Severity is how loud a finding is;
+  the tier is what backs it. `url_inspection.py` asks the index rather than
+  inferring from a fetch, which is the only way a finding reaches `CONFIRMED` —
+  at a quota of 2000/day and 600/minute per property, so sample one URL per
+  template plus the pages a finding is actually about.
+
+Moved out of `SKILL.md` on 2026-08-16 for the body budget. Every invocation was
+already documented here; what was in the body was the summary of this file.
+
