@@ -140,6 +140,7 @@ jobs:
           set -eu
           for home in \
             plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md \
+            plugins/seo-aeo-audit/skills/seo-aeo-audit/references/scripts.md \
             README.md
           do
             rm -rf /tmp/path-copy && cp -R . /tmp/path-copy

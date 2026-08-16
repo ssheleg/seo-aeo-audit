@@ -76,10 +76,14 @@ Inspect first, then act. In order:
 4. Report status in three lines — inputs available, inputs missing, scope — then
    start. Suggest exactly one next action at the end of every run.
 
-`scripts/preflight.py` runs the automatable half and names **which** gate a failure
-hit — `login`, `quota-project`, `api-not-enabled`, `scope` and `permission` fail
-for different reasons and most of them say `403`. What it probes, and the large
-half it leaves to you: [preflight.md](references/preflight.md).
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --site sc-domain:example.com --origin https://example.com
+```
+
+It names **which** gate a failure hit — `login`, `quota-project`,
+`api-not-enabled`, `scope` and `permission` fail for different reasons and most of
+them say `403`. What it probes, and the large half it leaves to you:
+[preflight.md](references/preflight.md).
 **A green preflight is not a covered step.**
 
 Resolve `$SKILL_DIR` and confirm it before relying on it —
@@ -305,8 +309,6 @@ is a serving decision rather than a ranking one. The boundary and its conditions
 Markdown to rank in AI" is still the myth.
 
 ## References
-
-Every track's file is named in the Step 2 table; this is the whole set.
 
 **Per track** — [technical-checks.md](references/technical-checks.md) A/B ·
 [architecture-and-equity.md](references/architecture-and-equity.md) C ·

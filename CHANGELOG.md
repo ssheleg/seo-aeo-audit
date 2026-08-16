@@ -33,6 +33,26 @@ removing the thing the number is for.
 than met: the remaining candidates are the doctrine list and a guarded constant.
 The next section added here needs a split, not a trim.
 
+### The guard that was supposed to catch this, twice
+
+`v0.22.0`'s first CI run failed on a plant that **landed and proved nothing**: the
+body split moved every script invocation into `references/scripts.md`, and the
+guard's `_INVOCATION_HOMES` was a hand-written list of three files that did not
+follow. It kept passing by looking where the invocations used to be — one move
+later, the exact shape its own comment describes. The list is **discovered** now:
+every `references/*.md` joins the check by existing.
+
+Restoring the `preflight.py` invocation to `SKILL.md` was part of the fix and not a
+concession to the guard. It is the one command Step 0 tells you to run, and the
+trim that removed it went a step past compression into deletion.
+
+And the local guard added earlier the same day — *every plant in the workflow must
+still land* — **did not see this one**, because it only read `plant_edit.py` forms
+and this plant is a `perl -0pi -e`. It reads both now, including the `for home in
+…` list a plant loops over, rather than skipping a file it cannot resolve. A guard
+that silently declines to look is the thing every other guard here exists to
+prevent.
+
 ### Fixed
 
 - The Track-K block took its `references/…` links with it when it moved **into**

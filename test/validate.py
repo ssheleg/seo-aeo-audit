@@ -764,10 +764,21 @@ else:
 # one: after SKILL.md was fixed, the README still carried eight bare invocations and
 # the slash command a ninth — and the README's did not resolve for a developer in a
 # clone either, since `scripts/` at the repository root is the documentation gate.
+#
+# A fourth home appeared on 2026-08-16 without anyone adding it: the body split for
+# the token budget moved every invocation into `references/scripts.md`, and this
+# list did not follow. The guard kept passing because it was looking where the
+# invocations used to be — the exact shape the comment above describes, one move
+# later. So the reference set is DISCOVERED rather than listed: a new reference
+# joins this check by existing.
 _INVOCATION_HOMES = (
     os.path.join(SKILL_DIR, "SKILL.md"),
     "README.md",
     os.path.join("plugins", "seo-aeo-audit", "commands", "seo-aeo-audit.md"),
+) + tuple(
+    os.path.join(SKILL_DIR, "references", _f)
+    for _f in sorted(os.listdir(os.path.join(ROOT, SKILL_DIR, "references")))
+    if _f.endswith(".md")
 )
 for _rel in _INVOCATION_HOMES:
     _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
@@ -925,9 +936,37 @@ if os.path.isfile(_au):
 _wf = os.path.join(ROOT, ".github", "workflows", "validate.yml")
 if os.path.isfile(_wf):
     _wfsrc = open(_wf, encoding="utf-8").read()
+    # `plant_edit.py` is not the only way a step plants: a `perl -0pi -e 's{A}{B}'`
+    # over a named file is the same thing with the needle inside a substitution.
+    # That form is how a plant reached CI on 2026-08-16 after the needle it depended
+    # on was moved into another file — this guard was looking only at the first form.
     _pats = [r'plant_edit\.py sub ("?[^"\s]+"?) (".*?"|\'.*?\')',
              r'plant_edit\.py delline ("?[^"\s]+"?) (".*?"|\'.*?\')',
              r'plant_edit\.py truncate ("?[^"\s]+"?) (".*?"|\'.*?\')']
+    for _m in re.finditer(r"perl -0pi -e 's\{(.+?)\}\{.*?\}' \"?([^\"\s]+)\"?", _wfsrc):
+        _needle = _m.group(1).replace("\\$", "$").replace("\\\\", "\\")
+        _raw = _m.group(2)
+        if "$home" in _raw:
+            # The file comes from a `for home in A \ B \ C` list above this line.
+            # Read that list rather than skipping — skipping is how this exact plant
+            # reached CI, and a guard that silently declines to look is the thing
+            # every other guard here exists to prevent.
+            _before = _wfsrc[:_m.start()]
+            _loop = re.search(r"for home in \\\n((?:\s+\S+ \\\n)*\s+\S+)\n\s*do",
+                              _before[_before.rfind("for home in"):] if "for home in" in _before else "")
+            _homes = ([h.strip().rstrip(" \\") for h in _loop.group(1).split("\n")]
+                      if _loop else [])
+        else:
+            _homes = [_raw]
+        for _f in _homes:
+            _f = _f.strip('"').strip()
+            if not _f or "$" in _f:
+                continue
+            _full = os.path.join(ROOT, _f)
+            if os.path.isfile(_full) and _needle not in open(_full, encoding="utf-8").read():
+                fail(f"validate.yml: a `perl` negative self-test plants into {_f} by "
+                     f"substituting {_needle!r}, which is no longer in that file — the "
+                     "plant will not land and its guard is unproven.")
     for _pat in _pats:
         for _m in re.finditer(_pat, _wfsrc):
             _f = _m.group(1).strip('"').replace("$S", SKILL_DIR)
