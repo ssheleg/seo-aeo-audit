@@ -1010,7 +1010,10 @@ def fetch(url: str, timeout: float, user_agent: str,
     return raw.decode(charset, errors="replace"), headers, truncated
 
 
-SEVERITY_ORDER = {"blocker": 0, "high": 1, "medium": 2, "info": 3}
+# `low` sat between `medium` and `info` in every message this file writes and
+# in none of its ordering, so to_markdown raised KeyError on the first page
+# without FAQ schema — the default output mode, on the common case.
+SEVERITY_ORDER = {"blocker": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 
 
 def to_markdown(results: list[dict]) -> str:

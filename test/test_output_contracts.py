@@ -156,10 +156,39 @@ psi.fetch = lambda *a, **kw: {
 rc = silently(psi.main, ["--url", "https://e.com/a"])
 check(rc == 0, f"psi_pull must exit 0 when the call succeeded but CrUX has no data; got {rc}")
 
+
+# ── 6. every severity a script emits can be ordered ──────────────────────────
+#
+# `page_audit.py` emitted `low` from `faq-schema-absent` and `SEVERITY_ORDER`
+# held four keys without it, so `to_markdown` raised `KeyError: 'low'` on any
+# page with no FAQ schema — which is most pages, and is the tool's default
+# output mode. The JSON path was fine, so the crash only ever appeared to
+# somebody running the documented invocation.
+#
+# Derived from the source rather than listed here, because a list in a test is a
+# third place to forget the new severity.
+import re as _re
+
+for _name in ("page_audit", "sitemap_audit", "agent_surface", "url_inspection"):
+    _path = os.path.join(SCRIPTS, _name + ".py")
+    if not os.path.exists(_path):
+        continue
+    _src = open(_path, encoding="utf-8").read()
+    _order = _re.search(r"^SEVERITY_ORDER\s*=\s*\{([^}]*)\}", _src, _re.M)
+    if not _order:
+        continue
+    _known = set(_re.findall(r'"([a-z]+)"\s*:', _order.group(1)))
+    _emitted = set(_re.findall(r'\badd\(\s*"([a-z]+)"', _src))
+    _missing = sorted(_emitted - _known)
+    check(not _missing,
+          f"{_name}.py emits severity {_missing} that SEVERITY_ORDER cannot order — "
+          f"to_markdown raises KeyError on the first finding at that level")
+
 if failures:
     print("FAIL: output contracts")
     for f in failures:
         print("  -", f)
     raise SystemExit(1)
 print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
-      "denominator, exit status from the same predicate the report uses)")
+      "denominator, exit status from the same predicate the report uses, every "
+      "emitted severity orderable)")
