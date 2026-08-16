@@ -17,6 +17,18 @@ what the whole skill is about.
 A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
+
+## v0.22.0 — the Cloudflare row, and a body 18% over budget
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| The Cloudflare rows state the 2026-09-15 default and the multi-purpose rule | read inside the **published** tarball, not the working tree | `npm pack @ssheleg/seo-aeo-audit@0.21.0` → `grep -c 2026-09-15` returns 3 in `algorithm-updates.md`, 2 in `technical-checks.md` | 2026-08-16 |
+| `OAI-AdsBot` is in the inventory and not in the retrieval bucket | same tarball | `grep -c oai-adsbot` → 2 in the shipped `agent_surface.py` | 2026-08-16 |
+| The vendor facts were read, not restated | WebFetch of Meta's dedup page and OpenAI's bots page, and of the Cloudflare coverage | both `event_id` **and** `event_name`, 48-hour window; `OAI-AdsBot/1.0` with no stated robots.txt behaviour | 2026-08-16 |
+| The body is inside the 5000 budget | `audit_skill.py --house` | 5885 → **4996 tokens**; still 246 over the 4750 house limit, and the ledger says so rather than rounding | 2026-08-17 |
+| Every reference on disk is declared, both directions | planted an undeclared `references/*.md`; then a declared file with no counterpart | both refused | 2026-08-16 |
+| The release shipped after three refusals | `npm view`; CI on the fourth tag | `0.22.0`; `release: completed success`. The first three were correct refusals — two stale plants and one guard looking where the invocations used to be | 2026-08-17 |
+
 ## v0.14.1 — 2026-08-10 acceptance walk
 
 | REQ | What shipped | Confirmed | Evidence |
