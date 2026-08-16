@@ -500,7 +500,7 @@ jobs:
           plant "a section id defined in two references" \
             python3 test/plant_edit.py sub "$S/references/onpage-checks.md" "## O1. Can crawlers" "## D1. Can crawlers"
           plant "a row appended without moving the newest-row line" \
-            python3 -c "p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();assert '**Newest row in this file: 2026-07-30.**' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('**Newest row in this file: 2026-07-30.**','**Newest row in this file: 2026-07-01.**',1))"
+            python3 -c "import re;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(\*\*Newest row in this file:\s*)20\d\d-\d\d-\d\d',r'\g<1>2000-01-01',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
           plant "a finding emitted with no evidence tier" \
             python3 test/plant_edit.py sub "$S/scripts/page_audit.py" '    "truncated-read": "CONFIRMED",' ""
           plant "the CWV thresholds drifting from their documented home" \

@@ -1,7 +1,10 @@
 # Google update timeline — and how to keep it current
 
 **Sources last re-fetched: 2026-08-16.**
-**Newest row in this file: 2026-09-15** (a dated default that has not landed yet — the only forward-dated row here, kept because the audit happens before the date, not after).
+**Newest row in this file: 2026-09-15.**
+> That date is in the future, and it is the only forward-dated row here. It is kept
+> because this file is read *before* the date, not after: an audit run in August that
+> does not know about a September default ships a client into it.
 
 ## Contents
 
