@@ -121,7 +121,7 @@ tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
 
 ## What knowledge is packed inside
 
-Twenty-three reference contracts ship *inside* the skill, so they travel to every
+Twenty-five reference contracts ship *inside* the skill, so they travel to every
 agent, not just Claude Code. This is the substance:
 
 | Area | What it holds | Why it is worth having |
@@ -145,7 +145,7 @@ agent, not just Claude Code. This is the substance:
 ### Data freshness
 
 - **Verified as of 2026-08-10.** Roughly 5,000 lines of distilled reference
-  material across the twenty-three contracts. The update timeline covers
+  material across the twenty-five contracts. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
   last re-fetched and what its newest row is.
 - **Most benchmarks carry a date and a sample; the ones that do not say so.** The
@@ -307,7 +307,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            23 contract files (shipped on every channel)
+      ├── references/*.md            25 contract files (shipped on every channel)
       └── scripts/                   7 stdlib-only scripts: page_audit, gsc_pull,
                                      url_inspection, psi_pull, sitemap_audit, preflight,
                                      agent_surface

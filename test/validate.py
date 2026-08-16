@@ -39,6 +39,8 @@ REQUIRED_REFERENCES = (
     "demand-and-conversion.md",
     "linkbuilding.md",
     "prowl-mcp.md",
+    "preflight.md",
+    "scripts.md",
 )
 errors = []
 
@@ -673,6 +675,22 @@ if os.path.isfile(_plays):
 # It went stale again the moment a twenty-second reference shipped, in the same tree
 # as the guards written for exactly this. Third occurrence of the class in one file,
 # so it stops being a review item (standing instruction #3).
+# The tuple is the declaration; the directory is the fact. Compared both ways since
+# 2026-08-16, when `preflight.md` and `scripts.md` had been shipping in every tarball
+# and on every channel while the tuple said 23 and three documents repeated it. The
+# prose reconciler below reads `len(REQUIRED_REFERENCES)`, so without this the number
+# could drift as far as the tuple did and stay green the whole way.
+_ref_dir = os.path.join(ROOT, SKILL_DIR, "references")
+if os.path.isdir(_ref_dir):
+    _on_disk = {f for f in os.listdir(_ref_dir) if f.endswith(".md")}
+    _declared = set(REQUIRED_REFERENCES)
+    for _extra in sorted(_on_disk - _declared):
+        fail(f"references/{_extra} ships but is not in REQUIRED_REFERENCES — every "
+             "reference is declared, or the count that three documents restate is "
+             "measured against a number nobody keeps")
+    for _missing in sorted(_declared - _on_disk):
+        fail(f"REQUIRED_REFERENCES names references/{_missing}, which is not on disk")
+
 _WORDNUM = {19: "nineteen", 20: "twenty", 21: "twenty-one", 22: "twenty-two",
             23: "twenty-three", 24: "twenty-four", 25: "twenty-five"}
 _ref_n = len(REQUIRED_REFERENCES)

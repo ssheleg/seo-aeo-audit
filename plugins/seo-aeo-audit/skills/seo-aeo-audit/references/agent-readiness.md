@@ -104,11 +104,12 @@ vendor's own purpose statement, read from the vendor's documentation on
 2026-08-14 — because the previous version of this table was assembled from the
 shape of the names and got three of them wrong:
 
-| Use | Agents (verified 2026-08-14) | What blocking costs |
+| Use | Agents (verified 2026-08-14; ad-page row 2026-08-16) | What blocking costs |
 |---|---|---|
 | Answer-engine retrieval | `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User` | The site stops appearing in that engine's answers. Perplexity states it plainly: allow `PerplexityBot` "to ensure your site appears in search results" |
 | Training-corpus collection | `GPTBot`, `ClaudeBot`, `CCBot`, `Bytespider` | Nothing in retrieval. OpenAI documents `GPTBot` as crawling "content that may be used in training our generative AI foundation models"; Anthropic documents `ClaudeBot` as "collecting web content that could potentially contribute to their training" |
 | Model grounding | `Google-Extended`, `Applebot-Extended` | Gemini / Vertex AI grounding and Apple's model training. **Not Google Search and not AI Overviews** — those are Googlebot's, and Googlebot cannot be split by purpose at all (technical-checks.md) |
+| Ad-page validation | `OAI-AdsBot` | Not retrieval, and OpenAI states no robots.txt behaviour for it where it states one for `OAI-SearchBot` and `GPTBot` — so a block is reported as a block, never as a retrieval loss. It still costs something concrete: OpenAI documents it as validating "the safety of web pages submitted as ads on ChatGPT", so a site running ChatGPT ads behind a blanket `OAI-*` or managed-bot block has its ad landing pages fail validation while every other report reads clean (verified 2026-08-16) |
 | Everything else | unnamed agents | The `*` group already covers them |
 
 **Three corrections this table carries, and the reason it is worth reading twice.**

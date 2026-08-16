@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time. This skill is mostly **knowledge** — twenty-three
+Thanks for taking the time. This skill is mostly **knowledge** — twenty-five
 reference contracts plus a small standard-library auditor. That shapes what a
 good contribution looks like here.
 
@@ -70,7 +70,7 @@ python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
 ```
 
-`validate.py` checks structure, the four-way version sync, that all twenty-three
+`validate.py` checks structure, the four-way version sync, that all twenty-five
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that every bundled script is
 standard-library only. It also reconciles the facts this repo keeps duplicating:

@@ -1,5 +1,74 @@
 # Changelog
 
+## v0.21.0 — 2026-08-16
+
+### The Cloudflare row said "stalled" thirty days before a default that blocks Googlebot
+
+`references/algorithm-updates.md` and `technical-checks.md` both carried, at
+**`CONFIRMED`** — the tier this skill's own non-negotiable #2 forbids anything from
+out-ranking — that *Cloudflare's Content Signals initiative stalled* and had *little
+uptake as of Jul 2026*, so the Googlebot/AI trade-off was not actionable. Two separate
+things wear that name and only one of them stalled:
+
+- the **robots.txt vocabulary** (`search` / `ai-input` / `ai-train`, announced
+  **2025-09-24**) — little uptake, and that part stands;
+- the **enforcement layer** — Cloudflare's Search / Agent / Training controls, live for
+  **all customers including the free tier** since the second Content Independence Day on
+  **2026-07-02**, four days *before* the row's own date, at the network level where a
+  block is far harder to bypass than a robots.txt line.
+
+And on **2026-09-15** the defaults move: Training and Agent blocked on **ad-bearing
+pages** for new customers and new sites, Search still allowed, **and existing free
+customers who have not touched the setting are moved to those defaults**. Multi-purpose
+crawlers are then judged under **the strictest rule that applies**, and Cloudflare names
+**Googlebot, Bingbot and Applebot** as crawlers doing both Search and Training — so a
+site that blocks Training blocks them.
+
+The rows are rewritten as **a check rather than a note**: for any site behind Cloudflare,
+read the plan, the bot-control setting and whether the pages carry ads. A free-tier,
+ad-bearing site whose operator changed nothing is the case where Googlebot stops being
+fetched *on a date* rather than after a decision — and nothing in robots.txt shows it,
+because the block sits upstream of the origin. What is still true is kept: Googlebot is
+not split by purpose **at Google's end**, so no robots.txt line separates the two.
+
+### `OAI-AdsBot` was missing from the crawler inventory
+
+Documented by OpenAI since ~April 2026 and absent from `agent_surface.py` and
+`agent-readiness.md`. It is filed in `OTHER_AI_UAS`, **not** in the retrieval bucket:
+OpenAI states robots.txt behaviour for `OAI-SearchBot` and `GPTBot` and states none for
+this one, and the file's own rule is that an unverified purpose cannot support a
+retrieval-loss claim. It still costs something concrete — a site running ChatGPT ads
+behind a blanket `OAI-*` or managed-bot block has its ad landing pages fail validation
+while every other line of the report reads clean.
+
+### "Twenty-three reference contracts ship" — twenty-five ship, and the gate could not see it
+
+`REQUIRED_REFERENCES` held 23 entries while `preflight.md` and `scripts.md` shipped in
+every tarball and on every channel. The prose reconciler compares three documents against
+`len(REQUIRED_REFERENCES)`, so the number could drift exactly as far as the tuple did and
+never go red — the fourth occurrence of the class the validator's own comment says it
+stopped being a review item over. **The tuple is now compared against the directory in
+both directions**, watched refusing a planted undeclared reference, and the five prose
+sites read twenty-five. README's *"Roughly 5,000 lines"* is derived from
+`cat …/references/*.md | wc -l` and dated: **6708**, where the round number was 34% under.
+
+### `npm test` exists here
+
+The family states `npm test` as its gate and `hooks/repo-gate.js` denies a commit whose
+`npm test` is red — and this member had no `scripts` block at all, so the verb hard-errored
+and an agent could not tell a missing script from a failing suite. It now runs
+`bash scripts/check-docs.sh`, which stays the implementation so `CLAUDE.md`, `CONTRIBUTING.md`
+and CI keep naming the same command. Two of the family's nine members still owe this
+(umbrella `B-65`).
+
+This release also carries the untagged `.env` gitignore hardening, which had been sitting
+one commit past `v0.20.2` in no tag, no release and no umbrella pin — so the change the
+umbrella's v0.79.0 notes announced for *all nine* repositories reaches a clone of this one
+for the first time.
+
+Found by the nine-repository audit of 2026-08-16 (umbrella `B-74`, `B-65`;
+`F-seo-aeo-audit-01`, `-03`, `-04`, `-06`, `-07`, `-13`).
+
 ## v0.20.2 — 2026-08-16
 
 **This gate can now see an invariant it breaks one repository away.** The family umbrella

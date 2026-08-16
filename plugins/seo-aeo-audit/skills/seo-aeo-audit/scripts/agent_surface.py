@@ -153,9 +153,17 @@ GROUNDING_UAS = ("google-extended", "applebot-extended")
 # Named in real robots.txt files (Cloudflare's managed block ships several) with
 # no vendor purpose statement read here. Reported as blocked, never as a retrieval
 # loss: an unverified purpose cannot support that claim.
+# `oai-adsbot` is here and NOT in RETRIEVAL_UAS deliberately. OpenAI documents it
+# ("used to validate the safety of web pages submitted as ads on ChatGPT",
+# developers.openai.com/api/docs/bots, read 2026-08-16) but states no robots.txt
+# behaviour for it, where it states one for OAI-SearchBot and GPTBot. An
+# unverified purpose cannot support a retrieval-loss claim — the rule two comments
+# up — so a block is reported as a block. It matters anyway: a site running ChatGPT
+# ads behind a blanket `OAI-*` or managed-bot block gets a clean report here while
+# its ad landing pages fail validation.
 OTHER_AI_UAS = ("meta-externalagent", "facebookbot", "amazonbot", "ai2bot",
                 "diffbot", "omgilibot", "omgili", "imagesiftbot", "anthropic-ai",
-                "cohere-ai")
+                "cohere-ai", "oai-adsbot")
 
 # Root paths a client probes for an agent manual, and the near-misses a presence
 # check reads as absence. A file served one character off the convention is
