@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.20.1 — 2026-08-16
+
+**The default output mode crashed on the common case, and only there.** `page_audit.py`
+emitted the severity `low` from `faq-schema-absent` while `SEVERITY_ORDER` held four
+keys without it. `to_markdown` sorts findings on that map, so any page lacking FAQ
+schema — which is most pages — died with `KeyError: 'low'` before printing a single
+finding. The `--json` path builds no such ordering and was fine, so the crash was
+invisible to every caller except the one running the invocation `SKILL.md` documents.
+Found by pointing v0.20.0 at a real site: it failed on the first URL.
+
+**The guard is the general form, not the incident.** `test_output_contracts.py` now
+parses `SEVERITY_ORDER` out of each script's source and compares it against every
+severity string that script actually emits, so the next severity added anywhere fails
+the suite instead of the first real page. Watched failing against the reinstated defect
+before this release: *page_audit.py emits severity ['low'] that SEVERITY_ORDER cannot
+order*.
+
+**Released as its own version because the fix was already on `main` and untagged.** The
+umbrella pinned 0.20.0 — a version that crashes — while the branch carried the repair,
+so the two channels the family installs through disagreed about what this skill does.
+
 ## v0.20.0 — 2026-08-16
 
 ### Added
