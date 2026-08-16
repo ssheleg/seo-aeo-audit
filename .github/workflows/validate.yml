@@ -508,7 +508,7 @@ jobs:
           plant "a backticked references/ pointer resolving to nothing" \
             python3 test/plant_edit.py sub "$S/references/linkbuilding.md" '`references/myths.md`' '`references/mythz.md`'
           plant "a prose reference count going stale" \
-            python3 test/plant_edit.py sub CONTRIBUTING.md "mostly **knowledge** — twenty-three" "mostly **knowledge** — twenty-two"
+            python3 -c "import re;p='CONTRIBUTING.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(mostly \*\*knowledge\*\* — )[a-z-]+',r'\g<1>two',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
           plant "the slash command losing a non-negotiable" \
             python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md "8. **Know each instrument"
 

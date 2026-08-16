@@ -910,6 +910,37 @@ if os.path.isfile(_au):
         fail(f"algorithm-updates.md says its newest row is {_newest.group(1)} but the newest "
              f"date in the file is {_dates[-1]} — a row was appended without moving the line")
 
+# Every plant in the workflow must still land — checked HERE, before the tag.
+#
+# A negative self-test is a string substitution into a real file, so it rots the
+# moment the fact it guards is reworded. v0.21.0 hit this twice: the freshness
+# plant was pinned to the literal `2026-07-30` and the reference-count plant to
+# `twenty-three`, and both facts were exactly what the release changed. CI refused,
+# correctly — a plant that does not land leaves its check unproven — but it refused
+# AFTER the tag was public, which is the one moment the release workflow cannot
+# recover from on its own.
+#
+# So the local gate reads the workflow and asserts each needle is still present.
+# It is a cheap parse, not an execution: nothing is planted, nothing is written.
+_wf = os.path.join(ROOT, ".github", "workflows", "validate.yml")
+if os.path.isfile(_wf):
+    _wfsrc = open(_wf, encoding="utf-8").read()
+    _pats = [r'plant_edit\.py sub ("?[^"\s]+"?) (".*?"|\'.*?\')',
+             r'plant_edit\.py delline ("?[^"\s]+"?) (".*?"|\'.*?\')',
+             r'plant_edit\.py truncate ("?[^"\s]+"?) (".*?"|\'.*?\')']
+    for _pat in _pats:
+        for _m in re.finditer(_pat, _wfsrc):
+            _f = _m.group(1).strip('"').replace("$S", SKILL_DIR)
+            _needle = _m.group(2)[1:-1]
+            _full = os.path.join(ROOT, _f)
+            if not os.path.isfile(_full):
+                continue          # the tool's own usage example, not a plant
+            if _needle not in open(_full, encoding="utf-8").read():
+                fail(f"validate.yml: a negative self-test plants into {_f} by substituting "
+                     f"{_needle!r}, which is no longer in that file — the plant will not "
+                     "land, its check is unproven, and CI refuses AFTER the tag is public. "
+                     "Match the fact with a regex rather than pinning it to a literal.")
+
 # Section ids must be unique across the reference set. Two files defined D1, D2,
 # E1 and E2 with different content, so "run D1" had two answers.
 _sec_home: dict = {}
