@@ -1,5 +1,65 @@
 # Changelog
 
+## v0.23.0 — 2026-08-19
+
+Two halves of the same problem: the instruments could already tell an answer from a silence,
+and nothing that reached a client could.
+
+### The report could not separate `pass` from `never looked`
+
+Every collector already distinguished them. `url_inspection.py` grants CONFIRMED only to the
+N of M URLs the index actually answered for; `page_audit.py` drops every absence finding on a
+truncated read; `gsc_pull.py` ships `row_limit_reached`. The deliverable offered a free-text
+"Not checked" table and a `Status` column **with no defined values**, and no check read
+either — so a track that silently returned nothing rendered identically to one that came back
+clean. That is the manifesto's two opposite states with the same output, in the document a
+client actually reads.
+
+`Track coverage` is now a **closed vocabulary** — `observed · partial · unlooked ·
+blocked-by <gate> · out-of-scope` — owned end to end by `preflight.py`: the enum, the track
+denominator, the gate set, a seeder, a renderer and a report linter. A blank cell, a tick or
+a sentence is an error, named as such.
+
+Three mechanisms rather than discipline. Every track has a row, because the denominator is
+generated and reconciled against SKILL.md — so a track can no longer be **absent** rather
+than unanswered (the table shipped one row short, and `{{A–J}}` should have read `{{A–K}}`).
+Every row carries a status from the enum with a Notes obligation. And **the one value that
+reads as clean cannot be produced by automation**: `coverage_seed` runs at step 0, before any
+track, and emits only `unlooked` or `blocked-by <gate>`. Forgetting produces *nobody looked*,
+never *clean*.
+
+`out-of-scope` was added beyond the four proposed: track K is conditional by doctrine, and
+without that value an auditor who correctly skipped it must choose between claiming `observed`
+and reporting `unlooked` — the pressure is towards the lie.
+
+### No output could say which run produced it
+
+No script emitted a timestamp, a version or a run id, in the family's **most perishable
+evidence**: a crawl result expires the moment the site or the algorithm moves. A
+three-month-old audit was indistinguishable from today's.
+
+All seven scripts now stamp a nine-field producer block in both formats. What cannot be
+resolved is **named, not omitted** — `actor`, `model` and `trace` print as
+`unavailable: … is not set by this harness`, because a field that vanishes when unavailable
+is indistinguishable from one nobody checked, which is the defect the coverage column had
+just lost. Nothing is fabricated: naming the wrong model id sends an investigation to a model
+that never ran. Credential values are redacted in `args`.
+
+Four invalidators — **site · index · instrument · policy** — mapped from task-pipeline's
+code/dependency/environment/policy, with the mapping table written above them so a reader can
+see it is the same shape and not a second design. An overtaken audit is not wrong: it is true
+about the site it observed, and it stays.
+
+### Also
+
+`SECURITY.md` said six scripts and a 22-line I/O surface; measured, seven and 26 — and the
+published pattern had to gain `os.environ` to stay true of what it named, giving 33. Both
+numbers are now read out of `SECURITY.md` by the validator and re-run. `SKILL.md` named
+`sitemap_pull.py`, a file that has never existed.
+
+Board rows B-16…B-21 were renumbered **B-24…B-29**: a merged pull request had allocated the
+same ids to different rows, and both sets survive.
+
 ## v0.22.0 — 2026-08-16
 
 ### The body was 18% over budget, and Step 2 was carrying two other files
