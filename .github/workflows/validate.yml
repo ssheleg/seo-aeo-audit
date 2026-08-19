@@ -566,8 +566,15 @@ jobs:
           # because `bin/seo-aeo-audit.js` installs `scripts/` with no manifest beside
           # it — so a producer block naming a version that never ran is the risk, and
           # this is what refuses it. Bump all seven with the manifests.
+          # The version is READ from package.json, not written here. Hard-coding it made
+          # this plant a release blocker: v0.23.0 bumped the seven literals, the plant
+          # could no longer find "0.22.0", and it refused with PLANT DID NOT LAND — the
+          # second-order guard working exactly as designed, on the release itself. A
+          # plant anchored on a value that moves describes the tree it was written
+          # against; anchor on where the value lives instead.
+          V="$(python3 -c 'import json;print(json.load(open("package.json"))["version"])')"
           plant "a SKILL_VERSION literal drifting from the manifests" \
-            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "SKILL_VERSION = \"0.22.0\"" "SKILL_VERSION = \"0.19.0\""; done'
+            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "SKILL_VERSION = \"'"$V"'\"" "SKILL_VERSION = \"0.0.1-drift\""; done'
           # Both skeletons in one command, as the coverage plants do: change one and
           # the template-drift guard fires instead, proving a different guard works.
           plant "a skeleton losing the command that seeds the block" \

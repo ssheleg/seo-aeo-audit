@@ -57,6 +57,12 @@ published pattern had to gain `os.environ` to stay true of what it named, giving
 numbers are now read out of `SECURITY.md` by the validator and re-run. `SKILL.md` named
 `sitemap_pull.py`, a file that has never existed.
 
+One plant blocked this very release and was right to: it anchored on the literal
+`SKILL_VERSION = "0.22.0"`, so bumping the seven scripts left it unable to find its
+target, and it refused with `PLANT DID NOT LAND` rather than passing. It reads the
+version out of `package.json` now — a plant anchored on a value that moves describes the
+tree it was written against.
+
 Board rows B-16…B-21 were renumbered **B-24…B-29**: a merged pull request had allocated the
 same ids to different rows, and both sets survive.
 
