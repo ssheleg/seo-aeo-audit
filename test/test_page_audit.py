@@ -7,9 +7,12 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
+
+residue.open_case("page_audit behaviour")
 SCRIPT = os.path.join(
     ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit", "scripts", "page_audit.py"
 )
@@ -237,7 +240,7 @@ check(good["jsonld_missing_required"] == [],
 
 # and an incomplete one must be caught, by structure, without claiming anything
 # about rich-result eligibility (that needs Google's per-feature tables).
-_tmp = os.path.join(tempfile.mkdtemp(), "incomplete.html")
+_tmp = os.path.join(residue.workspace("incomplete-schema"), "incomplete.html")
 with open(_tmp, "w", encoding="utf-8") as _fh:
     _fh.write(
         '<html><head><title>t</title>'
@@ -663,6 +666,10 @@ check(_allfail.returncode == 1,
       f"a run where every URL failed must exit non-zero, got {_allfail.returncode}")
 check(json.loads(_allfail.stdout)[0].get("error"),
       "the failing run must still print the error row it collected")
+
+if not failures:
+    residue.close_case("page_audit behaviour")
+residue.report()
 
 if failures:
     print("FAIL: page_audit behavior")

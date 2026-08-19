@@ -25,6 +25,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit", "scripts")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
+
+residue.open_case("agent_surface behaviour")
 failures: list[str] = []
 sys.dont_write_bytecode = True
 
@@ -493,6 +497,10 @@ with tempfile.TemporaryDirectory() as tmp:
     check("openapi-operationid" in codes, "the operationId findings did not reach main()")
     check(all(f.get("tier") for f in payload["findings"]),
           "a finding reached the payload with no tier")
+
+if not failures:
+    residue.close_case("agent_surface behaviour")
+residue.report()
 
 if failures:
     print("FAIL: agent_surface")

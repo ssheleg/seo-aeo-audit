@@ -7,7 +7,7 @@ clone: an agent invoked in a fresh checkout was told none of it.
 ## What this is
 
 `seo-aeo-audit` is an **agent skill**, not an application. The deliverable is
-knowledge plus six standard-library scripts, shipped to several agent channels at
+knowledge plus seven standard-library scripts, shipped to several agent channels at
 once. So the failure modes are documentation failure modes: a claim that is wrong, a
 count that has drifted, a pointer into empty space, a tool whose silence reads as a
 measurement.
@@ -22,13 +22,17 @@ here too.
 bash scripts/check-docs.sh
 ```
 
-That script is the whole gate — `test/validate.py`, `test/test_page_audit.py`,
-`test/test_url_inspection.py`, `test/test_collectors.py` and
-`test/test_output_contracts.py`. CI runs the same set plus a negative self-test
-per guard. The count is deliberately not written down here: it had four homes and
-went stale in three of them the first time a test file was added. `test/validate.py`
-reconciles the counts and cross-file facts this repo keeps re-breaking; CONTRIBUTING
-names each guard family and the validator asserts that paragraph keeps up.
+That script is the whole gate — `test/validate.py`, `test/plant_guard_test.py`,
+`test/test_page_audit.py`, `test/test_url_inspection.py`, `test/test_collectors.py`,
+`test/test_agent_surface.py`, `test/test_output_contracts.py` and
+`test/residue_test.py`. CI runs the same set
+plus a negative self-test per guard. The count is deliberately not written down here:
+it had four homes and went stale in three of them the first time a test file was
+added — and this list itself went two files stale anyway, so `validate.py` now holds
+every command in `check-docs.sh` against **all six** of its homes, this file included.
+`test/validate.py` reconciles the counts and cross-file facts this repo keeps
+re-breaking; CONTRIBUTING names each guard family and the validator asserts that
+paragraph keeps up.
 
 **Run the gate as its own command from the repo root and read its exit status.** Not
 behind a pipe: a shell pipeline exits with the status of its last command, so

@@ -46,6 +46,13 @@ than in this file: the cliff detector only fires on a collapse of ~90% or more t
 held for two weeks, and the query set is capped at the API row limit with no
 pagination, which drops the long tail the beyond-30 band is made of.
 
+**Zero rows exits `1`, and the report says `NOTHING MEASURED` first.** Everything from
+the position split down is derived from rows, so a property that answered nothing
+renders a full report finding no cliff, no cannibalization and no CTR gap — a document
+that reads like a clean site. The commonest causes are a `sc-domain:` property spelled
+as its `https://` twin, which is a different resource, and a window that predates
+verification. A run with no `--site` is a usage error and exits `1` too.
+
 ## page_audit.py
 
 `scripts/page_audit.py` (stdlib-only, no network required in `--file` mode)

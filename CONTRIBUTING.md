@@ -68,6 +68,7 @@ python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
+python3 test/residue_test.py
 ```
 
 `validate.py` checks structure, the four-way version sync, that all twenty-five
@@ -110,6 +111,40 @@ six scripts and 22 lines against seven and 26 for four releases (B-25). The same
 reads `SKILL.md`'s script inventory, which named a `sitemap_pull.py` that has never
 existed, in the one paragraph an agent consults to learn what it can run.
 
+Eight more families are about this repository's own evidence documents — the ones that
+say what shipped, what is owed and what proved it. They exist because on 2026-08-20 the
+gate was green while eleven documented facts were false.
+**gate homes**: every command in `check-docs.sh` is named in all six of its homes, and
+the two documents that *explain* the gate — `CLAUDE.md` and `docs/DOCMAP.md` — were the
+last two nobody read, each publishing five of the seven commands under the sentence "it
+runs exactly these and nothing else"; the home count itself is read out of DOCMAP and
+compared to the tuple, because that row said three, the matrix said five and the checker
+read four.
+**flat copies**: `_flat()` ships as a copy per script and DOCMAP said "one copy per
+script, five in all" against seven scripts — the definitions are counted.
+**corpus freshness**: the README's freshness stamp equals the one in
+`algorithm-updates.md` that owns it, and the corpus line count is measured and rounded
+rather than restated; the bullet said "Verified as of 2026-08-10" six days after the
+re-fetch, and "Roughly 5,000 lines" against 5,917.
+**body budget**: `SKILL.md`'s body is measured here — `len(body) / 3.9`, the estimator
+vendored from `make-skill`'s `audit_skill.py --house`, which does not ship in this tree
+and which three ledger rows quoted as runnable. Over the 5000-token or 500-line budget
+fails; past the 4750 house limit prints a note, because that state is filed as B-27.
+**board status**: a `B-nn` the prose calls closed must read `done` on the board, and
+every board id cited must exist — `SECURITY.md` credited its own repair to B-17, which
+is open and about something else.
+**ledger coverage**: the newest release in `CHANGELOG.md` must have a section in
+`docs/evidence/verification.md`, and the releases that have none are declared in a
+counted list rather than silently absent; two sections said "**Not shipped**" about work
+that had shipped in the release tagged on HEAD.
+**confirmed tally**: every ledger section's stated tally is parsed out of its own
+`Confirmed` column — the v0.13.0 line said twenty-two against twenty-one rows and left
+a whole vocabulary value out, and the prose under it reasoned from the wrong number.
+**run stamps**: `retro.md`'s newest run stamp cannot be older than `plugin.json`'s
+version, and its live instruction count is read from the headings rather than from the
+prune log's arithmetic — the stamps stopped eighteen releases back, which is the file
+every run is told to read first.
+
 Those names are not decoration: the validator asserts that this paragraph still
 mentions each guard family it runs, because a prose summary of a checker is a fact
 with two homes and this one had already fallen four checks behind, then four more.
@@ -126,9 +161,19 @@ URL-scheme guard, which exists because `urlopen` will happily read
 measured nothing exits non-zero, and no network error reaches generated markdown
 with its newlines intact.
 
+`test/residue_test.py` is the ledger over what a run leaves on disk. Every temp tree in
+this repository comes from `residue.workspace()`, a **failing** case keeps its own tree by
+name so a plant can be read where it landed, and every gate command ends by printing one
+line naming its residue — `nothing` included, because a clean run that stays silent is how
+the next leak becomes invisible. It runs last, so its final case reads the `$TMPDIR` every
+earlier suite shared.
+
 CI runs the same set plus negative self-tests that prove each guard can fail.
 **Add a guard and you add its negative self-test**: a guard nobody has watched
-fail against a planted defect is indistinguishable from a guard that cannot.
+fail against a planted defect is indistinguishable from a guard that cannot. A plant
+over a **document** uses `plantq`, which requires the refusal to name the defect: the
+anchor-liveness guard fires on any literal-anchored document plant, so "the validator
+failed" alone cannot tell the intended guard from that one (B-33).
 
 
 ### The family catalogue moves with the release

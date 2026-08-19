@@ -15,6 +15,10 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
+
+residue.open_case("url_inspection behaviour")
 SCRIPT = os.path.join(ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit",
                       "scripts", "url_inspection.py")
 failures: list[str] = []
@@ -136,6 +140,10 @@ check("never-crawled" not in _ecodes,
       "an empty inspectionResult must not be reported as a URL Google never crawled")
 check("no-index-status" in _ecodes,
       "an empty inspectionResult must say the response carried no index status")
+
+if not failures:
+    residue.close_case("url_inspection behaviour")
+residue.report()
 
 if failures:
     print("FAIL: url_inspection behavior")

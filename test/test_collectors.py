@@ -17,9 +17,12 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
+
+residue.open_case("collector behaviour")
 SCRIPTS = os.path.join(ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit", "scripts")
 failures: list[str] = []
 sys.dont_write_bytecode = True
@@ -125,7 +128,7 @@ check("sitemap-mixed-hosts" in {f["code"] for f in sm.findings(mixed)},
       "URLs spanning host variants must be flagged")
 
 # end-to-end through the CLI, so the argument surface is covered too
-tmp = os.path.join(tempfile.mkdtemp(), "sitemap.xml")
+tmp = os.path.join(residue.workspace("sitemap-cli"), "sitemap.xml")
 with open(tmp, "w", encoding="utf-8") as fh:
     fh.write('<?xml version="1.0" encoding="UTF-8"?>\n'
              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
@@ -302,6 +305,10 @@ check("5000" in _text and "row" in _text.lower(),
       "the report must say the query set hit the API row limit")
 check("4" in _text and "noise" in _text.lower(),
       "the rows dropped as scraper noise must be counted, not silently removed")
+
+if not failures:
+    residue.close_case("collector behaviour")
+residue.report()
 
 if failures:
     print("FAIL: collector behavior")

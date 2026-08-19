@@ -20,7 +20,10 @@ Measured, not asserted — the verification command at the bottom reproduces thi
 table for all seven, and `test/validate.py` fails when the count in this file drifts
 from the directory. It said **six** scripts and **22** grep lines against a measured
 seven and 26 for four releases, in the document a reader consults *because* they will
-not read the code (B-17, closed 2026-08-19).
+not read the code (B-25, closed in v0.23.0). This sentence credited **B-17** until
+2026-08-20 — an open row about a different defect entirely — so the reader it sent
+looking for the explanation found the wrong item; `validate.py` now refuses a board id
+the prose calls closed while the board row reads open.
 
 | script | outbound | executes a subprocess | writes |
 |---|---|---|---|
@@ -119,7 +122,7 @@ exactly:
 |---|---|
 | 13 | `urllib` — **9 that issue a request**: 7 `urlopen` calls, plus the `build_opener` and `opener.open` that carry `page_audit.py`'s scheme guard. The other 4 are 2 import lines and 2 comments that only mention these names |
 | 7 | the three `subprocess.run` blocks that call `gcloud`, with their error branches — 2 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`, which also catches a timeout |
-| 7 | `os.environ` — one read per producer field per script, the three variables above |
+| 7 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:161-163`), so seven scripts give seven lines. Three fields per script would be 21 |
 | 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). A seventh line matches `\bopen\(` — `opener.open` — and is counted in the `urllib` row above, which is why the four rows sum to 33 and a per-pattern grep gives 34 |
 
 No `os.system`, no `eval`, no `exec`, no raw sockets, no shell string. Everything

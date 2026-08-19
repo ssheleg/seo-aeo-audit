@@ -17,7 +17,7 @@ duplicated into commit messages or the changelog — those reference it.
 | The myth count | the rows of `references/myths.md` | four prose homes — README twice, SKILL.md, the Cursor rule — plus the size of the two short lists. `validate.py` reads every one; it used to read one, and was green while three were wrong |
 | The play count | the rows of `references/growth-plays.md` | README's knowledge table — checked |
 | The Prowl provider-tool count | `references/prowl-mcp.md` | `tooling.md` and README quote it — all three compared |
-| The gate commands | `scripts/check-docs.sh` | CONTRIBUTING, README and CI — `validate.py` requires every command in the script to appear in all three |
+| The gate commands | `scripts/check-docs.sh` | six other homes — CONTRIBUTING, README, the PR template, CI, `CLAUDE.md` and this file — `validate.py` requires every command in the script to appear in all six of them. It read four for a while, and the two documents that EXPLAIN the gate were the two nobody read: both published five of the seven commands under the sentence *"it runs exactly these and nothing else"* |
 | A finding's evidence tier | `FINDING_TIERS` in the script that emits it (`page_audit.py`, `agent_surface.py`) | the script's docstring explains the mapping; `validate.py` reads **every** script that declares the table, and both emitter shapes — `add(sev, code, …)` and an inline `"code":` key. Written against `page_audit.py` alone until a second emitter shipped |
 | Whether a track-K check is a defect or a bet | `FINDING_TIERS` in `scripts/agent_surface.py`, and the K8 table in `references/agent-readiness.md` | the two must agree: K8 publishes the effect tier a reader plans against, the script multiplies by it. A draft specification's absence may never carry `CONFIRMED` — `test_agent_surface.py` names the five codes it checks |
 | The CWV pass bands | `THRESHOLDS` in `scripts/psi_pull.py` | `references/experience-signals.md` publishes them as a table — compared numerically, in either unit |
@@ -30,9 +30,9 @@ duplicated into commit messages or the changelog — those reference it.
 | Tool → check routing | `references/tooling.md` | SKILL.md names a script; the routing table owns which rung it sits on |
 | A script's contract | its own docstring | README and SKILL.md describe usage; neither is the contract |
 | Version | `plugins/*/.claude-plugin/plugin.json` | marketplace.json, package.json, CHANGELOG — four-way sync enforced |
-| A script's exit-code contract | its own docstring | asserted in `test_output_contracts.py`. Four scripts had settled it four ways, and two of them returned 0 after measuring nothing — the prose was honest, the machine-readable half was not |
+| A script's exit-code contract | its own docstring | asserted in `test_output_contracts.py`. Four scripts had settled it four ways, and two of them returned 0 after measuring nothing — the prose was honest, the machine-readable half was not. `gsc_pull.py` had no such path at all until 2026-08-20: three `return 0`s, no `return 1`, and a docstring saying only "0 = ran". Six of the seven now read one predicate for the report and the status; `preflight.py` is the deliberate exception, because there the failures **are** the report |
 | How to reach the bundled scripts | the `$SKILL_DIR` block in `SKILL.md` | every invocation in that file uses it, and `validate.py` rejects a bare `scripts/*.py` path. The Cursor rule states the same thing in prose because a `.mdc` may not link out |
-| Whether an error is safe to render | `_flat()` — one copy per script, five in all | these ship as standalone files with no shared module, so the copies are counted rather than imported |
+| Whether an error is safe to render | `_flat()` — five of the seven scripts define one | these ship as standalone files with no shared module, so the copies are counted rather than imported. The row said "one copy per script, five in all" — two claims in one breath, and the per-script half was false against seven scripts, while `preflight.py`'s shared provenance block said the true number out loud in a comment. `validate.py` counts the definitions now |
 | The 2026-08-10 defect total | the `### D<n>` rows of `docs/audit/2026-08-10-defect-ledger.md` | six prose homes, each named with its phrase in `validate.py`. Five said forty-one against forty-three rows — including the ledger's own summary sentence, which said both |
 | The audit's track list | the step-2 table in `SKILL.md` | `TRACKS` in `scripts/preflight.py` is the machine-readable second home, because a script cannot read a markdown table at runtime — `validate.py` compares ids, order and label, in both directions. The deliverable's coverage table is generated from `TRACKS`, so it can no longer ship one row short of the tracks the skill declares |
 | The coverage-status vocabulary | `COVERAGE_STATUS` in `scripts/preflight.py` | both skeleton homes publish every value verbatim (`templates/audit-report.template.md` and `references/deliverable-templates.md`), and `references/preflight.md` defines each one — all checked. `validate_coverage()` is the only reader, so a value outside the enum is an error rather than an unread cell |
@@ -41,6 +41,7 @@ duplicated into commit messages or the changelog — those reference it.
 | What a producer field says when unavailable | `PRODUCER_ENV` in `scripts/preflight.py` | `unavailable: <VAR> is not set by this harness`, generated — never a literal anywhere. `SECURITY.md` lists the three variables as the only environment this skill reads; `test_output_contracts.py` asserts a guessed value is refused |
 | What invalidates an audit | `INVALIDATORS` in `scripts/preflight.py` | both skeleton homes and `references/preflight.md` publish the four rows; `validate_provenance()` refuses a block that names fewer. The shape is `task-pipeline`'s verification-ledger invalidators mapped onto this domain, not a second design |
 | The skill version, at runtime | `SKILL_VERSION` in each script's shared block | seven literals rather than a lookup, because `bin/seo-aeo-audit.js` installs `scripts/` with no manifest beside it. `validate.py` holds all seven equal to `plugin.json` — a producer block naming a version that never ran is worse than one naming none |
+| What a run leaves on disk | `test/residue.py` — every temp tree comes from `residue.workspace()` | no second implementation, deliberately: the module is **copied** from `make-skill` and the umbrella, which closed the same leak first, because two implementations of one ledger is the defect this family keeps finding. `test/residue_test.py` runs the real suites in a private `$TMPDIR` and requires the box to be empty |
 | The bundled script inventory | the `scripts/` directory | `SECURITY.md` states the count in five sentences and one row per script; `SKILL.md` names them in its inventory paragraph — all measured against the directory since B-25, which had six/22 against seven/26 for four releases, and a `sitemap_pull.py` that has never existed |
 | Reference count | `test/validate.py:REQUIRED_REFERENCES` | README (three places) and CONTRIBUTING (two) quote it in prose, in words or digits — **checked** since 2026-08-10. It was marked *review* on the grounds that it is "a prose number about a tuple", and went stale again the moment a twenty-second reference shipped |
 
@@ -72,7 +73,7 @@ the reason no check can.
 | Document an invocation in `SKILL.md` | it resolves through `$SKILL_DIR`, never relative to the caller | `validate.py` script-reachability guard. The agent stands in the user's project; a relative path there is not a smaller feature, it is a silent drop to the bottom evidence rung |
 | Render anything an API returned into markdown | `_flat()` around it | `validate.py` error-flattening guard rejects `r['error']`/`r['detail']` reaching a rendered line raw |
 | Change what a script returns on total failure | its docstring, and the assertion in `test_output_contracts.py` | the test; the docstring is **review** — no check reads prose for intent, which is exactly how two contracts drifted from their own documentation |
-| Add a test file to the gate | `check-docs.sh`, CONTRIBUTING, the README, the PR template and CI | `validate.py` gate parity across all five. The PR template was the unguarded fifth home and kept asking for two commands long after that was fixed elsewhere |
+| Add a test file to the gate | `check-docs.sh`, CONTRIBUTING, the README, the PR template, CI, `CLAUDE.md` and this file | `validate.py` gate parity across all six of them, and the count is read out of this row and out of the one above and compared to `_GATE_HOMES` — the row above said three homes, this one said five, and the checker read four. The PR template was the unguarded fifth home and kept asking for two commands long after that was fixed elsewhere |
 | Add or rename an audit track | the step-2 table in `SKILL.md`, `TRACKS` in `preflight.py`, and therefore a row in both skeleton homes | `validate.py` coverage-vocabulary guard. This row exists because `SKILL.md` declared track K in v0.19.0 and the coverage table stopped at J for three releases: the track was not merely unanswered, its coverage was unstatable |
 | Add a status to the coverage vocabulary | `COVERAGE_STATUS`, the decision about whether it owes a Notes reason (`NO_REASON_NEEDED`), both skeleton homes and the table in `references/preflight.md` | `validate.py` requires every value to be published in both skeletons and asserts the exemption list is a subset of the enum; the reference table is **review** |
 | Add a gate name to a probe | `COVERAGE_GATES` | `validate.py` reads the `probe(...)` calls with `ast` — the enum-drift shape this family has already shipped is a contract listing five statuses against a linter matching four, where the fifth read as no status at all |
@@ -80,7 +81,8 @@ the reason no check can.
 | Release a version | also `SKILL_VERSION` in all seven scripts | `validate.py` compares each literal to `plugin.json` and names the files that disagree. Seven extra homes is the price of a version that survives `bin/seo-aeo-audit.js`, which copies `scripts/` alone |
 | Add or remove a bundled script | `SECURITY.md`'s five count sentences and its per-script I/O row, and `SKILL.md`'s inventory paragraph | `validate.py` I/O-surface guard measures both against the directory and **runs** the regex `SECURITY.md` publishes, so narrowing the pattern breaks the count it claims |
 | Add a way a payload can be produced | a producer block on it, stamped with that script's own name | `validate.py` requires every script to call `provenance("<its own file>", …)`; `test_output_contracts.py` drives all seven through both formats and reads the output |
-| Add a validator guard | a planted-defect step in CI, and the family name in the CONTRIBUTING summary | `validate.py` asserts the name survives; CI proves the guard can fail. A guard nobody has watched fail is indistinguishable from one that cannot |
+| Add a validator guard | a planted-defect step in CI, and the family name in the CONTRIBUTING summary | `validate.py` asserts the name survives; CI proves the guard can fail. A guard nobody has watched fail is indistinguishable from one that cannot. A plant over a **document** uses `plantq`, which requires the refusal to name the defect — `plant` alone cannot tell the guard under test from the anchor-liveness guard, which fires on any literal-anchored document plant (B-33) |
+| Make a temp directory in a test | `residue.workspace()`, never `tempfile.mkdtemp()` | `test/residue_test.py` runs the four suites that used to leak in a private `$TMPDIR` and requires it empty afterwards; every gate command prints one residue line, `nothing` included, because a clean run that says nothing is how the next leak becomes invisible. A negative self-test runs its copy with a `$TMPDIR` of its own: a planted run is designed to fail, a failing case keeps its tree, and the shared box would read that as a leak |
 
 ## What proves it
 
@@ -89,16 +91,19 @@ bash scripts/check-docs.sh
 ```
 
 It runs exactly these and nothing else, so the gate cannot drift from the
-tests — and `validate.py` now requires every command in that script to be named in
-CONTRIBUTING, in the README and in CI, because the docs had fallen two test files
-behind the gate:
+tests — and `validate.py` requires every command in that script to be named in all six
+homes the row above lists, this file included, because the docs had fallen two test
+files behind the gate and then this list did it again:
 
 ```bash
 python3 test/validate.py
+python3 test/plant_guard_test.py
 python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
+python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
+python3 test/residue_test.py
 ```
 
 Read its exit status as its own command, not behind a pipe (standing instruction

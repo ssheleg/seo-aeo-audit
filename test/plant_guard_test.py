@@ -4,15 +4,21 @@
 Five inline variants of this guard shipped five different bugs. The one that reached a
 pull request compared content only, against a plant whose entire effect is `chmod` — so
 the mode case below is not an edge case, it is the incident.
+
+`tree()` built one temp directory per case and removed none of them, and no line of
+output said so — 2560 trees of exactly this shape were on this machine when the count
+was taken, across the four repositories that ship this fixture byte for byte. Every tree
+now comes from `residue.workspace()`, a failing case keeps its own by name, and the run
+ends with one line naming what it left. See `test/residue.py`.
 """
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GUARD = os.path.join(HERE, "plant_guard.py")
+sys.path.insert(0, HERE)
+import residue  # noqa: E402
 
 failures = []
 
@@ -22,16 +28,22 @@ def run(*args):
 
 
 def case(name, fn):
+    # The case owns every tree made while it runs, so a case that FAILS keeps its copy:
+    # a plant is debugged by reading the tree it landed in, and a cleanup on the pass
+    # path only deletes the evidence exactly when somebody wants it.
+    residue.open_case(name)
     try:
         fn()
-        print(f"  ok  {name}")
     except AssertionError as e:
         failures.append(f"{name}: {e}")
         print(f"FAIL  {name}: {e}")
+    else:
+        print(f"  ok  {name}")
+        residue.close_case(name)
 
 
 def tree():
-    d = tempfile.mkdtemp()
+    d = residue.workspace("plant-guard")
     root = os.path.join(d, "copy")
     os.makedirs(os.path.join(root, "sub"))
     with open(os.path.join(root, "a.txt"), "w") as fh:
@@ -137,6 +149,8 @@ for n, f in [
     ("the manifest lives outside the tree", the_manifest_lives_outside_the_tree),
 ]:
     case(n, f)
+
+residue.report()
 
 if failures:
     print(f"\nFAIL: {len(failures)} of 9")

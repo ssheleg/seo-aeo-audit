@@ -144,8 +144,13 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Verified as of 2026-08-10.** Roughly 5,000 lines of distilled reference
-  material across the twenty-five contracts. The update timeline covers
+- **Sources last re-fetched 2026-08-16**. That date has one home —
+  `references/algorithm-updates.md` — and the gate holds this line equal to it, because
+  this bullet said "Verified as of 2026-08-10" for six days after the corpus was
+  refreshed, and a staleness claim that is itself stale is the number a reader uses to
+  decide whether to trust the rest. **~5,900 non-blank lines** of distilled reference
+  material across the twenty-five contracts, rounded to the nearest hundred and
+  recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
   last re-fetched and what its newest row is.
 - **Most benchmarks carry a date and a sample; the ones that do not say so.** The
@@ -274,11 +279,11 @@ must name, anchor discipline, and the CSV column contract.
 
 ## Security posture
 
-Text plus **six** standard-library Python scripts, and nothing else runs. Three of
+Text plus **seven** standard-library Python scripts, and nothing else runs. Four of
 them are read-only network clients (`page_audit.py`, `psi_pull.py`,
-`sitemap_audit.py`); two call Google APIs with a token minted locally
-(`gsc_pull.py`, `url_inspection.py`); one probes access (`preflight.py`). None of
-them writes anything, and none submits, requests indexing or changes a property.
+`sitemap_audit.py`, `agent_surface.py`); two call Google APIs with a token minted
+locally (`gsc_pull.py`, `url_inspection.py`); one probes access (`preflight.py`). None
+of them writes anything, and none submits, requests indexing or changes a property.
 
 `page_audit.py` makes plain http(s) GETs to the URLs you hand it — any other scheme
 is refused before a request is made, redirects off http(s) are refused, non-HTML
@@ -327,6 +332,10 @@ test/test_url_inspection.py          index-verdict tests (documented API shape)
 test/test_collectors.py              psi / sitemap / gsc / preflight tests
 test/test_agent_surface.py           track-K collector: parsers, tiers, blind spots
 test/test_output_contracts.py        exit status and markdown safety, all seven
+test/residue.py                      what a run leaves on disk — one ledger, printed
+                                     on every path, `nothing` included
+test/residue_test.py                 fixtures for it, run last: the final case reads
+                                     the TMPDIR every suite above shared
 test/fixtures/*.html                 pages the auditor is tested against
 .github/workflows/validate.yml       CI, including negative self-tests
 docs/research/                       provenance behind every claim in the references
@@ -342,6 +351,7 @@ python3 test/test_url_inspection.py  # index verdicts against the documented API
 python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
 python3 test/test_agent_surface.py   # the track-K collector, offline
 python3 test/test_output_contracts.py  # exit status and markdown safety across all seven
+python3 test/residue_test.py         # what the run left on disk, and that it said so
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
 ```
@@ -393,7 +403,8 @@ evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
 `bash scripts/check-docs.sh` must pass — it runs `python3 test/validate.py`,
 `python3 test/plant_guard_test.py`, `python3 test/test_page_audit.py`,
 `python3 test/test_url_inspection.py`, `python3 test/test_collectors.py`,
-`python3 test/test_agent_surface.py` and `python3 test/test_output_contracts.py`.
+`python3 test/test_agent_surface.py`, `python3 test/test_output_contracts.py` and
+`python3 test/residue_test.py`.
 Everyone taking part is expected to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 

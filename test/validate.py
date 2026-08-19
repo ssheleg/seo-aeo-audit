@@ -13,6 +13,10 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
+
+residue.open_case("structural validator")
 NAME = "seo-aeo-audit"
 SKILL_DIR = f"plugins/{NAME}/skills/{NAME}"
 REQUIRED_TEMPLATES = ("audit-report.template.md", "action-plan.template.md",
@@ -45,6 +49,34 @@ REQUIRED_REFERENCES = (
     "scripts.md",
 )
 errors = []
+
+# One home for the number-words. Three separate guards below carried their own map
+# over overlapping ranges, which is the defect class this file exists to reconcile,
+# one level down: a prose count written in words could be read by one map and not by
+# another, and the guard that could not read it passed.
+NUMWORDS = {
+    0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six",
+    7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve",
+    13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen",
+    18: "eighteen", 19: "nineteen", 20: "twenty", 21: "twenty-one",
+    22: "twenty-two", 23: "twenty-three", 24: "twenty-four", 25: "twenty-five",
+    26: "twenty-six", 27: "twenty-seven", 28: "twenty-eight", 29: "twenty-nine",
+    30: "thirty",
+}
+_WORD_TO_N = {w: n for n, w in NUMWORDS.items()}
+
+
+def numword(text):
+    """A prose number as an int, in digits or in words. None when it is neither."""
+    t = str(text).strip().strip(".,;:*`()").lower().replace(",", "")
+    if t.isdigit():
+        return int(t)
+    return _WORD_TO_N.get(t)
+
+
+def semver(v):
+    """`0.13.0` -> (0, 13, 0), so releases sort by version and not by string."""
+    return tuple(int(x) for x in str(v).split("."))
 
 
 def fail(m):
@@ -462,6 +494,14 @@ _GUARD_FAMILIES = (
     "coverage vocabulary",
     "provenance",
     "I/O surface",
+    "gate homes",
+    "flat copies",
+    "corpus freshness",
+    "body budget",
+    "board status",
+    "ledger coverage",
+    "confirmed tally",
+    "run stamps",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -696,8 +736,7 @@ if os.path.isdir(_ref_dir):
     for _missing in sorted(_declared - _on_disk):
         fail(f"REQUIRED_REFERENCES names references/{_missing}, which is not on disk")
 
-_WORDNUM = {19: "nineteen", 20: "twenty", 21: "twenty-one", 22: "twenty-two",
-            23: "twenty-three", 24: "twenty-four", 25: "twenty-five"}
+_WORDNUM = {n: NUMWORDS[n] for n in range(19, 31)}
 _ref_n = len(REQUIRED_REFERENCES)
 _ref_word = _WORDNUM.get(_ref_n)
 for _rel, _pats in (("README.md", (r"(\w+(?:-\w+)?) reference contracts ship",
@@ -731,12 +770,30 @@ if len(_seen_prowl) > 1:
     fail(f"the Prowl provider-tool count disagrees across its homes: "
          f"{ {k: sorted(v) for k, v in _prowl_counts.items() if v} }")
 
-# The gate is one fact with five homes: scripts/check-docs.sh runs it, CI repeats
-# it, CONTRIBUTING and README tell a contributor what to run, and the PR template
-# asks them to paste the output. CONTRIBUTING named two of the four commands and
-# called CI "the same two"; the PR template was not counted as a home at all, so it
-# kept asking for two of five long after that was corrected everywhere else.
+# The gate is one fact with several homes: scripts/check-docs.sh runs it, CI repeats
+# it, CONTRIBUTING and README tell a contributor what to run, the PR template asks
+# them to paste the output, and CLAUDE.md and docs/DOCMAP.md are the two documents an
+# agent reads to learn what the gate IS. CONTRIBUTING named two of the four commands
+# and called CI "the same two"; the PR template was not counted as a home at all, so
+# it kept asking for two of five long after that was corrected everywhere else.
+#
+# The two documents that EXPLAIN the gate were the last two nobody read: on 2026-08-20
+# `CLAUDE.md` and `docs/DOCMAP.md` each published five of the gate's seven commands —
+# `plant_guard_test.py` and `test_agent_surface.py` missing from both — while DOCMAP's
+# own sentence said "It runs exactly these and nothing else". So the home list is a
+# tuple, the loop reads it, and the prose that COUNTS the homes is compared to `len()`:
+# the row at DOCMAP said three homes, its propagation matrix said five, and the checker
+# read four. Three numbers for one tuple is the shape this file exists to refuse.
+_GATE_HOMES = (
+    "CONTRIBUTING.md",
+    "README.md",
+    os.path.join(".github", "PULL_REQUEST_TEMPLATE.md"),
+    os.path.join(".github", "workflows", "validate.yml"),
+    "CLAUDE.md",
+    os.path.join("docs", "DOCMAP.md"),
+)
 _gate_path = os.path.join(ROOT, "scripts", "check-docs.sh")
+_gate_cmds = []
 if not os.path.isfile(_gate_path):
     fail("missing scripts/check-docs.sh — the documentation gate")
 else:
@@ -745,18 +802,36 @@ else:
     if len(_gate_cmds) < 2:
         fail("scripts/check-docs.sh: no `python3 test/*.py` lines found — the gate-parity "
              "check cannot read it")
-    for _rel in ("CONTRIBUTING.md", "README.md",
-                 os.path.join(".github", "PULL_REQUEST_TEMPLATE.md")):
-        _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+    for _rel in _GATE_HOMES:
+        _p = os.path.join(ROOT, _rel)
+        if not os.path.isfile(_p):
+            fail(f"{_rel} is named as a home of the gate commands and does not exist")
+            continue
+        _txt = open(_p, encoding="utf-8").read()
         for _cmd in _gate_cmds:
             if _cmd not in _txt:
                 fail(f"{_rel} does not mention `{_cmd}`, which scripts/check-docs.sh runs — "
-                     f"a contributor following the docs runs a subset of the gate")
-    _ci = open(os.path.join(ROOT, ".github", "workflows", "validate.yml"),
-               encoding="utf-8").read()
-    for _cmd in _gate_cmds:
-        if _cmd not in _ci:
-            fail(f"CI does not run `{_cmd}`, which scripts/check-docs.sh runs")
+                     f"a reader following that document runs a subset of the gate")
+
+    # The home COUNT is itself a prose fact, and it had three values. DOCMAP states it
+    # twice — once in the single-home table, once in the propagation matrix — and both
+    # are read out of the document and compared to this tuple.
+    _dm_path = os.path.join(ROOT, "docs", "DOCMAP.md")
+    if os.path.isfile(_dm_path):
+        _dm = open(_dm_path, encoding="utf-8").read()
+        for _pat, _what in ((r"appear in all (\w+(?:-\w+)?) of them", "the single-home row"),
+                            (r"gate parity across all (\w+(?:-\w+)?) of them",
+                             "the propagation-matrix row")):
+            _m = re.search(_pat, _dm)
+            if not _m:
+                fail(f"docs/DOCMAP.md: {_what} no longer counts the gate's homes in a form "
+                     f"this check can read (expected /{_pat}/) — a home list nothing reads "
+                     f"is how one document said three, another five, and the checker four")
+            elif numword(_m.group(1)) != len(_GATE_HOMES):
+                fail(f"docs/DOCMAP.md: {_what} says the gate commands have "
+                     f"{_m.group(1)!r} homes beside the script; `_GATE_HOMES` holds "
+                     f"{len(_GATE_HOMES)} ({NUMWORDS[len(_GATE_HOMES)]}): "
+                     f"{', '.join(_GATE_HOMES)}")
 
 # Every documented invocation must resolve from where the agent is standing, which
 # is the user's project — not the skill directory. Eleven bash lines read
@@ -1379,7 +1454,8 @@ if _pre is not None:
                 fail(f"{_rel}: {_err}")
 
 # ── the I/O surface this file publishes is counted, not restated ──────────────
-# B-17: `SECURITY.md` said **six** scripts and that its I/O grep "prints **22** lines
+# B-25 (this comment said B-17 until 2026-08-20, which is an open row about something
+# else): `SECURITY.md` said **six** scripts and that its I/O grep "prints **22** lines
 # and that is all of it", against a measured seven and 26, for four releases. Those
 # numbers are the whole point of that section — a reader consults it *because* they
 # will not read the code — and it is the same prose-count class already reconciled
@@ -1390,8 +1466,7 @@ if _pre is not None:
 _sec_path = os.path.join(ROOT, "SECURITY.md")
 if os.path.isfile(_sec_path) and _ALL_SCRIPTS:
     _sec = open(_sec_path, encoding="utf-8").read()
-    _WORDS_UP = {6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
-                 11: "eleven", 12: "twelve"}
+    _WORDS_UP = {n: NUMWORDS[n] for n in range(6, 13)}
     _n_scripts = len(_ALL_SCRIPTS)
     _word = _WORDS_UP.get(_n_scripts, str(_n_scripts))
     for _pat, _what in (
@@ -1405,7 +1480,7 @@ if os.path.isfile(_sec_path) and _ALL_SCRIPTS:
         if not _m:
             fail(f"SECURITY.md: {_what} no longer states the script count in a form this "
                  f"check can read (expected /{_pat}/) — the number goes stale silently the "
-                 f"moment nothing reads it, which is exactly how B-17 happened")
+                 f"moment nothing reads it, which is exactly how B-25 happened")
         elif _m.group(1).strip(".,") not in (_word, str(_n_scripts)):
             fail(f"SECURITY.md: {_what} says {_m.group(1)!r} scripts, the directory holds "
                  f"{_n_scripts} ({_word})")
@@ -1467,6 +1542,56 @@ if os.path.isfile(_sec_path) and _ALL_SCRIPTS:
                      f"an audited bundle and is not one")
 
 
+# ── the script count in the two documents a reader meets FIRST ───────────────
+# B-25 measured `SECURITY.md` and `SKILL.md` and stopped there. On 2026-08-20 the
+# README's security posture (`Text plus **six** …`) and `CLAUDE.md`'s opening
+# sentence (`knowledge plus six standard-library scripts`) still said six, and the
+# README's own enumeration accounted for six of the seven by role — `agent_surface.py`,
+# the track-K collector, was in neither. Two more homes of the fact B-25 was filed
+# against, in the two files a reader opens before either of the documents it fixed.
+#
+# The README also NAMES them, and a count word beside a list of names is two claims,
+# so both are measured — the same shape the SKILL.md inventory check above uses.
+if _ALL_SCRIPTS:
+    _n_all = len(_ALL_SCRIPTS)
+    for _rel, _pat, _what in (
+        ("README.md", r"Text plus \*\*(\w+)\*\* standard-library Python scripts",
+         "the security-posture sentence"),
+        ("CLAUDE.md", r"knowledge plus (\w+) standard-library scripts",
+         "the opening description"),
+    ):
+        _p = os.path.join(ROOT, _rel)
+        if not os.path.isfile(_p):
+            fail(f"{_rel} is named as a home of the script count and does not exist")
+            continue
+        _txt = open(_p, encoding="utf-8").read()
+        _m = re.search(_pat, _txt)
+        if not _m:
+            fail(f"{_rel}: {_what} no longer states the bundled-script count in a form "
+                 f"this check can read (expected /{_pat}/) — the number goes stale "
+                 f"silently the moment nothing reads it, which is how B-25 happened")
+        elif numword(_m.group(1)) != _n_all:
+            fail(f"{_rel}: {_what} says {_m.group(1)!r} scripts, the directory holds "
+                 f"{_n_all} ({NUMWORDS[_n_all]}) — {', '.join(_ALL_SCRIPTS)}")
+    # The README's enumeration by role, read to the end of its paragraph.
+    _rm = open(os.path.join(ROOT, "README.md"), encoding="utf-8").read()
+    _para = re.search(r"Text plus \*\*\w+\*\* standard-library Python scripts.*?\n\n",
+                      _rm, re.S)
+    if not _para:
+        fail("README.md: the security-posture paragraph that enumerates the scripts by "
+             "role is unreadable — it is the only place a reader learns which script "
+             "does what before opening SECURITY.md")
+    else:
+        _named = set(re.findall(r"`([a-z_0-9]+\.py)`", _para.group(0)))
+        for _bad in sorted(_named - set(_ALL_SCRIPTS)):
+            fail(f"README.md's security posture names `{_bad}` among the bundled scripts "
+                 f"and no such file ships")
+        for _missing in sorted(set(_ALL_SCRIPTS) - _named):
+            fail(f"README.md's security posture does not name `{_missing}`, which ships — "
+                 f"a script absent from the paragraph that divides them by role is an "
+                 f"undisclosed surface in the document a reader meets first")
+
+
 # HARD RULE: a SKILL.md may exist ONLY inside plugins/<plugin>/skills/<skill>/.
 for dirpath, dirnames, filenames in os.walk(ROOT):
     dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules")]
@@ -1503,6 +1628,339 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
                 continue
             if anchor and tpath.endswith(".md") and anchor not in heading_slugs(tpath):
                 fail(f"broken anchor in {rel}: {target} — no heading with that slug")
+
+
+# --------------------------------------------------------------------------- evidence guards
+# Everything below reconciles a number or a pointer that one of this repository's own
+# evidence documents STATES against the thing it is about. Each family was measured
+# wrong on this tree on 2026-08-20 before its guard existed; each has a planted-defect
+# step in CI. The pattern is the one CLAUDE.md rule 1 names: count the homes first.
+
+# ── `_flat()` is copied, so the copies are counted ────────────────────────────
+# DOCMAP called it "one copy per script, five in all" — two claims in one breath,
+# and the per-script half was false: seven scripts ship and five define one.
+# `preflight.py` says the true version out loud in a comment above the shared
+# provenance block ("only five of the seven scripts define one"), which is a fact with
+# two homes and no reconciler, so the document drifted and the code did not.
+_flat_homes = [_s for _s in _ALL_SCRIPTS
+               if "def _flat(" in open(os.path.join(_SCRIPTS_DIR, _s), encoding="utf-8").read()]
+_DOCMAP = os.path.join(ROOT, "docs", "DOCMAP.md")
+if _ALL_SCRIPTS and os.path.isfile(_DOCMAP):
+    _dm_txt = open(_DOCMAP, encoding="utf-8").read()
+    _m = re.search(r"`_flat\(\)` — (\w+) of the (\w+) scripts define one", _dm_txt)
+    if not _m:
+        fail("docs/DOCMAP.md: the `_flat()` row no longer states its copy count as "
+             "'<N> of the <M> scripts define one' — it used to say 'one copy per script, "
+             "five in all' against seven scripts, and nothing could read either number")
+    else:
+        _claim = (numword(_m.group(1)), numword(_m.group(2)))
+        if _claim != (len(_flat_homes), len(_ALL_SCRIPTS)):
+            fail(f"docs/DOCMAP.md: the `_flat()` row says {_m.group(1)!r} of "
+                 f"{_m.group(2)!r} scripts define one; measured "
+                 f"{len(_flat_homes)} of {len(_ALL_SCRIPTS)} — "
+                 f"{', '.join(_flat_homes)}")
+
+# ── the reference corpus: its freshness stamp and its size, both measured ────
+# README's "Data freshness" bullet said **Verified as of 2026-08-10** while
+# `algorithm-updates.md` — the single home of that fact per the row above — said the
+# sources were last re-fetched 2026-08-16. A staleness claim that is itself stale is
+# the one number in this repository a reader uses to decide whether to trust the rest.
+#
+# The size is rounded ON PURPOSE, to the nearest hundred, and the rounding is what the
+# README states. An exact line count sat there once and was wrong four edits later;
+# a figure nothing recomputes is the defect, and a figure that moves on every comma
+# is the reason the last one was deleted instead of fixed.
+_ALG = os.path.join(ROOT, SKILL_DIR, "references", "algorithm-updates.md")
+_README = os.path.join(ROOT, "README.md")
+if os.path.isfile(_ALG) and os.path.isfile(_README):
+    _alg_txt = open(_ALG, encoding="utf-8").read()
+    _rm_txt = open(_README, encoding="utf-8").read()
+    _am = re.search(r"\*\*Sources last re-fetched:\s*(\d{4}-\d{2}-\d{2})", _alg_txt)
+    _rmm = re.search(r"\*\*Sources last re-fetched (\d{4}-\d{2}-\d{2})\*\*", _rm_txt)
+    if not _am:
+        fail("references/algorithm-updates.md: no `**Sources last re-fetched: YYYY-MM-DD`"
+             " line — it is the single home of the corpus freshness date")
+    elif not _rmm:
+        fail("README.md: the Data-freshness bullet no longer carries "
+             "`**Sources last re-fetched YYYY-MM-DD**` — it used to say "
+             "'Verified as of 2026-08-10' with nothing comparing it to the reference "
+             "that owns the date, and it was six days stale")
+    elif _am.group(1) != _rmm.group(1):
+        fail(f"README.md says the sources were last re-fetched {_rmm.group(1)}; "
+             f"references/algorithm-updates.md — the single home of that fact — says "
+             f"{_am.group(1)}. A freshness claim that is itself stale is the number a "
+             f"reader uses to decide whether to trust the corpus")
+    if os.path.isdir(_ref_dir):
+        _corpus_nonblank = sum(
+            1 for _f in sorted(os.listdir(_ref_dir)) if _f.endswith(".md")
+            for _l in open(os.path.join(_ref_dir, _f), encoding="utf-8") if _l.strip())
+        _rounded = round(_corpus_nonblank / 100) * 100
+        _sm = re.search(r"\*\*~([\d,]+) non-blank lines\*\*", _rm_txt)
+        if not _sm:
+            fail("README.md: the Data-freshness bullet no longer states the corpus size "
+                 "as `**~N non-blank lines**` — it said 'Roughly 5,000 lines' against a "
+                 f"measured {_corpus_nonblank}")
+        elif numword(_sm.group(1)) != _rounded:
+            fail(f"README.md says ~{_sm.group(1)} non-blank lines of reference material; "
+                 f"`references/*.md` holds {_corpus_nonblank}, which rounds to "
+                 f"{_rounded}. The README states the rounding, so this is the figure "
+                 f"it claims and not an approximation of a different one")
+
+# ── SKILL.md's body budget is measured HERE, not in another repository ────────
+# Three evidence rows and a board row rested on `audit_skill.py --house`, which is
+# `make-skill`'s script and does not exist in this tree: a reader handed that command
+# gets `No such file or directory`, and the four numbers it produced were unreproducible
+# from this repository. The estimator is `len(body) / 3.9` — the same one that script
+# uses — so it is vendored rather than cited, and the gate prints the measurement on
+# every run.
+#
+# The HARD limits fail; the house limit only reports. The body is over the house limit
+# today (that is board row B-27) and a gate that goes red on a known, filed, deliberate
+# state teaches everyone to ignore it.
+_BODY_MAX_TOKENS, _BODY_HOUSE_TOKENS, _BODY_MAX_LINES, _CHARS_PER_TOKEN = 5000, 4750, 500, 3.9
+_body_tokens = _body_lines = None
+if os.path.isfile(skill_path):
+    _sm_txt = open(skill_path, encoding="utf-8").read()
+    _fmm = re.match(r"^---\n.*?\n---\n", _sm_txt, re.S)
+    if _fmm:
+        _body = _sm_txt[_fmm.end():]
+        _body_tokens = int(len(_body) / _CHARS_PER_TOKEN)
+        _body_lines = _body.count("\n") + 1
+        if _body_tokens >= _BODY_MAX_TOKENS:
+            fail(f"SKILL.md body is ~{_body_tokens} tokens ({len(_body)} chars / "
+                 f"{_CHARS_PER_TOKEN}), the budget is < {_BODY_MAX_TOKENS} — move detail "
+                 f"into references/. The answer at this ceiling is a split, not a trim "
+                 f"(B-27)")
+        if _body_lines >= _BODY_MAX_LINES:
+            fail(f"SKILL.md body is {_body_lines} lines, the budget is < {_BODY_MAX_LINES}")
+
+# ── a `B-nn` the prose calls closed must read closed on the board ─────────────
+# `SECURITY.md` credited its own repair to "(B-17, closed 2026-08-19)". B-17 is open
+# and is about comparing a number on a third-party manifest against the same number on
+# the site; the row that closed the I/O count is B-25, which `CONTRIBUTING.md:109`
+# cites correctly. Three of this repository's own guard comments carried the same wrong
+# id. A pointer that resolves is not a pointer that answers (CLAUDE.md rule 3), and a
+# closed-row credit is the citation a reader follows to learn what was actually fixed.
+_BOARD = os.path.join(ROOT, "docs", "evidence", "backlog.md")
+_board_status = {}
+if os.path.isfile(_BOARD):
+    for _line in open(_BOARD, encoding="utf-8"):
+        _bm = re.match(r"\|\s*(B-\d+)\s*\|", _line)
+        if _bm:
+            _cells = [_c.strip() for _c in _line.strip().strip("|").split("|")]
+            _board_status[_bm.group(1)] = _cells[-1].lower()
+    if not _board_status:
+        fail("docs/evidence/backlog.md: no `| B-nn |` rows found — the board is the "
+             "single home of every row's status and nothing else can be checked against it")
+    # A quotation is not an exemption: a document that reproduces "(B-17, closed …)"
+    # reads as that claim to every checker and most readers, so a correction records
+    # the wrong id WITHOUT reassembling the sentence — the same rule this family
+    # applies to a dead command, which may be named and never quoted as runnable.
+    _CLOSED_CLAIMS = (r"(B-\d+),\s*closed\b", r"\bclosed by (B-\d+)\b", r"(B-\d+)\s*\(closed")
+    for _rel in ("README.md", "SECURITY.md", "CONTRIBUTING.md", "CLAUDE.md",
+                 os.path.join("docs", "DOCMAP.md"),
+                 os.path.join("docs", "evidence", "verification.md"),
+                 os.path.join("docs", "evidence", "retro.md"),
+                 os.path.join("docs", "evidence", "backlog.md")):
+        _p = os.path.join(ROOT, _rel)
+        if not os.path.isfile(_p):
+            continue
+        _txt = open(_p, encoding="utf-8").read()
+        for _bid in sorted(set(re.findall(r"\b(B-\d+)\b", _txt))):
+            if _bid not in _board_status:
+                fail(f"{_rel} cites {_bid} and the board has no such row — a board id is "
+                     f"the pointer a reader follows to learn why something was done")
+        for _pat in _CLOSED_CLAIMS:
+            for _bid in sorted(set(re.findall(_pat, _txt))):
+                _st = _board_status.get(_bid)
+                if _st is not None and "done" not in _st:
+                    fail(f"{_rel} calls {_bid} closed; the board reads {_st!r}. The row "
+                         f"that closed the work is a different one, and crediting the "
+                         f"wrong id sends a reader to an open item for the explanation")
+
+# ── the verification ledger covers every release it says it covers ────────────
+# Two sections headed `## Unreleased` and `## 2026-08-19` opened "**Not shipped.**" for
+# work that is in v0.23.0, tagged on HEAD, and there was no `v0.23.0` section at all:
+# the ledger was frozen in the working-tree state it was written in and the release went
+# past it. Its own closing policy — read out of the file rather than copied here — says
+# every release from a stated floor forward gets a row.
+#
+# The newest release must have a section, full stop; the historical gap is DECLARED and
+# counted instead of silent, because backfilling sixteen sections from the changelog is
+# exactly what that closing paragraph refuses ("a ledger filled in from memory is the
+# thing it exists to replace").
+_LEDGER = os.path.join(ROOT, "docs", "evidence", "verification.md")
+_CHANGELOG = os.path.join(ROOT, "CHANGELOG.md")
+if os.path.isfile(_LEDGER) and os.path.isfile(_CHANGELOG):
+    _led = open(_LEDGER, encoding="utf-8").read()
+    _chg = open(_CHANGELOG, encoding="utf-8").read()
+    _fm = re.search(r"Releases from v(\d+\.\d+\.\d+) forward get a row each", _led)
+    if not _fm:
+        fail("docs/evidence/verification.md: no 'Releases from vX.Y.Z forward get a row "
+             "each' sentence — that sentence is the floor this check reads, and without "
+             "it the ledger's coverage is whatever it happens to be")
+    else:
+        _floor = semver(_fm.group(1))
+        _releases = [_v for _v in re.findall(r"^## v(\d+\.\d+\.\d+)\b", _chg, re.M)
+                     if semver(_v) >= _floor]
+        _recorded = set(re.findall(r"^## v(\d+\.\d+\.\d+)\b", _led, re.M))
+        if not _releases:
+            fail(f"CHANGELOG.md has no `## vX.Y.Z` heading at or above v{_fm.group(1)}")
+        else:
+            _newest = max(_releases, key=semver)
+            if _newest not in _recorded:
+                fail(f"docs/evidence/verification.md has no `## v{_newest}` section, and "
+                     f"that is CHANGELOG.md's newest release — a release with no ledger "
+                     f"section is a release nobody has said was confirmed. Two sections "
+                     f"headed `## Unreleased` and a date said '**Not shipped**' about "
+                     f"work that had shipped, for exactly this reason")
+            _gap = sorted((_v for _v in _releases if _v not in _recorded), key=semver)
+            _dec = re.search(r"<!-- unrecorded-releases:start -->(.*?)"
+                             r"<!-- unrecorded-releases:end -->", _led, re.S)
+            if not _dec:
+                fail("docs/evidence/verification.md: no `<!-- unrecorded-releases:start -->"
+                     "` block — the releases with no section here are declared and counted, "
+                     "or they are silently absent, which is the state this guard was "
+                     "written against")
+            else:
+                _declared = sorted(set(re.findall(r"^- `?v(\d+\.\d+\.\d+)`?", _dec.group(1),
+                                                  re.M)), key=semver)
+                if _declared != _gap:
+                    _extra = sorted(set(_declared) - set(_gap), key=semver)
+                    _short = sorted(set(_gap) - set(_declared), key=semver)
+                    fail(f"docs/evidence/verification.md: the declared unrecorded-release "
+                         f"list disagrees with CHANGELOG.md — not declared: "
+                         f"{['v' + _v for _v in _short]}; declared but recorded above: "
+                         f"{['v' + _v for _v in _extra]}")
+                _cm = re.search(r"\*\*(\w+(?:-\w+)?)\*\* of the (\w+(?:-\w+)?) releases "
+                                r"at or above", _led)
+                if not _cm:
+                    fail("docs/evidence/verification.md: the unrecorded-release block no "
+                         "longer states its size as '**N** of the M releases at or above' "
+                         "— a list nothing counts is a list that grows quietly")
+                elif (numword(_cm.group(1)), numword(_cm.group(2))) != (len(_gap),
+                                                                       len(_releases)):
+                    fail(f"docs/evidence/verification.md says {_cm.group(1)!r} of "
+                         f"{_cm.group(2)!r} releases are unrecorded; measured "
+                         f"{len(_gap)} of {len(_releases)}")
+
+    # ── each section's stated tally is parsed out of its own rows ─────────────
+    # The v0.13.0 section said "5 observed · 6 test-only · 5 planted+observed · 6 never"
+    # — twenty-two against twenty-one rows, four planted+observed, five never, and one
+    # `planted` row omitted from the vocabulary altogether. The prose under it then
+    # reasoned from the wrong number ("Six `never` rows are all prose"). This is the
+    # `Confirmed` column's own count, in the file whose entire subject is the difference
+    # between tested and confirmed.
+    _CONF_ORDER = (
+        ("planted+observed", (r"\*\*planted\*\*\s*\+\s*\*\*observed\*\*",
+                              r"\*\*observed\*\*\s*\+\s*\*\*planted\*\*")),
+        ("planted", (r"\*\*planted\*\*",)),
+        ("observed", (r"\*\*observed\*\*",)),
+        ("test-only", (r"\*\*test-only\*\*",)),
+        ("never", (r"\*\*never\*\*",)),
+    )
+
+    def _classify_confirmed(cell):
+        for _label, _pats in _CONF_ORDER:
+            for _pat in _pats:
+                if re.search(_pat, cell):
+                    return _label
+        return None
+
+    _sections, _cur = [], None
+    for _line in _led.split("\n"):
+        if _line.startswith("## "):
+            _cur = (_line[3:].strip(), [])
+            _sections.append(_cur)
+        elif _cur is not None:
+            _cur[1].append(_line)
+    for _head, _lines in _sections:
+        _conf_col, _tally = None, {}
+        for _line in _lines:
+            if not _line.startswith("|"):
+                _conf_col = None
+                continue
+            _cells = [_c.strip() for _c in _line.strip().strip("|").split("|")]
+            if "Confirmed" in _cells:
+                _conf_col = _cells.index("Confirmed")
+                continue
+            if _conf_col is None or set("".join(_cells)) <= set("-: "):
+                continue
+            if _conf_col < len(_cells):
+                _lab = _classify_confirmed(_cells[_conf_col])
+                if _lab:
+                    _tally[_lab] = _tally.get(_lab, 0) + 1
+        _total = sum(_tally.values())
+        _stated = re.search(r"^\*\*Counts[^*]*?:\s*(.+?)\*\*", "\n".join(_lines), re.M)
+        if _total >= 3 and not _stated:
+            fail(f"docs/evidence/verification.md: section {_head!r} has {_total} rows with "
+                 f"a Confirmed value and no '**Counts …**' line — a table this size with "
+                 f"no tally is a tally nobody can check, and the one that existed was wrong")
+        elif _stated:
+            _cap = _stated.group(1)
+            _said = {}
+            for _n, _lab in re.findall(
+                    r"(\d+)\s+(planted\+observed|planted|observed|test-only|never)", _cap):
+                _said[_lab] = _said.get(_lab, 0) + int(_n)
+            if _said != _tally:
+                fail(f"docs/evidence/verification.md: section {_head!r} states "
+                     f"{ {k: _said[k] for k in sorted(_said)} } and its rows give "
+                     f"{ {k: _tally[k] for k in sorted(_tally)} }")
+            _rm2 = re.search(r"(\d+)\s+rows", _cap)
+            if _rm2 and int(_rm2.group(1)) != _total:
+                fail(f"docs/evidence/verification.md: section {_head!r} says "
+                     f"{_rm2.group(1)} rows, its Confirmed column has {_total}")
+
+# ── the standing instructions: their run stamps and their cap ─────────────────
+# `retro.md` says the run stamps are "what makes the cold-retirement trigger
+# computable" and its newest was `v0.14.1`, eighteen releases behind HEAD — so no run
+# could tell which instruction had gone cold, in the file every run is told to read
+# first. And the prune log's arithmetic was wrong in the other direction: it said the
+# list stood at eleven, one over the cap, while ten live instructions ship.
+_RETRO = os.path.join(ROOT, "docs", "evidence", "retro.md")
+if os.path.isfile(_RETRO) and plg_ver:
+    _rt = open(_RETRO, encoding="utf-8").read()
+    # Up to the prune log, not to the first blank line: the stamp series is a
+    # paragraph of its own under the heading sentence, and a regex that stopped at
+    # the first blank line read the heading and reported "no version".
+    _sb = re.search(r"\*\*Run stamps[^*]*\*\*(.*?)\*\*Prune log", _rt, re.S)
+    if not _sb:
+        fail("docs/evidence/retro.md: no `**Run stamps…**` block — it is what makes the "
+             "cold-retirement trigger computable, and the file says so itself")
+    else:
+        _stamps = re.findall(r"v(\d+\.\d+\.\d+)", _sb.group(1))
+        if not _stamps:
+            fail("docs/evidence/retro.md: the run-stamp block names no version")
+        else:
+            _newest_stamp = max(_stamps, key=semver)
+            if semver(_newest_stamp) < semver(plg_ver):
+                fail(f"docs/evidence/retro.md's newest run stamp is v{_newest_stamp} and "
+                     f"the shipped version is v{plg_ver} — the stamps stopped eighteen "
+                     f"releases behind HEAD once, which made the 'no firing in five run "
+                     f"stamps' retirement trigger uncomputable. Stamp the release in the "
+                     f"same change that bumps the manifests")
+    _numbered = re.findall(r"^## (\d+)\.\s+(.*)$", _rt, re.M)
+    _live = [_n for _n, _title in _numbered if not _title.strip().startswith("~~")]
+    _CAP = 10
+    if len(_live) > _CAP:
+        fail(f"docs/evidence/retro.md carries {len(_live)} live standing instructions "
+             f"against a cap of {_CAP} — the cap is the whole mechanism: an instruction "
+             f"that cannot be added without retiring one is an instruction somebody has "
+             f"to justify")
+    _stands = re.findall(r"the list stands at \*\*(\w+)", _rt)
+    if not _stands:
+        fail("docs/evidence/retro.md: no 'the list stands at **N**' figure in the prune "
+             "log — the count that decides whether the cap has been breached was wrong "
+             "by one, in both directions, and nothing read it")
+    elif numword(_stands[-1]) != len(_live):
+        fail(f"docs/evidence/retro.md's last prune entry says the list stands at "
+             f"{_stands[-1]!r}; counting live `## N.` headings gives {len(_live)} "
+             f"({NUMWORDS.get(len(_live), len(_live))}) — struck-through headings are "
+             f"retired and do not bind a run")
+    _checked = re.findall(r"all (\w+) checked", _rt)
+    if _checked and numword(_checked[-1]) != len(_live):
+        fail(f"docs/evidence/retro.md's last prune entry says 'all {_checked[-1]} "
+             f"checked'; {len(_live)} instructions are live")
 
 
 # --------------------------------------------------------------------------- portability
@@ -1583,10 +2041,25 @@ def check_routed_triggers_still_advertised():
 check_routed_triggers_still_advertised()
 
 
+if not errors:
+    residue.close_case("structural validator")
+residue.report()
+
 if errors:
     print(f"FAIL: {NAME} structure invalid")
     for e in errors:
         print(" - " + e)
     sys.exit(1)
+_budget_note = ""
+if _body_tokens is not None:
+    _budget_note = (f", SKILL.md body ~{_body_tokens}/{_BODY_MAX_TOKENS} tokens "
+                    f"/ {_body_lines}/{_BODY_MAX_LINES} lines")
+    if _body_tokens >= _BODY_HOUSE_TOKENS:
+        # Reported, not failed: the body is knowingly past the house limit and B-27
+        # holds the remedy. A gate that goes red on a filed, deliberate state is a
+        # gate everyone learns to run with `|| true`.
+        print(f"note: SKILL.md body is ~{_body_tokens} tokens — inside the "
+              f"{_BODY_MAX_TOKENS} budget, past the {_BODY_HOUSE_TOKENS} house limit "
+              f"(B-27; the answer at this ceiling is a split, not a trim)")
 print(f"PASS: {NAME} structure valid ({len(mdcs)} cursor rule(s), "
-      f"{len(REQUIRED_REFERENCES)} reference(s))")
+      f"{len(REQUIRED_REFERENCES)} reference(s){_budget_note})")

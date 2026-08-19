@@ -4,9 +4,24 @@ Capped at ten. Each one binds the next run and carries the date it was written
 and the date it last fired. An instruction that has not fired in a long time is a
 candidate for retirement — that is what the stamps are for.
 
-**Run stamps.** 2026-08-04 · 2026-08-05 (`v0.11.2`) · 2026-08-10 (`v0.13.0`) ·
-**2026-08-10 (`v0.14.0`/`v0.14.1`, commit `ef3d584`, the agent-usage audit)**. The stamp is what makes the
-cold-retirement trigger computable, so it goes first.
+**Run stamps.** Derived, not typed — `git for-each-ref --sort=creatordate
+--format='%(refname:short) %(creatordate:short)' refs/tags` plus this file's own prune
+log. The stamp is what makes the cold-retirement trigger computable, so it goes first:
+
+2026-08-04 · 2026-08-05 (`v0.10.0`…`v0.11.2`) · 2026-08-06 (`v0.12.0`) · 2026-08-10
+(`v0.13.0`) · 2026-08-10 (`v0.14.0`, `v0.14.1`, commit `ef3d584`, the agent-usage audit)
+· 2026-08-11 (`v0.15.0`, `v0.15.1`) · 2026-08-12 (`v0.15.2`, `v0.16.0`) · 2026-08-13
+(`v0.16.1`) · 2026-08-14 (`v0.16.2`, `v0.16.3`, `v0.17.0`, `v0.17.1`, `v0.19.0`) ·
+2026-08-15 (`v0.19.1`) · 2026-08-16 (`v0.20.0`, `v0.20.1`, `v0.20.2`, `v0.21.0`,
+`v0.22.0`) · 2026-08-19 (`v0.23.0`) · **2026-08-20 (at `v0.23.0`, the truth-fix run)**
+
+**Five of those stamps carry a prune entry** — 2026-08-04, 2026-08-05, the two runs of
+2026-08-10, and 2026-08-20 — and the retirement trigger counts *those*, because a
+release is not a run that re-checked the instructions. The list stopped at `v0.14.1` for
+eighteen releases (B-28), which made the trigger uncomputable in the file every run is
+told to read first: `test/validate.py` now refuses a newest stamp older than
+`plugin.json`'s version, so it cannot fall behind a release again. `v0.18.0` is in the
+changelog and in no stamp on purpose — it was never tagged and never published (B-31).
 
 **Prune log.**
 
@@ -23,7 +38,7 @@ cold-retirement trigger computable, so it goes first.
   one, which is the cap doing its job: #6 and #7 are the strongest candidates, both
   being one grep away from becoming checks.
 
-- 2026-08-10 (second run, agent-usage audit): all eleven checked against the three
+- 2026-08-10 (second run, agent-usage audit): all ten checked against the three
   retirement triggers. **#6 retired** — it became a check in spirit and in practice: the
   gate is run as its own command everywhere the docs name it, and this run caught its
   own pipe violation within one command. **#4 fired hardest again** and is rewritten
@@ -32,8 +47,27 @@ cold-retirement trigger computable, so it goes first.
   reference before it was relied on), #2 on seventeen self-tests, #9 on the whole
   premise of this audit, #10 on the four scripts whose docstrings contradicted their
   own returns, #11 on the first `git fetch` of the run. #3, #7, #8 did not fire.
-  **One added** (#12), one retired, so the list stands at **eleven** — one over the
-  cap, and #3 leaves next run unless it fires: it has not fired in three stamps.
+  **One added** (#12), one retired, so the list stands at **ten** — exactly the cap,
+  and #3 leaves next run unless it fires: it has not fired in three stamps.
+  *(Recounted 2026-08-20: this entry said "all eleven checked" and "the list stands at
+  **eleven** — one over the cap". Ten instructions were live at both moments — twelve
+  numbered, #5 and #6 struck through — so the entry reported a breached cap that never
+  happened, and `docs/evidence/backlog.md`'s B-28 restated it. Counting live `## N.`
+  headings is now `validate.py`'s job.)*
+
+- 2026-08-20 (truth-fix run): all ten checked. **None retired** — the list is at the cap
+  and this run added none. #2 fired on every guard in this change, each watched failing
+  on the real tree before its plant was written. #4 fired hardest: eight of the eleven
+  defects closed here were a fact with two homes and no reconciler, including this
+  file's own stamp list. #7 fired on the prose the new guards have to read — the
+  fixed-string anchors in `validate.py` are chosen so a reworded sentence fails loudly
+  instead of matching nothing. #8 fired on the recount of the v0.13.0 ledger tally,
+  which nobody had added up. #9 fired on the premise: the gate was green while eleven
+  documented facts were false. #1, #3, #10, #11 and #12 did not fire. #3 has now not
+  fired in five stamps and meets the cold-retirement trigger for the first time — it is
+  left standing for one run because the run that could retire it is the run that made
+  the trigger computable, and retiring an instruction on the strength of a stamp list
+  written the same day is the shape this file exists to refuse.
 
 ## 1. Verify a carried number before it enters a reference
 *Written 2026-08-04. Last fired 2026-08-05.*

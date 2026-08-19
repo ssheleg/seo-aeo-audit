@@ -26,7 +26,7 @@ jobs:
       - name: Negative self-test (sed -i must not come back)
         run: |
           set -eu
-          rm -rf /tmp/sedback && cp -R . /tmp/sedback
+          rm -rf /tmp/sedback /tmp/sedback-residue && cp -R . /tmp/sedback && mkdir -p /tmp/sedback-residue
           python3 - <<'PY'
           import re
           # The failure this prevents is invisible on the platform where it happens: a
@@ -53,7 +53,7 @@ jobs:
           assert s2.rstrip().endswith(s[i + len(old):].rstrip()), "PLANT DID NOT LAND: the tail moved"
           open(p, "w", encoding="utf-8").write(s2)
           PY
-          if python3 /tmp/sedback/test/validate.py; then
+          if TMPDIR=/tmp/sedback-residue python3 /tmp/sedback/test/validate.py; then
             echo "ERROR: validator accepted a sed -i plant that is dead on macOS"
             exit 1
           else
@@ -103,10 +103,13 @@ jobs:
       - name: Cross-script output contracts
         run: python3 test/test_output_contracts.py
 
+      - name: What the run left on disk (and that it said so)
+        run: python3 test/residue_test.py
+
       - name: Negative self-test (a run that measured nothing must not exit 0)
         run: |
           set -eu
-          rm -rf /tmp/exit-copy && cp -R . /tmp/exit-copy
+          rm -rf /tmp/exit-copy /tmp/exit-copy-residue && cp -R . /tmp/exit-copy && mkdir -p /tmp/exit-copy-residue
           python3 - <<'PY'
           p = '/tmp/exit-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py'
           s = open(p, encoding="utf-8").read()
@@ -114,7 +117,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, 'return 0', 1))
           PY
-          if python3 /tmp/exit-copy/test/test_output_contracts.py; then
+          if TMPDIR=/tmp/exit-copy-residue python3 /tmp/exit-copy/test/test_output_contracts.py; then
             echo "ERROR: tests passed while a run of 403s reported success"
             exit 1
           else
@@ -124,7 +127,7 @@ jobs:
       - name: Negative self-test (unflattened error text must fail)
         run: |
           set -eu
-          rm -rf /tmp/flat-copy && cp -R . /tmp/flat-copy
+          rm -rf /tmp/flat-copy /tmp/flat-copy-residue && cp -R . /tmp/flat-copy && mkdir -p /tmp/flat-copy-residue
           python3 - <<'PY'
           p = '/tmp/flat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/preflight.py'
           s = open(p, encoding="utf-8").read()
@@ -132,8 +135,8 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, "{r['detail']}", 1))
           PY
-          if python3 /tmp/flat-copy/test/test_output_contracts.py && \
-             python3 /tmp/flat-copy/test/validate.py; then
+          if TMPDIR=/tmp/flat-copy-residue python3 /tmp/flat-copy/test/test_output_contracts.py && \
+             TMPDIR=/tmp/flat-copy-residue python3 /tmp/flat-copy/test/validate.py; then
             echo "ERROR: an API error page reached the table raw and nothing objected"
             exit 1
           else
@@ -148,9 +151,9 @@ jobs:
             plugins/seo-aeo-audit/skills/seo-aeo-audit/references/scripts.md \
             README.md
           do
-            rm -rf /tmp/path-copy && cp -R . /tmp/path-copy
+            rm -rf /tmp/path-copy /tmp/path-copy-residue && cp -R . /tmp/path-copy && mkdir -p /tmp/path-copy-residue
             perl -0pi -e 's{python3 "\$SKILL_DIR/scripts/}{python3 "scripts/}' "/tmp/path-copy/$home"
-            if python3 /tmp/path-copy/test/validate.py; then
+            if TMPDIR=/tmp/path-copy-residue python3 /tmp/path-copy/test/validate.py; then
               echo "ERROR: validator accepted an unreachable invocation in $home"
               exit 1
             else
@@ -161,7 +164,7 @@ jobs:
       - name: Negative self-test (a stale defect count must fail)
         run: |
           set -eu
-          rm -rf /tmp/count-copy && cp -R . /tmp/count-copy
+          rm -rf /tmp/count-copy /tmp/count-copy-residue && cp -R . /tmp/count-copy && mkdir -p /tmp/count-copy-residue
           python3 - <<'PY'
           p = '/tmp/count-copy/docs/evidence/retro.md'
           s = open(p, encoding="utf-8").read()
@@ -169,7 +172,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, 'exited 0 against forty-one defects', 1))
           PY
-          if python3 /tmp/count-copy/test/validate.py; then
+          if TMPDIR=/tmp/count-copy-residue python3 /tmp/count-copy/test/validate.py; then
             echo "ERROR: validator accepted a defect count the ledger contradicts"
             exit 1
           else
@@ -179,7 +182,7 @@ jobs:
       - name: Negative self-test (lab score must never stand in for field data)
         run: |
           set -eu
-          cp -R . /tmp/psi-copy
+          cp -R . /tmp/psi-copy && mkdir -p /tmp/psi-copy-residue
           python3 - <<'PY'
           p = '/tmp/psi-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/psi_pull.py'
           s = open(p, encoding="utf-8").read()
@@ -187,7 +190,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, '"field_data": field or {"LCP": {"p75": 0, "unit": "ms", "band": "good", "good_at_or_below": 2500, "poor_above": 4000}},', 1))
           PY
-          if python3 /tmp/psi-copy/test/test_collectors.py; then
+          if TMPDIR=/tmp/psi-copy-residue python3 /tmp/psi-copy/test/test_collectors.py; then
             echo "ERROR: tests passed while absent CrUX data was reported as a pass"
             exit 1
           else
@@ -197,7 +200,7 @@ jobs:
       - name: Negative self-test (the wrong canonical field name must fail)
         run: |
           set -eu
-          cp -R . /tmp/canon-copy
+          cp -R . /tmp/canon-copy && mkdir -p /tmp/canon-copy-residue
           python3 - <<'PY'
           p = '/tmp/canon-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py'
           s = open(p, encoding="utf-8").read()
@@ -205,7 +208,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, 'idx.get("userDeclaredCanonical")', 1))
           PY
-          if python3 /tmp/canon-copy/test/test_url_inspection.py; then
+          if TMPDIR=/tmp/canon-copy-residue python3 /tmp/canon-copy/test/test_url_inspection.py; then
             echo "ERROR: tests passed while reading a field the API does not return"
             exit 1
           else
@@ -215,7 +218,7 @@ jobs:
       - name: Negative self-test (robots Allow precedence must fail if dropped)
         run: |
           set -eu
-          rm -rf /tmp/robots-copy && cp -R . /tmp/robots-copy
+          rm -rf /tmp/robots-copy /tmp/robots-copy-residue && cp -R . /tmp/robots-copy && mkdir -p /tmp/robots-copy-residue
           python3 - <<'PY'
           p = '/tmp/robots-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
           s = open(p, encoding="utf-8").read()
@@ -225,7 +228,7 @@ jobs:
           # shape that reported a permitted /api as forbidden.
           open(p, "w", encoding="utf-8").write(s.replace(old, '            if n >= best_len:', 1))
           PY
-          if python3 /tmp/robots-copy/test/test_agent_surface.py; then
+          if TMPDIR=/tmp/robots-copy-residue python3 /tmp/robots-copy/test/test_agent_surface.py; then
             echo "ERROR: a path the site explicitly Allows passed as forbidden"
             exit 1
           else
@@ -235,7 +238,7 @@ jobs:
       - name: Negative self-test (a redirect credited as the page asked for must fail)
         run: |
           set -eu
-          rm -rf /tmp/redir-copy && cp -R . /tmp/redir-copy
+          rm -rf /tmp/redir-copy /tmp/redir-copy-residue && cp -R . /tmp/redir-copy && mkdir -p /tmp/redir-copy-residue
           python3 - <<'PY'
           p = '/tmp/redir-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
           s = open(p, encoding="utf-8").read()
@@ -243,7 +246,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, '    return "same"', 1))
           PY
-          if python3 /tmp/redir-copy/test/test_agent_surface.py; then
+          if TMPDIR=/tmp/redir-copy-residue python3 /tmp/redir-copy/test/test_agent_surface.py; then
             echo "ERROR: a 301 to the homepage passed as the page that was requested"
             exit 1
           else
@@ -253,7 +256,7 @@ jobs:
       - name: Negative self-test (HTML comments counted as visible prose must fail)
         run: |
           set -eu
-          rm -rf /tmp/cmt-copy && cp -R . /tmp/cmt-copy
+          rm -rf /tmp/cmt-copy /tmp/cmt-copy-residue && cp -R . /tmp/cmt-copy && mkdir -p /tmp/cmt-copy-residue
           python3 - <<'PY'
           p = '/tmp/cmt-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
           s = open(p, encoding="utf-8").read()
@@ -261,7 +264,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: the comment stripper is not where this plant reads it"
           open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
           PY
-          if python3 /tmp/cmt-copy/test/test_agent_surface.py; then
+          if TMPDIR=/tmp/cmt-copy-residue python3 /tmp/cmt-copy/test/test_agent_surface.py; then
             echo "ERROR: a trust page graded on the length of its HTML comments"
             exit 1
           else
@@ -271,7 +274,7 @@ jobs:
       - name: Negative self-test (presence dressed up as effect must fail)
         run: |
           set -eu
-          rm -rf /tmp/tier-copy && cp -R . /tmp/tier-copy
+          rm -rf /tmp/tier-copy /tmp/tier-copy-residue && cp -R . /tmp/tier-copy && mkdir -p /tmp/tier-copy-residue
           python3 - <<'PY'
           p = '/tmp/tier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
           s = open(p, encoding="utf-8").read()
@@ -279,7 +282,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, '"wellknown-absent": "CONFIRMED",', 1))
           PY
-          if python3 /tmp/tier-copy/test/test_agent_surface.py; then
+          if TMPDIR=/tmp/tier-copy-residue python3 /tmp/tier-copy/test/test_agent_surface.py; then
             echo "ERROR: a draft spec's absence passed as a CONFIRMED defect"
             exit 1
           else
@@ -289,7 +292,7 @@ jobs:
       - name: Negative self-test (a finding with no declared tier must fail)
         run: |
           set -eu
-          rm -rf /tmp/notier-copy && cp -R . /tmp/notier-copy
+          rm -rf /tmp/notier-copy /tmp/notier-copy-residue && cp -R . /tmp/notier-copy && mkdir -p /tmp/notier-copy-residue
           python3 - <<'PY'
           p = '/tmp/notier-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/agent_surface.py'
           s = open(p, encoding="utf-8").read()
@@ -297,8 +300,8 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: openapi-batch tier not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, "", 1))
           PY
-          if python3 /tmp/notier-copy/test/validate.py && \
-             python3 /tmp/notier-copy/test/test_agent_surface.py; then
+          if TMPDIR=/tmp/notier-copy-residue python3 /tmp/notier-copy/test/validate.py && \
+             TMPDIR=/tmp/notier-copy-residue python3 /tmp/notier-copy/test/test_agent_surface.py; then
             echo "ERROR: a finding shipped with no entry in FINDING_TIERS"
             exit 1
           else
@@ -308,7 +311,7 @@ jobs:
       - name: Negative self-test (dropping the blindness caveat must fail)
         run: |
           set -eu
-          cp -R . /tmp/caveat-copy
+          cp -R . /tmp/caveat-copy && mkdir -p /tmp/caveat-copy-residue
           python3 - <<'PY'
           p = '/tmp/caveat-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py'
           s = open(p, encoding="utf-8").read()
@@ -316,7 +319,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, 'redacted', 1))
           PY
-          if python3 /tmp/caveat-copy/test/validate.py; then
+          if TMPDIR=/tmp/caveat-copy-residue python3 /tmp/caveat-copy/test/validate.py; then
             echo "ERROR: validator accepted a page_audit with no blindness caveat"
             exit 1
           else
@@ -326,7 +329,7 @@ jobs:
       - name: Negative self-test (Cursor doctrine drift must fail)
         run: |
           set -eu
-          cp -R . /tmp/cursor-copy
+          cp -R . /tmp/cursor-copy && mkdir -p /tmp/cursor-copy-residue
           # drop one non-negotiable from the Cursor channel only
           python3 - <<'PY'
           import re
@@ -336,7 +339,7 @@ jobs:
           assert n == 1, "PLANT DID NOT LAND: non-negotiable 8 is not where this plant reads it"
           open(p, "w", encoding="utf-8").write(s2)
           PY
-          if python3 /tmp/cursor-copy/test/validate.py; then
+          if TMPDIR=/tmp/cursor-copy-residue python3 /tmp/cursor-copy/test/validate.py; then
             echo "ERROR: validator accepted a Cursor rule missing a non-negotiable"
             exit 1
           else
@@ -346,7 +349,7 @@ jobs:
       - name: Negative self-test (version drift must fail)
         run: |
           set -eu
-          cp -R . /tmp/corrupt-copy
+          cp -R . /tmp/corrupt-copy && mkdir -p /tmp/corrupt-copy-residue
           python3 - <<'PY'
           import re
           p = '/tmp/corrupt-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json'
@@ -355,7 +358,7 @@ jobs:
           assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
           open(p, "w", encoding="utf-8").write(s2)
           PY
-          if python3 /tmp/corrupt-copy/test/validate.py; then
+          if TMPDIR=/tmp/corrupt-copy-residue python3 /tmp/corrupt-copy/test/validate.py; then
             echo "ERROR: validator passed on a corrupted copy — it cannot fail"
             exit 1
           else
@@ -365,9 +368,9 @@ jobs:
       - name: Negative self-test (missing reference must fail)
         run: |
           set -eu
-          cp -R . /tmp/noref-copy
+          cp -R . /tmp/noref-copy && mkdir -p /tmp/noref-copy-residue
           rm -f /tmp/noref-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/myths.md
-          if python3 /tmp/noref-copy/test/validate.py; then
+          if TMPDIR=/tmp/noref-copy-residue python3 /tmp/noref-copy/test/validate.py; then
             echo "ERROR: validator passed with a contract file missing"
             exit 1
           else
@@ -377,9 +380,9 @@ jobs:
       - name: Negative self-test (the Discover reference is a contract, not a file)
         run: |
           set -eu
-          cp -R . /tmp/nodiscover-copy
+          cp -R . /tmp/nodiscover-copy && mkdir -p /tmp/nodiscover-copy-residue
           rm -f /tmp/nodiscover-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/discover.md
-          if python3 /tmp/nodiscover-copy/test/validate.py; then
+          if TMPDIR=/tmp/nodiscover-copy-residue python3 /tmp/nodiscover-copy/test/validate.py; then
             echo "ERROR: validator passed with the Discover track missing"
             exit 1
           else
@@ -389,9 +392,9 @@ jobs:
       - name: Negative self-test (stray SKILL.md must fail)
         run: |
           set -eu
-          cp -R . /tmp/stray-copy
+          cp -R . /tmp/stray-copy && mkdir -p /tmp/stray-copy-residue
           cp /tmp/stray-copy/templates/audit-report.template.md /tmp/stray-copy/templates/SKILL.md
-          if python3 /tmp/stray-copy/test/validate.py; then
+          if TMPDIR=/tmp/stray-copy-residue python3 /tmp/stray-copy/test/validate.py; then
             echo "ERROR: validator passed with a stray SKILL.md outside plugins/*/skills/*/"
             exit 1
           else
@@ -401,7 +404,7 @@ jobs:
       - name: Negative self-test (auditor tests must be able to fail)
         run: |
           set -eu
-          cp -R . /tmp/badscript-copy
+          cp -R . /tmp/badscript-copy && mkdir -p /tmp/badscript-copy-residue
           python3 - <<'PY'
           p = '/tmp/badscript-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/page_audit.py'
           s = open(p, encoding="utf-8").read()
@@ -409,7 +412,7 @@ jobs:
           assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
           open(p, "w", encoding="utf-8").write(s.replace(old, 'if False:', 1))
           PY
-          if python3 /tmp/badscript-copy/test/test_page_audit.py; then
+          if TMPDIR=/tmp/badscript-copy-residue python3 /tmp/badscript-copy/test/test_page_audit.py; then
             echo "ERROR: auditor tests passed with the noindex check disabled"
             exit 1
           else
@@ -419,7 +422,7 @@ jobs:
       - name: Negative self-test (renamed heading must break the auditor's anchors)
         run: |
           set -eu
-          cp -R . /tmp/anchor-copy
+          cp -R . /tmp/anchor-copy && mkdir -p /tmp/anchor-copy-residue
           python3 - <<'PY'
           import re
           p = '/tmp/anchor-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/references/architecture-and-equity.md'
@@ -428,7 +431,7 @@ jobs:
           assert n == 1, "PLANT DID NOT LAND: pattern not found in " + p
           open(p, "w", encoding="utf-8").write(s2)
           PY
-          if python3 /tmp/anchor-copy/test/validate.py; then
+          if TMPDIR=/tmp/anchor-copy-residue python3 /tmp/anchor-copy/test/validate.py; then
             echo "ERROR: validator passed while page_audit.py points at a renamed heading"
             exit 1
           else
@@ -438,10 +441,10 @@ jobs:
       - name: Negative self-test (bytecode in the shipped tree must fail)
         run: |
           set -eu
-          cp -R . /tmp/pyc-copy
+          cp -R . /tmp/pyc-copy && mkdir -p /tmp/pyc-copy-residue
           mkdir -p /tmp/pyc-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/__pycache__
           touch /tmp/pyc-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/__pycache__/x.cpython-312.pyc
-          if python3 /tmp/pyc-copy/test/validate.py; then
+          if TMPDIR=/tmp/pyc-copy-residue python3 /tmp/pyc-copy/test/validate.py; then
             echo "ERROR: validator passed with __pycache__ inside plugins/ — v0.7.0 shipped exactly that"
             exit 1
           else
@@ -451,9 +454,9 @@ jobs:
       - name: Negative self-test (template drift must fail)
         run: |
           set -eu
-          cp -R . /tmp/drift-copy
+          cp -R . /tmp/drift-copy && mkdir -p /tmp/drift-copy-residue
           printf '\n## injected drift\n' >> /tmp/drift-copy/templates/audit-report.template.md
-          if python3 /tmp/drift-copy/test/validate.py; then
+          if TMPDIR=/tmp/drift-copy-residue python3 /tmp/drift-copy/test/validate.py; then
             echo "ERROR: validator passed with the root template drifted from the shipped copy"
             exit 1
           else
@@ -470,7 +473,7 @@ jobs:
           # home of a fact that lived in four, all of them green.
           plant() {
             desc="$1"; shift
-            rm -rf /tmp/neg && cp -R . /tmp/neg
+            rm -rf /tmp/neg /tmp/neg-residue && cp -R . /tmp/neg && mkdir -p /tmp/neg-residue
             python3 test/plant_guard.py snap /tmp/neg
             ( cd /tmp/neg && "$@" )
             # Instruction #6's corollary, once for every call site. The comparison is
@@ -478,8 +481,34 @@ jobs:
             # this check produced five different bugs, one of them a content-only
             # comparison against a plant whose whole effect is `chmod`.
             python3 test/plant_guard.py verify /tmp/neg "$desc"
-            if python3 /tmp/neg/test/validate.py >/dev/null 2>&1; then
+            if TMPDIR=/tmp/neg-residue python3 /tmp/neg/test/validate.py >/dev/null 2>&1; then
               echo "BROKEN GUARD: $desc — validator still passes"; exit 1
+            fi
+            echo "ok: $desc"
+          }
+          # `plant` asks only "does the validator now fail". That is not enough for a
+          # plant that edits a DOCUMENT: this workflow's own anchor-liveness guard
+          # notices that the literal a plant substitutes is no longer in the file, so
+          # every literal-anchored document plant makes the validator fail for a second
+          # reason whether its own guard works or not. Measured 2026-08-20: the
+          # run-stamp plant lowered one stamp of several, its guard (which takes the
+          # newest) correctly did not fire, and `plant` reported ok. `plantq` requires
+          # the refusal to NAME the defect. The 39 older calls are left on `plant` and
+          # the weakness is filed as B-33 rather than left implicit.
+          plantq() {
+            desc="$1"; needle="$2"; shift 2
+            rm -rf /tmp/neg /tmp/neg-residue && cp -R . /tmp/neg && mkdir -p /tmp/neg-residue
+            python3 test/plant_guard.py snap /tmp/neg
+            ( cd /tmp/neg && "$@" )
+            python3 test/plant_guard.py verify /tmp/neg "$desc"
+            if out=$( cd /tmp/neg && TMPDIR=/tmp/neg-residue python3 test/validate.py 2>&1 ); then
+              echo "BROKEN GUARD: $desc — validator still passes"; exit 1
+            fi
+            if ! printf '%s' "$out" | grep -qF "$needle"; then
+              echo "BROKEN GUARD: $desc — the validator failed and never named it."
+              echo "  expected to see: $needle"
+              printf '%s\n' "$out" | head -25
+              exit 1
             fi
             echo "ok: $desc"
           }
@@ -583,8 +612,10 @@ jobs:
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py delline "$f" "| **policy** | a core or AI-surface update changed the rules the evidence was read under |"; done'
           plant "a skeleton no longer naming every producer field" \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "\`args\` · \`scope\` · \`actor\` · \`model\` · \`trace\`" "\`args\` · \`actor\` · \`model\` · \`trace\`"; done'
-          # B-17. Two numbers in SECURITY.md that a reader consults *because* they will
-          # not read the code, and that said six/22 against seven/26 for four releases.
+          # B-25 (this comment said B-17 until 2026-08-20 — an open row about a
+          # different defect). Two numbers in SECURITY.md that a reader consults
+          # *because* they will not read the code, and that said six/22 against
+          # seven/26 for four releases.
           plant "SECURITY.md's script count going stale" \
             python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'
           plant "SECURITY.md's I/O line count going stale" \
@@ -596,6 +627,52 @@ jobs:
           # pattern would only prove its copy agrees with itself.
           plant "the published I/O regex narrowed away from its own count" \
             python3 test/plant_edit.py sub SECURITY.md 'socket|os\.environ|os\.system' 'socket|os\.system'
+          # ── the evidence documents, one plant per family ────────────────────
+          # Eleven documented facts were false on 2026-08-20 with the gate green. Each
+          # guard below was watched failing on the real tree BEFORE its plant existed —
+          # that is the order standing instruction #2 asks for — and each plant restores
+          # the exact wording that shipped, so the plant is the defect and not a
+          # caricature of it. `plantq`, not `plant`: the refusal has to name the defect.
+          # The needle is SINGLE-quoted, because half of these messages carry the
+          # backticked name of a file and a double-quoted needle hands it to the shell.
+          plantq "the script count going stale in the README's security posture" 'the security-posture sentence says' \
+            python3 test/plant_edit.py sub README.md 'Text plus **seven** standard-library' 'Text plus **six** standard-library'
+          plantq "a shipped script the README's security posture does not name" 'does not name `agent_surface.py`' \
+            python3 test/plant_edit.py sub README.md '`sitemap_audit.py`, `agent_surface.py`)' '`sitemap_audit.py`)'
+          plantq "the script count going stale in CLAUDE.md" 'the opening description says' \
+            python3 test/plant_edit.py sub CLAUDE.md 'knowledge plus seven standard-library scripts' 'knowledge plus six standard-library scripts'
+          plantq "CLAUDE.md naming a subset of the gate" 'CLAUDE.md does not mention `test/plant_guard_test.py`' \
+            python3 test/plant_edit.py sub CLAUDE.md '`test/plant_guard_test.py`,' ''
+          plantq "DOCMAP's gate block naming a subset of the gate" 'docs/DOCMAP.md does not mention `test/test_agent_surface.py`' \
+            python3 test/plant_edit.py delline docs/DOCMAP.md 'python3 test/test_agent_surface.py'
+          plantq "DOCMAP counting the gate's homes wrong" 'the single-home row says the gate commands have' \
+            python3 test/plant_edit.py sub docs/DOCMAP.md 'appear in all six of them' 'appear in all five of them'
+          plantq "DOCMAP's _flat copy count drifting from the scripts" 'scripts define one; measured' \
+            python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` — five of the seven scripts define one' '`_flat()` — seven of the seven scripts define one'
+          plantq "the README's freshness stamp drifting from the reference that owns it" 'says the sources were last re-fetched' \
+            python3 test/plant_edit.py sub README.md '**Sources last re-fetched 2026-08-16**' '**Sources last re-fetched 2026-08-10**'
+          plantq "the README's corpus size restated instead of counted" 'non-blank lines of reference material' \
+            python3 test/plant_edit.py sub README.md '**~5,900 non-blank lines**' '**~5,000 non-blank lines**'
+          plantq "a SKILL.md body over the 5000-token budget" 'the budget is < 5000' \
+            python3 -c "p='plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md';s=open(p,encoding='utf-8').read();a='## Step 3 — Triage';assert a in s,'PLANT DID NOT LAND: '+a;open(p,'w',encoding='utf-8').write(s.replace(a,'<!-- '+('budget '*900)+'-->'+chr(10)+chr(10)+a,1))"
+          plantq "prose calling an OPEN board row closed" 'calls B-17 closed' \
+            python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-17, closed 2026-08-19)'
+          plantq "a board id that resolves to no row" 'cites B-99 and the board has no such row' \
+            python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-99, closed in v0.23.0)'
+          plantq "the newest release with no verification-ledger section" 'has no `## v0.23.0` section' \
+            bash -c "python3 test/plant_edit.py sub docs/evidence/verification.md '## v0.23.0 — the coverage vocabulary' '## Unreleased — the coverage vocabulary' && python3 test/plant_edit.py sub docs/evidence/verification.md '## v0.23.0 — provenance in every payload' '## 2026-08-19 — provenance in every payload'"
+          plantq "a release missing from the declared unrecorded list" 'the declared unrecorded-release list disagrees' \
+            python3 test/plant_edit.py delline docs/evidence/verification.md '- `v0.18.0`'
+          plantq "the unrecorded-release count restated instead of counted" 'releases are unrecorded; measured' \
+            python3 test/plant_edit.py sub docs/evidence/verification.md '**Sixteen** of the twenty-one releases' '**Fifteen** of the twenty-one releases'
+          plantq "a ledger tally disagreeing with its own Confirmed column" 'and its rows give' \
+            python3 test/plant_edit.py sub docs/evidence/verification.md '21 rows — 5 observed · 6 test-only · 4 planted+observed · 1 planted · 5 never' '22 rows — 5 observed · 6 test-only · 5 planted+observed · 6 never'
+          plantq "a ledger section with rows and no tally at all" 'no tally is a tally nobody can check' \
+            python3 test/plant_edit.py sub docs/evidence/verification.md '**Counts, by parsing the table above: 12 rows — 4 observed' 'Counts, by parsing the table above: 12 rows — 4 observed'
+          plantq "run stamps falling behind the shipped version" 'newest run stamp is v' \
+            python3 test/plant_edit.py sub docs/evidence/retro.md '2026-08-19 (`v0.23.0`) · **2026-08-20 (at `v0.23.0`, the truth-fix run)**' '2026-08-19 (`v0.14.1`) · **2026-08-20 (at `v0.14.1`, the truth-fix run)**'
+          plantq "the prune log's instruction count drifting from the headings" 'last prune entry says the list stands at' \
+            python3 test/plant_edit.py sub docs/evidence/retro.md 'so the list stands at **ten** — exactly the cap' 'so the list stands at **eleven** — one over the cap'
 
       - name: Negative self-tests for the provenance behaviour contracts
         run: |
@@ -608,11 +685,11 @@ jobs:
           # five hand-written variants and five bugs.
           plant() {
             desc="$1"; checker="$2"; shift 2
-            rm -rf /tmp/negb && cp -R . /tmp/negb
+            rm -rf /tmp/negb /tmp/negb-residue && cp -R . /tmp/negb && mkdir -p /tmp/negb-residue
             python3 test/plant_guard.py snap /tmp/negb
             ( cd /tmp/negb && "$@" )
             python3 test/plant_guard.py verify /tmp/negb "$desc"
-            if ( cd /tmp/negb && python3 "$checker" >/dev/null 2>&1 ); then
+            if ( cd /tmp/negb && TMPDIR=/tmp/negb-residue python3 "$checker" >/dev/null 2>&1 ); then
               echo "BROKEN GUARD: $desc — $checker still passes"; exit 1
             fi
             echo "ok: $desc"
@@ -640,6 +717,27 @@ jobs:
           # collector is driven through both formats.
           plant "the producer block dropped from one renderer's default format" "$C" \
             python3 test/plant_edit.py delline "$S/scripts/psi_pull.py" '        print("\n" + provenance_md(prov))'
+          # gsc_pull had three `return 0`s and no `return 1`: a property that answered
+          # zero rows for every dimension rendered a report finding no cliff, no
+          # cannibalization and no CTR gap, and exited success. The renderer and the
+          # status read one predicate, so both plants below break both at once.
+          plant "a gsc_pull run that measured nothing exiting 0" "$C" \
+            bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/gsc_pull.py "    rc = 0 if measured_rows(report) else 1" "    rc = 0"'
+          plant "the nothing-measured banner dropped from the gsc_pull report" "$C" \
+            python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" '"NOTHING MEASURED — the API answered zero rows for every dimension "' '"the API answered zero rows for every dimension "' 
+
+          # ── the residue ledger: a leak, and a silence about it ───────────────
+          # `test/plant_guard_test.py:34` built one tree per case and removed none;
+          # 2560 trees of that shape were on this machine when the count was taken.
+          # The first plant restores the leak, the second the silence — a clean run
+          # that says nothing is how the next leak becomes invisible again.
+          R=test/residue_test.py
+          plant "a suite that leaks its temp trees again" "$R" \
+            python3 test/plant_edit.py sub test/plant_guard_test.py 'd = residue.workspace("plant-guard")' 'import tempfile; d = tempfile.mkdtemp()'
+          plant "a passing case whose tree is kept anyway" "$R" \
+            python3 test/plant_edit.py sub test/residue.py '        if _keep(owner):' '        if True:'
+          plant "the residue line dropped from a clean run" "$R" \
+            python3 test/plant_edit.py sub test/residue.py '    if not kept:' '    if kept and False:'
 
       - name: install.sh syntax check
         run: bash -n install.sh

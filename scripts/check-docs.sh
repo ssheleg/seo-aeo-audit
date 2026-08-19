@@ -11,4 +11,7 @@ python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
+# Last on purpose: its final case reads the TMPDIR every suite above shared, so a
+# leak anywhere in the gate shows up in the gate's own output.
+python3 test/residue_test.py
 echo "OK: structure, doctrine guards and behaviour tests all pass"

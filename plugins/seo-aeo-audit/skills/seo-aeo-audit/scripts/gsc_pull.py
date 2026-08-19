@@ -33,7 +33,12 @@ What it cannot give you: Manual Actions, Security Issues and the Index Coverage
 report are web-UI only, at every scope. An unexplained cliff needs a human to
 open that page.
 
-Exit codes: 0 = ran, 1 = usage/auth/API error.
+Exit codes: 0 = the API answered rows for at least one dimension, 1 = usage/auth/API
+error, or every dimension came back empty. "Ran" is not the useful question here: every
+number this script prints below the position split is derived from rows, so a property
+that answered nothing renders a full report in which no cliff, no cannibalization and no
+CTR gap were found — a document that reads like a clean site and is a measurement of
+nothing. The report and the exit status read one predicate, `measured_rows`.
 
 Every output carries a **producer block** — `skill` (this tool's version), `script`,
 `observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
@@ -244,6 +249,22 @@ ROW_LIMIT_NOTE = (
 
 
 # ── pure analysis (no network — unit-testable) ───────────────────────────────
+
+
+def measured_rows(report: dict) -> int:
+    """How many Search Console rows this report actually rests on.
+
+    One predicate, read by `render_text` and by `main`'s exit status — the shape
+    `url_inspection.answered_rows` settled, and the one this script did not have:
+    `main()` had three `return 0` paths and no `return 1`, so a run that measured
+    nothing exited success. Four dimensions are pulled and every derivation below
+    the position split is computed from them, so zero rows across all four is the
+    honest zero: not "no cannibalization on this property" but "nothing was
+    measured". The commonest causes are a `sc-domain:` property spelled as its
+    `https://` twin (different resources), and a window that predates verification.
+    """
+    return sum(len(report.get(k) or []) for k in
+               ("monthly", "top_queries", "top_pages", "query_page_pairs"))
 
 
 def monthly_rollup(rows: list[dict]) -> list[dict]:
@@ -470,6 +491,18 @@ def render_text(report: dict) -> str:
         out.append(f"recent window: {rw.get('start')} -> {rw.get('end')}  ·  "
                    f"history: {hw.get('start')} -> {hw.get('end')}")
 
+    if not measured_rows(report):
+        out += ["",
+                "NOTHING MEASURED — the API answered zero rows for every dimension "
+                "(dates, queries, pages, query x page).",
+                "  Every section below is empty because there was nothing to derive from, "
+                "not because",
+                "  this property has no cannibalization and no CTR gaps. Check the property "
+                "spelling",
+                "  (`sc-domain:example.com` and `https://example.com/` are different "
+                "resources) and the",
+                "  window: one that predates verification returns nothing. Exit status is 1."]
+
     ps = report["position_split"]
     out += ["", "position split (recent window) — rank the brief by THIS, not by impressions:"]
     for band, label in (("top20", "<= 20"), ("striking_21_30", "21-30"), ("beyond_30", "> 30")):
@@ -609,7 +642,11 @@ def main(argv: list[str]) -> int:
         for s in sites:
             print(f"  {s.get('permissionLevel','?'):<22} {s['siteUrl']}")
         if not args.site:
+            # A usage error, and the docstring has always said usage errors exit 1.
+            # It returned 0, so an agent whose invocation lost `--site` read success
+            # from output containing nothing but a property list.
             print("\nPass --site to pull a property.", file=sys.stderr)
+            return 1
         return 0
 
     site = args.site
@@ -666,17 +703,22 @@ def main(argv: list[str]) -> int:
         "sitemaps": sitemaps,
     }
 
+    # One predicate for both formats and for the report itself. Computed before the
+    # branch so the two output paths cannot answer the question differently — which
+    # is how this script came to have three `return 0`s and no `return 1`.
+    rc = 0 if measured_rows(report) else 1
+
     if args.format == "json":
         json.dump(report, sys.stdout, indent=2)
         print()
-        return 0
+        return rc
 
     print(render_text(report))
     # The producer block reaches the DEFAULT format too. This script is where that
     # rule was learned: four analyses were computed into `report` and printed only
     # under `--format json` while `text` is the documented invocation.
     print("\n" + provenance_md(report["producer"]))
-    return 0
+    return rc
 
 
 if __name__ == "__main__":

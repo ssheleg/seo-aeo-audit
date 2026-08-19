@@ -9,7 +9,11 @@ the instruments follow.
    prose. `page_audit.py` and `sitemap_audit.py` already exited 1 when every URL
    failed. `url_inspection.py` returned 0 after a run where every inspection came
    back 403, and `psi_pull.py` returned 0 after a run where every call was refused
-   — both while their own docstrings promised 1. SKILL.md's documented invocation
+   — both while their own docstrings promised 1. `gsc_pull.py` was the one with no
+   such path at all: three `return 0`s, no `return 1`, and a docstring that said
+   only "0 = ran" — so a property that answered zero rows for every dimension
+   rendered a report in which no cliff, no cannibalization and no CTR gap were
+   found, exited 0, and read exactly like a clean site. SKILL.md's documented invocation
    redirects stdout to a file, so an agent branching on `$?` read *success* from a
    file containing nothing but refusals. `preflight.py` is the deliberate
    exception and keeps returning 0: there, the failures **are** the report.
@@ -40,9 +44,10 @@ import json
 import os
 import re
 import sys
-import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import residue  # noqa: E402
 SCRIPTS = os.path.join(ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit", "scripts")
 failures: list[str] = []
 sys.dont_write_bytecode = True
@@ -302,13 +307,71 @@ check(pre.validate_coverage(_honest) == [],
 # complete, a credential never reaches the block, the block is in the DEFAULT format
 # too, and the checker refuses every way the block can lie.
 
-_TMP = tempfile.mkdtemp(prefix="seo-aeo-contracts-")
+# Owned by the suite rather than by a case: these fixtures are built once at module
+# level, so the tree survives a red run and goes on a green one. See test/residue.py.
+residue.open_case("output contracts")
+_TMP = residue.workspace("contracts")
 
 sm = load("sitemap_audit")
 gsc = load("gsc_pull")
 COLLECTORS = (("preflight", pre), ("page_audit", pa), ("psi_pull", psi),
               ("sitemap_audit", sm), ("url_inspection", ui),
               ("agent_surface", ags), ("gsc_pull", gsc))
+
+# ── 5b. gsc_pull: zero rows is not a clean property ──────────────────────────
+# The report is row-driven from the position split down, so this is the one script
+# where "measured nothing" and "found nothing" render identically. `measured_rows`
+# is the single predicate; the renderer and the exit status both read it, which is
+# the property invariant 1 above is really about.
+check(hasattr(gsc, "measured_rows"),
+      "gsc_pull.py must expose measured_rows() — the renderer and the exit status must "
+      "read one predicate, not two")
+if hasattr(gsc, "measured_rows"):
+    check(gsc.measured_rows({"monthly": [], "top_queries": [], "top_pages": [],
+                             "query_page_pairs": []}) == 0,
+          "a report with no rows in any dimension has measured nothing")
+    check(gsc.measured_rows({"monthly": [{"month": "2026-07"}], "top_queries": [],
+                             "top_pages": [], "query_page_pairs": []}) == 1,
+          "date rows alone are still a measurement — impressions over time is a finding")
+
+    gsc.access_token = lambda: "stub-token"
+    gsc.call = lambda path, *a, **kw: (
+        {"siteEntry": [{"siteUrl": "sc-domain:e.com", "permissionLevel": "siteOwner"}]}
+        if path == "/sites" else {"sitemap": []})
+
+    gsc.query = lambda *a, **kw: []
+    _rc = silently(gsc.main, ["--site", "sc-domain:e.com"])
+    check(_rc == 1, f"gsc_pull must exit 1 when every dimension came back empty; got {_rc}")
+    _rc = silently(gsc.main, ["--site", "sc-domain:e.com", "--format", "json"])
+    check(_rc == 1, f"gsc_pull must exit 1 on the JSON path too; got {_rc}")
+
+    # And the report says it, in the format the documented invocation prints.
+    _b = io.StringIO()
+    with contextlib.redirect_stdout(_b), contextlib.redirect_stderr(io.StringIO()):
+        gsc.main(["--site", "sc-domain:e.com"])
+    check("NOTHING MEASURED" in _b.getvalue(),
+          "gsc_pull's default report must say the API answered nothing — an empty "
+          "cannibalization section reads as a clean property otherwise")
+
+    # A property that answered is a success, and the banner is gone.
+    gsc.query = lambda site, token, qp, dims, start, end, row_limit=25000: (
+        [{"keys": ["2026-07-01"], "clicks": 5, "impressions": 100, "position": 4.0,
+          "ctr": 0.05}] if dims == ["date"] else
+        [{"keys": ["widget"], "clicks": 5, "impressions": 100, "position": 4.0,
+          "ctr": 0.05}])
+    _b = io.StringIO()
+    with contextlib.redirect_stdout(_b), contextlib.redirect_stderr(io.StringIO()):
+        _rc = gsc.main(["--site", "sc-domain:e.com"])
+    check(_rc == 0, f"gsc_pull must exit 0 when the API answered rows; got {_rc}")
+    check("NOTHING MEASURED" not in _b.getvalue(),
+          "the nothing-measured banner must not appear on a run that measured something")
+
+    # A usage error is a usage error: the docstring has always promised 1, and the
+    # no-`--site` path returned 0 while printing nothing but a property list.
+    _rc = silently(gsc.main, [])
+    check(_rc == 1, f"gsc_pull with no --site is a usage error and must exit 1; got {_rc}")
+
+    gsc.query = lambda *a, **kw: []
 
 _manifest = json.load(open(os.path.join(ROOT, "package.json"), encoding="utf-8"))["version"]
 
@@ -503,13 +566,18 @@ for _rel in ("templates/audit-report.template.md",
           f"{_rel}: {pre.validate_provenance(_txt)}")
 
 
+if not failures:
+    residue.close_case("output contracts")
+residue.report()
+
 if failures:
     print("FAIL: output contracts")
     for f in failures:
         print("  -", f)
     raise SystemExit(1)
 print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
-      "denominator, exit status from the same predicate the report uses, every "
+      "denominator, exit status from the same predicate the report uses in all six "
+      "collectors that can measure nothing, every "
       "emitted severity orderable, coverage vocabulary closed and seeded, "
       f"provenance in all {len(COLLECTORS)} collectors — closed field set, nothing "
       "guessed, credentials redacted, default format included, checker refuses six "
