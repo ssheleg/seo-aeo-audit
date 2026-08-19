@@ -71,6 +71,22 @@ which is the platform split that made eleven `sed -i` plants dead for two days. 
 B-31, B-32 and B-33 are what this run found and did not close; B-34 is what it found and
 deliberately left alone.
 
+## v0.24.0 — eleven documented facts recomputed (2026-08-20)
+
+**Shipped in v0.24.0.** This section exists because the guard added in the same release
+demands it: the newest `## v` in `CHANGELOG.md` must have a section here, so a release can
+no longer ship unrecorded. It was written before the tag, which is the only order that
+works — the tag cannot exist before the commit that bumps to it.
+
+| REQ | What shipped | How it was confirmed | Confirmed |
+|---|---|---|---|
+| R-70 | Eleven false statements in shipped documents, each replaced by a computed one | `bash scripts/check-docs.sh` → exit 0, `PASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body ~4994/5000 tokens / 330/500 lines)`; the guards were added first and the first run named eleven defects at once | **planted** + **observed** |
+| R-71 | 63 plants extracted from `validate.yml` and run under bash | 63 behaved as designed, 0 did not, across 36 of 38 runnable steps | **observed** |
+| R-72 | `test/residue.py` copied from the umbrella; every gate command prints its residue | `PASS: residue — 8 cases`, `residue: this run left nothing — 5 temp tree(s) created, 5 removed`; the pre-existing pile (2560 trees, 28343 dirs, 7.0G) counted and left in place | **planted** + **observed** |
+| R-73 | `gsc_pull.py` can say "measured nothing" | `measured_rows()` serves both the report and the exit status; a run with no `--site` exits 1 where it used to exit 0 | **planted** |
+
+**Counts at ship: 4 rows — 1 observed · 1 planted · 2 planted+observed.**
+
 ## v0.23.0 — the coverage vocabulary (conformance row SE-01)
 
 **Shipped in v0.23.0.** `git tag --points-at HEAD` prints `v0.23.0`, and the changelog's
@@ -281,7 +297,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-one releases at or above `v0.13.0` have no section
+**Sixteen** of the twenty-two releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

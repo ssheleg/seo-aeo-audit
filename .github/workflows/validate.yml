@@ -664,13 +664,13 @@ jobs:
           plantq "a release missing from the declared unrecorded list" 'the declared unrecorded-release list disagrees' \
             python3 test/plant_edit.py delline docs/evidence/verification.md '- `v0.18.0`'
           plantq "the unrecorded-release count restated instead of counted" 'releases are unrecorded; measured' \
-            python3 test/plant_edit.py sub docs/evidence/verification.md '**Sixteen** of the twenty-one releases' '**Fifteen** of the twenty-one releases'
+            python3 test/plant_edit.py resub docs/evidence/verification.md '\*\*[A-Z][a-z]+\*\* of the [a-z-]+ releases' '**Fifteen** of the twenty-one releases'
           plantq "a ledger tally disagreeing with its own Confirmed column" 'and its rows give' \
             python3 test/plant_edit.py sub docs/evidence/verification.md '21 rows — 5 observed · 6 test-only · 4 planted+observed · 1 planted · 5 never' '22 rows — 5 observed · 6 test-only · 5 planted+observed · 6 never'
           plantq "a ledger section with rows and no tally at all" 'no tally is a tally nobody can check' \
             python3 test/plant_edit.py sub docs/evidence/verification.md '**Counts, by parsing the table above: 12 rows — 4 observed' 'Counts, by parsing the table above: 12 rows — 4 observed'
           plantq "run stamps falling behind the shipped version" 'newest run stamp is v' \
-            python3 test/plant_edit.py sub docs/evidence/retro.md '2026-08-19 (`v0.23.0`) · **2026-08-20 (at `v0.23.0`, the truth-fix run)**' '2026-08-19 (`v0.14.1`) · **2026-08-20 (at `v0.14.1`, the truth-fix run)**'
+            python3 test/plant_edit.py resub docs/evidence/retro.md '\*\*[0-9]{4}-[0-9]{2}-[0-9]{2} \(`v[0-9.]+`\)\*\*\s*$' '**2026-08-20 (`v0.14.1`)**'
           plantq "the prune log's instruction count drifting from the headings" 'last prune entry says the list stands at' \
             python3 test/plant_edit.py sub docs/evidence/retro.md 'so the list stands at **ten** — exactly the cap' 'so the list stands at **eleven** — one over the cap'
 

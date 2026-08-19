@@ -1,5 +1,64 @@
 # Changelog
 
+## v0.24.0 — 2026-08-20
+
+**Eleven documented facts were false while the gate was green**, and every one of them was a
+number or a name this repository could have computed. The gate now does.
+
+- `README.md` and `CLAUDE.md` said **six** standard-library scripts and named six; seven
+  ship, and the missing one — `agent_surface.py` — makes the widest set of outbound probes
+  in the pack. Both homes are in the inventory guard now, count and names.
+- `CLAUDE.md` and `docs/DOCMAP.md` published **five** of the gate's seven commands, three
+  lines under a sentence promising it *"runs exactly these and nothing else, so the gate
+  cannot drift from the tests"*. Six homes are enforced, and the prose counts are read out
+  of DOCMAP against the checker's own list.
+- DOCMAP said the gate fact had three homes in one row and five in another while the code
+  enforced four; `_flat()` was "one copy per script, five in all" against seven scripts, a
+  figure `preflight.py:184-186` already contradicted out loud.
+- The verification ledger headed two sections `## Unreleased` and opened them **"Not
+  shipped."** for work that shipped in v0.23.0, with the tag on HEAD and no v0.23.0 section
+  at all. Its own tally read 22 against 21 rows, with a `planted` row left out of the sum.
+  Sections are required for the newest release now, the Confirmed column is parsed per
+  section, and the sixteen releases with no section are **declared and counted** rather
+  than quietly missing.
+- `SECURITY.md` credited its own repair to **B-17** — a row that is open and about something
+  else entirely — where `CONTRIBUTING.md` cited the right one. A citation that resolves to
+  the wrong row is worse than none, so a `B-nn` the prose calls closed while the board reads
+  open now fails.
+- `SECURITY.md` explained its seven `os.environ` lines as *"one read per producer field per
+  script"* — which is twenty-one. They are one loop per script, and the code says so.
+- Both homes of one row cited `manifesto.md:206-208` for a sentence that lives at `:210`.
+- `README.md` said "Verified as of 2026-08-10" beside a source stamped 2026-08-16, and
+  "Roughly 5,000 lines" against 6,977. The stamp is compared to its source; the size is
+  recomputed.
+- The retrospective's run stamps stopped at v0.14.1 — **eighteen releases back** — so the
+  "no firing in five run stamps" retirement trigger could not be computed at all. Stamps are
+  derived from tags, and the newest must not be older than the shipped version. The prune
+  log's arithmetic went with it: *"the list stands at eleven — one over the cap"* against ten
+  live entries, a figure the board had copied.
+- Three live rows rested on `audit_skill.py --house`, quoted as runnable and **absent from
+  this tree**. The estimator is vendored, and the gate prints `~4994/5000 tokens`.
+- `gsc_pull.py` was the one collector that could not say *"measured nothing"*: three
+  `return 0` paths and no `return 1`, so a run that reached the API and got no rows exited
+  exactly like a full pull. One predicate serves both the report and the exit status now.
+
+Also: `test/residue.py` **copied** from the umbrella (not rewritten), all four temp-tree
+sites routed through it, and every gate command prints its residue — `nothing` included.
+The pre-existing pile is measured and left in place: 2560 trees of the shared plant-guard
+shape, 28343 `tmp*` dirs, 7.0G, attributable to none of the four repositories that ship the
+identical fixture.
+
+Two findings came out of the plants rather than the reading. A `plant` call could pass for
+the wrong reason — the anchor-liveness guard fires on any literal-anchored document plant,
+so "the validator failed" could not identify which guard fired; `plantq` requires the
+refusal to name the defect, and carries the nineteen new plants. And a planted run poisoned
+the shared `$TMPDIR`, because a failing case keeps its tree by design: every standalone
+negative step boxes its own residue now.
+
+63 plants extracted from the workflow and run under bash: **63 behaved as designed, 0 did
+not.**
+
+
 ## v0.23.0 — 2026-08-19
 
 Two halves of the same problem: the instruments could already tell an answer from a silence,

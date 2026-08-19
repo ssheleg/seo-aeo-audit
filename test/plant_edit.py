@@ -22,6 +22,7 @@ Anchors are LITERAL, never regular expressions. Half the sed calls this replaces
 their length escaping `**` and `/`, and an escape that is wrong in one direction silently
 matches nothing.
 """
+import re
 import sys
 
 
@@ -50,6 +51,26 @@ def sub(path, needle, replacement, count=1):
     write(path, out)
 
 
+def resub(path, pattern, replacement, count=1):
+    """Substitute by REGEX, so a plant does not pin the number it is about.
+
+    Two plants in this workflow named a literal — `**Sixteen** of the twenty-one releases`
+    and a run-stamp line — and both stopped landing the moment the fact they measure
+    changed, which is on every release. A plant that does not land is a check nobody ran,
+    reported green, and the guard that noticed says so out loud: *the plant will not land,
+    its check is unproven, and CI refuses AFTER the tag is public.* A regex tracks the
+    shape instead of the value, which is what the plant was always about.
+    """
+    count = int(count)
+    s = read(path)
+    out, n = re.subn(pattern, replacement, s, count=count)
+    if not n:
+        raise SystemExit(f"PLANT DID NOT LAND: {path} matches no {pattern!r}")
+    if out == s:
+        raise SystemExit(f"PLANT DID NOT LAND: substituting {pattern!r} in {path} changed nothing")
+    write(path, out)
+
+
 def delline(path, exact):
     """Drop every line equal to `exact` (stripped of its newline)."""
     lines = read(path).split("\n")
@@ -74,7 +95,8 @@ def truncate(path, prefix):
     raise SystemExit(f"PLANT DID NOT LAND: {path} has no line starting {prefix!r}")
 
 
-VERBS = {"sub": sub, "delline": delline, "truncate": truncate}
+VERBS = {"sub": sub,
+    "resub": resub, "delline": delline, "truncate": truncate}
 
 
 def main(argv):
