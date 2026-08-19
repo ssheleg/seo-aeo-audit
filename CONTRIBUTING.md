@@ -106,7 +106,7 @@ when it was produced or by what. Bump `SKILL_VERSION` in all seven scripts in th
 the manifests; the guard names each file that disagrees.
 **I/O surface**: `SECURITY.md`'s script count and its "prints **N** lines" claim are
 measured, and the regex is read out of that file and run rather than copied — it said
-six scripts and 22 lines against seven and 26 for four releases (B-17). The same guard
+six scripts and 22 lines against seven and 26 for four releases (B-25). The same guard
 reads `SKILL.md`'s script inventory, which named a `sitemap_pull.py` that has never
 existed, in the one paragraph an agent consults to learn what it can run.
 
