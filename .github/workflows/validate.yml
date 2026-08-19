@@ -659,8 +659,8 @@ jobs:
             python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-17, closed 2026-08-19)'
           plantq "a board id that resolves to no row" 'cites B-99 and the board has no such row' \
             python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-99, closed in v0.23.0)'
-          plantq "the newest release with no verification-ledger section" 'has no `## v0.23.0` section' \
-            bash -c "python3 test/plant_edit.py sub docs/evidence/verification.md '## v0.23.0 — the coverage vocabulary' '## Unreleased — the coverage vocabulary' && python3 test/plant_edit.py sub docs/evidence/verification.md '## v0.23.0 — provenance in every payload' '## 2026-08-19 — provenance in every payload'"
+          plantq "the newest release with no verification-ledger section" 'section, and that is CHANGELOG.md' \
+            python3 test/plant_newest_section.py
           plantq "a release missing from the declared unrecorded list" 'the declared unrecorded-release list disagrees' \
             python3 test/plant_edit.py delline docs/evidence/verification.md '- `v0.18.0`'
           plantq "the unrecorded-release count restated instead of counted" 'releases are unrecorded; measured' \

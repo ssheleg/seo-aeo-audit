@@ -83,9 +83,10 @@ works — the tag cannot exist before the commit that bumps to it.
 | R-70 | Eleven false statements in shipped documents, each replaced by a computed one | `bash scripts/check-docs.sh` → exit 0, `PASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body ~4994/5000 tokens / 330/500 lines)`; the guards were added first and the first run named eleven defects at once | **planted** + **observed** |
 | R-71 | 63 plants extracted from `validate.yml` and run under bash | 63 behaved as designed, 0 did not, across 36 of 38 runnable steps | **observed** |
 | R-72 | `test/residue.py` copied from the umbrella; every gate command prints its residue | `PASS: residue — 8 cases`, `residue: this run left nothing — 5 temp tree(s) created, 5 removed`; the pre-existing pile (2560 trees, 28343 dirs, 7.0G) counted and left in place | **planted** + **observed** |
+| R-74 | The plant proving "a release with no ledger section is refused" stopped pinning a version | it named `## v0.23.0 — the coverage vocabulary` and stopped landing the moment v0.24.0 shipped: the validator still failed, for other guards, and the plant read as one that had been watched. CI refused **after** the tag was public. `test/plant_newest_section.py` reads the newest release from `CHANGELOG.md`, the same fact the guard reads, and exits 1 saying `PLANT DID NOT LAND` when there is nothing to plant | **planted** + **observed** |
 | R-73 | `gsc_pull.py` can say "measured nothing" | `measured_rows()` serves both the report and the exit status; a run with no `--site` exits 1 where it used to exit 0 | **planted** |
 
-**Counts at ship: 4 rows — 1 observed · 1 planted · 2 planted+observed.**
+**Counts at ship: 5 rows — 1 observed · 1 planted · 3 planted+observed.**
 
 ## v0.23.0 — the coverage vocabulary (conformance row SE-01)
 
