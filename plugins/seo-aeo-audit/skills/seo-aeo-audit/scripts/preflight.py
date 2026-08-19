@@ -23,6 +23,19 @@ Usage:
 track this run cannot reach reads `blocked-by <gate>`, and every other track reads
 `unlooked`. It never writes `observed` — see the coverage block below.
 
+`--format provenance` prints the report's `## Provenance` block instead. It probes
+nothing: the block is about the execution, not the site.
+
+Every output carries a **producer block** — `skill` (this tool's version), `script`,
+`observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
+resolved input set), and `actor` / `model` / `trace` from `SEO_AEO_AUDIT_ACTOR`,
+`_MODEL`, `_TRACE`. It is present in the default output and under `--format json` as
+`producer`. A field the harness did not supply reads `unavailable: <VAR> is not set by
+this harness` — never guessed, and never dropped, because a field that vanishes when
+unavailable is indistinguishable from one nobody checked. `observed_at` is the field
+that decides whether a finding has expired; the report's own `## Provenance` block adds
+the four invalidators (see references/preflight.md).
+
 Exit codes: 0 = probes ran (even if some failed — that IS the report),
             1 = usage error.
 """
@@ -30,12 +43,153 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+
+# ── why every payload carries a producer block ───────────────────────────────
+# M-32: *when an agent produces the change, the proof should identify the execution
+# that produced it* — model and runtime, policy and instruction versions, tools and
+# permissions, and the trace that connects actions to results. M-08: every proof is
+# **scoped, versioned and perishable**.
+#
+# Nothing in this bundle emitted any of it. `grep -n "__version__\|observed_at\|
+# timestamp" scripts/*.py` returned nothing, so an audit deliverable could not say
+# when it was produced, by what version, or against what arguments. That is worse
+# here than almost anywhere: an SEO audit is the most perishable evidence this family
+# produces — a crawl result expires the moment the site or the algorithm moves — and a
+# three-month-old audit was indistinguishable from today's.
+#
+# Four properties, and each one is a way this could ship and still not work:
+#
+# 1. **Every field prints, always.** A value this process cannot establish reads
+#    `unavailable: <VAR> is not set by this harness`, never nothing. A field that
+#    disappears when unavailable is indistinguishable from one nobody checked — the
+#    same defect SE-01 removed from the coverage table one property up.
+# 2. **Nothing is guessed to look complete.** `actor`, `model` and `trace` are the
+#    harness's to export; a python process has no honest access to them. `model`
+#    especially is never inferred: naming the wrong vendor id is worse than saying
+#    nothing, and the manifesto asks for provenance that can be *investigated*, not
+#    for a filled-in field.
+# 3. **The block is computed, never typed.** Both report skeletons carry the command
+#    that seeds it, not a row a human fills in after the run — that is the automation
+#    debt the manifesto names at :283, and it is how `observed_at` becomes a lie.
+# 4. **Perishability is stated, not implied.** The report says what it applies to
+#    (`scope`), when it was observed (`observed_at`), what produced it (`skill`), and
+#    which four things overtake it (`INVALIDATORS`). Same shape task-pipeline shipped
+#    on 2026-08-17 for its verification ledger, mapped onto this domain.
+#
+# ── provenance: the execution that produced this payload ── shared block ──────
+# Copied verbatim into all seven scripts and compared byte for byte by
+# `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
+# with no shared module, and an import of one does not exist in the installed layout
+# (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
+# doctrine behind the field set lives above this block in preflight.py. Never edit
+# one copy — the guard fails all seven.
+SKILL_VERSION = "0.22.0"
+
+# The fields no python process can establish, with the variable that would supply
+# each. They print by NAME on every run, because a field that vanishes when
+# unavailable is indistinguishable from one nobody checked.
+PRODUCER_ENV = (
+    ("actor", "SEO_AEO_AUDIT_ACTOR", "who or what invoked the run"),
+    ("model", "SEO_AEO_AUDIT_MODEL", "the model behind the agent — never inferred"),
+    ("trace", "SEO_AEO_AUDIT_TRACE", "the id linking these actions to a run"),
+)
+
+# The closed field set, in render order. A payload missing one of these is refused
+# by `preflight.validate_provenance`.
+PRODUCER_FIELDS = ("skill", "script", "observed_at", "runtime", "args", "scope",
+                   "actor", "model", "trace")
+
+# Flags whose VALUE is a credential. `psi_pull.py --key <secret>` is the live case:
+# echoing argv verbatim would write an API key into a deliverable somebody emails.
+SECRET_FLAGS = ("--key",)
+
+# One home for the block's table shape, read by every renderer, by
+# `preflight.validate_provenance`, and by `test/validate.py` when it looks for the
+# block in both report skeletons.
+PROVENANCE_HEADER = "| Field | Value |"
+
+
+def redact(argv: list[str]) -> list[str]:
+    """The argv as given, with every credential flag's value removed.
+
+    Both spellings, because handling one is the same as handling neither: `--key V`
+    hides the following token, `--key=V` hides the tail.
+    """
+    out: list[str] = []
+    hide = False
+    for a in argv:
+        if hide:
+            out.append("<redacted>")
+            hide = False
+            continue
+        head, sep, _ = a.partition("=")
+        if head in SECRET_FLAGS:
+            out.append(f"{head}=<redacted>" if sep else head)
+            hide = not sep
+        else:
+            out.append(a)
+    return out
+
+
+def provenance(script: str, argv: list[str], scope: str = "") -> dict:
+    """Which execution produced this payload: what ran, when, on what, about what.
+
+    Every field in `PRODUCER_FIELDS` is present on every run. A value this process
+    cannot establish reads `unavailable: <VAR> is not set by this harness` — never a
+    guess and never nothing. `model` in particular is not inferred: naming the wrong
+    vendor id is worse than saying nothing.
+    """
+    v = sys.version_info
+    out = {
+        "skill": f"seo-aeo-audit@{SKILL_VERSION}",
+        "script": script,
+        "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "runtime": f"{sys.implementation.name} {v.major}.{v.minor}.{v.micro} "
+                   f"on {sys.platform}",
+        "args": redact(argv),
+        "scope": scope or "unavailable: this run resolved no input set to record",
+    }
+    for _name, _var, _what in PRODUCER_ENV:
+        _val = os.environ.get(_var, "").strip()
+        out[_name] = _val or f"unavailable: {_var} is not set by this harness ({_what})"
+    return out
+
+
+def provenance_md(prov: dict) -> str:
+    """The producer block as a markdown table — one row per field, always.
+
+    Emitted in the DEFAULT output format too, not only under `--format json`. This
+    bundle has already shipped the other shape: four `gsc_pull.py` analyses were
+    computed into the payload and printed only in JSON while `text` was the
+    documented invocation, so an agent running the documented command never saw
+    them. A provenance block a human never reads is a provenance block that does
+    not exist.
+    """
+    lines = ["## Provenance — the execution that produced this", "",
+             PROVENANCE_HEADER, "|---|---|"]
+    for f in PRODUCER_FIELDS:
+        v = prov.get(f, "")
+        if isinstance(v, list):
+            v = " ".join(v)
+        # Flattened here rather than through `_flat`: only five of the seven scripts
+        # define one, and a shared block resting on a name two of its homes lack
+        # would crash in exactly the two least-exercised renderers.
+        cell = " ".join(str(v).split()).replace("|", "\\|")
+        if len(cell) > 300:
+            cell = cell[:299].rstrip() + "…"
+        lines.append(f"| {f} | `{cell}` |")
+    return "\n".join(lines)
+# ── end provenance shared block ──────────────────────────────────────────────
+
 
 UA = "seo-aeo-audit/preflight (+https://github.com/ssheleg/seo-aeo-audit)"
 # The Search Console API is TWO surfaces on one host and they are not
@@ -489,7 +643,160 @@ def validate_coverage(text: str) -> list[str]:
     return errs
 
 
-def render(rows: list[dict]) -> str:
+# ── the report's provenance block ────────────────────────────────────────────
+# What overtakes an SEO audit. `task-pipeline` shipped this shape on 2026-08-17 for
+# its verification ledger — four named invalidators, and naming which one applies is
+# the note's job — so this is that list mapped onto this domain rather than a second
+# design of the same idea:
+#
+#   task-pipeline   here          what moved
+#   ─────────────   ───────────   ─────────────────────────────────────────────
+#   code            site          the pages themselves
+#   dependency      index         the engine reading them
+#   environment     instrument    the thing that measured
+#   policy          policy        the rules the evidence was accepted under
+#
+# **Invalidation is not deletion**, exactly as it is there: an overtaken audit is not
+# wrong, it is true about the site it observed, and it stays. Re-auditing writes a new
+# dated file — `deliverable-templates.md` already forbids overwriting one.
+INVALIDATORS = (
+    ("site", "the audited pages, their markup, `robots.txt` or the sitemap changed — "
+             "every page-level finding is about the bytes that were fetched"),
+    ("index", "the engine re-crawled or re-ranked: its own state moved even though the "
+              "site did not, and coverage, canonical choice and position all rest on it"),
+    ("instrument", "this skill, its probes or its access changed — a later version "
+                   "looks in places this run did not, and a lost credential turns an "
+                   "`observed` track into `blocked-by`"),
+    ("policy", "a core or AI-surface update changed the rules the evidence was read "
+               "under, which is the one invalidator no re-run of this tool detects"),
+)
+
+def scope_of(site: str | None, origin: str | None) -> str:
+    """What this run's payload is ABOUT — the M-08 `scoped` half, in one line.
+
+    Not the argv: `--urls-file urls.txt` names a file, and six months later nobody
+    can say which URLs were in it. Every script computes this from its RESOLVED
+    inputs, which is why it is a per-script argument to `provenance()` rather than
+    something the shared block derives.
+    """
+    parts = [p for p in (f"origin {origin}" if origin else "",
+                         f"property {site}" if site else "") if p]
+    return " · ".join(parts) or "unavailable: this run resolved no input set to record"
+
+
+def render_provenance(prov: dict) -> str:
+    """The provenance section, ready to paste into `docs/seo/audit-<date>.md`.
+
+    Every field in `PRODUCER_FIELDS` gets a row whether or not it resolved, and the
+    invalidators are printed with it: a block that says when the audit was taken and
+    nothing about what expires it leaves a reader to assume it is still true.
+    """
+    lines = [
+        "## Provenance — what produced this, and what expires it",
+        "",
+        "Computed, never typed. Every field prints even when it cannot be resolved:",
+        "",
+        '```bash',
+        'python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com \\',
+        '  --format provenance',
+        '```',
+        "",
+    ]
+    # The field table itself comes from the shared block, so the report's block and
+    # every collector's own footer are the same table rather than two renderings of
+    # one idea. Only the section heading and everything below it is preflight's.
+    lines += provenance_md(prov).split("\n")[2:]
+    lines += [
+        "",
+        f"`{'` · `'.join(e[0] for e in PRODUCER_ENV)}` are the harness's to export and "
+        f"say so by name when unset. A field is never deleted and never guessed — "
+        f"`model` least of all, because naming the wrong id is worse than saying nothing.",
+        "",
+        "**What invalidates this report.** An overtaken audit is not wrong — it is true "
+        "about the site it observed, and it stays. Re-auditing writes a new dated file "
+        "and names which row below applies.",
+        "",
+        "| Invalidator | What moved |",
+        "|---|---|",
+    ]
+    for name, what in INVALIDATORS:
+        lines.append(f"| **{name}** | {what} |")
+    return "\n".join(lines)
+
+
+def validate_provenance(text: str) -> list[str]:
+    """Every complaint a provenance block can earn. Empty list = it identifies a run.
+
+    Reads a rendered report — either skeleton, or a filled-in deliverable. A skeleton
+    has no values yet, so the table is optional there; the SECTION, the field names,
+    the seeding command and the four invalidators are not. What is refused is a block
+    that exists and cannot answer: a value cell left blank, a field dropped from the
+    set, or an `observed_at` that is not a timestamp.
+    """
+    errs: list[str] = []
+    lines = text.split("\n")
+    start = next((i for i, ln in enumerate(lines)
+                  if ln.strip().lower().startswith("## provenance")), None)
+    if start is None:
+        return ["no `## Provenance` section — a deliverable that cannot say when it was "
+                "produced, by what version and against what arguments is not evidence "
+                "about a site, it is a document about nothing (M-32)"]
+    end = next((i for i in range(start + 1, len(lines))
+                if lines[i].startswith("## ")), len(lines))
+    body = "\n".join(lines[start:end])
+
+    for f in PRODUCER_FIELDS:
+        if not re.search(rf"(?<![\w-]){re.escape(f)}(?![\w-])", body):
+            errs.append(f"`## Provenance` never names the field {f!r} — the field set has "
+                        f"one home (`preflight.py:PRODUCER_FIELDS`) and every field has to "
+                        f"be readable where the block is edited")
+    for name, _ in INVALIDATORS:
+        if not re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", body):
+            errs.append(f"`## Provenance` never names the invalidator {name!r} — a proof "
+                        f"with no stated expiry reads as permanent, which is the half of "
+                        f"M-08 that matters most for a crawl result")
+    if "preflight.py" not in body or "--format provenance" not in body:
+        errs.append("`## Provenance` does not carry the command that seeds it — a block a "
+                    "human types after the run is automation debt, and `observed_at` is "
+                    "then a claim about when somebody remembered rather than when the "
+                    "instrument looked")
+
+    hdr = next((i for i in range(start + 1, end)
+                if " ".join(lines[i].strip().split()) == PROVENANCE_HEADER), None)
+    if hdr is None:
+        return errs        # a skeleton: no values to check yet
+
+    seen = []
+    for i in range(hdr + 1, end):
+        s = lines[i].strip()
+        if not s.startswith("|"):
+            break
+        if re.match(r"^\|[\s:\-|]+\|$", s):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) != 2:
+            errs.append(f"provenance row {s!r} has {len(cells)} cells, the header has 2")
+            continue
+        field, value = cells[0].strip("`* "), cells[1].strip("` ")
+        seen.append(field)
+        if not value:
+            errs.append(f"provenance field {field!r} has a blank value — a blank reads the "
+                        f"same whether the value was unavailable or nobody looked. An "
+                        f"unresolved field says `unavailable: <VAR> is not set by this "
+                        f"harness`")
+        elif field == "observed_at" and not re.match(
+                r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", value):
+            errs.append(f"provenance `observed_at` is {value!r}, not a UTC timestamp of the "
+                        f"form 2026-08-19T12:34:56Z — the one field that decides whether "
+                        f"this report has expired cannot be free text")
+    missing = [f for f in PRODUCER_FIELDS if f not in seen]
+    if missing:
+        errs.append(f"the provenance table has no row for {missing} — every field in "
+                    f"PRODUCER_FIELDS is present on every run, resolved or not")
+    return errs
+
+
+def render(rows: list[dict], prov: dict | None = None) -> str:
     ok = [r for r in rows if r["reachable"]]
     bad = [r for r in rows if not r["reachable"]]
     lines = ["# Preflight — what this audit can actually observe", "",
@@ -520,6 +827,11 @@ def render(rows: list[dict]) -> str:
     # shape, so step 4 pastes it instead of typing it. A field a human fills in
     # after the run is the debt this exists to retire.
     lines += ["", render_coverage(coverage_seed(rows))]
+    # And the block that says which execution produced all of the above. Optional
+    # only so `test_output_contracts.py` can render a table from hand-built probes;
+    # `main` always passes one.
+    if prov is not None:
+        lines += ["", render_provenance(prov)]
     return "\n".join(lines)
 
 
@@ -529,16 +841,24 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--origin", help="site origin to probe publicly, e.g. https://example.com")
     ap.add_argument("--quota-project", help="GCP project that meters the API calls")
     ap.add_argument("--skip-psi", action="store_true", help="skip the PageSpeed probe (it is slow)")
-    ap.add_argument("--format", choices=["markdown", "json", "coverage"],
+    ap.add_argument("--format", choices=["markdown", "json", "coverage", "provenance"],
                     default="markdown",
-                    help="markdown report, the JSON payload, or just the report's "
-                         "seeded Track coverage section")
+                    help="markdown report, the JSON payload, the report's seeded Track "
+                         "coverage section, or its seeded Provenance block")
     args = ap.parse_args(argv)
 
     if not args.site and not args.origin:
         print("pass --site and/or --origin — there is nothing to probe otherwise",
               file=sys.stderr)
         return 1
+
+    prov = provenance("preflight.py", argv, scope_of(args.site, args.origin))
+    # `--format provenance` probes nothing: the block is about the execution, not
+    # about the site, and making a caller wait on a PageSpeed round trip to learn
+    # what version produced their report is how a seeding step gets skipped.
+    if args.format == "provenance":
+        print(render_provenance(prov))
+        return 0
 
     rows = [check_python()]
     if args.site:
@@ -551,7 +871,8 @@ def main(argv: list[str]) -> int:
             rows.append(check_psi(args.origin))
 
     if args.format == "json":
-        print(json.dumps({"probes": rows,
+        print(json.dumps({"producer": prov,
+                          "probes": rows,
                           "reachable": sum(1 for r in rows if r["reachable"]),
                           "total": len(rows),
                           "tracks": [{"track": t, "label": l} for t, l in TRACKS],
@@ -560,7 +881,7 @@ def main(argv: list[str]) -> int:
     elif args.format == "coverage":
         print(render_coverage(coverage_seed(rows)))
     else:
-        print(render(rows))
+        print(render(rows, prov))
     return 0
 
 

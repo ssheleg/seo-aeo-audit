@@ -34,17 +34,136 @@ report are web-UI only, at every scope. An unexplained cliff needs a human to
 open that page.
 
 Exit codes: 0 = ran, 1 = usage/auth/API error.
+
+Every output carries a **producer block** — `skill` (this tool's version), `script`,
+`observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
+resolved input set), and `actor` / `model` / `trace` from `SEO_AEO_AUDIT_ACTOR`,
+`_MODEL`, `_TRACE`. It is present in the default output and under `--format json` as
+`producer`. A field the harness did not supply reads `unavailable: <VAR> is not set by
+this harness` — never guessed, and never dropped, because a field that vanishes when
+unavailable is indistinguishable from one nobody checked. `observed_at` is the field
+that decides whether a finding has expired; the report's own `## Provenance` block adds
+the four invalidators (see references/preflight.md).
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date, timedelta
+
+
+# ── provenance: the execution that produced this payload ── shared block ──────
+# Copied verbatim into all seven scripts and compared byte for byte by
+# `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
+# with no shared module, and an import of one does not exist in the installed layout
+# (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
+# doctrine behind the field set lives above this block in preflight.py. Never edit
+# one copy — the guard fails all seven.
+SKILL_VERSION = "0.22.0"
+
+# The fields no python process can establish, with the variable that would supply
+# each. They print by NAME on every run, because a field that vanishes when
+# unavailable is indistinguishable from one nobody checked.
+PRODUCER_ENV = (
+    ("actor", "SEO_AEO_AUDIT_ACTOR", "who or what invoked the run"),
+    ("model", "SEO_AEO_AUDIT_MODEL", "the model behind the agent — never inferred"),
+    ("trace", "SEO_AEO_AUDIT_TRACE", "the id linking these actions to a run"),
+)
+
+# The closed field set, in render order. A payload missing one of these is refused
+# by `preflight.validate_provenance`.
+PRODUCER_FIELDS = ("skill", "script", "observed_at", "runtime", "args", "scope",
+                   "actor", "model", "trace")
+
+# Flags whose VALUE is a credential. `psi_pull.py --key <secret>` is the live case:
+# echoing argv verbatim would write an API key into a deliverable somebody emails.
+SECRET_FLAGS = ("--key",)
+
+# One home for the block's table shape, read by every renderer, by
+# `preflight.validate_provenance`, and by `test/validate.py` when it looks for the
+# block in both report skeletons.
+PROVENANCE_HEADER = "| Field | Value |"
+
+
+def redact(argv: list[str]) -> list[str]:
+    """The argv as given, with every credential flag's value removed.
+
+    Both spellings, because handling one is the same as handling neither: `--key V`
+    hides the following token, `--key=V` hides the tail.
+    """
+    out: list[str] = []
+    hide = False
+    for a in argv:
+        if hide:
+            out.append("<redacted>")
+            hide = False
+            continue
+        head, sep, _ = a.partition("=")
+        if head in SECRET_FLAGS:
+            out.append(f"{head}=<redacted>" if sep else head)
+            hide = not sep
+        else:
+            out.append(a)
+    return out
+
+
+def provenance(script: str, argv: list[str], scope: str = "") -> dict:
+    """Which execution produced this payload: what ran, when, on what, about what.
+
+    Every field in `PRODUCER_FIELDS` is present on every run. A value this process
+    cannot establish reads `unavailable: <VAR> is not set by this harness` — never a
+    guess and never nothing. `model` in particular is not inferred: naming the wrong
+    vendor id is worse than saying nothing.
+    """
+    v = sys.version_info
+    out = {
+        "skill": f"seo-aeo-audit@{SKILL_VERSION}",
+        "script": script,
+        "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "runtime": f"{sys.implementation.name} {v.major}.{v.minor}.{v.micro} "
+                   f"on {sys.platform}",
+        "args": redact(argv),
+        "scope": scope or "unavailable: this run resolved no input set to record",
+    }
+    for _name, _var, _what in PRODUCER_ENV:
+        _val = os.environ.get(_var, "").strip()
+        out[_name] = _val or f"unavailable: {_var} is not set by this harness ({_what})"
+    return out
+
+
+def provenance_md(prov: dict) -> str:
+    """The producer block as a markdown table — one row per field, always.
+
+    Emitted in the DEFAULT output format too, not only under `--format json`. This
+    bundle has already shipped the other shape: four `gsc_pull.py` analyses were
+    computed into the payload and printed only in JSON while `text` was the
+    documented invocation, so an agent running the documented command never saw
+    them. A provenance block a human never reads is a provenance block that does
+    not exist.
+    """
+    lines = ["## Provenance — the execution that produced this", "",
+             PROVENANCE_HEADER, "|---|---|"]
+    for f in PRODUCER_FIELDS:
+        v = prov.get(f, "")
+        if isinstance(v, list):
+            v = " ".join(v)
+        # Flattened here rather than through `_flat`: only five of the seven scripts
+        # define one, and a shared block resting on a name two of its homes lack
+        # would crash in exactly the two least-exercised renderers.
+        cell = " ".join(str(v).split()).replace("|", "\\|")
+        if len(cell) > 300:
+            cell = cell[:299].rstrip() + "…"
+        lines.append(f"| {f} | `{cell}` |")
+    return "\n".join(lines)
+# ── end provenance shared block ──────────────────────────────────────────────
+
 
 API = "https://searchconsole.googleapis.com/webmasters/v3"
 
@@ -464,7 +583,10 @@ def render_text(report: dict) -> str:
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
+    # argv is a parameter rather than read from `sys.argv` inside, so the producer
+    # block records the arguments THIS run was given and a test can hand it a set.
+    # The other six scripts already had this shape; only this one read the global.
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--site", help="sc-domain:example.com or https://example.com/")
@@ -477,7 +599,7 @@ def main() -> int:
                     help="comma-separated brand terms; without them the branded/"
                          "non-branded split is reported as unavailable rather than guessed")
     ap.add_argument("--format", choices=["text", "json"], default="text")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     token = access_token()
     qp = args.quota_project
@@ -521,6 +643,9 @@ def main() -> int:
                     token, qp).get("sitemap", [])
 
     report = {
+        "producer": provenance(
+            "gsc_pull.py", argv,
+            f"property {site} · recent {start_recent}..{end} · history {start_hist}..{end}"),
         "rows_dropped_as_noise": dropped_noise,
         "row_limits": row_limits,
         "row_limit_reached": limit_reached,
@@ -547,8 +672,12 @@ def main() -> int:
         return 0
 
     print(render_text(report))
+    # The producer block reaches the DEFAULT format too. This script is where that
+    # rule was learned: four analyses were computed into `report` and printed only
+    # under `--format json` while `text` is the documented invocation.
+    print("\n" + provenance_md(report["producer"]))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

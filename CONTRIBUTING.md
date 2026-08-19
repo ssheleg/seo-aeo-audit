@@ -85,7 +85,7 @@ section-id uniqueness across references, the two freshness facts in
 table integrity — both a blank line inside a table and a row with more cells than
 its header, either of which stops rows rendering as part of the table.
 
-Two guard families are about what the skill does at runtime rather than what the
+Four guard families are about what the skill does at runtime rather than what the
 repository says. **script reachability**: every invocation in `SKILL.md` must
 resolve from the caller's working directory, which is the user's project and not
 the skill directory — eleven bare `scripts/*.py` paths once failed in the only
@@ -97,6 +97,18 @@ both skeleton homes, carry one row per track SKILL.md declares, and use only the
 closed enum in `preflight.py:COVERAGE_STATUS` — a blank Status cell reads the same
 whether a track came back clean or never ran, which was true of every row in the
 shipped skeleton, and track K had no row to be blank in.
+**provenance**: every script carries the byte-identical producer block, calls it
+under its own name, declares a `SKILL_VERSION` that matches the manifests, and both
+report skeletons publish every field in `preflight.py:PRODUCER_FIELDS`, all four
+`INVALIDATORS` and the command that seeds the block — through v0.22.0 no script
+emitted a version, a timestamp or an input set at all, so a deliverable could not say
+when it was produced or by what. Bump `SKILL_VERSION` in all seven scripts in the same commit as
+the manifests; the guard names each file that disagrees.
+**I/O surface**: `SECURITY.md`'s script count and its "prints **N** lines" claim are
+measured, and the regex is read out of that file and run rather than copied — it said
+six scripts and 22 lines against seven and 26 for four releases (B-17). The same guard
+reads `SKILL.md`'s script inventory, which named a `sitemap_pull.py` that has never
+existed, in the one paragraph an agent consults to learn what it can run.
 
 Those names are not decoration: the validator asserts that this paragraph still
 mentions each guard family it runs, because a prose summary of a checker is a fact

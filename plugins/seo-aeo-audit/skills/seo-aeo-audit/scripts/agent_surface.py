@@ -39,6 +39,16 @@ output, not only in the docs):
     K8/K9 decides what is worth shipping, and a business decision (a public repo,
     an npm package, a directory listing) is never inferable from a fetch.
 
+Every output carries a **producer block** — `skill` (this tool's version), `script`,
+`observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
+resolved input set), and `actor` / `model` / `trace` from `SEO_AEO_AUDIT_ACTOR`,
+`_MODEL`, `_TRACE`. It is present in the default output and under `--format json` as
+`producer`. A field the harness did not supply reads `unavailable: <VAR> is not set by
+this harness` — never guessed, and never dropped, because a field that vanishes when
+unavailable is indistinguishable from one nobody checked. `observed_at` is the field
+that decides whether a finding has expired; the report's own `## Provenance` block adds
+the four invalidators (see references/preflight.md).
+
 Exit codes: 0 = at least one probe answered, 1 = usage error, or nothing answered
 (a run where every request failed is not a measurement of an absent surface).
 """
@@ -46,11 +56,120 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+
+# ── provenance: the execution that produced this payload ── shared block ──────
+# Copied verbatim into all seven scripts and compared byte for byte by
+# `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
+# with no shared module, and an import of one does not exist in the installed layout
+# (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
+# doctrine behind the field set lives above this block in preflight.py. Never edit
+# one copy — the guard fails all seven.
+SKILL_VERSION = "0.22.0"
+
+# The fields no python process can establish, with the variable that would supply
+# each. They print by NAME on every run, because a field that vanishes when
+# unavailable is indistinguishable from one nobody checked.
+PRODUCER_ENV = (
+    ("actor", "SEO_AEO_AUDIT_ACTOR", "who or what invoked the run"),
+    ("model", "SEO_AEO_AUDIT_MODEL", "the model behind the agent — never inferred"),
+    ("trace", "SEO_AEO_AUDIT_TRACE", "the id linking these actions to a run"),
+)
+
+# The closed field set, in render order. A payload missing one of these is refused
+# by `preflight.validate_provenance`.
+PRODUCER_FIELDS = ("skill", "script", "observed_at", "runtime", "args", "scope",
+                   "actor", "model", "trace")
+
+# Flags whose VALUE is a credential. `psi_pull.py --key <secret>` is the live case:
+# echoing argv verbatim would write an API key into a deliverable somebody emails.
+SECRET_FLAGS = ("--key",)
+
+# One home for the block's table shape, read by every renderer, by
+# `preflight.validate_provenance`, and by `test/validate.py` when it looks for the
+# block in both report skeletons.
+PROVENANCE_HEADER = "| Field | Value |"
+
+
+def redact(argv: list[str]) -> list[str]:
+    """The argv as given, with every credential flag's value removed.
+
+    Both spellings, because handling one is the same as handling neither: `--key V`
+    hides the following token, `--key=V` hides the tail.
+    """
+    out: list[str] = []
+    hide = False
+    for a in argv:
+        if hide:
+            out.append("<redacted>")
+            hide = False
+            continue
+        head, sep, _ = a.partition("=")
+        if head in SECRET_FLAGS:
+            out.append(f"{head}=<redacted>" if sep else head)
+            hide = not sep
+        else:
+            out.append(a)
+    return out
+
+
+def provenance(script: str, argv: list[str], scope: str = "") -> dict:
+    """Which execution produced this payload: what ran, when, on what, about what.
+
+    Every field in `PRODUCER_FIELDS` is present on every run. A value this process
+    cannot establish reads `unavailable: <VAR> is not set by this harness` — never a
+    guess and never nothing. `model` in particular is not inferred: naming the wrong
+    vendor id is worse than saying nothing.
+    """
+    v = sys.version_info
+    out = {
+        "skill": f"seo-aeo-audit@{SKILL_VERSION}",
+        "script": script,
+        "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "runtime": f"{sys.implementation.name} {v.major}.{v.minor}.{v.micro} "
+                   f"on {sys.platform}",
+        "args": redact(argv),
+        "scope": scope or "unavailable: this run resolved no input set to record",
+    }
+    for _name, _var, _what in PRODUCER_ENV:
+        _val = os.environ.get(_var, "").strip()
+        out[_name] = _val or f"unavailable: {_var} is not set by this harness ({_what})"
+    return out
+
+
+def provenance_md(prov: dict) -> str:
+    """The producer block as a markdown table — one row per field, always.
+
+    Emitted in the DEFAULT output format too, not only under `--format json`. This
+    bundle has already shipped the other shape: four `gsc_pull.py` analyses were
+    computed into the payload and printed only in JSON while `text` was the
+    documented invocation, so an agent running the documented command never saw
+    them. A provenance block a human never reads is a provenance block that does
+    not exist.
+    """
+    lines = ["## Provenance — the execution that produced this", "",
+             PROVENANCE_HEADER, "|---|---|"]
+    for f in PRODUCER_FIELDS:
+        v = prov.get(f, "")
+        if isinstance(v, list):
+            v = " ".join(v)
+        # Flattened here rather than through `_flat`: only five of the seven scripts
+        # define one, and a shared block resting on a name two of its homes lack
+        # would crash in exactly the two least-exercised renderers.
+        cell = " ".join(str(v).split()).replace("|", "\\|")
+        if len(cell) > 300:
+            cell = cell[:299].rstrip() + "…"
+        lines.append(f"| {f} | `{cell}` |")
+    return "\n".join(lines)
+# ── end provenance shared block ──────────────────────────────────────────────
+
 
 UA = "seo-aeo-audit/agent_surface (+https://github.com/ssheleg/seo-aeo-audit)"
 TIMEOUT = 20
@@ -1345,10 +1464,22 @@ def main(argv: list[str]) -> int:
                     "tier": FINDING_TIERS["api-401-no-hint"]})
 
     answered = data.pop("_answered", 0)
+    prov = provenance("agent_surface.py", argv,
+                      " · ".join(p for p in (
+                          f"origin {args.origin}" if args.origin else "",
+                          f"api {args.api_origin}" if args.api_origin else "",
+                          f"page {args.page}" if args.page else "",
+                          f"spec {args.openapi}" if args.openapi else "",
+                          f"spec file {args.openapi_file}" if args.openapi_file else "",
+                      ) if p))
     if args.format == "json":
-        print(json.dumps(data, indent=2, ensure_ascii=False))
+        # Prepended, not appended: `data` is one object per the contract at line 20,
+        # and the block that says which execution produced it belongs above the
+        # findings a reader will act on.
+        print(json.dumps({"producer": prov, **data}, indent=2, ensure_ascii=False))
     else:
         print(render(data))
+        print("\n" + provenance_md(prov))
 
     # Contract #1: a run where nothing answered is not a measurement of an absent
     # surface. Offline spec analysis counts as an answer — it measured something.

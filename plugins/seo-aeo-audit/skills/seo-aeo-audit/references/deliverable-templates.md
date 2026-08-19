@@ -39,6 +39,22 @@ write `observed`, which means a row nobody edits says *nobody looked*. The state
 the gate names and why the seed is a floor rather than a verdict:
 [preflight.md](preflight.md).
 
+**Its `## Provenance` block is the second field you must not type**, and for the
+matching reason: an SEO audit is the most perishable evidence this skill makes, and
+through v0.22.0 no script emitted a version, a timestamp or an input set at all — so a
+three-month-old audit was indistinguishable from today's. Seed it:
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com --format provenance
+```
+
+It prints what produced the report (`skill`, `script`, `observed_at`, `runtime`,
+`args`, `scope`) plus the three fields only the calling harness can supply (`actor`,
+`model`, `trace`), each naming its variable when unset rather than vanishing. Under it
+go the four invalidators — `site`, `index`, `instrument`, `policy` — because a proof
+with no stated expiry reads as permanent. The field set, the redaction rule and the
+checker: [preflight.md](preflight.md#seeding-the-reports-provenance-block).
+
 ## docs/seo/audit-<YYYY-MM-DD>.md
 
 ````markdown
@@ -129,6 +145,41 @@ left as seeded reads `unlooked`, and forgetting to edit this table produces
 | I risk & threats | unlooked | |
 | J measurement | unlooked | |
 | K agent surface | unlooked | |
+
+## Provenance — what produced this, and what expires it
+
+**Replace this whole section** with the output of the command below — do not type it.
+A field a human fills in after the run is automation debt, and `observed_at` then
+records when somebody remembered rather than when an instrument looked. The `Date`
+bullet at the top is when this document was written; `observed_at` is when the site
+was read, and that is the one that decides whether this report has expired.
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com \
+  --format provenance
+```
+
+It prints one row per field — `skill` · `script` · `observed_at` · `runtime` ·
+`args` · `scope` · `actor` · `model` · `trace` — and every field prints even when it
+cannot be resolved, as `unavailable: <VAR> is not set by this harness`. A field that
+vanishes when unavailable is indistinguishable from one nobody checked. `model` is
+never inferred: naming the wrong id is worse than saying nothing, and what the
+provenance is for is being *investigated*, not looking complete.
+
+Every collector prints the same block under its own output and carries it in
+`--format json` as `producer`, so a finding pasted into this report can be traced
+back to the run that produced it.
+
+**What invalidates this report.** An overtaken audit is not wrong — it is true about
+the site it observed, and it stays. Re-auditing writes a new dated file and names
+which row below applies.
+
+| Invalidator | What moved |
+|---|---|
+| **site** | the audited pages, their markup, `robots.txt` or the sitemap changed |
+| **index** | the engine re-crawled or re-ranked — its own state moved, not the site's |
+| **instrument** | this skill, its probes or its access changed, so a later run looks elsewhere |
+| **policy** | a core or AI-surface update changed the rules the evidence was read under |
 ````
 
 ## docs/seo/plan-<YYYY-MM-DD>.md

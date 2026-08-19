@@ -36,6 +36,11 @@ def write(path, text):
 
 
 def sub(path, needle, replacement, count=1):
+    # `count` arrives from a shell as a string and `str.replace` refuses one, which
+    # this file then reported as "wrong number of arguments" — sending the reader to
+    # the argv instead of to the type. Coerced here so a plant that legitimately
+    # needs to hit the Nth copy of a duplicated block can say so.
+    count = int(count)
     s = read(path)
     if needle not in s:
         raise SystemExit(f"PLANT DID NOT LAND: {path} does not contain {needle!r}")

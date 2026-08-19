@@ -28,6 +28,7 @@ jobs:
           set -eu
           rm -rf /tmp/sedback && cp -R . /tmp/sedback
           python3 - <<'PY'
+          import re
           # The failure this prevents is invisible on the platform where it happens: a
           # `sed -i` plant is a no-op on macOS, so the guard it was meant to disarm stays
           # armed, the validator honestly passes, and the step blames a healthy guard.
@@ -40,9 +41,13 @@ jobs:
           # rindex, not index, and no anchor literal either: every string this step
           # names also EXISTS in this step, so the first draft rewrote its own source
           # text twice over — a plant planting into itself, once per attempt to fix it.
-          # The last occurrence in the file is always a real call site.
+          # The last LINE-INITIAL occurrence: "the last occurrence" stopped being a
+          # call site in command position on 2026-08-19, when a plant's `sub` moved
+          # inside a `for … ; do …; done` — the plant then landed in a place the guard
+          # did not read, and the step blamed a healthy guard. The guard was widened to
+          # cover `do`/`then`/`else` as well; this anchor states what the step needs.
           old = "python3 test/plant_edit.py sub"
-          i = s.rindex(old)
+          i = max(m.start(1) for m in re.finditer(r"^\s*(" + re.escape(old) + r")", s, re.M))
           s2 = s[:i] + 'sed -i "s/x/y/" #' + s[i + len(old):]
           assert s2 != s, "PLANT DID NOT LAND: no plant_edit call after plant()"
           assert s2.rstrip().endswith(s[i + len(old):].rstrip()), "PLANT DID NOT LAND: the tail moved"
@@ -540,6 +545,94 @@ jobs:
             python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    ("K", "agent surface"),'
           plant "a track with no TRACK_SOURCES entry, which can never read blocked-by" \
             python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    "K": ("robots.txt", "homepage"),'
+          # Provenance (SE-02). The producer block is COPIED into all seven scripts
+          # rather than imported — the installed layout has nothing to import from —
+          # so the plants below break the copy, the call, the version literal and both
+          # skeleton homes in turn. Five more, whose checker is the behaviour suite
+          # rather than the validator, live in the next step.
+          plant "a script emitting a payload with no producer block" \
+            python3 test/plant_edit.py sub "$S/scripts/sitemap_audit.py" 'prov = provenance("sitemap_audit.py", argv,' 'prov = dict(argv=argv,  # noqa'
+          plant "the provenance shared block missing from one script" \
+            python3 test/plant_edit.py truncate "$S/scripts/psi_pull.py" '# ── provenance: the execution that produced this payload ── shared block ──────'
+          plant "a script carrying the block and never calling it under its own name" \
+            python3 test/plant_edit.py sub "$S/scripts/agent_surface.py" 'prov = provenance("agent_surface.py", argv,' 'prov = provenance("preflight.py", argv,'
+          # The whole reason seven copies are compared byte for byte: one edited copy
+          # is seven versions of one function, and six of them keep passing.
+          plant "the shared block edited in one copy only" \
+            python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" 'SECRET_FLAGS = ("--key",)' 'SECRET_FLAGS = ()'
+          plant "observed_at dropped from the closed field set" \
+            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "PRODUCER_FIELDS = (\"skill\", \"script\", \"observed_at\", \"runtime\", \"args\", \"scope\"," "PRODUCER_FIELDS = (\"skill\", \"script\", \"runtime\", \"args\", \"scope\","; done'
+          # Seven more homes for one semver. Literals rather than a runtime lookup
+          # because `bin/seo-aeo-audit.js` installs `scripts/` with no manifest beside
+          # it — so a producer block naming a version that never ran is the risk, and
+          # this is what refuses it. Bump all seven with the manifests.
+          plant "a SKILL_VERSION literal drifting from the manifests" \
+            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "SKILL_VERSION = \"0.22.0\"" "SKILL_VERSION = \"0.19.0\""; done'
+          # Both skeletons in one command, as the coverage plants do: change one and
+          # the template-drift guard fires instead, proving a different guard works.
+          plant "a skeleton losing the command that seeds the block" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "  --format provenance" "  --format json"; done'
+          plant "a skeleton losing an invalidator" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py delline "$f" "| **policy** | a core or AI-surface update changed the rules the evidence was read under |"; done'
+          plant "a skeleton no longer naming every producer field" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "\`args\` · \`scope\` · \`actor\` · \`model\` · \`trace\`" "\`args\` · \`actor\` · \`model\` · \`trace\`"; done'
+          # B-17. Two numbers in SECURITY.md that a reader consults *because* they will
+          # not read the code, and that said six/22 against seven/26 for four releases.
+          plant "SECURITY.md's script count going stale" \
+            python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'
+          plant "SECURITY.md's I/O line count going stale" \
+            python3 test/plant_edit.py sub SECURITY.md 'prints **33 lines and that is all of it**' 'prints **22 lines and that is all of it**'
+          plant "a script with no row in SECURITY.md's I/O table" \
+            python3 test/plant_edit.py delline SECURITY.md '| `agent_surface.py` | the origin, API host, page and OpenAPI URL **you** pass | no | no |'
+          # The regex is read out of SECURITY.md and RUN, so narrowing the published
+          # pattern breaks the count it claims — a guard with its own copy of the
+          # pattern would only prove its copy agrees with itself.
+          plant "the published I/O regex narrowed away from its own count" \
+            python3 test/plant_edit.py sub SECURITY.md 'socket|os\.environ|os\.system' 'socket|os\.system'
+
+      - name: Negative self-tests for the provenance behaviour contracts
+        run: |
+          set -eu
+          S=plugins/seo-aeo-audit/skills/seo-aeo-audit
+          # Same harness as the step above with the checker as a parameter: these five
+          # defects are BEHAVIOUR — a guessed field, an echoed credential, a block that
+          # never reaches markdown — and the structural validator cannot see any of
+          # them. The comparison is still `plant_guard.py`, which is the part that had
+          # five hand-written variants and five bugs.
+          plant() {
+            desc="$1"; checker="$2"; shift 2
+            rm -rf /tmp/negb && cp -R . /tmp/negb
+            python3 test/plant_guard.py snap /tmp/negb
+            ( cd /tmp/negb && "$@" )
+            python3 test/plant_guard.py verify /tmp/negb "$desc"
+            if ( cd /tmp/negb && python3 "$checker" >/dev/null 2>&1 ); then
+              echo "BROKEN GUARD: $desc — $checker still passes"; exit 1
+            fi
+            echo "ok: $desc"
+          }
+          C=test/test_output_contracts.py
+          # `observed_at` is the field the whole row turns on: without it a report
+          # cannot say whether it has expired, and a three-month-old audit reads like
+          # today's. Both plants hit the seventh copy of the shared block — preflight's
+          # — because a single-copy edit is what the byte comparison one step up
+          # catches, and this step is measuring something else.
+          plant "a producer block with no observed_at" "$C" \
+            bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/preflight.py "\"observed_at\": time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime())," "" 7'
+          plant "observed_at written as free text" "$C" \
+            bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/preflight.py "time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime())" "\"recently\"" 7'
+          # The manifesto asks for provenance that can be investigated, not for a field
+          # filled in to look complete. A guessed `model` is the worst case: the wrong
+          # vendor id sends an investigation to a model that never ran.
+          plant "a harness-owned field guessed instead of reported unavailable" "$C" \
+            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "out[_name] = _val or f\"unavailable: {_var} is not set by this harness ({_what})\"" "out[_name] = _val or \"a-model-nobody-ran\""; done'
+          plant "a --key value echoed into the producer block" "$C" \
+            bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "\"args\": redact(argv)," "\"args\": list(argv),"; done'
+          # Watched under-reporting before it was trusted: asserting `provenance_md`
+          # EXISTS left this green when the print was deleted from a renderer, because
+          # nothing ran a default-format main() and read its output. Now every
+          # collector is driven through both formats.
+          plant "the producer block dropped from one renderer's default format" "$C" \
+            python3 test/plant_edit.py delline "$S/scripts/psi_pull.py" '        print("\n" + provenance_md(prov))'
 
       - name: install.sh syntax check
         run: bash -n install.sh

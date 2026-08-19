@@ -190,7 +190,7 @@ than observations, and get tiered accordingly.
 
 **Seven scripts ship with the skill** — `preflight.py`, `gsc_pull.py`,
 `page_audit.py`, `url_inspection.py`, `agent_surface.py`, `psi_pull.py` and
-`sitemap_pull.py`. Their invocations, and the **four traps that decide whether a
+`sitemap_audit.py`. Their invocations, and the **four traps that decide whether a
 finding is real** — rendered vs server HTML, the JSON array shape, truncation
 dropping count-based findings, and the evidence tier that enters triage where
 severity does not — are in [scripts.md](references/scripts.md).

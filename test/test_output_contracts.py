@@ -36,8 +36,11 @@ from __future__ import annotations
 import contextlib
 import importlib.util
 import io
+import json
 import os
+import re
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(ROOT, "plugins", "seo-aeo-audit", "skills", "seo-aeo-audit", "scripts")
@@ -287,6 +290,219 @@ _honest = _good.replace("| E content value | unlooked |  |",
 check(pre.validate_coverage(_honest) == [],
       f"an honest partial row must pass; got {pre.validate_coverage(_honest)}")
 
+# ── 8. every payload names the execution that produced it ─────────────────────
+#
+# M-32 asks the proof to identify the execution behind it; M-08 asks every proof to
+# be scoped, versioned and perishable. Nothing here emitted any of it — no version,
+# no timestamp, no run id — so a three-month-old audit was indistinguishable from
+# today's, in the family's most perishable evidence.
+#
+# Six properties, and each is a way this could ship and still not work: the field set
+# is closed, every field is present even when unavailable, nothing is guessed to look
+# complete, a credential never reaches the block, the block is in the DEFAULT format
+# too, and the checker refuses every way the block can lie.
+
+_TMP = tempfile.mkdtemp(prefix="seo-aeo-contracts-")
+
+sm = load("sitemap_audit")
+gsc = load("gsc_pull")
+COLLECTORS = (("preflight", pre), ("page_audit", pa), ("psi_pull", psi),
+              ("sitemap_audit", sm), ("url_inspection", ui),
+              ("agent_surface", ags), ("gsc_pull", gsc))
+
+_manifest = json.load(open(os.path.join(ROOT, "package.json"), encoding="utf-8"))["version"]
+
+for _name, _mod in COLLECTORS:
+    _fn = getattr(_mod, "provenance", None)
+    if _fn is None:
+        failures.append(f"{_name}.py defines no provenance() — its payload cannot say which "
+                        f"execution produced it, and a finding lifted out of it reaches a "
+                        f"ticket with no way back to the run")
+        continue
+    _p = _fn(f"{_name}.py", ["--origin", "https://e.com"], "origin https://e.com")
+    check(tuple(_p) == pre.PRODUCER_FIELDS,
+          f"{_name}.provenance must emit exactly PRODUCER_FIELDS in order; got {tuple(_p)}")
+    check(all(str(_p.get(f, "")).strip() for f in pre.PRODUCER_FIELDS),
+          f"{_name}.provenance left a field empty — a blank reads the same whether the "
+          f"value was unavailable or nobody looked")
+    check(_p.get("skill") == f"seo-aeo-audit@{_manifest}",
+          f"{_name}.provenance says {_p.get('skill')!r}; package.json says {_manifest} — a "
+          f"producer block naming a version that never ran is worse than one naming none")
+    check(_p.get("script") == f"{_name}.py",
+          f"{_name}.provenance stamped {_p.get('script')!r} — a payload carrying another "
+          f"script's name is worse than an unstamped one")
+    check(re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", str(_p.get("observed_at", ""))),
+          f"{_name}.provenance observed_at is {_p.get('observed_at')!r}, not a UTC stamp — the "
+          f"one field that decides whether the report has expired cannot be free text")
+    # Nothing guessed to look complete. Unset is the normal case and says so BY NAME.
+    for _f, _var, _ in pre.PRODUCER_ENV:
+        check(str(_p.get(_f, "")).startswith("unavailable: ") and _var in str(_p.get(_f, "")),
+              f"{_name}.provenance filled {_f!r} with {_p.get(_f)!r} while {_var} is unset — a "
+              f"harness-owned field is reported unavailable and names the variable, never "
+              f"inferred. `model` least of all: the wrong vendor id is worse than none")
+    # ...and it is read from the environment when the harness DOES supply it.
+    os.environ[pre.PRODUCER_ENV[0][1]] = "agent-42"
+    try:
+        check(_fn(f"{_name}.py", [])[pre.PRODUCER_ENV[0][0]] == "agent-42",
+              f"{_name}.provenance ignores {pre.PRODUCER_ENV[0][1]} when it IS set — the "
+              f"field would then read unavailable in the one case it is available")
+    finally:
+        del os.environ[pre.PRODUCER_ENV[0][1]]
+    # A credential on the command line never reaches a block that gets emailed.
+    _red = _fn(f"{_name}.py", ["--url", "u", "--key", "SEKRIT", "--key=SEKRIT2"])["args"]
+    check("SEKRIT" not in " ".join(_red) and "SEKRIT2" not in " ".join(_red),
+          f"{_name}.provenance echoed a --key value into args: {_red}")
+    check(_red.count("<redacted>") + sum("<redacted>" in a for a in _red) >= 2,
+          f"{_name}.provenance must redact BOTH --key spellings; got {_red}")
+    # The block reaches the default format, not only --format json. This bundle has
+    # shipped the other shape: four gsc_pull analyses were json-only while `text` was
+    # the documented invocation.
+    _md = getattr(_mod, "provenance_md", None)
+    if _md is None:
+        failures.append(f"{_name}.py defines no provenance_md() — the block would exist "
+                        f"only in JSON, and the deliverable is markdown")
+        continue
+    _rendered = _md(_p)
+    check(pre.PROVENANCE_HEADER in _rendered,
+          f"{_name}.provenance_md must emit the declared table header")
+    _stray = [l for l in _rendered.split("\n")[2:]
+              if l.strip() and not (l.startswith("|") and l.rstrip().endswith("|"))]
+    check(not _stray, f"{_name}.provenance_md must emit only well-formed rows; got {_stray[:2]}")
+
+# ── 8b. the block reaches the DEFAULT format of every collector's main() ─────
+#
+# Asserting that `provenance_md` exists is not asserting that anything calls it, and
+# the difference was measured: deleting `print(provenance_md(prov))` from a renderer
+# left this file green. Every collector is driven through its own main() here, with
+# its network stubbed, and its default-format output is read.
+_stub_spec = os.path.join(_TMP, "spec.json")
+with open(_stub_spec, "w", encoding="utf-8") as _fh:
+    json.dump({"openapi": "3.1.0", "info": {"title": "x", "version": "1"},
+               "paths": {"/a": {"get": {}}}}, _fh)
+_stub_sitemap = os.path.join(_TMP, "sitemap.xml")
+with open(_stub_sitemap, "w", encoding="utf-8") as _fh:
+    _fh.write('<?xml version="1.0" encoding="UTF-8"?>\n'
+              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+              '<url><loc>https://e.com/a</loc></url>'
+              '<url><loc>https://e.com/b</loc></url></urlset>\n')
+
+psi.fetch = lambda *a, **kw: {"lighthouseResult": {
+    "categories": {"performance": {"score": 0.9}}, "fetchTime": "2026-08-10T00:00:00Z"}}
+ui.access_token = lambda: "stub-token"
+ui.inspect = lambda *a, **kw: {"inspectionResult": {"indexStatusResult": {
+    "verdict": "PASS", "coverageState": "Submitted and indexed",
+    "googleCanonical": "https://e.com/a", "userCanonical": "https://e.com/a"}}}
+gsc.access_token = lambda: "stub-token"
+gsc.call = lambda path, *a, **kw: (
+    {"siteEntry": [{"siteUrl": "sc-domain:e.com", "permissionLevel": "siteOwner"}]}
+    if path == "/sites" else {"sitemap": []})
+gsc.query = lambda *a, **kw: []
+
+# `.invalid` is reserved and resolves nowhere, so preflight's probes fail at the
+# resolver and no request leaves the machine — the same offline handle SE-01 used.
+_DEFAULT_RUNS = (
+    ("preflight", pre, ["--origin", "https://example.invalid", "--skip-psi"]),
+    ("page_audit", pa, ["--file", os.path.join(ROOT, "test", "fixtures", "good-page.html"),
+                        "--base-url", "https://e.com/x"]),
+    ("psi_pull", psi, ["--url", "https://e.com/a"]),
+    ("sitemap_audit", sm, ["--file", _stub_sitemap]),
+    ("url_inspection", ui, ["--site", "sc-domain:e.com", "--urls", "https://e.com/a"]),
+    ("agent_surface", ags, ["--openapi-file", _stub_spec]),
+    ("gsc_pull", gsc, ["--site", "sc-domain:e.com"]),
+)
+check(len(_DEFAULT_RUNS) == len(COLLECTORS),
+      f"every collector must be driven through its default format; {len(_DEFAULT_RUNS)} "
+      f"runs against {len(COLLECTORS)} collectors")
+for _name, _mod, _argv in _DEFAULT_RUNS:
+    _buf = io.StringIO()
+    with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(io.StringIO()):
+        _mod.main(_argv)
+    _out = _buf.getvalue()
+    check(pre.PROVENANCE_HEADER in _out,
+          f"{_name}.py prints no producer block in its DEFAULT format — the deliverable "
+          f"is markdown, and a block that exists only under `--format json` is a block "
+          f"the auditor pasting evidence never sees")
+    check(f"| script | `{_name}.py` |" in _out,
+          f"{_name}.py's default-format block does not name {_name}.py as its script")
+    # And the JSON path carries it under the documented key.
+    _buf = io.StringIO()
+    with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(io.StringIO()):
+        _mod.main(_argv + ["--format", "json"])
+    _payload = json.loads(_buf.getvalue())
+    # page_audit emits an ARRAY by documented contract, so the block rides on each
+    # element rather than wrapping it — an envelope would break `jq '.[].url'`.
+    _blocks = ([e.get("producer") for e in _payload] if isinstance(_payload, list)
+               else [_payload.get("producer")])
+    check(_blocks and all(isinstance(b, dict) for b in _blocks),
+          f"{_name}.py --format json carries no `producer` block")
+    check(all(tuple(b) == pre.PRODUCER_FIELDS for b in _blocks if isinstance(b, dict)),
+          f"{_name}.py --format json emits a producer block whose fields are not "
+          f"PRODUCER_FIELDS")
+
+# A hostile value cannot break the table it is rendered into — the same defect the
+# five _flat homes above exist for, in a block two of the seven scripts render
+# without an _flat to call.
+_hostile_md = pre.provenance_md(pre.provenance("preflight.py", [HOSTILE], HOSTILE))
+check(all(l.startswith("|") and l.rstrip().endswith("|")
+          for l in _hostile_md.split("\n")[2:] if l.strip()),
+      "provenance_md must survive a value carrying newlines and pipes")
+check(len(max(_hostile_md.split("\n"), key=len)) < 400,
+      "provenance_md must cap a runaway value")
+
+# The report block: seeded, and accepted by the checker a filled-in report faces.
+_prov = pre.provenance("preflight.py", ["--origin", "https://e.com"],
+                       pre.scope_of(None, "https://e.com"))
+_block = pre.render_provenance(_prov)
+check(pre.validate_provenance(_block) == [],
+      f"the seeded provenance block must satisfy its own checker; got "
+      f"{pre.validate_provenance(_block)}")
+check("--format provenance" in _block,
+      "the seeded block must carry the command that reproduces it — a block a human "
+      "types after the run is automation debt, and observed_at then records when "
+      "somebody remembered")
+for _n, _ in pre.INVALIDATORS:
+    check(_n in _block, f"the provenance block must name the {_n!r} invalidator — a proof "
+                        f"with no stated expiry reads as permanent")
+
+# `--format provenance` exits 0 and probes nothing, so seeding never waits on a
+# PageSpeed round trip.
+check(silently(pre.main, ["--origin", "https://example.invalid",
+                          "--format", "provenance"]) == 0,
+      "--format provenance must exit 0")
+
+# Every way the block can lie is refused.
+for _label, _bad, _needle in (
+    ("no provenance section at all", "# an audit with findings and no producer\n", "Provenance"),
+    ("a field dropped from the set",
+     "\n".join(l for l in _block.split("\n") if not l.startswith("| observed_at ")),
+     "observed_at"),
+    ("a blank value cell",
+     _block.replace(f"| skill | `{_prov['skill']}` |", "| skill |  |", 1), "blank"),
+    ("observed_at as free text",
+     # `.get`, because the plant one row up removes this very field and a KeyError
+     # here would replace a named refusal with a traceback — the shape SE-01 named
+     # when a plant emptied a file instead of editing it.
+     _block.replace(_prov.get("observed_at", "1970-01-01T00:00:00Z"), "last quarter", 1),
+     "observed_at"),
+    ("an invalidator dropped",
+     "\n".join(l for l in _block.split("\n") if not l.startswith("| **policy**")), "policy"),
+    ("the seeding command removed",
+     _block.replace("--format provenance", "by hand", 1), "automation debt"),
+):
+    _errs = pre.validate_provenance(_bad)
+    check(_errs != [], f"validate_provenance must refuse {_label}")
+    check(any(_needle in e for e in _errs),
+          f"the refusal of {_label} must name {_needle!r}; got {_errs[:2]}")
+
+# Both skeletons carry a block a reader can act on — the seeding command, every
+# field name and every invalidator — without carrying values it cannot have yet.
+for _rel in ("templates/audit-report.template.md",
+             "plugins/seo-aeo-audit/skills/seo-aeo-audit/references/deliverable-templates.md"):
+    _txt = open(os.path.join(ROOT, _rel), encoding="utf-8").read()
+    check(pre.validate_provenance(_txt) == [],
+          f"{_rel}: {pre.validate_provenance(_txt)}")
+
+
 if failures:
     print("FAIL: output contracts")
     for f in failures:
@@ -294,4 +510,7 @@ if failures:
     raise SystemExit(1)
 print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
       "denominator, exit status from the same predicate the report uses, every "
-      "emitted severity orderable, coverage vocabulary closed and seeded)")
+      "emitted severity orderable, coverage vocabulary closed and seeded, "
+      f"provenance in all {len(COLLECTORS)} collectors — closed field set, nothing "
+      "guessed, credentials redacted, default format included, checker refuses six "
+      "ways to lie)")

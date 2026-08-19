@@ -11,6 +11,7 @@ an agent cannot know to open a file about a trap it has not hit yet.
 - [The gates, and which screen each one sends you to](#the-gates-and-which-screen-each-one-sends-you-to)
 - [Why a green preflight is not a covered step](#why-a-green-preflight-is-not-a-covered-step)
 - [Seeding the report's coverage table](#seeding-the-reports-coverage-table)
+- [Seeding the report's provenance block](#seeding-the-reports-provenance-block)
 
 ## What it probes
 
@@ -107,3 +108,58 @@ screen you open next — which is why it is worth carrying into a client documen
 different asks. `validate_coverage()` refuses a gate outside `COVERAGE_GATES`, and
 `test/validate.py` refuses a probe that emits one the tuple does not declare, so the
 two cannot drift.
+
+## Seeding the report's provenance block
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com --format provenance
+```
+
+Prints the `## Provenance` section of `docs/seo/audit-<YYYY-MM-DD>.md`. It probes
+nothing — the block is about the execution, not about the site — so seeding it never
+waits on a PageSpeed round trip.
+
+It exists because **no script emitted a version, a timestamp or an input set**, so a
+deliverable could not say when it was produced, by what version, or against what
+arguments. That matters more here than in most places: an SEO audit is the most
+perishable evidence this skill makes — a crawl result expires the moment the site or
+the algorithm moves — and a three-month-old audit was indistinguishable from today's.
+
+| field | where it comes from |
+|---|---|
+| `skill` | `SKILL_VERSION` in the script, which `test/validate.py` holds equal to the manifests |
+| `script` | the instrument that produced the payload |
+| `observed_at` | UTC, `2026-08-19T12:34:56Z`. The field that decides whether the report has expired |
+| `runtime` | the interpreter and platform that ran it |
+| `args` | the argv, with every credential flag's value replaced by `<redacted>` |
+| `scope` | the RESOLVED input set — the URLs, not `--urls-file urls.txt`, which names a file nobody can reconstruct six months later |
+| `actor` · `model` · `trace` | `SEO_AEO_AUDIT_ACTOR` / `_MODEL` / `_TRACE`, exported by the calling harness |
+
+**A field is never deleted and never guessed.** The last three are the harness's to
+supply and unset is the normal case: each then reads `unavailable: <VAR> is not set by
+this harness`, by name. A field that vanishes when unavailable is indistinguishable
+from one nobody checked — the same defect the coverage vocabulary above removed from
+the `Status` column. `model` least of all is inferred: the wrong vendor id sends an
+investigation to a model that never ran, which is worse than saying nothing.
+
+**Every collector carries the same block**, printed under its markdown or text output
+and present in `--format json` under `producer` — one per array element for
+`page_audit.py`, whose JSON is an array by contract. So a finding lifted out of one
+payload and pasted into the report can still be traced back to the run that produced
+it. `validate_provenance()` in the same script reads a rendered report and refuses a
+blank value, a missing field, an `observed_at` that is not a timestamp, a missing
+invalidator, or a block with no seeding command.
+
+**What invalidates the report** is stated, not implied — four rows, the shape
+`task-pipeline` ships for its verification ledger:
+
+| invalidator | what moved |
+|---|---|
+| `site` | the audited pages, their markup, `robots.txt` or the sitemap |
+| `index` | the engine re-crawled or re-ranked; its own state, not the site's |
+| `instrument` | this skill, its probes or its access — a later version looks elsewhere |
+| `policy` | a core or AI-surface update changed the rules the evidence was read under |
+
+Invalidation is not deletion. An overtaken audit is not wrong — it is true about the
+site it observed, and it stays; re-auditing writes a new dated file and names which
+row applies.

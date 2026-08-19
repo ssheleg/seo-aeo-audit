@@ -13,6 +13,7 @@ run.
 - [sitemap_audit.py](#sitemap_auditpy) — declared URLs clustered into template families
 - [psi_pull.py](#psi_pullpy) — field and lab, kept apart on purpose
 - [agent_surface.py](#agent_surfacepy) — track K: what a machine finds when it arrives alone
+- [Every payload names the run that produced it](#every-payload-names-the-run-that-produced-it)
 
 ## gsc_pull.py
 
@@ -171,6 +172,29 @@ A run where every request failed at the network layer exits `1`: that report
 measures the connection, not the site.
 
 ---
+
+## Every payload names the run that produced it
+
+All seven scripts stamp their output with a **producer block** — `skill` (the tool
+version), `script`, `observed_at` (UTC), `runtime`, `args` (credentials redacted),
+`scope` (the resolved input set), and `actor` · `model` · `trace` from the calling
+harness. It is present in the default markdown or text output *and* under
+`--format json` as `producer` — one per array element for `page_audit.py`, whose JSON
+is an array by contract.
+
+Three consequences worth knowing before you paste a payload into a report:
+
+- **A field is never blank and never guessed.** `actor`, `model` and `trace` come
+  from `SEO_AEO_AUDIT_ACTOR` / `_MODEL` / `_TRACE`; unset is the normal case and reads
+  `unavailable: <VAR> is not set by this harness`. That is not a gap to fill in by
+  hand — `model` in particular is never inferred.
+- **`psi_pull.py --key` is redacted.** Both `--key V` and `--key=V` print as
+  `<redacted>`, because a producer block ends up in a deliverable somebody emails.
+- **`observed_at` is what expires the evidence.** The report's own `## Provenance`
+  block carries it alongside the four invalidators — `site`, `index`, `instrument`,
+  `policy` — and is seeded, never typed:
+  `preflight.py --origin <origin> --format provenance`. The field set, the
+  invalidators and the checker live in one place: [preflight.md](preflight.md#seeding-the-reports-provenance-block).
 
 ## The inventory, and the four traps that decide whether a finding is real
 

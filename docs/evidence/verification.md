@@ -65,6 +65,61 @@ clear. The one
 `test-only` row is the never-writes-`observed` property: it is asserted, and nobody has
 yet watched an auditor fill this table in on a live engagement.
 
+## 2026-08-19 — provenance in every payload (conformance row SE-02)
+
+**Not shipped.** No version bumped, no tag, no CHANGELOG release section: the
+changelog entry here is a release artifact, and a section under `v0.22.0` would claim
+this was in a package already on npm. The rows below are what the gate and the plants
+confirmed on the working tree, committed locally.
+
+**A correction to the section above, appended rather than edited** (that is what
+`docs/AGENT_SYNC.md` prescribes, and the ledger's own perishability is SE-03's row):
+SE-01's block says it was "not committed either". It was — `265dfa5`. The umbrella
+index cleared after that note was written.
+
+The defect: **no output carried provenance.**
+`grep -n "__version__\|observed_at\|timestamp" scripts/*.py` returned nothing across
+all seven scripts, and the report skeleton had no producer block. So a deliverable
+could not say when it was produced, by what version, or against what arguments — in
+the family's **most perishable** evidence. A crawl result expires the moment the site
+or the algorithm moves, and a three-month-old audit was indistinguishable from
+today's. M-32 (`manifesto.md:206-208`) asks the proof to identify the execution behind
+it; M-08 asks every proof to be scoped, versioned and perishable.
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| Every `--format json` payload carries a `producer` block | one per object payload; one per **array element** for `page_audit.py`, whose array shape is a documented contract (`page_audit.py:17`) that `jq '.[].url'` depends on | **observed** (offline) | all seven driven through both formats in `test_output_contracts.py` against stubbed probes and `.invalid` hosts — no network. `producer` is the first key of every object payload and present on every array element, and its keys equal `PRODUCER_FIELDS` in order |
+| The field set is closed and has one home | `PRODUCER_FIELDS` in `preflight.py`; `validate_provenance()` is its only reader | **planted** | CI plant `observed_at dropped from the closed field set` edits all seven copies and the validator names the missing field. The same shape SE-01 gave `COVERAGE_STATUS`, deliberately — a second mechanism beside it would be two vocabularies for one report |
+| Nothing is guessed to look complete | `actor` · `model` · `trace` read `SEO_AEO_AUDIT_ACTOR` / `_MODEL` / `_TRACE` and otherwise print `unavailable: <VAR> is not set by this harness` | **planted** + **observed** | run with all three unset (the normal case) and with `SEO_AEO_AUDIT_ACTOR=agent-42`, so the field is proven to report *and* to resolve. CI plant `a harness-owned field guessed instead of reported unavailable` replaces the sentence with a literal id and the contract test names each of the three. **`model` is never inferred** — the wrong vendor id sends an investigation to a model that never ran, which is worse than saying nothing |
+| A field is never deleted when unavailable | every field in `PRODUCER_FIELDS` prints on every run | **planted** | a field that vanishes when unavailable is indistinguishable from one nobody checked. `validate_provenance` refuses a blank value cell and a missing row; both are planted |
+| `observed_at` is a UTC timestamp, not free text | `time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())`, and the checker matches the shape | **planted** | two plants: the field removed, and rewritten as `"recently"`. This is the field the whole row turns on — without it nothing can say the report has expired |
+| The audit is scoped to its RESOLVED inputs, not its flags | `scope`, computed per script: the URL set, the property and its windows, the sitemap sources, the local file | **observed** | `--urls-file urls.txt` names a file nobody can reconstruct later, so `scope` carries the URLs. Read on all seven: `2 URL(s) from 1 sitemap(s): /tmp/sm.xml`, `property sc-domain:e.com · recent 2026-05-19..2026-08-17 · history 2025-04-24..2026-08-17`, `local file test/fixtures/good-page.html as https://e.com/x` |
+| A credential on the command line never reaches the block | `SECRET_FLAGS` + `redact()`; both `--key V` and `--key=V` | **planted** + **observed** | `psi_pull.py --key SUPERSECRET` was run in both formats and the string appears in neither. CI plant `a --key value echoed into the producer block` swaps `redact(argv)` for `list(argv)`. A producer block ends up in a deliverable somebody emails, and handling one spelling is the same as handling neither |
+| The block reaches the DEFAULT format, not only JSON | `provenance_md()` in the shared block; every renderer prints it | **planted** + **observed** | **the guard was watched under-reporting first.** Asserting `provenance_md` *exists* left the suite green when the print was deleted from a renderer, because nothing ran a default-format `main()` and read its output. Now all seven are driven through their default format and the output is read; the plant deletes one `print` line and is named. `gsc_pull.py` is where this rule was learned — four of its analyses were JSON-only while `text` is the documented invocation |
+| The emitter is one function, not seven | the shared block is copied verbatim into all seven scripts and compared **byte for byte** | **planted** | a copy rather than an import because `bin/seo-aeo-audit.js` installs `scripts/` alone into `~/.claude/skills/` — there is nothing to import from. Same reasoning as `_flat`'s five homes. CI plant `the shared block edited in one copy only` changes `SECRET_FLAGS` in `gsc_pull.py` and the diff is named against the reference copy |
+| Every script calls it under its own name | `validate.py` requires `provenance("<its own file>", …)` in each | **planted** | two plants: the call removed, and `agent_surface.py` stamping `preflight.py`. A payload carrying another script's name is worse than an unstamped one, and a shared block nobody invokes passes every structural check |
+| `SKILL_VERSION` cannot name a version that never ran | seven literals, each held equal to `plugin.json` | **planted** | a runtime manifest lookup is impossible in the installed layout, so the price is seven more homes for one semver and a guard that names each file that disagrees. CI plant drops all seven to `0.19.0`. `DOCMAP.md` and `CONTRIBUTING.md` both record that a release bumps them with the manifests |
+| The report says what would expire it | `INVALIDATORS` — `site` · `index` · `instrument` · `policy` — in both skeletons and the seeded block | **planted** | `task-pipeline`'s verification-ledger shape (code / dependency / environment / policy) mapped onto this domain rather than redesigned; the mapping table is in `preflight.py` above `INVALIDATORS`. Invalidation is not deletion: an overtaken audit is true about the site it observed and stays. Plant drops the `policy` row from both skeletons |
+| The block is seeded, never typed | `preflight.py --format provenance`, carried in both skeleton homes | **planted** + **observed** | run: exits 0 and probes nothing, because the block is about the execution and making a caller wait on a PageSpeed round trip is how a seeding step gets skipped. Plants: the command removed from both skeletons, and a field name dropped from the list they publish |
+| Both skeleton homes carry it, byte for byte | `templates/audit-report.template.md` and `references/deliverable-templates.md` | **planted** | the three skeleton plants edit **both** homes on purpose, so the provenance guard fires rather than the pre-existing template-drift check |
+| B-17: `SECURITY.md`'s counted claims are measured | script count in five sentences, one row per script, and the "prints **N** lines" claim | **planted** + **observed** | measured on the tree: **seven scripts and 26 grep lines** against a stated six and 22 — pre-existing and identical at HEAD, as filed. Now seven and **33**, because the published pattern also had to match `os.environ` (which the producer block reads) or the "whole surface" sentence would be true of a smaller pattern than it named. The regex is read **out of** `SECURITY.md` and run, so narrowing it breaks the count it claims — four plants |
+| B-17's neighbour: `SKILL.md` named a script that has never existed | the inventory paragraph said `sitemap_pull.py`; the file is `sitemap_audit.py` | **planted** + **observed** | found while counting for B-17. The guard reads the inventory sentence both ways — a name that does not ship, and a script the paragraph omits. `audit_skill.py --house` re-measured after the rename: body unchanged at **4994** tokens, so B-19's six tokens of headroom are intact and nothing was added to `SKILL.md` |
+| The `sed -i` self-test measures a call in COMMAND POSITION | `_sed_call` widened to `do` / `then` / `else` / `{`; the plant anchors on the last line-initial call site | **observed** | found by running the whole extracted set: SE-02's new plants moved the last `plant_edit.py sub` inside a `for … ; do …; done`, the guard did not read that as a command position, and the step reported a **healthy guard as broken**. Both halves fixed — the guard genuinely missed a live shape, and the step's "last occurrence" assumption is now stated as what it needs |
+| `plant_edit.py sub` accepts a count from a shell | `count = int(count)` | **observed** | a numeric count arrives as a string and `str.replace` refuses it, which this file reported as *"wrong number of arguments"* — sending the reader to the argv instead of the type. Two SE-02 plants need the count, and both were dead until this was fixed |
+| Every negative self-test still behaves as designed | the whole set, extracted from `validate.yml` and re-run | **observed** | parsed with `yaml.safe_load` and run under bash: **64 behaved as designed, 0 did not** — 39 `plant()` calls (18 new) plus 25 standalone steps. Counted by parsing the workflow, not carried over: this file's own history is a release whose notes said 71 fixtures, whose record said 74, and whose count was 75 |
+| The gate is green | `npm test` | **observed** | exit 0; `PASS: output contracts (… provenance in all 7 collectors — closed field set, nothing guessed, credentials redacted, default format included, checker refuses six ways to lie)` |
+
+**Counts, by parsing the table above: 20 rows — 6 observed · 8 planted · 6 planted+observed.** Counted, not carried: the first draft of this line said 19 / 7 / 8 / 4 and every number was wrong, which is the defect `CLAUDE.md`'s Evidence section exists for.
+
+**Not confirmed.** No provenance block has been read by a client on a live engagement,
+so nothing says the four invalidators are the four an auditor actually reaches for.
+`actor`, `model` and `trace` have never been exported by a real harness — the
+resolve-from-environment path is exercised with a fabricated value in a test, and no
+harness on this machine sets `SEO_AEO_AUDIT_*`. And `observed_at` is the moment the
+payload was emitted, not the moment each URL was fetched: on a long `--url-list` crawl
+those differ by the length of the run, which the docstring says out loud rather than
+implying a precision it does not have.
+
 ## v0.22.0 — the Cloudflare row, and a body 18% over budget
 
 | REQ | What shipped | Confirmed | Evidence |

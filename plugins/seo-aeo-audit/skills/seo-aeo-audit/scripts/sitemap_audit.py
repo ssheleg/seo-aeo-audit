@@ -23,6 +23,16 @@ Usage:
   sitemap_audit.py --file sitemap.xml --format json
   sitemap_audit.py --url https://example.com/sitemap_index.xml --max-maps 20
 
+Every output carries a **producer block** — `skill` (this tool's version), `script`,
+`observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
+resolved input set), and `actor` / `model` / `trace` from `SEO_AEO_AUDIT_ACTOR`,
+`_MODEL`, `_TRACE`. It is present in the default output and under `--format json` as
+`producer`. A field the harness did not supply reads `unavailable: <VAR> is not set by
+this harness` — never guessed, and never dropped, because a field that vanishes when
+unavailable is indistinguishable from one nobody checked. `observed_at` is the field
+that decides whether a finding has expired; the report's own `## Provenance` block adds
+the four invalidators (see references/preflight.md).
+
 Exit codes: 0 = ran, 1 = usage/fetch/parse error.
 """
 from __future__ import annotations
@@ -30,13 +40,122 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections import Counter
 from urllib.parse import urlparse
+
+
+# ── provenance: the execution that produced this payload ── shared block ──────
+# Copied verbatim into all seven scripts and compared byte for byte by
+# `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
+# with no shared module, and an import of one does not exist in the installed layout
+# (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
+# doctrine behind the field set lives above this block in preflight.py. Never edit
+# one copy — the guard fails all seven.
+SKILL_VERSION = "0.22.0"
+
+# The fields no python process can establish, with the variable that would supply
+# each. They print by NAME on every run, because a field that vanishes when
+# unavailable is indistinguishable from one nobody checked.
+PRODUCER_ENV = (
+    ("actor", "SEO_AEO_AUDIT_ACTOR", "who or what invoked the run"),
+    ("model", "SEO_AEO_AUDIT_MODEL", "the model behind the agent — never inferred"),
+    ("trace", "SEO_AEO_AUDIT_TRACE", "the id linking these actions to a run"),
+)
+
+# The closed field set, in render order. A payload missing one of these is refused
+# by `preflight.validate_provenance`.
+PRODUCER_FIELDS = ("skill", "script", "observed_at", "runtime", "args", "scope",
+                   "actor", "model", "trace")
+
+# Flags whose VALUE is a credential. `psi_pull.py --key <secret>` is the live case:
+# echoing argv verbatim would write an API key into a deliverable somebody emails.
+SECRET_FLAGS = ("--key",)
+
+# One home for the block's table shape, read by every renderer, by
+# `preflight.validate_provenance`, and by `test/validate.py` when it looks for the
+# block in both report skeletons.
+PROVENANCE_HEADER = "| Field | Value |"
+
+
+def redact(argv: list[str]) -> list[str]:
+    """The argv as given, with every credential flag's value removed.
+
+    Both spellings, because handling one is the same as handling neither: `--key V`
+    hides the following token, `--key=V` hides the tail.
+    """
+    out: list[str] = []
+    hide = False
+    for a in argv:
+        if hide:
+            out.append("<redacted>")
+            hide = False
+            continue
+        head, sep, _ = a.partition("=")
+        if head in SECRET_FLAGS:
+            out.append(f"{head}=<redacted>" if sep else head)
+            hide = not sep
+        else:
+            out.append(a)
+    return out
+
+
+def provenance(script: str, argv: list[str], scope: str = "") -> dict:
+    """Which execution produced this payload: what ran, when, on what, about what.
+
+    Every field in `PRODUCER_FIELDS` is present on every run. A value this process
+    cannot establish reads `unavailable: <VAR> is not set by this harness` — never a
+    guess and never nothing. `model` in particular is not inferred: naming the wrong
+    vendor id is worse than saying nothing.
+    """
+    v = sys.version_info
+    out = {
+        "skill": f"seo-aeo-audit@{SKILL_VERSION}",
+        "script": script,
+        "observed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "runtime": f"{sys.implementation.name} {v.major}.{v.minor}.{v.micro} "
+                   f"on {sys.platform}",
+        "args": redact(argv),
+        "scope": scope or "unavailable: this run resolved no input set to record",
+    }
+    for _name, _var, _what in PRODUCER_ENV:
+        _val = os.environ.get(_var, "").strip()
+        out[_name] = _val or f"unavailable: {_var} is not set by this harness ({_what})"
+    return out
+
+
+def provenance_md(prov: dict) -> str:
+    """The producer block as a markdown table — one row per field, always.
+
+    Emitted in the DEFAULT output format too, not only under `--format json`. This
+    bundle has already shipped the other shape: four `gsc_pull.py` analyses were
+    computed into the payload and printed only in JSON while `text` was the
+    documented invocation, so an agent running the documented command never saw
+    them. A provenance block a human never reads is a provenance block that does
+    not exist.
+    """
+    lines = ["## Provenance — the execution that produced this", "",
+             PROVENANCE_HEADER, "|---|---|"]
+    for f in PRODUCER_FIELDS:
+        v = prov.get(f, "")
+        if isinstance(v, list):
+            v = " ".join(v)
+        # Flattened here rather than through `_flat`: only five of the seven scripts
+        # define one, and a shared block resting on a name two of its homes lack
+        # would crash in exactly the two least-exercised renderers.
+        cell = " ".join(str(v).split()).replace("|", "\\|")
+        if len(cell) > 300:
+            cell = cell[:299].rstrip() + "…"
+        lines.append(f"| {f} | `{cell}` |")
+    return "\n".join(lines)
+# ── end provenance shared block ──────────────────────────────────────────────
+
 
 UA = "seo-aeo-audit/sitemap_audit (+https://github.com/ssheleg/seo-aeo-audit)"
 # A sitemap file may hold 50,000 URLs and 50 MB uncompressed (sitemaps.org).
@@ -263,10 +382,16 @@ def main(argv: list[str]) -> int:
     a["sitemaps_skipped"] = skipped
     a["urls_truncated"] = truncated
     f = findings(a)
+    prov = provenance("sitemap_audit.py", argv,
+                      f"{len(urls)} URL(s) from {len(sources)} sitemap(s): "
+                      + ", ".join(sources[:3])
+                      + (f" (+{len(sources) - 3} more)" if len(sources) > 3 else ""))
     if args.format == "json":
-        print(json.dumps({"sources": sources, "analysis": a, "findings": f}, indent=2))
+        print(json.dumps({"producer": prov, "sources": sources,
+                          "analysis": a, "findings": f}, indent=2))
     else:
         print(render_markdown(a, f, sources))
+        print("\n" + provenance_md(prov))
     return 0
 
 

@@ -460,6 +460,8 @@ _GUARD_FAMILIES = (
     "error flattening",
     "defect count",
     "coverage vocabulary",
+    "provenance",
+    "I/O surface",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -1262,6 +1264,209 @@ if _pre is not None:
     if not set(getattr(_pre, "NO_REASON_NEEDED", ())) <= {s.split(" ", 1)[0] for s in (_status or ())}:
         fail("preflight.py: NO_REASON_NEEDED names a status outside COVERAGE_STATUS")
 
+# ── every payload names the execution that produced it ───────────────────────
+# M-32: *when an agent produces the change, the proof should identify the execution
+# that produced it.* M-08: every proof is **scoped, versioned and perishable**.
+#
+# Nothing here emitted any of it — `grep -n "__version__\|observed_at\|timestamp"
+# scripts/*.py` returned nothing — so a deliverable could not say when it was
+# produced, by what version, or against what arguments. An SEO audit is the most
+# perishable evidence this family makes, and a three-month-old one was
+# indistinguishable from today's.
+#
+# Five things are checked, and each is a way the fix could ship and not work:
+#
+#   1. the field set is CLOSED and lives in one place (`preflight.PRODUCER_FIELDS`),
+#      the same shape SE-01 gave the coverage vocabulary;
+#   2. the emitter is byte-identical in all seven scripts. It is a copy rather than
+#      an import because these ship standalone — `bin/seo-aeo-audit.js` copies
+#      `scripts/` alone into `~/.claude/skills/`, so there is nothing to import from
+#      — and a copy nobody compares is seven versions of one function;
+#   3. every script CALLS it, naming itself. A shared block nobody invokes is dead
+#      code that passes every structural check;
+#   4. `SKILL_VERSION` agrees with the manifests. It is the one field that says which
+#      doctrine produced a finding, and a stale literal is worse than none: it names
+#      a version that never ran;
+#   5. both report skeletons publish every field, every invalidator and the command
+#      that seeds the block. A field a human types after the run is the automation
+#      debt the manifesto names at :283.
+_SCRIPTS_DIR = os.path.join(ROOT, SKILL_DIR, "scripts")
+_ALL_SCRIPTS = sorted(f for f in os.listdir(_SCRIPTS_DIR) if f.endswith(".py")) \
+    if os.path.isdir(_SCRIPTS_DIR) else []
+_PROV_RE = re.compile(
+    r"# ── provenance: the execution that produced this payload ── shared block ─+\n"
+    r".*?# ── end provenance shared block ─+\n", re.S)
+
+_prov_blocks = {}
+for _s in _ALL_SCRIPTS:
+    _src = open(os.path.join(_SCRIPTS_DIR, _s), encoding="utf-8").read()
+    _m = _PROV_RE.search(_src)
+    if not _m:
+        fail(f"{_s} carries no provenance shared block — its `--format json` payload "
+             f"cannot say which execution produced it, and a finding taken from it "
+             f"reaches a ticket with no way back to the run (M-32)")
+        continue
+    _prov_blocks[_s] = _m.group(0)
+    # 3. the block is called, and it names this script rather than a sibling's file.
+    if not re.search(rf'provenance\(\s*"{re.escape(_s)}"', _src):
+        fail(f"{_s} never calls provenance(\"{_s}\", …) — either the block is dead code "
+             f"or the payload is stamped with another script's name, which is worse than "
+             f"an unstamped one")
+
+if len(set(_prov_blocks.values())) > 1:
+    # Named as a diff against the alphabetically-first copy, because "seven copies
+    # disagree" sends nobody anywhere.
+    _ref = _prov_blocks[sorted(_prov_blocks)[0]]
+    _drifted = sorted(k for k, v in _prov_blocks.items() if v != _ref)
+    fail(f"the provenance shared block differs in {_drifted} from {sorted(_prov_blocks)[0]} "
+         f"— it is copied rather than imported because these ship standalone, so the only "
+         f"thing holding the seven together is this comparison")
+
+if _pre is not None:
+    _fields = getattr(_pre, "PRODUCER_FIELDS", None)
+    _penv = getattr(_pre, "PRODUCER_ENV", None)
+    _inval = getattr(_pre, "INVALIDATORS", None)
+    if not isinstance(_fields, tuple) or not _fields:
+        fail("preflight.py declares no PRODUCER_FIELDS — the producer block's field set "
+             "has no home, so nothing can say a payload is missing one")
+    elif not callable(getattr(_pre, "validate_provenance", None)):
+        fail("preflight.py exposes no validate_provenance() — the provenance block would "
+             "have no reader, which is the state SE-01 left the coverage table's checker "
+             "behind to avoid")
+    elif not isinstance(_inval, tuple) or len(_inval) < 2:
+        fail("preflight.py declares no INVALIDATORS — a proof with no stated expiry reads "
+             "as permanent, and that is the half of M-08 that matters most for a crawl "
+             "result")
+    else:
+        # 1. `observed_at` is the field the whole thing turns on: it is what makes the
+        #    proof perishable rather than merely stamped.
+        for _need in ("skill", "script", "observed_at", "args", "scope"):
+            if _need not in _fields:
+                fail(f"preflight.py: PRODUCER_FIELDS has no {_need!r} — without it a payload "
+                     f"cannot answer "
+                     f"{'when it was taken' if _need == 'observed_at' else 'what it is about'}")
+        # 2b. every harness-owned field is IN the field set and reports itself by name.
+        for _n, _var, _ in (_penv or ()):
+            if _n not in _fields:
+                fail(f"preflight.py: PRODUCER_ENV names {_n!r}, which is not in "
+                     f"PRODUCER_FIELDS — a field the renderer never prints")
+            if not _var.startswith("SEO_AEO_AUDIT_"):
+                fail(f"preflight.py: PRODUCER_ENV reads {_var!r} — a producer field is fed "
+                     f"from this skill's own namespace, never from a variable another tool "
+                     f"may set to something about itself")
+
+        # 4. the version literal against the manifests. Seven more homes for one
+        #    semver, and they are literals rather than a runtime lookup because the
+        #    installed layout carries no manifest to look in.
+        for _s, _blk in _prov_blocks.items():
+            _vm = re.search(r'^SKILL_VERSION = "([^"]+)"$', _blk, re.M)
+            if not _vm:
+                fail(f"{_s}: the provenance block declares no SKILL_VERSION")
+            elif plg_ver and _vm.group(1) != plg_ver:
+                fail(f"{_s}: SKILL_VERSION is {_vm.group(1)!r}, the manifests say "
+                     f"{plg_ver!r} — a producer block naming a version that never ran is "
+                     f"worse than one naming none. Bump all {len(_ALL_SCRIPTS)} scripts in "
+                     f"the same commit as the manifests")
+
+        # 5. both skeletons, against the checker a filled-in report faces
+        for _rel in ("templates/audit-report.template.md",
+                     f"{SKILL_DIR}/references/deliverable-templates.md"):
+            _p = os.path.join(ROOT, _rel)
+            if not os.path.isfile(_p):
+                continue
+            _txt = open(_p, encoding="utf-8").read()
+            for _err in _pre.validate_provenance(_txt):
+                fail(f"{_rel}: {_err}")
+
+# ── the I/O surface this file publishes is counted, not restated ──────────────
+# B-17: `SECURITY.md` said **six** scripts and that its I/O grep "prints **22** lines
+# and that is all of it", against a measured seven and 26, for four releases. Those
+# numbers are the whole point of that section — a reader consults it *because* they
+# will not read the code — and it is the same prose-count class already reconciled
+# above for the myth, play, Prowl and reference counts.
+#
+# The regex is read OUT OF the document and run, rather than copied here: a guard
+# with its own copy of the pattern proves that its copy agrees with its own count.
+_sec_path = os.path.join(ROOT, "SECURITY.md")
+if os.path.isfile(_sec_path) and _ALL_SCRIPTS:
+    _sec = open(_sec_path, encoding="utf-8").read()
+    _WORDS_UP = {6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+                 11: "eleven", 12: "twelve"}
+    _n_scripts = len(_ALL_SCRIPTS)
+    _word = _WORDS_UP.get(_n_scripts, str(_n_scripts))
+    for _pat, _what in (
+        (r"documentation plus \*\*(\S+?)\*\* small Python scripts", "the headline"),
+        (r"`scripts/\*\.py` — (\S+) of them", "the component table"),
+        (r"reproduces this\ntable for all (\S+)", "the measurement note"),
+        (r"anywhere in the (\S+) —", "the no-eval sentence"),
+        (r"I/O surface of all (\S+) scripts", "the verification command"),
+    ):
+        _m = re.search(_pat, _sec)
+        if not _m:
+            fail(f"SECURITY.md: {_what} no longer states the script count in a form this "
+                 f"check can read (expected /{_pat}/) — the number goes stale silently the "
+                 f"moment nothing reads it, which is exactly how B-17 happened")
+        elif _m.group(1).strip(".,") not in (_word, str(_n_scripts)):
+            fail(f"SECURITY.md: {_what} says {_m.group(1)!r} scripts, the directory holds "
+                 f"{_n_scripts} ({_word})")
+    # every script has a row in the per-script I/O table
+    for _s in _ALL_SCRIPTS:
+        if f"| `{_s}` |" not in _sec:
+            fail(f"SECURITY.md: no row for `{_s}` in the per-script I/O table — a script "
+                 f"absent from the table a reader trusts is an undisclosed surface")
+    # the documented grep, run
+    # The same class one document over: SKILL.md enumerates the bundled scripts by
+    # name, and named `sitemap_pull.py` — a file that has never existed — in the one
+    # paragraph an agent reads to learn what it can run. A count word beside a list of
+    # names is two claims, so both are measured.
+    _skill_txt2 = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
+    _inv = re.search(r"\*\*(\w+) scripts ship with the skill\*\*(.*?)\. ", _skill_txt2, re.S)
+    if not _inv:
+        fail("SKILL.md: no '**<N> scripts ship with the skill**' sentence — the script "
+             "inventory an agent reads to learn what it can run is unchecked")
+    else:
+        _claim = {"six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}.get(
+            _inv.group(1).lower())
+        if _claim != _n_scripts:
+            fail(f"SKILL.md says {_inv.group(1)!r} scripts ship, the directory holds "
+                 f"{_n_scripts}")
+        _named = set(re.findall(r"`([a-z_0-9]+\.py)`", _inv.group(2)))
+        for _bad in sorted(_named - set(_ALL_SCRIPTS)):
+            fail(f"SKILL.md names `{_bad}` among the bundled scripts and no such file "
+                 f"ships — an agent told to run it gets a missing-file error, which is "
+                 f"CLAUDE.md rule 3: a pointer that resolves is not the same as one that "
+                 f"answers")
+        for _missing in sorted(set(_ALL_SCRIPTS) - _named):
+            fail(f"SKILL.md's script inventory does not name `{_missing}`, which ships — "
+                 f"an instrument nobody is told about is an instrument nobody uses")
+
+    _gm = re.search(r'grep -rnE "([^"]+)"', _sec)
+    if not _gm:
+        fail("SECURITY.md: the I/O verification command no longer carries a "
+             "`grep -rnE \"…\"` pattern this check can run")
+    else:
+        try:
+            _io_re = re.compile(_gm.group(1))
+        except re.error as _e:
+            _io_re = None
+            fail(f"SECURITY.md: the published I/O regex does not compile in python "
+                 f"({_e}) — a reader is being handed a command that cannot run")
+        if _io_re is not None:
+            _io_lines = sum(
+                1 for _s in _ALL_SCRIPTS
+                for _l in open(os.path.join(_SCRIPTS_DIR, _s), encoding="utf-8")
+                if _io_re.search(_l))
+            _cm = re.search(r"prints \*\*(\d+) lines and that is all of it\*\*", _sec)
+            if not _cm:
+                fail("SECURITY.md: the I/O line count is no longer stated as "
+                     "'prints **N** lines and that is all of it' — nothing can compare it")
+            elif int(_cm.group(1)) != _io_lines:
+                fail(f"SECURITY.md says the I/O grep prints {_cm.group(1)} lines; running "
+                     f"the pattern it publishes over scripts/ gives {_io_lines}. That "
+                     f"sentence claims to be the WHOLE surface, so a low number reads as "
+                     f"an audited bundle and is not one")
+
+
 # HARD RULE: a SKILL.md may exist ONLY inside plugins/<plugin>/skills/<skill>/.
 for dirpath, dirnames, filenames in os.walk(ROOT):
     dirnames[:] = [d for d in dirnames if d not in (".git", "node_modules")]
@@ -1320,7 +1525,14 @@ if os.path.isfile(_wf):
     # the payload string of the plant that deliberately writes one. That is standing
     # instruction #7 — a mechanical sweep cannot tell a path used from a path discussed —
     # so the pattern anchors on command position instead.
-    _sed_call = re.compile(r"(?:^|&&|\|\||;)\s*sed\s+-i\b")
+    # `do`, `then` and `else` are command positions too, and the first version of this
+    # pattern missed them: `for f in …; do sed -i …; done` is a live call and read as
+    # prose. Found on 2026-08-19, when a new plant's call site moved inside such a loop
+    # and the sed self-test reported a healthy guard as broken. Still anchored — a
+    # bare `\bsed -i\b` flagged a step name, a comment, an `echo` and a payload string
+    # the moment it shipped.
+    _sed_call = re.compile(
+        r"(?:^|&&|\|\||;|\bdo\b|\bthen\b|\belse\b|\{)\s*sed\s+-i\b")
     _seds = [i + 1 for i, l in enumerate(_wf_text.split("\n")) if _sed_call.search(l)]
     if _seds:
         errors.append(
