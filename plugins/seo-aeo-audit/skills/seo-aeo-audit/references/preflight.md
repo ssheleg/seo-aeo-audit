@@ -10,6 +10,7 @@ an agent cannot know to open a file about a trap it has not hit yet.
 - [What it probes](#what-it-probes)
 - [The gates, and which screen each one sends you to](#the-gates-and-which-screen-each-one-sends-you-to)
 - [Why a green preflight is not a covered step](#why-a-green-preflight-is-not-a-covered-step)
+- [Seeding the report's coverage table](#seeding-the-reports-coverage-table)
 
 ## What it probes
 
@@ -67,3 +68,42 @@ different reasons and their own messages do not distinguish them, which is why
 the script reports which independent gate a failure hit. An unreachable source
 comes back as unreachable, never as absent data: that difference decides
 whether a finding is possible at all.
+
+## Seeding the report's coverage table
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com --format coverage
+```
+
+Prints the `## Track coverage` section of `docs/seo/audit-<YYYY-MM-DD>.md`, already
+filled in. It exists because the deliverable used to carry a `Status` column with
+**no defined vocabulary** and a free-text "Not checked" table beside it, and nothing
+read either — so a track that silently returned nothing rendered identically to a
+track that came back clean. Two opposite states, one output, in the document
+somebody pays for.
+
+The vocabulary is closed. `validate_coverage()` in the same script refuses anything
+else, including a blank cell:
+
+| status | means |
+|---|---|
+| `observed` | the track ran and its checks answered |
+| `partial` | the track ran on less than it wanted — say what was missing in Notes |
+| `unlooked` | in scope, nobody ran it |
+| `blocked-by <gate>` | an instrument was reached for and refused. `<gate>` comes from `COVERAGE_GATES` in the script, which is every gate a probe emits — the five the table above explains, plus `install`, `interpreter`, `network`, `unattempted`, `http`, `usage`, `rate-limit` — and two for blockers no probe can reach: `logs` (no server-log export) and `seat` (no seat on a third-party index) |
+| `out-of-scope` | deliberately excluded — track K on a site with no programmable surface, a market nobody bought. Notes carries the decision |
+
+**The seed is a floor, not a verdict, and it cannot write `observed`.** Preflight
+runs at step 0, before any track has run: it fills `blocked-by <gate>` where a
+source it probed refused, and `unlooked` everywhere else. Only somebody who looked
+writes the one value that reads as clean — so the failure mode of forgetting this
+table is *nobody looked*, never a clean report. Upgrading a row is the auditor's
+job, and `partial` is there so an honest answer never has to be rounded up to
+`observed`.
+
+Where the gate is one of the five above, it is the same gate that decides which
+screen you open next — which is why it is worth carrying into a client document:
+*"we could not check indexation"* and *"this account is not on the property"* are
+different asks. `validate_coverage()` refuses a gate outside `COVERAGE_GATES`, and
+`test/validate.py` refuses a probe that emits one the tuple does not declare, so the
+two cannot drift.

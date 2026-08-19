@@ -18,6 +18,53 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## Unreleased — the coverage vocabulary (conformance row SE-01)
+
+**Not shipped, and — see the note at the end of this section — not committed either.** No version was bumped, no tag pushed, no CHANGELOG section written:
+in this repository the changelog entry is a release artifact, and a section under
+`v0.22.0` would claim this was in a package that is already on npm. The rows below
+are what the gate and the plants confirmed on the working tree.
+
+The defect was unusual in shape and worth recording as such: **the instruments could
+already tell a clean result from a check that never looked, and the deliverable could
+not.** `url_inspection.py:236-250` grants CONFIRMED only to the N of M URLs the index
+answered for; `page_audit.py:94-110,924-925` drops every absence and count finding on
+a truncated read; `gsc_pull.py:524-527` ships `row_limit_reached`; `preflight.py`'s
+`_unattempted_property` keeps its own denominator fixed. The report skeleton then
+offered a free-text `Status` column and a free-text "Not checked" table, with no
+check reading either.
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| The coverage `Status` column is a closed vocabulary with one home | `COVERAGE_STATUS` in `preflight.py`; `validate_coverage()` is its only reader | **planted** + **observed** | the guard fired on the real repository first — every one of the ten rows in both skeleton homes had a blank Status, and none of the five values was published anywhere. CI plant `a coverage status outside the closed vocabulary` was watched failing with `checked` in row E, naming the enum |
+| A blank Status cell is an error, not an unread cell | `validate_coverage()` refuses it by name | **planted** | CI plant `a blank Status cell — the defect this vocabulary replaced`; the refusal names the row and lists the five legal values |
+| The denominator is every track `SKILL.md` declares | the table is generated from `TRACKS`, reconciled against the step-2 table | **planted** + **observed** | `SKILL.md:151` declared track K and the skeleton stopped at J, in both homes — found by the guard on its first run, and the findings block offered `{{A–J}}` for the same reason. Two plants: the K row dropped, and `("K", "agent surface")` removed from `TRACKS` |
+| The table is seeded by the instruments, not typed | `preflight.py --format coverage`, and `coverage` / `tracks` / `coverage_status` in the `--format json` payload | **observed** (offline) | run against stubbed probes — no network — with robots.txt 503 and no ADC: A and K read `blocked-by http`, D and J `blocked-by login` with the gate the preflight table names, the rest `unlooked`. Output read as a client would read it, which is how the note bug below was found |
+| The seed can never write `observed` | `coverage_seed()` emits only `unlooked` and `blocked-by <gate>` | **test-only** | asserted in `test_output_contracts.py`. This is the property that makes forgetting safe: a row nobody edits says *nobody looked*, so the failure mode of omission is the honest state rather than the clean one |
+| A `blocked-by` row may only name a gate this skill emits | `COVERAGE_GATES`, reconciled by reading every `probe(...)` argument **and** every assignment to a local `gate`, with `ast` | **planted** + **observed** | the first version read `probe()`'s arguments only and was watched **under-reporting on the real tree**: `check_gsc` classifies into a local `gate` before calling `probe`, so deleting `api-not-enabled` from the tuple left the validator green while the probe still emitted it — a coverage row naming that gate would have been refused as unknown. Two plants now, one per shape: a direct literal (`unattempted`) and one through the variable (`api-not-enabled`). Renaming `render()`'s `gate` local to `gate_note` was part of the fix — a rendering fragment was answering a question about the vocabulary |
+| A track that can never be seeded `blocked-by` is refused | `validate.py` requires a `TRACK_SOURCES` entry for every track in `TRACKS` | **planted** | a missing key and an empty tuple behave identically at runtime and mean opposite things — the same "absence indistinguishable from a state" shape one level down. Track G declares `()` on purpose; the plant deletes track K's key and the refusal names it |
+| A `blocked-by` note is true on every row that rests on the source | `coverage_seed` reads the probe's `detail`, not its `blocks` | **observed** | the first version put *"crawl-directive checks (track A)"* in track **K**'s row — a sentence about the wrong track in a client document. Found by reading the output, not by a test; standing instruction #9 |
+| Both skeleton homes carry it, byte for byte | `templates/audit-report.template.md` and `references/deliverable-templates.md` | **planted** | the pre-existing template-drift guard; the three skeleton plants edit **both** homes on purpose, so it is the coverage guard that fires and not the drift check |
+| Every negative self-test still fails as designed after the code changes | the whole set, re-run locally | **observed** | extracted from `validate.yml` with `yaml.safe_load` and run under bash: **44 behaved as designed, 0 did not** — 23 standalone steps plus 21 `plant()` calls, of which 7 are new. Counted by parsing the workflow, not carried over: this file's own history is a release whose notes said 71 fixtures, whose acceptance record said 74, and whose count was 75 |
+| `SKILL.md` carries no pointer, and that was measured | the pointer lives in `deliverable-templates.md` and `preflight.md` | **observed** | `audit_skill.py --house`: the four-line Step 4 addition moved the body from 4994 to **5107** tokens against a 5000 budget, so it was reverted and the body is unchanged. Filed as B-19 — the remedy v0.22.0 named is a split, not a trim |
+| The gate is green | `npm test` | **observed** | exit 0; `PASS: output contracts (… coverage vocabulary closed and seeded)` |
+
+**Counts, by parsing the table above: 12 rows — 5 observed · 3 planted · 3 planted+observed · 1 test-only.**
+
+**Uncommitted, and the reason is not this change.** The umbrella wires a `PreToolUse`
+gate (`hooks/repo-gate.js`) that runs `npm test` before any `git commit`. It decides
+whether a commit belongs to the umbrella by asking whether the umbrella has anything
+staged — and on 2026-08-19 it did, from a concurrent row of the same conformance
+program. So a commit inside this submodule was judged by the umbrella's suite, which
+is red because five *sibling* submodules hold local-only commits, every one of them
+under the same "commit locally, do not push" instruction. `seo-aeo-audit` holds none,
+and its own gate — the one `docs/DOCMAP.md` names — exits 0. The hook's docstring
+predicts this exact deadlock. Not routed around: the work is staged in this
+submodule's index, green, and waiting for an umbrella index that is not this row's to
+clear. The one
+`test-only` row is the never-writes-`observed` property: it is asserted, and nobody has
+yet watched an auditor fill this table in on a live engagement.
+
 ## v0.22.0 — the Cloudflare row, and a body 18% over budget
 
 | REQ | What shipped | Confirmed | Evidence |

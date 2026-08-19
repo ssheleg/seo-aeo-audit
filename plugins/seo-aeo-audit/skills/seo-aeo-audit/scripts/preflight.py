@@ -15,6 +15,13 @@ Usage:
   preflight.py --site sc-domain:example.com --origin https://example.com
   preflight.py --origin https://example.com          # public-only audit
   preflight.py --site sc-domain:example.com --format json
+  preflight.py --origin https://example.com --format coverage   # seed the report's
+                                                                # coverage table
+
+`--format coverage` prints the `## Track coverage` section of
+`docs/seo/audit-<date>.md` already filled in with what the probes found: every
+track this run cannot reach reads `blocked-by <gate>`, and every other track reads
+`unlooked`. It never writes `observed` — see the coverage block below.
 
 Exit codes: 0 = probes ran (even if some failed — that IS the report),
             1 = usage error.
@@ -23,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import urllib.error
@@ -235,6 +243,252 @@ def check_psi(origin: str | None) -> dict:
                  "psi_pull.py will report it as absent and offer the origin aggregate")
 
 
+# ── the report's coverage table ──────────────────────────────────────────────
+# Every instrument in this bundle can already tell a clean result from a check
+# that never looked. `url_inspection.py` grants CONFIRMED only to the N of M URLs
+# the index answered for; `page_audit.py` drops every absence and count finding on
+# a truncated read; `gsc_pull.py` ships `row_limit_reached` and
+# `rows_dropped_as_noise`; `_unattempted_property` above keeps this script's own
+# denominator fixed so an unasked question cannot look like a smaller world.
+#
+# None of it reached the markdown a client reads. The deliverable's coverage table
+# offered a `Status` column with **no defined vocabulary** and a free-text
+# "Not checked" table beside it, and nothing read either — so a track that
+# silently returned nothing rendered identically to a track that came back clean.
+# Two opposite states, one output, in the one document somebody pays for.
+#
+# Three properties fix that, and all three live here because a fact with two homes
+# drifts:
+#
+# 1. **The vocabulary is closed.** A value outside `COVERAGE_STATUS` is an error,
+#    not an unread cell. The family has already shipped the other shape — a
+#    contract listing five statuses against a linter matching four, where an
+#    out-of-enum value read as *no status at all*.
+# 2. **The denominator is the whole declared track list.** SKILL.md step 2
+#    declares eleven tracks; the skeleton shipped ten rows, so track K's coverage
+#    was not merely unanswered, it was unstatable. `test/validate.py` reconciles
+#    `TRACKS` against that table, in both directions.
+# 3. **The seed cannot write `observed`.** Preflight runs at step 0, before any
+#    track has run, so it fills the floor: `unlooked`, or `blocked-by <gate>`
+#    where a source it probed refused. Only somebody who looked can write the one
+#    value that reads as clean, which means the failure mode of forgetting is now
+#    "nobody looked" instead of "clean".
+
+# The eleven tracks of SKILL.md step 2, in its order. Second home of that list by
+# necessity — a script cannot read a markdown table at runtime — so `validate.py`
+# compares the two and fails on either a missing or a surplus track.
+TRACKS = (
+    ("A", "access & indexation"),
+    ("B", "canonicalization"),
+    ("C", "architecture & equity"),
+    ("D", "intent & SERP fit"),
+    ("E", "content value"),
+    ("F", "extractability / AEO"),
+    ("G", "entity & brand"),
+    ("H", "experience signals"),
+    ("I", "risk & threats"),
+    ("J", "measurement"),
+    ("K", "agent surface"),
+)
+
+# The closed vocabulary, written in the form a reader sees. `blocked-by <gate>`
+# carries its gate because "we could not check" and "the account is not on the
+# property" send a client to different rooms — that is the same reason this
+# script names its gates at all.
+COVERAGE_STATUS = (
+    "observed",
+    "partial",
+    "unlooked",
+    "blocked-by <gate>",
+    "out-of-scope",
+)
+
+# Which statuses owe the reader a reason in Notes. `observed` needs none and
+# `unlooked` explains itself; everything else is a claim about why. Kept as the
+# short exemption list rather than the long obligation list, so a sixth status
+# cannot arrive without a decision about its Notes cell.
+NO_REASON_NEEDED = ("observed", "unlooked")
+
+# Gates a `blocked-by` row may name. The first block is exactly what this
+# script's own probes emit — `validate.py` parses every `probe(...)` call and
+# refuses a gate that is not declared here, which is the enum drift this
+# vocabulary exists to prevent. The second block is for blockers no probe can
+# reach: the client never sent the log export (`logs`), or the audit has no seat
+# for a third-party index (`seat`).
+COVERAGE_GATES = (
+    "install", "interpreter", "login", "quota-project", "scope",
+    "api-not-enabled", "permission", "network", "unattempted", "http",
+    "usage", "rate-limit",
+    "logs", "seat",
+)
+
+# One home for the table's shape, read by the seeder, by the checker, and by
+# `validate.py` when it looks for the table in the deliverable skeleton.
+COVERAGE_HEADER = "| Track | Status | Notes |"
+
+# The sources whose refusal genuinely stops a track, not every source it would
+# like. A 404 sitemap costs track A its published-URL inventory and leaves the
+# rest of A runnable, so that is a `partial` the auditor writes — not a
+# `blocked-by` this script asserts. Matched by prefix, so `Search Console` also
+# covers the `property <site>` row. A track with no entry has no probe that can
+# speak for it and stays at the floor.
+TRACK_SOURCES = {
+    "A": ("robots.txt", "homepage"),
+    "B": ("homepage",),
+    "C": ("homepage",),
+    "D": ("Search Console", "property"),
+    "E": ("homepage",),
+    "F": ("homepage",),
+    "G": (),
+    "H": ("PageSpeed Insights",),
+    "I": ("homepage",),
+    "J": ("Search Console", "property"),
+    "K": ("robots.txt", "homepage"),
+}
+
+
+def _status_word(spec: str) -> str:
+    """The keyword of a vocabulary entry: `blocked-by <gate>` matches on `blocked-by`."""
+    return spec.split(" ", 1)[0]
+
+
+def coverage_seed(rows: list[dict]) -> list[dict]:
+    """The floor of the report's coverage table, computed from the probes that ran.
+
+    Never `observed`: see property 3 above. A track whose blocking source was
+    refused comes back `blocked-by <gate>` naming the same gate the preflight table
+    named, with the probe's `detail` as its reason. Everything else is `unlooked`,
+    which is the truth at step 0 and stays the truth for any row nobody edits.
+
+    A track with no `TRACK_SOURCES` entry can never be reported blocked, so
+    `test/validate.py` requires an entry for every track — an empty tuple where no
+    probe can speak for it, as track G has, rather than a missing key that reads
+    the same as a track nothing refused.
+    """
+    refused = [r for r in rows if not r.get("reachable")]
+    out = []
+    for tid, label in TRACKS:
+        hit = None
+        for req in TRACK_SOURCES.get(tid, ()):
+            hit = next((r for r in refused if str(r.get("source", "")).startswith(req)), None)
+            if hit:
+                break
+        if hit:
+            gate = hit.get("gate") or "network"
+            # `detail`, not `blocks`. A probe's `blocks` string is written for the
+            # preflight table and names the track it was thought of for — reused
+            # here it put "crawl-directive checks (track A)" in track K's row, a
+            # sentence about the wrong track in the document a client reads. The
+            # detail is a fact about the source, so it is true on every row that
+            # rests on it.
+            why = hit.get("detail") or hit.get("blocks") or "the probe was refused"
+            out.append({"track": tid, "label": label,
+                        "status": f"blocked-by {gate}",
+                        "notes": _flat(f"{hit['source']} unreachable — {why}", 160)})
+        else:
+            out.append({"track": tid, "label": label, "status": "unlooked", "notes": ""})
+    return out
+
+
+def render_coverage(seed: list[dict]) -> str:
+    """The coverage section, ready to paste into `docs/seo/audit-<date>.md`.
+
+    Carries the vocabulary above the table rather than only in the skill's
+    references, because the person who edits this table next may be reading the
+    report and nothing else.
+    """
+    vocab = " · ".join(f"`{s}`" for s in COVERAGE_STATUS)
+    lines = [
+        "## Track coverage",
+        "",
+        f"Status is a closed vocabulary — {vocab}. Any status but `observed` or "
+        f"`unlooked` owes a reason in Notes. A row left as seeded reads `unlooked`, "
+        f"which is what a track nobody ran actually is.",
+        "",
+        COVERAGE_HEADER,
+        "|---|---|---|",
+    ]
+    for r in seed:
+        lines.append(f"| {r['track']} {r['label']} | {r['status']} | {_flat(r['notes'])} |")
+    return "\n".join(lines)
+
+
+def validate_coverage(text: str) -> list[str]:
+    """Every complaint a coverage table can earn. Empty list = it says something.
+
+    Reads a rendered report — the skeleton, a seeded table, or the filled-in
+    deliverable — and answers whether a reader could tell a clean track from one
+    that never ran. A blank cell is a finding here, which is the whole point: the
+    defect this replaces was two opposite states sharing one output.
+    """
+    errs: list[str] = []
+    lines = text.split("\n")
+    start = next((i for i, ln in enumerate(lines)
+                  if ln.strip().lower().startswith("## track coverage")), None)
+    if start is None:
+        return ["no `## Track coverage` section — a report with no coverage table cannot "
+                "distinguish a track that came back clean from one that never looked"]
+
+    hdr = None
+    for i in range(start + 1, len(lines)):
+        s = lines[i].strip()
+        if s.startswith("## "):
+            break
+        if " ".join(s.split()) == COVERAGE_HEADER:
+            hdr = i
+            break
+    if hdr is None:
+        return [f"`## Track coverage` carries no table with the header {COVERAGE_HEADER!r}"]
+
+    rows = []
+    for i in range(hdr + 1, len(lines)):
+        s = lines[i].strip()
+        if not s.startswith("|"):
+            break
+        if re.match(r"^\|[\s:\-|]+\|$", s):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) != 3:
+            errs.append(f"coverage row {s!r} has {len(cells)} cells, the header has 3")
+            continue
+        rows.append(cells)
+
+    declared = [t[0] for t in TRACKS]
+    seen = [c[0].split(" ", 1)[0] for c in rows]
+    if seen != declared:
+        errs.append(f"the coverage table lists tracks {seen} — SKILL.md declares {declared}. "
+                    f"A track with no row cannot be reported as unchecked at all, which is "
+                    f"the denominator shrinking silently")
+
+    words = {_status_word(s) for s in COVERAGE_STATUS}
+    for tid, status, notes in rows:
+        where = f"coverage row {tid.split(' ', 1)[0]!r}"
+        if not status:
+            errs.append(f"{where}: blank Status — a blank cell reads the same whether the "
+                        f"track was clean or never ran. Use one of: "
+                        f"{', '.join(COVERAGE_STATUS)}")
+            continue
+        word = _status_word(status)
+        if word not in words:
+            errs.append(f"{where}: {status!r} is outside the closed vocabulary "
+                        f"({', '.join(COVERAGE_STATUS)}) — an unrecognised status is read as "
+                        f"no status, which is how the enum drifts")
+            continue
+        if word == "blocked-by":
+            gate = status.split(" ", 1)[1].strip() if " " in status else ""
+            if not gate:
+                errs.append(f"{where}: `blocked-by` with no gate — the gate is what decides "
+                            f"which screen the client opens next")
+            elif gate not in COVERAGE_GATES:
+                errs.append(f"{where}: gate {gate!r} is not one this skill emits "
+                            f"({', '.join(COVERAGE_GATES)})")
+        if word not in NO_REASON_NEEDED and not notes:
+            errs.append(f"{where}: status {word!r} with an empty Notes cell — every status but "
+                        f"{' and '.join(NO_REASON_NEEDED)} is a claim about why, and a claim "
+                        f"with no reason is the thing this table replaced")
+    return errs
+
+
 def render(rows: list[dict]) -> str:
     ok = [r for r in rows if r["reachable"]]
     bad = [r for r in rows if not r["reachable"]]
@@ -247,9 +501,14 @@ def render(rows: list[dict]) -> str:
     if bad:
         lines += ["", "## What this costs the audit", ""]
         for r in bad:
-            gate = f" (gate: **{r['gate']}**)" if r.get("gate") else ""
+            # `gate_note`, not `gate`: this is a rendered fragment, and
+            # `test/validate.py` reads assignments to a name `gate` to learn which
+            # gates a probe can emit. Sharing the name made the guard report `''`
+            # as an undeclared gate — a rendering local answering a question about
+            # the vocabulary.
+            gate_note = f" (gate: **{r['gate']}**)" if r.get("gate") else ""
             what = r["blocks"] or "the checks that depend on this source"
-            lines.append(f"- **{r['source']}** unreachable{gate} — blocks {what}")
+            lines.append(f"- **{r['source']}** unreachable{gate_note} — blocks {what}")
         lines += ["", "Report these in the three-line status, and tier every finding "
                        "that rests on a missing source accordingly. An unreachable "
                        "source is a gap in the report, not a silent omission "
@@ -257,6 +516,10 @@ def render(rows: list[dict]) -> str:
     else:
         lines += ["", "Every probed source answered. Findings can rest on the highest "
                        "rung each check allows (tooling.md, the evidence ladder)."]
+    # The coverage floor, in the deliverable's own vocabulary and its own table
+    # shape, so step 4 pastes it instead of typing it. A field a human fills in
+    # after the run is the debt this exists to retire.
+    lines += ["", render_coverage(coverage_seed(rows))]
     return "\n".join(lines)
 
 
@@ -266,7 +529,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--origin", help="site origin to probe publicly, e.g. https://example.com")
     ap.add_argument("--quota-project", help="GCP project that meters the API calls")
     ap.add_argument("--skip-psi", action="store_true", help="skip the PageSpeed probe (it is slow)")
-    ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument("--format", choices=["markdown", "json", "coverage"],
+                    default="markdown",
+                    help="markdown report, the JSON payload, or just the report's "
+                         "seeded Track coverage section")
     args = ap.parse_args(argv)
 
     if not args.site and not args.origin:
@@ -287,7 +553,12 @@ def main(argv: list[str]) -> int:
     if args.format == "json":
         print(json.dumps({"probes": rows,
                           "reachable": sum(1 for r in rows if r["reachable"]),
-                          "total": len(rows)}, indent=2))
+                          "total": len(rows),
+                          "tracks": [{"track": t, "label": l} for t, l in TRACKS],
+                          "coverage_status": list(COVERAGE_STATUS),
+                          "coverage": coverage_seed(rows)}, indent=2))
+    elif args.format == "coverage":
+        print(render_coverage(coverage_seed(rows)))
     else:
         print(render(rows))
     return 0

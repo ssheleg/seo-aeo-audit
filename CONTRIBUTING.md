@@ -92,6 +92,11 @@ the skill directory — eleven bare `scripts/*.py` paths once failed in the only
 environment the skill is ever used in. **error flattening**: no renderer may
 interpolate a network error into generated markdown unflattened, because a Google
 error page carries newlines and the first one ends the table row.
+**coverage vocabulary**: the deliverable's Track coverage table must be present in
+both skeleton homes, carry one row per track SKILL.md declares, and use only the
+closed enum in `preflight.py:COVERAGE_STATUS` — a blank Status cell reads the same
+whether a track came back clean or never ran, which was true of every row in the
+shipped skeleton, and track K had no row to be blank in.
 
 Those names are not decoration: the validator asserts that this paragraph still
 mentions each guard family it runs, because a prose summary of a checker is a fact

@@ -184,6 +184,109 @@ for _name in ("page_audit", "sitemap_audit", "agent_surface", "url_inspection"):
           f"{_name}.py emits severity {_missing} that SEVERITY_ORDER cannot order — "
           f"to_markdown raises KeyError on the first finding at that level")
 
+
+# ── 7. the report's coverage table is a closed vocabulary ─────────────────────
+#
+# The instruments could already tell a clean result from a check that never
+# looked; the deliverable could not. `url_inspection` grants CONFIRMED only to
+# the URLs the index answered for, `page_audit` drops absence findings on a
+# truncated read, `gsc_pull` ships `row_limit_reached`, and `check_gsc` above
+# keeps its own denominator fixed — and then the report's coverage table offered
+# a `Status` column with no vocabulary and nothing that read it. A track that
+# silently returned nothing rendered exactly like a track that came back clean.
+#
+# Three properties are asserted here, because each one is a way the fix could be
+# shipped and still not work: the vocabulary is CLOSED (an out-of-enum value is an
+# error, not an unread cell), the denominator is the whole declared track list, and
+# the seed can never write the one value that reads as clean.
+
+check(isinstance(getattr(pre, "TRACKS", None), tuple) and len(pre.TRACKS) >= 2,
+      "preflight.py must declare TRACKS — the coverage table's denominator needs a home")
+if isinstance(getattr(pre, "TRACKS", None), tuple) and pre.TRACKS:
+    _ids = [t[0] for t in pre.TRACKS]
+    check(len(set(_ids)) == len(_ids), f"TRACKS ids must be unique; got {_ids}")
+    check(all(isinstance(t, tuple) and len(t) == 2 and t[1] for t in pre.TRACKS),
+          "every TRACKS entry is (id, label) with a non-empty label")
+
+check(isinstance(getattr(pre, "COVERAGE_STATUS", None), tuple) and len(pre.COVERAGE_STATUS) >= 4,
+      "preflight.py must declare COVERAGE_STATUS — the closed vocabulary needs one home")
+if isinstance(getattr(pre, "COVERAGE_STATUS", None), tuple):
+    check("observed" in pre.COVERAGE_STATUS,
+          "the vocabulary needs the value that means the track ran and answered")
+    check(any(s.startswith("blocked-by") for s in pre.COVERAGE_STATUS),
+          "the vocabulary needs a value that names the gate that stopped a track")
+    check("unlooked" in pre.COVERAGE_STATUS,
+          "the vocabulary needs the value that means nobody looked — that is the whole point")
+    check(set(getattr(pre, "NO_REASON_NEEDED", ())) <=
+          {s.split(" ", 1)[0] for s in pre.COVERAGE_STATUS},
+          "NO_REASON_NEEDED names a status outside the vocabulary — the enum-drift defect")
+
+# The seed: a floor, from probes, never a verdict.
+_seed_rows = [
+    pre.probe("python", True, "3.14.6"),
+    pre.probe("robots.txt", False, "HTTP 503", "http", "crawl-directive checks (track A)"),
+    pre.probe("sitemap", True, "HTTP 200"),
+    pre.probe("homepage", True, "HTTP 200"),
+    pre.probe("PageSpeed Insights", False, "HTTP 429", "rate-limit", "field CWV"),
+]
+_seed = pre.coverage_seed(_seed_rows)
+check(len(_seed) == len(pre.TRACKS),
+      f"coverage_seed must emit one row per declared track; got {len(_seed)} of {len(pre.TRACKS)}")
+check([r["track"] for r in _seed] == [t[0] for t in pre.TRACKS],
+      "coverage_seed must keep the declared track order — the denominator is the list, not a subset")
+check(all(r["status"] != "observed" for r in _seed),
+      "coverage_seed must never write `observed`: preflight runs before any track does, so "
+      "the one value that reads as clean can only be written by somebody who looked")
+_byid = {r["track"]: r for r in _seed}
+check(_byid["A"]["status"] == "blocked-by http",
+      f"track A rests on robots.txt, which was refused — got {_byid['A']['status']!r}")
+check(_byid["A"]["notes"].strip() != "",
+      "a blocked row must carry the reason it is blocked")
+check(_byid["H"]["status"] == "blocked-by rate-limit",
+      f"track H rests on PageSpeed, which was rate-limited — got {_byid['H']['status']!r}")
+check(_byid["E"]["status"] == "unlooked",
+      f"a track nothing refused starts at unlooked, not blank — got {_byid['E']['status']!r}")
+
+# The seeded table is accepted by the checker that reads a real report.
+_rendered = pre.render_coverage(_seed)
+check(pre.COVERAGE_HEADER in _rendered, "render_coverage must emit the declared table header")
+check(pre.validate_coverage(_rendered) == [],
+      f"the seeded table must satisfy its own checker; got {pre.validate_coverage(_rendered)}")
+
+# And the same seed reaches the JSON payload, so the table is generated from the
+# instruments' own output rather than typed in afterwards.
+_json_md = silently(pre.main, ["--origin", "https://example.invalid", "--skip-psi",
+                              "--format", "coverage"])
+check(_json_md == 0, f"--format coverage must exit 0; got {_json_md}")
+
+# The checker refuses every way this table can lie.
+_good = _rendered
+for _label, _bad, _needle in (
+    ("a status outside the vocabulary",
+     _good.replace("| E content value | unlooked |", "| E content value | checked |", 1), "checked"),
+    ("a blank status — the original defect",
+     _good.replace("| E content value | unlooked |", "| E content value |  |", 1), "blank"),
+    ("a track row dropped, shrinking the denominator",
+     "\n".join(l for l in _good.split("\n") if not l.startswith(f"| {pre.TRACKS[-1][0]} ")),
+     pre.TRACKS[-1][0]),
+    ("blocked-by naming a gate nothing emits",
+     _good.replace("blocked-by http", "blocked-by vibes", 1), "vibes"),
+    ("partial with no reason given",
+     _good.replace("| E content value | unlooked |", "| E content value | partial |", 1), "partial"),
+    ("no coverage section at all", "# A report with findings and no coverage table\n", "Track coverage"),
+):
+    _errs = pre.validate_coverage(_bad)
+    check(_errs != [], f"validate_coverage must refuse {_label}")
+    check(any(_needle in e for e in _errs),
+          f"the refusal of {_label} must name {_needle!r}; got {_errs[:2]}")
+
+# A report that is honest about being partial, with reasons, is accepted — the
+# checker must not push an auditor towards claiming `observed` to get past it.
+_honest = _good.replace("| E content value | unlooked |  |",
+                        "| E content value | partial | 3 of 40 templates sampled |", 1)
+check(pre.validate_coverage(_honest) == [],
+      f"an honest partial row must pass; got {pre.validate_coverage(_honest)}")
+
 if failures:
     print("FAIL: output contracts")
     for f in failures:
@@ -191,4 +294,4 @@ if failures:
     raise SystemExit(1)
 print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
       "denominator, exit status from the same predicate the report uses, every "
-      "emitted severity orderable)")
+      "emitted severity orderable, coverage vocabulary closed and seeded)")

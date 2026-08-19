@@ -23,6 +23,22 @@ becomes optional by accident:
 Never overwrite an existing audit or plan silently — write a new dated file, or
 ask before replacing.
 
+**The audit's Track coverage table is the one field you must not type.** Its
+`Status` column is a closed vocabulary — `observed` · `partial` · `unlooked` ·
+`blocked-by <gate>` · `out-of-scope` — carrying one row per track `SKILL.md` step 2
+declares, and it is seeded from the instruments:
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com --format coverage
+```
+
+It used to be a free-text `Status` beside a free-text "Not checked" table, with
+nothing reading either — so a track that silently returned nothing rendered exactly
+like a track that came back clean, in the document the client reads. The seed cannot
+write `observed`, which means a row nobody edits says *nobody looked*. The states,
+the gate names and why the seed is a floor rather than a verdict:
+[preflight.md](preflight.md).
+
 ## docs/seo/audit-<YYYY-MM-DD>.md
 
 ````markdown
@@ -60,7 +76,7 @@ Repeat this block per finding, most severe first.
 
 ### F-{{n}} — {{short title}}
 
-- **Track:** {{A–J}}
+- **Track:** {{A–K}}
 - **Issue:** {{what is wrong}}
 - **Impact:** {{1–5}} — {{traffic/revenue framing}}
 - **Evidence:** {{observation, location, value, date}}
@@ -74,23 +90,45 @@ Repeat this block per finding, most severe first.
 
 ## Not checked
 
+Anything **outside** the track list — a market, a template, a subdomain, a surface
+nobody had access to. Every track's own gap belongs in Track coverage below, where
+it carries a status from the closed vocabulary instead of a sentence.
+
 | Area | Why not | What it would take |
 |---|---|---|
 
 ## Track coverage
 
+Status is a **closed vocabulary** — `observed` · `partial` · `unlooked` ·
+`blocked-by <gate>` · `out-of-scope`. Any status but `observed` or `unlooked` owes
+a reason in Notes. Nothing else is a status: a blank cell, a tick or a sentence
+here is the defect this table exists to prevent, because a clean track and a track
+that never ran then render identically.
+
+Do not type this table — seed it from the instruments, which already know which
+sources answered:
+
+```bash
+python3 "$SKILL_DIR/scripts/preflight.py" --origin https://example.com --format coverage
+```
+
+The seed never writes `observed`: preflight runs before any track does. So a row
+left as seeded reads `unlooked`, and forgetting to edit this table produces
+*nobody looked*, never a clean report.
+
 | Track | Status | Notes |
 |---|---|---|
-| A access & indexation | | |
-| B canonicalization | | |
-| C architecture & equity | | |
-| D intent & SERP fit | | |
-| E content value | | |
-| F extractability / AEO | | |
-| G entity & brand | | |
-| H experience signals | | |
-| I risk & threats | | |
-| J measurement | | |
+| A access & indexation | unlooked | |
+| B canonicalization | unlooked | |
+| C architecture & equity | unlooked | |
+| D intent & SERP fit | unlooked | |
+| E content value | unlooked | |
+| F extractability / AEO | unlooked | |
+| G entity & brand | unlooked | |
+| H experience signals | unlooked | |
+| I risk & threats | unlooked | |
+| J measurement | unlooked | |
+| K agent surface | unlooked | |
 ````
 
 ## docs/seo/plan-<YYYY-MM-DD>.md

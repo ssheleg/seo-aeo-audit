@@ -512,6 +512,34 @@ jobs:
             python3 -c "import re;p='CONTRIBUTING.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(mostly \*\*knowledge\*\* — )[a-z-]+',r'\g<1>two',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
           plant "the slash command losing a non-negotiable" \
             python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md "8. **Know each instrument"
+          # The coverage vocabulary. Three of these edit BOTH skeleton homes in one
+          # command, deliberately: change one and the template-drift guard fires
+          # instead, which would prove a different guard works. The first attempt at
+          # them used `open(p,'w').write(open(p).read().replace(...))` — python
+          # truncates the target before it evaluates the argument, so the plant
+          # emptied the file and the guard reported "no Track coverage section". It
+          # landed, plant_guard was satisfied, and the evidence was worthless. That
+          # is why plant_edit.py exists, and why every plant's failure message is
+          # read rather than counted.
+          SKEL='templates/audit-report.template.md plugins/seo-aeo-audit/skills/seo-aeo-audit/references/deliverable-templates.md'
+          plant "a coverage status outside the closed vocabulary" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "| E content value | unlooked |" "| E content value | checked |"; done'
+          plant "the coverage table one row short of the tracks SKILL.md declares" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py delline "$f" "| K agent surface | unlooked | |"; done'
+          plant "a blank Status cell — the defect this vocabulary replaced" \
+            bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "| E content value | unlooked |" "| E content value |  |"; done'
+          plant "a probe emitting a gate COVERAGE_GATES does not declare" \
+            python3 test/plant_edit.py sub "$S/scripts/preflight.py" '"network", "unattempted", "http",' '"network", "http",'
+          # The same defect one indirection away, and it is the one that was silently
+          # passing: check_gsc classifies into a local `gate` before calling probe(),
+          # so a guard reading only probe()'s arguments left this green while the
+          # probe still emitted the gate a coverage row would then be refused for.
+          plant "a gate emitted through a variable, undeclared" \
+            python3 test/plant_edit.py sub "$S/scripts/preflight.py" '"api-not-enabled", "permission", "network",' '"permission", "network",'
+          plant "a track declared in SKILL.md and absent from preflight's TRACKS" \
+            python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    ("K", "agent surface"),'
+          plant "a track with no TRACK_SOURCES entry, which can never read blocked-by" \
+            python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    "K": ("robots.txt", "homepage"),'
 
       - name: install.sh syntax check
         run: bash -n install.sh

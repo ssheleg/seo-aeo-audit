@@ -2,6 +2,8 @@
 """Structural validator for the seo-aeo-audit plugin repo. Exit 0 = pass."""
 from __future__ import annotations
 
+import ast
+import importlib.util
 import json
 import subprocess
 import os
@@ -457,6 +459,7 @@ _GUARD_FAMILIES = (
     "script reachability",
     "error flattening",
     "defect count",
+    "coverage vocabulary",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -1094,6 +1097,170 @@ else:
         if embedded and body not in embedded:
             fail(f"templates/{t} has drifted from references/deliverable-templates.md "
                  f"(the copy the skills CLI ships) — regenerate the embedded copy")
+
+# ── the report's coverage vocabulary ─────────────────────────────────────────
+# M-40: *a report that says nothing about what was skipped cannot distinguish a
+# clean result from a check that never looked.* Every instrument in this bundle
+# could already tell those apart — `url_inspection.py` grants CONFIRMED only to
+# the URLs the index answered for, `page_audit.py` drops absence findings on a
+# truncated read, `gsc_pull.py` ships `row_limit_reached`, `preflight.py` keeps
+# its own denominator fixed — and none of it reached the markdown a client reads.
+# The skeleton offered a `Status` column with no vocabulary and a free-text
+# "Not checked" table, and nothing read either.
+#
+# Four things are checked here, and each one is a way the fix could ship and still
+# not work:
+#
+#   1. the enum is CLOSED and lives in one place (`preflight.COVERAGE_STATUS`),
+#      and the skeleton publishes exactly those values. The family has shipped the
+#      other shape: a contract listing five statuses against a linter matching
+#      four, where an out-of-enum value read as *no status at all*;
+#   2. the denominator is the track list SKILL.md step 2 declares — it declared
+#      eleven and the skeleton carried ten rows, so track K's coverage was
+#      unstatable;
+#   3. the skeleton satisfies the same checker a filled-in report does, so the
+#      document an auditor starts from is a valid document;
+#   4. every gate `preflight.py` actually emits is a gate a `blocked-by` row may
+#      name. Parsed out of the `probe(...)` calls with `ast`, not grepped, because
+#      the drift this prevents is a gate string added in one place and not the
+#      other.
+_pre_path = os.path.join(ROOT, SKILL_DIR, "scripts", "preflight.py")
+_pre = None
+if os.path.isfile(_pre_path):
+    try:
+        # Imported rather than parsed, so the enum and the track list have exactly one
+        # home and this guard cannot fall behind them. `dont_write_bytecode` is not
+        # hygiene: without it the first run of this guard left a `__pycache__` inside
+        # `plugins/`, which both installers copy verbatim and npm ships — the artifact
+        # guard forty lines up caught it on the spot.
+        _no_pyc = sys.dont_write_bytecode
+        sys.dont_write_bytecode = True
+        try:
+            _spec = importlib.util.spec_from_file_location("_preflight_for_validate", _pre_path)
+            _pre = importlib.util.module_from_spec(_spec)
+            _spec.loader.exec_module(_pre)
+        finally:
+            # `finally`, because the plant that breaks this import is exactly the run
+            # where the flag would otherwise stay set for the rest of the validator.
+            sys.dont_write_bytecode = _no_pyc
+    except Exception as _e:  # noqa: BLE001 - a module that will not load is a failure
+        fail(f"{SKILL_DIR}/scripts/preflight.py does not import: {_e}")
+        _pre = None
+if _pre is not None and not callable(getattr(_pre, "validate_coverage", None)):
+    fail("preflight.py exposes no validate_coverage() — the coverage table would have "
+         "no reader, which is the state this guard exists to leave behind")
+    _pre = None
+
+if _pre is not None:
+    _tracks = getattr(_pre, "TRACKS", None)
+    _status = getattr(_pre, "COVERAGE_STATUS", None)
+    if not isinstance(_tracks, tuple) or not _tracks:
+        fail("preflight.py declares no TRACKS — the coverage table's denominator has no home")
+    elif not isinstance(_status, tuple) or not _status:
+        fail("preflight.py declares no COVERAGE_STATUS — the coverage vocabulary has no home")
+    else:
+        # 2. the denominator, against SKILL.md step 2
+        _skill_txt = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").read()
+        _step2 = re.search(r"^\| # \| Track \| Answers \| Reference \|\n(.*?)(?=\n\n)",
+                           _skill_txt, re.M | re.S)
+        if not _step2:
+            fail("SKILL.md: no step-2 track table with the header "
+                 "'| # | Track | Answers | Reference |' — the coverage denominator is "
+                 "read from it")
+        else:
+            _skill_tracks = re.findall(r"^\| ([A-Z]) \| ([^|]+?) *\|", _step2.group(1), re.M)
+            _declared = [t[0] for t in _tracks]
+            if [t[0] for t in _skill_tracks] != _declared:
+                fail(f"SKILL.md step 2 declares tracks {[t[0] for t in _skill_tracks]} and "
+                     f"preflight.py TRACKS declares {_declared} — the coverage table's "
+                     f"denominator is read from TRACKS, so the two must agree")
+            else:
+                _srcs = getattr(_pre, "TRACK_SOURCES", {})
+                _no_entry = [t for t, _ in _tracks if t not in _srcs]
+                if _no_entry:
+                    fail(f"preflight.py: track(s) {_no_entry} have no TRACK_SOURCES entry, so "
+                         f"they can never be seeded `blocked-by` — a missing key reads exactly "
+                         f"like a track nothing refused. Declare an empty tuple where no probe "
+                         f"can speak for it, as track G does")
+                for (_tid, _sk_label), (_, _pf_label) in zip(_skill_tracks, _tracks):
+                    _first = re.sub(r"[^\w]", "", _sk_label.split()[0]).lower()
+                    if _first and _first not in _pf_label.lower():
+                        fail(f"track {_tid}: SKILL.md calls it {_sk_label.strip()!r} and "
+                             f"preflight.py calls it {_pf_label!r} — a reader matching the "
+                             f"coverage row to the track cannot")
+
+        # 1 + 3. both homes of the skeleton, against the checker itself
+        _cov_homes = ("templates/audit-report.template.md",
+                      f"{SKILL_DIR}/references/deliverable-templates.md")
+        _range = f"{{{{{_tracks[0][0]}–{_tracks[-1][0]}}}}}"
+        for _rel in _cov_homes:
+            _p = os.path.join(ROOT, _rel)
+            if not os.path.isfile(_p):
+                continue
+            _txt = open(_p, encoding="utf-8").read()
+            for _err in _pre.validate_coverage(_txt):
+                fail(f"{_rel}: {_err}")
+            for _s in _status:
+                if f"`{_s}`" not in _txt:
+                    fail(f"{_rel}: the coverage vocabulary does not publish `{_s}` — the enum "
+                         f"lives in preflight.py:COVERAGE_STATUS and every value has to be "
+                         f"readable where the table is edited")
+            # A findings block that cannot name the last track is the same
+            # denominator bug one section up: it said {{A–J}} while step 2
+            # declared K.
+            if _range not in _txt:
+                fail(f"{_rel}: the findings block does not offer the track range {_range} — "
+                     f"a finding on the last declared track cannot be labelled")
+
+    # 4. every gate a probe emits is a gate a coverage row may name
+
+
+    def _gate_literals(_node):
+        """The strings an expression can EVALUATE to, ignoring the tests along the way.
+
+        A conditional's test strings are not gates: `check_gsc` classifies on
+        "quota project", "serviceusage", "insufficient" and "disabled" and evaluates
+        to `quota-project`, `scope`, `api-not-enabled` or `permission`. Collecting
+        every constant in the expression would demand the test strings be declared
+        too; collecting only the top level would miss all four, because that gate is
+        assigned to a variable before it reaches `probe()`.
+
+        Watched under-reporting before this existed: removing `api-not-enabled` from
+        COVERAGE_GATES left the validator green while the probe still emitted it, so
+        a `blocked-by api-not-enabled` row would have been refused as an unknown
+        gate. That is the same guard-written-against-one-home shape the 2026-08-10
+        audit named, one call indirection later.
+        """
+        if isinstance(_node, ast.Constant):
+            return {_node.value} if isinstance(_node.value, str) else set()
+        if isinstance(_node, ast.IfExp):
+            return _gate_literals(_node.body) | _gate_literals(_node.orelse)
+        return set()
+
+    _gates_declared = set(getattr(_pre, "COVERAGE_GATES", ()))
+    _emitted = set()
+    for _node in ast.walk(ast.parse(open(_pre_path, encoding="utf-8").read())):
+        if isinstance(_node, ast.Call) and isinstance(_node.func, ast.Name) \
+                and _node.func.id == "probe":
+            _g = _node.args[3] if len(_node.args) > 3 else None
+            for _kw in _node.keywords:
+                if _kw.arg == "gate":
+                    _g = _kw.value
+            _emitted |= _gate_literals(_g)
+        # The indirect form: `gate = <conditional>` then `probe(..., gate, ...)`.
+        elif isinstance(_node, ast.Assign) and any(
+                isinstance(_t, ast.Name) and _t.id == "gate" for _t in _node.targets):
+            _emitted |= _gate_literals(_node.value)
+    # An empty string is never a gate: `validate_coverage` already refuses a bare
+    # `blocked-by`, and a rendering local that evaluates to "" is not a claim about
+    # the vocabulary.
+    _undeclared = sorted(_emitted - _gates_declared - {""})
+    if _undeclared:
+        fail(f"preflight.py emits gate(s) {_undeclared} that COVERAGE_GATES does not declare — "
+             f"a `blocked-by <gate>` row naming one would be refused by validate_coverage, "
+             f"which is the enum drift the closed vocabulary exists to prevent")
+    if not set(getattr(_pre, "NO_REASON_NEEDED", ())) <= {s.split(" ", 1)[0] for s in (_status or ())}:
+        fail("preflight.py: NO_REASON_NEEDED names a status outside COVERAGE_STATUS")
 
 # HARD RULE: a SKILL.md may exist ONLY inside plugins/<plugin>/skills/<skill>/.
 for dirpath, dirnames, filenames in os.walk(ROOT):
