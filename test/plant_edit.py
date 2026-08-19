@@ -63,7 +63,11 @@ def resub(path, pattern, replacement, count=1):
     """
     count = int(count)
     s = read(path)
-    out, n = re.subn(pattern, replacement, s, count=count)
+    # MULTILINE, because every file this plants into is a document: an anchored pattern
+    # like `…\)\*\*\s*$` is meant to say "end of that LINE", and without the flag it says
+    # "end of the file" and lands nowhere. Cost one red release to learn — the plant
+    # printed `PLANT DID NOT LAND`, honestly, after the tag was already public.
+    out, n = re.subn(pattern, replacement, s, count=count, flags=re.M)
     if not n:
         raise SystemExit(f"PLANT DID NOT LAND: {path} matches no {pattern!r}")
     if out == s:
