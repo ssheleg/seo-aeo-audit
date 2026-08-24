@@ -11,6 +11,12 @@ was taken, across the four repositories that ship this fixture byte for byte. Ev
 now comes from `residue.workspace()`, a failing case keeps its own by name, and the run
 ends with one line naming what it left. See `test/residue.py`.
 """
+# shared-mechanism: plant_guard_test.py — 4 copies in this family, kept as one file
+#   rather than 4 dialects. The umbrella's gate computes which module-level
+#   constants actually differ between the copies and refuses a difference this line
+#   does not name: on 2026-08-24 an undeclared success-vocabulary constant made a
+#   ported runner report twenty healthy guards as broken, and nothing could see it.
+# diverges: CASES
 import os
 import subprocess
 import sys
