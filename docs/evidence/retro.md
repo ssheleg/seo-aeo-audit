@@ -13,7 +13,7 @@ log. The stamp is what makes the cold-retirement trigger computable, so it goes 
 · 2026-08-11 (`v0.15.0`, `v0.15.1`) · 2026-08-12 (`v0.15.2`, `v0.16.0`) · 2026-08-13
 (`v0.16.1`) · 2026-08-14 (`v0.16.2`, `v0.16.3`, `v0.17.0`, `v0.17.1`, `v0.19.0`) ·
 2026-08-15 (`v0.19.1`) · 2026-08-16 (`v0.20.0`, `v0.20.1`, `v0.20.2`, `v0.21.0`,
-`v0.22.0`) · 2026-08-19 (`v0.23.0`) · 2026-08-20 (at `v0.23.0`, the truth-fix run) · 2026-08-20 (`v0.24.0`) · **2026-08-24 (`v0.25.0`)**
+`v0.22.0`) · 2026-08-19 (`v0.23.0`) · 2026-08-20 (at `v0.23.0`, the truth-fix run) · 2026-08-20 (`v0.24.0`) · 2026-08-24 (`v0.25.0`) · **2026-08-25 (`v0.25.1`, the residue and README run)**
 
 **Five of those stamps carry a prune entry** — 2026-08-04, 2026-08-05, the two runs of
 2026-08-10, and 2026-08-20 — and the retirement trigger counts *those*, because a

@@ -346,6 +346,10 @@ docs/research/                       provenance behind every claim in the refere
 
 ## Development
 
+<!-- commands-run-in: a clone -->
+These run **in a clone of this repository**. The published npm package ships no
+`test/` directory, so from an install they are names, not commands.
+
 ```bash
 bash scripts/check-docs.sh      # the gate: runs exactly the files below, nothing else
 python3 test/validate.py        # structure, version sync, references, links, anchors, drift

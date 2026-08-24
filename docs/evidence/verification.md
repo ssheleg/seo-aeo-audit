@@ -71,6 +71,15 @@ which is the platform split that made eleven `sed -i` plants dead for two days. 
 B-31, B-32 and B-33 are what this run found and did not close; B-34 is what it found and
 deliberately left alone.
 
+## v0.25.1 — the residue scan, and a command the package cannot run (2026-08-25)
+
+**Shipped in v0.25.1.** Written before the tag, the only order that works.
+
+| REQ | What shipped | How it was confirmed | Confirmed |
+|---|---|---|---|
+| R-77 | `test/residue.py` tags each workspace with the process group that made it, so the gate-wide scan answers for ONE run rather than for a prefix every run shares | the scan read the shared `$TMPDIR` by prefix and failed on another session's trees and on a tree a FAILING case kept on purpose; demonstrated on identical state, where the old logic FAILs and the new suite passes while printing what it excluded | **planted** + **observed** |
+| R-78 | The README stops presenting commands the published package cannot run | it ships no `test/` directory, so seven fenced `python3 test/...` lines resolved in a clone and nowhere else; the umbrella's validator now refuses a member whose README claims such a command without naming where it runs, watched failing with the marker stripped | **planted** + **observed** |
+
 ## v0.25.0 — the plan is ordered on axes, not on a product (2026-08-24)
 
 **Shipped in v0.25.0.** Written before the tag, the only order that works.
@@ -313,7 +322,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-three releases at or above `v0.13.0` have no section
+**Sixteen** of the twenty-four releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
