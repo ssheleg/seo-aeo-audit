@@ -72,7 +72,7 @@ from urllib.request import Request, urlopen
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all seven.
-SKILL_VERSION = "0.24.0"
+SKILL_VERSION = "0.25.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -1303,9 +1303,10 @@ def render(data: dict) -> str:
             lines.append(f"| {f['severity']} | `{f['tier']}` | {_flat(f['message'], 240)} | "
                          f"{_flat(f['reference'], 140)} |")
     lines.append("")
-    lines.append("Tier is the confidence multiplier in `priority = (impact × confidence) / "
-                 "effort`; severity is not. A `HYPOTHESIS` here belongs in the Experiments "
-                 "bucket, never in a sitewide rollout.")
+    lines.append("Tier is the `uncertainty` axis, one of the four the plan is ordered "
+                 "on — ranked, never multiplied into a product; severity is not an "
+                 "axis at all. A `HYPOTHESIS` here belongs in the Experiments bucket, "
+                 "never in a sitewide rollout.")
     return "\n".join(lines)
 
 

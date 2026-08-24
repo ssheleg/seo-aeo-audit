@@ -58,9 +58,10 @@ past a gate that never ran.
    written against the one place a fact had drifted, while the fact lived in four.
    The myth count was green in a repository where three of its four homes were
    wrong.
-2. **Severity is not an evidence tier.** Only the tier enters
-   `priority = (impact × confidence) / effort`. Any finding a script emits carries
-   one, declared in `FINDING_TIERS`.
+2. **Severity is not an evidence tier.** The tier IS the `uncertainty` axis — it is
+   ranked, never multiplied into a product (see `references/deliverable-templates.md`
+   → *Priority — four axes, and no scalar*). Any finding a script emits carries one,
+   declared in `FINDING_TIERS`.
 3. **A pointer that resolves is not a pointer that answers.** `file.md#anchor` is
    validated; "see `myths.md` on why X" is not, and one of those pointed at a row
    that did not exist. If you cite a claim in another file, make the claim findable

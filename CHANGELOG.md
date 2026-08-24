@@ -1,5 +1,60 @@
 # Changelog
 
+## v0.25.0 — the plan is ordered on axes, and the pack stops contradicting itself
+
+**`priority = (impact × confidence) / effort` is gone from every live surface.**
+It sat in `SKILL.md`, the command, two references, the README, `CLAUDE.md`, a
+shipped template and a script's own printed output — **eight** of them — beside a
+README that refuses "a score out of 100" and a `myths.md` row that spends a
+paragraph explaining why a grader's number is meaningless and then prescribes a
+product of three inputs. A pack cannot say *not a score* and order its plan by
+one.
+
+**And the number destroyed the inputs its own argument needed.** `4 × 1.0 / 4`
+and `1 × 1.0 / 1` both print **1**, so *a template-wide leak, CONFIRMED, four
+days* and *one informational page, CONFIRMED, one day* arrived at the same
+priority and nobody reading the plan could tell them apart. A product is a
+one-way function on exactly the values a reader needs to disagree with.
+
+**Four axes, and the first that separates two findings decides** — impact,
+irreversibility, uncertainty, coordination, in that order. `effort` keeps its job
+and loses its rank: it sizes the work and never moves it. Definitions live in
+`references/deliverable-templates.md` under a machine-readable
+`<!-- priority-axes: … -->` marker, because the axis list WAS prose and prose is
+what let two of the four be absent from the whole pack while a **cost** stood in
+their place.
+
+**Irreversibility is the axis this domain most needed and did not have.** A
+changed URL has already spread into links, indexes and citations by the time
+anyone reconsiders it; a meta description has not. The old formula could not
+express the difference, so a redirect plan and a title rewrite competed on one
+number.
+
+**Uncertainty is the evidence tier, ranked rather than multiplied.** The
+consequence reached the guards: the tier weights (1.0 / 0.7 / 0.4 / 0.2) existed
+*as the confidence multiplier*, and a check required `SKILL.md` to restate them
+"because SKILL.md's triage math quotes it". With the math gone the restatement is
+the two-homes defect this pack polices everywhere else, so the check now holds the
+single home and drops the copy. The column is an `Uncertainty rank`, not a
+`Confidence weight`.
+
+`check_the_plan_is_ordered_on_axes_and_not_a_product` sweeps every live surface —
+the skill dir, templates, cursor rules, the root docs and the commands — and
+refuses a formula that IS a line while allowing one quoted inside a sentence
+recording its removal, because naming a dead formula is how the record survives.
+Watched failing against two plants: a composed priority put back into `SKILL.md`,
+and `irreversibility` swapped for `effort` in the declaration. Ported from
+`agent-stack`, which found and closed the same defect first.
+
+**Found by the gate on the way:** a negative self-test was pinned to the literal
+`**~5,900 non-blank lines**` and my recount of that figure would have silently
+disarmed it — the exact shape of standing instruction #6, caught by this
+repository's own plant-integrity check rather than by reading. Re-anchored on the
+number's shape with `resub`.
+
+`SKILL.md` body 4817 → 4804 tokens: still 54 over the 4750 house limit, which is
+a pre-existing row this change improves rather than closes.
+
 ## v0.24.0 — 2026-08-20
 
 **Eleven documented facts were false while the gate was green**, and every one of them was a

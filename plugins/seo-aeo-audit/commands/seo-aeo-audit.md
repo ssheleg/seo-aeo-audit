@@ -22,9 +22,10 @@ Follow the skill exactly.
    or automate, run it last, and hold its own rule — presence is `CONFIRMED`,
    effect is mostly `HYPOTHESIS`, so most of it lands in Experiments rather than
    in Gains.
-4. Triage with `priority = (impact × confidence) / effort`, where confidence is the
-   evidence tier (CONFIRMED 1.0 · STUDY 0.7 · FIELD 0.4 · HYPOTHESIS 0.2), and group
-   into Blockers / Leaks / Gains / Experiments.
+4. Triage on four axes and no scalar — `impact`, `irreversibility`, `uncertainty`
+   (the evidence tier: CONFIRMED · STUDY · FIELD · HYPOTHESIS), `coordination` —
+   the first that separates two findings decides, in that order. `effort` is
+   recorded and never ranks. Group into Blockers / Leaks / Gains / Experiments.
 5. Write `docs/seo/audit-<date>.md` and `docs/seo/plan-<date>.md`, plus
    `docs/seo/experiments.md` if the plan has an Experiments bucket. **Never overwrite
    an existing audit or plan silently** — write a new dated file, or ask first.

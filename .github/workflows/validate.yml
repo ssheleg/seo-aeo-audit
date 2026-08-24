@@ -662,7 +662,7 @@ jobs:
           plantq "the README's freshness stamp drifting from the reference that owns it" 'says the sources were last re-fetched' \
             python3 test/plant_edit.py sub README.md '**Sources last re-fetched 2026-08-16**' '**Sources last re-fetched 2026-08-10**'
           plantq "the README's corpus size restated instead of counted" 'non-blank lines of reference material' \
-            python3 test/plant_edit.py sub README.md '**~5,900 non-blank lines**' '**~5,000 non-blank lines**'
+            python3 test/plant_edit.py resub README.md '\*\*~[0-9],[0-9]00 non-blank lines\*\*' '**~1,100 non-blank lines**'
           plantq "a SKILL.md body over the 5000-token budget" 'the budget is < 5000' \
             python3 -c "p='plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md';s=open(p,encoding='utf-8').read();a='## Step 3 — Triage';assert a in s,'PLANT DID NOT LAND: '+a;open(p,'w',encoding='utf-8').write(s.replace(a,'<!-- '+('budget '*900)+'-->'+chr(10)+chr(10)+a,1))"
           plantq "prose calling an OPEN board row closed" 'calls B-17 closed' \

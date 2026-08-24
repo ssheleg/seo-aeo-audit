@@ -407,9 +407,9 @@ with socketserver.TCPServer(("127.0.0.1", 0), _Handler) as _srv:
         _srv.shutdown()
 
 # ── every finding carries an evidence tier (non-negotiable #2) ───────────────
-# The tier is the confidence multiplier in `priority = (impact × confidence) /
-# effort`. Emitting severity alone leaves the agent to invent the number that
-# orders the plan.
+# The tier IS the `uncertainty` axis, one of the four the plan is ordered on —
+# ranked, never multiplied into a product. Emitting severity alone leaves the
+# agent to invent the ordering.
 _TIERS = {"CONFIRMED", "STUDY", "FIELD", "HYPOTHESIS"}
 for _name, _rec in (("bad-page", run("bad-page.html", "https://example.com/pricing")),
                     ("good-page", run("good-page.html", "https://example.com/pricing")),

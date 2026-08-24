@@ -71,6 +71,21 @@ which is the platform split that made eleven `sed -i` plants dead for two days. 
 B-31, B-32 and B-33 are what this run found and did not close; B-34 is what it found and
 deliberately left alone.
 
+## v0.25.0 — the plan is ordered on axes, not on a product (2026-08-24)
+
+**Shipped in v0.25.0.** Written before the tag, the only order that works.
+
+| REQ | What shipped | How it was confirmed | Confirmed |
+|---|---|---|---|
+| R-75 | `priority = (impact × confidence) / effort` removed from every live surface — `SKILL.md`, the command, `deliverable-templates.md`, `myths.md`, `README.md`, `CLAUDE.md`, `templates/audit-report.template.md` and `agent_surface.py`'s printed output | eight sites found by `grep -rn 'impact × confidence'`; after the change the same grep returns only CHANGELOG history, `docs/` records and the paragraph that names the removal. The count matters: the register row said four, and it said four because the earlier sweep grepped `plugins/` alone | **observed** |
+| R-76 | Four axes declared machine-readably and swept by a gate — `check_the_plan_is_ordered_on_axes_and_not_a_product`, ported from `agent-stack` | watched failing against **two** plants: a composed priority put back into `SKILL.md`, and `irreversibility` swapped for `effort` in the declaration. Equality, not subset — an axis that is not one of the manifesto's four is as wrong as one missing | **planted** + **observed** |
+| R-77 | The tier weights became an `Uncertainty rank` and stopped being restated in `SKILL.md` | the weights existed *as the confidence multiplier*; with the product gone, a check requiring the reference's table to also appear in `SKILL.md` was enforcing the two-homes defect this pack polices elsewhere. Single-home check kept, restatement dropped, reason recorded in the code | **observed** |
+| R-78 | A negative self-test re-anchored from a literal to a shape | recounting `~5,900 non-blank lines` to `6,000` would have silently disarmed the plant pinned to the old literal — standing instruction #6, caught by this repository's own plant-integrity guard rather than by reading. `resub` on the number's shape | **planted** + **observed** |
+| R-79 | `SKILL_VERSION` bumped in all seven collectors with the manifests | the gate refuses a producer block naming a version that never ran; 7 of 7 moved in this commit | **observed** |
+
+**Counts at ship: 5 rows — 3 observed · 2 planted+observed.**
+
+
 ## v0.24.0 — eleven documented facts recomputed (2026-08-20)
 
 **Shipped in v0.24.0.** This section exists because the guard added in the same release
@@ -298,7 +313,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-two releases at or above `v0.13.0` have no section
+**Sixteen** of the twenty-three releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

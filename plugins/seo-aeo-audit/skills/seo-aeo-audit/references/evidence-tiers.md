@@ -23,7 +23,7 @@ Every finding a bundled script emits carries a tier as well as a severity;
 fails if a finding is added without one. Severity is loudness, the tier is backing,
 and only the tier enters the triage formula.
 
-| Tier | Definition | Allowed action | Confidence weight |
+| Tier | Definition | Allowed action | Uncertainty rank |
 |---|---|---|---|
 | **CONFIRMED** | Documented by the engine, or reproduced on this site with an observation you can point at (GSC output, log line, HTTP response, rendered DOM) | Ship it. Blockers of this tier come first. | 1.0 |
 | **STUDY** | Published multi-site data with a stated method and sample size | Ship it where the site matches the study population; state the source and sample in the report | 0.7 |

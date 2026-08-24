@@ -41,7 +41,10 @@ Repeat this block per finding, most severe first.
 - **Fix:** {{the specific change}}
 - **Effort:** {{1–5 engineering days, including release}}
 - **Evidence tier:** {{CONFIRMED | STUDY | FIELD | HYPOTHESIS}}
-- **Priority:** {{(impact × confidence) / effort}}
+- **Impact:** {{a revenue page · a template · one informational page}}
+- **Irreversibility:** {{unrecoverable · recoverable with work · trivially reversible}}
+- **Uncertainty:** {{the evidence tier above}}
+- **Coordination:** {{how many systems and owners meet at the fix}}
 - **Verification:** {{the exact observable that proves it worked}}
 
 ## Not checked

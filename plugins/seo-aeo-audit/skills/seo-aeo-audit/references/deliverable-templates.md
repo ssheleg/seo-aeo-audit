@@ -101,7 +101,10 @@ Repeat this block per finding, most severe first.
 - **Fix:** {{the specific change}}
 - **Effort:** {{1–5 engineering days, including release}}
 - **Evidence tier:** {{CONFIRMED | STUDY | FIELD | HYPOTHESIS}}
-- **Priority:** {{(impact × confidence) / effort}}
+- **Impact:** {{a revenue page · a template · one informational page}}
+- **Irreversibility:** {{unrecoverable · recoverable with work · trivially reversible}}
+- **Uncertainty:** {{the evidence tier above}}
+- **Coordination:** {{how many systems and owners meet at the fix}}
 - **Verification:** {{the exact observable that proves it worked}}
 
 ## Not checked
@@ -181,6 +184,49 @@ which row below applies.
 | **instrument** | this skill, its probes or its access changed, so a later run looks elsewhere |
 | **policy** | a core or AI-surface update changed the rules the evidence was read under |
 ````
+
+## Priority — four axes, and no scalar
+
+`priority = (impact × confidence) / effort` used to sit in `SKILL.md` and in the
+command, beside a README that refuses "a score out of 100". A pack cannot say
+*not a score* and then order its plan by one.
+
+**And the number destroyed the inputs the argument needs.** `4 × 1.0 / 4` and
+`1 × 1.0 / 1` both print **1**, so *a template-wide leak, CONFIRMED, four days*
+and *one informational page, CONFIRMED, one day* arrive at the same priority and
+nobody reading the plan can tell them apart. A product is a one-way function.
+
+<!-- priority-axes: impact, irreversibility, uncertainty, coordination -->
+
+The axes are the manifesto's four (`manifesto` -> *"How many agents,
+repositories, services, and owners meet at the change?"*, under *"These axes are
+not a fake numerical score"*). Two were absent from this pack entirely, and
+`effort` -- a **cost**, not a risk axis -- had been substituted into their place.
+
+| Axis | Question | High · Medium · Low |
+|---|---|---|
+| **Impact** | What is harmed if the finding is right? | a revenue page · a template · one informational page |
+| **Irreversibility** | How hard is the harm to undo once it lands? | unrecoverable · recoverable with work · trivially reversible |
+| **Uncertainty** | How much of the effect cannot be checked deterministically? | HYPOTHESIS · FIELD or STUDY · CONFIRMED |
+| **Coordination** | How many systems and owners meet at the fix? | many · two · one |
+
+**Irreversibility is the axis this domain most needed and did not have.** A
+changed URL has already spread into links, indexes and citations by the time
+anyone reconsiders it; a meta description has not. The old formula could not
+express the difference, so a redirect plan and a title rewrite competed on one
+number.
+
+**Uncertainty is the evidence tier, renamed to its axis rather than multiplied
+into a product.** `CONFIRMED` is measured, `HYPOTHESIS` is not, and the tier
+already carried that meaning -- what it did not carry was a rank of its own.
+
+**Effort keeps its job and loses its rank.** Recorded per finding in engineering
+days including release, it sizes the work and never moves it up or down.
+
+**Ordering rule: the first axis that separates two findings decides.** Impact,
+then Irreversibility, then Uncertainty, then Coordination. A reader who
+disagrees with the order of two findings can point at the axis that decided it
+and argue about that axis alone.
 
 ## docs/seo/plan-<YYYY-MM-DD>.md
 

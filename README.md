@@ -99,9 +99,12 @@ ends with exactly one recommended next action. Deliverables land in
 | J | Measurement | Will anyone be able to tell whether the plan worked? |
 
 Each track has two halves: the diagnosis (what is wrong and why) and a mechanical
-sweep for completeness. Findings are triaged with
-`priority = (impact × confidence) / effort` — where confidence is the evidence
-tier — and grouped into **Blockers → Leaks → Gains → Experiments**.
+sweep for completeness. Findings are triaged on **four axes and no scalar** — impact, irreversibility,
+uncertainty (the evidence tier), coordination — where the first axis that
+separates two findings decides, and grouped into
+**Blockers → Leaks → Gains → Experiments**. `effort` is recorded and never
+ranks: a product of the inputs cannot be argued with on them, and this README
+already refuses a score out of 100.
 
 ### Rules the skill will not break
 
@@ -148,7 +151,7 @@ agent, not just Claude Code. This is the substance:
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~5,900 non-blank lines** of distilled reference
+  decide whether to trust the rest. **~6,000 non-blank lines** of distilled reference
   material across the twenty-five contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were

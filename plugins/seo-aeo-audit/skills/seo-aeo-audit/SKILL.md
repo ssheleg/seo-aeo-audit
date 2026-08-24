@@ -224,18 +224,15 @@ rulings. A check whose silence is indistinguishable from not having run is not
 evidence — and this is the one most easily skipped, because every track
 individually went green.
 
-Then score every finding and sort. Do not present an unranked list.
+Then order every finding. Do not present an unranked list.
 
-```
-priority = (impact × confidence) / effort
-```
+**Four axes, no scalar** — the first that separates two findings decides, in
+this order: `impact` · `irreversibility` · `uncertainty` · `coordination`.
+`effort` is recorded and never ranks. A product cannot be argued with on its
+inputs; an axis can. Definitions:
+[`deliverable-templates.md`](references/deliverable-templates.md).
 
-- **impact** 1–5: revenue pages blocked = 5; a template-wide leak = 4; a single
-  informational page = 1. Estimate in traffic or revenue terms where the baseline
-  allows it.
-- **confidence**: CONFIRMED 1.0 · STUDY 0.7 · FIELD 0.4 · HYPOTHESIS 0.2.
-- **effort** 1–5 in engineering days, counting release process, not just the
-  edit.
+<!-- priority-axes: impact, irreversibility, uncertainty, coordination -->
 
 Group the output into four buckets, in this order:
 

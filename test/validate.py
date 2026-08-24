@@ -1140,11 +1140,15 @@ _skill_txt = open(os.path.join(ROOT, SKILL_DIR, "SKILL.md"), encoding="utf-8").r
 _home_txt = open(_tier_home, encoding="utf-8").read()
 for _t, _w in _weights.items():
     if not re.search(rf"\|\s*\*\*{_t}\*\*\s*\|.*\|\s*{re.escape(_w)}\s*\|", _home_txt):
-        fail(f"evidence-tiers.md: {_t} no longer carries weight {_w} — SKILL.md's "
-             f"triage math quotes it")
-    if not re.search(rf"{_t}\s*{re.escape(_w)}", _skill_txt):
-        fail(f"SKILL.md: no '{_t} {_w}' in the confidence line — the weights have "
-             f"drifted from references/evidence-tiers.md")
+        fail(f"evidence-tiers.md: {_t} no longer carries rank {_w} — it is the "
+             f"single home of the `uncertainty` axis's ordering")
+    # SKILL.md no longer restates them, and that is the point. The weights existed
+    # as the confidence MULTIPLIER of `priority = (impact × confidence) / effort`;
+    # that product was removed on 2026-08-24 (four axes, no scalar) because it
+    # destroyed the inputs its own argument needed. With `uncertainty` ranked
+    # rather than multiplied, the numbers are an ORDERING and have one home. A
+    # check requiring the reference's table to also appear in SKILL.md was
+    # enforcing the two-homes defect this pack polices everywhere else.
 for _f in mdcs:
     _mdc_txt = open(os.path.join(cursor_dir, _f), encoding="utf-8").read()
     _gloss = re.search(r"FIELD\s*\(([^)]*)\)", _mdc_txt)
@@ -1910,6 +1914,91 @@ if os.path.isfile(_LEDGER) and os.path.isfile(_CHANGELOG):
             if _rm2 and int(_rm2.group(1)) != _total:
                 fail(f"docs/evidence/verification.md: section {_head!r} says "
                      f"{_rm2.group(1)} rows, its Confirmed column has {_total}")
+
+
+# ── the plan is ordered on axes, never on a product ──────────────────────────
+# Ported from `agent-stack` on 2026-08-24, where the same defect was found and
+# closed first. `priority = (impact × confidence) / effort` sat in SKILL.md, the
+# command, two references, the README, CLAUDE.md, a shipped template and a
+# script's own output — eight live surfaces — beside a README that refuses "a
+# score out of 100". A pack cannot say *not a score* and order its plan by one.
+#
+# Two design decisions, both learned from agent-stack's version:
+#  * the name is an alternation, not the literal `priority`, because renaming the
+#    variable would walk this check straight past the defect;
+#  * the whole line must BE the formula. A formula inside a sentence explaining
+#    why it was dropped is a citation, and refusing that would delete the record.
+PRIORITY_SCALAR = re.compile(
+    r"(?m)^\s*[-*]?\s*`?\s*(?:P|score|priority|rank|weight)\s*=\s*[^`\n]*[×*/][^`\n]*`?\s*$")
+PRIORITY_AXES_REQUIRED = ("impact", "irreversibility", "uncertainty", "coordination")
+PRIORITY_AXES_DECL = re.compile(r"<!--\s*priority-axes:\s*([^>]+?)\s*-->")
+
+
+def check_the_plan_is_ordered_on_axes_and_not_a_product():
+    """No live surface may prescribe a composed priority, and the axes are declared.
+
+    The declaration is a machine-readable marker rather than prose: the axis list WAS
+    prose here, and prose is what let two of the manifesto's four axes be absent from
+    the entire pack while `effort` -- a cost, not a risk axis -- stood in their place.
+    """
+    # Live prescriptions only. `CHANGELOG.md` and `docs/` record what past releases
+    # said and rewriting them is a thing this repository refuses; `docs/evidence/`
+    # holds frozen records of runs.
+    live = []
+    for base in (SKILL_DIR, "templates", "cursor/rules"):
+        for root_dir, _dirs, files in os.walk(os.path.join(ROOT, base)):
+            if "__pycache__" in root_dir:
+                continue
+            for f in files:
+                if f.endswith((".md", ".mdc", ".py")):
+                    live.append(os.path.join(root_dir, f))
+    for f in ("README.md", "CLAUDE.md", "CONTRIBUTING.md"):
+        fp = os.path.join(ROOT, f)
+        if os.path.isfile(fp):
+            live.append(fp)
+    cmd = os.path.join(ROOT, "plugins", "seo-aeo-audit", "commands")
+    if os.path.isdir(cmd):
+        live += [os.path.join(cmd, f) for f in os.listdir(cmd) if f.endswith(".md")]
+
+    looked = 0
+    for path in sorted(set(live)):
+        try:
+            text = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        looked += 1
+        rel = os.path.relpath(path, ROOT)
+        for m in PRIORITY_SCALAR.finditer(text):
+            fail(f"{rel}: prescribes a composed priority -- {m.group(0).strip()!r}. "
+                 f"Multiplication destroys the inputs the ranking argument needs: "
+                 f"`4 × 1.0 / 4` and `1 × 1.0 / 1` both print 1. Order on the four "
+                 f"axes and let the first that separates two findings decide")
+    if looked < 5:
+        _skips.append(f"priority-scalar sweep looked at only {looked} file(s) -- "
+                      f"the corpus walk found almost nothing, which is a fact about "
+                      f"the walk")
+
+    home = os.path.join(ROOT, SKILL_DIR, "references", "deliverable-templates.md")
+    if not os.path.isfile(home):
+        fail("references/deliverable-templates.md missing -- it is the single home of "
+             "the priority axes")
+        return
+    body = open(home, encoding="utf-8").read()
+    m = PRIORITY_AXES_DECL.search(body)
+    if not m:
+        fail("references/deliverable-templates.md: no `<!-- priority-axes: ... -->` "
+             "declaration, so the axis list is prose again")
+        return
+    axes = tuple(x.strip().lower() for x in m.group(1).split(",") if x.strip())
+    if axes != PRIORITY_AXES_REQUIRED:
+        fail(f"references/deliverable-templates.md declares axes {axes} -- the "
+             f"manifesto names exactly {PRIORITY_AXES_REQUIRED}, and this is equality "
+             f"rather than a subset: an axis that is not one of them is as wrong as "
+             f"one that is missing (`effort` is the specific wrong one)")
+
+
+check_the_plan_is_ordered_on_axes_and_not_a_product()
+
 
 # ── the standing instructions: their run stamps and their cap ─────────────────
 # `retro.md` says the run stamps are "what makes the cold-retirement trigger

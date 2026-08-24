@@ -1,6 +1,6 @@
 {
   "name": "@ssheleg/seo-aeo-audit",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "scripts": {
     "test": "bash scripts/check-docs.sh"
   },
