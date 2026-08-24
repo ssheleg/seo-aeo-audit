@@ -52,6 +52,19 @@ disarmed it — the exact shape of standing instruction #6, caught by this
 repository's own plant-integrity check rather than by reading. Re-anchored on the
 number's shape with `resub`.
 
+**The first tag of this release failed in CI, and the reason is the same rule a
+third time today.** The run stamp was written `**2026-08-24 (`v0.25.0`, the axes
+run)**` and a plant resubs on `**DATE (`vX.Y.Z`)**` at end of line, so it could
+not land and CI refused **after** the tag was public. Nothing shipped — npm stayed
+at 0.24.0 and no GitHub release exists — so the tag was re-cut rather than
+superseded.
+
+**Why the local suite could not see it: there is nothing local to run.** `npm
+test` is one script and every negative self-test lives in
+`.github/workflows/validate.yml`, so R-010 — run the release's suite before
+pushing the tag — has no subject in this repository. Filed as `B-35`, priority
+5.0, because this is the member whose plants are pinned to prose most often.
+
 `SKILL.md` body 4817 → 4804 tokens: still 54 over the 4750 house limit, which is
 a pre-existing row this change improves rather than closes.
 
