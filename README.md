@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![site](https://img.shields.io/badge/docs-skills.sshlg.me-8ab0ff)](https://skills.sshlg.me/skills/seo-aeo-audit/)
 
-**[Docs, and all 8 skills →](https://skills.sshlg.me/)** · [this skill's page](https://skills.sshlg.me/skills/seo-aeo-audit/) · [follow @sshlg93 on X](https://x.com/intent/follow?screen_name=sshlg93)
+**[Docs, and every skill →](https://skills.sshlg.me/)** · [this skill's page](https://skills.sshlg.me/skills/seo-aeo-audit/) · [follow @sshlg93 on X](https://x.com/intent/follow?screen_name=sshlg93)
 
 **An agent skill that audits a website for search *and* answer-engine visibility,
 proves every finding with evidence, and hands back a prioritized plan of
