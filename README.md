@@ -3,6 +3,9 @@
 [![validate](https://github.com/ssheleg/seo-aeo-audit/actions/workflows/validate.yml/badge.svg)](https://github.com/ssheleg/seo-aeo-audit/actions/workflows/validate.yml)
 [![npm](https://img.shields.io/npm/v/@ssheleg/seo-aeo-audit)](https://www.npmjs.com/package/@ssheleg/seo-aeo-audit)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![site](https://img.shields.io/badge/docs-ssheleg.github.io-8ab0ff)](https://ssheleg.github.io/sshlg-skills/skills/seo-aeo-audit/)
+
+**[Docs, and all 8 skills →](https://ssheleg.github.io/sshlg-skills/)** · [this skill's page](https://ssheleg.github.io/sshlg-skills/skills/seo-aeo-audit/) · [follow @sshlg93 on X](https://x.com/intent/follow?screen_name=sshlg93)
 
 **An agent skill that audits a website for search *and* answer-engine visibility,
 proves every finding with evidence, and hands back a prioritized plan of
