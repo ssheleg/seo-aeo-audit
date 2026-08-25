@@ -7,6 +7,10 @@
 
 **[Docs, and every skill →](https://skills.sshlg.me/)** · [this skill's page](https://skills.sshlg.me/skills/seo-aeo-audit/) · [follow @sshlg93 on X](https://x.com/intent/follow?screen_name=sshlg93)
 
+Loads in **DeepSeek Harness** (`dsh`) with **no plugin to write**: it reads the
+Agent Skills standard directly, scanning `~/.agents/skills` — where `npx skills
+add` puts this pack — at rank 500.
+
 **An agent skill that audits a website for search *and* answer-engine visibility,
 proves every finding with evidence, and hands back a prioritized plan of
 changes.** Part of the [sshlg-skills](https://github.com/ssheleg/sshlg-skills)
