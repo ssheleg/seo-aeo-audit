@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Pack and skill | `seo-aeo-audit` |
-| Version | `0.25.4` |
+| Version | `0.25.5` |
 | License | MIT |
 | Source | https://github.com/ssheleg/seo-aeo-audit |
 
@@ -46,4 +46,3 @@ Install from npm/GitHub, through the Agent Skills CLI, or as the
 A public-only audit cannot observe private indexation, conversion or server-log
 facts. Recommendations inherit the evidence ceiling of the strongest available
 instrument; unknown volume remains blank rather than becoming zero.
-

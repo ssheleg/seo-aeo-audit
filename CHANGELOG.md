@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.25.5 — the run-stamp plant has a stable target
+
+The latest run stamp again ends in the single-version form the negative test
+mutates, so CI proves the guard can fail before the release job publishes.
+
 ## v0.25.4 — the shared seam is explicit
 
 Both shared validators now state `diverges: none`, completing the umbrella
