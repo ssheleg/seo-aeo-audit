@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.25.3 — shared guards identify their owner
+
+The eval and social-preview validators now declare their umbrella-owned shared
+mechanisms, satisfying the cross-repository drift contract.
+
 ## v0.25.2 — public trust surface and working context headroom
 
 The detailed reference map moved behind `REFERENCE_INDEX.md`, reducing the

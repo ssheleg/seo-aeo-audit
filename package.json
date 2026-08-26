@@ -1,6 +1,6 @@
 {
   "name": "@ssheleg/seo-aeo-audit",
-  "version": "0.25.2",
+  "version": "0.25.3",
   "scripts": {
     "test": "bash scripts/check-docs.sh",
     "test:negatives": "python3 test/negatives.py",
