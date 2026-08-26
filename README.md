@@ -5,6 +5,16 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![site](https://img.shields.io/badge/docs-skills.sshlg.me-8ab0ff)](https://skills.sshlg.me/skills/seo-aeo-audit/)
 
+**Audit search and answer-engine visibility with evidence, then return a prioritized change plan.**
+
+```bash
+npx skills add ssheleg/seo-aeo-audit
+```
+
+Ask: `Audit example.com and explain why answer engines do not cite it.`
+
+**[Detailed docs →](https://skills.sshlg.me/skills/seo-aeo-audit/)**
+
 **[Docs, and every skill →](https://skills.sshlg.me/)** · [this skill's page](https://skills.sshlg.me/skills/seo-aeo-audit/) · [follow @sshlg93 on X](https://x.com/intent/follow?screen_name=sshlg93)
 
 Loads in **DeepSeek Harness** (`dsh`) with **no plugin to write**: it reads the

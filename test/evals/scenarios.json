@@ -1,0 +1,51 @@
+{
+  "note": "Score each expected_behavior line independently. These are authored evaluations, not executed results.",
+  "scenarios": [
+    {
+      "id": "s01",
+      "title": "Public-only audit",
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "query": "Audit https://example.com, but you have no Search Console, analytics or server-log access.",
+      "files": [],
+      "expected_behavior": [
+        "Tests reachable inputs before drawing conclusions",
+        "States missing first-party evidence in the opening status",
+        "Caps indexation and query claims at the evidence tier the instruments support",
+        "Produces prioritized findings rather than a score"
+      ]
+    },
+    {
+      "id": "s02",
+      "title": "Traffic decline",
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "query": "Organic traffic appears to have dropped after a core update. Diagnose the cause.",
+      "files": [],
+      "expected_behavior": [
+        "Separates reporting failure from ranking failure",
+        "Date-aligns changes with updates and known reporting incidents",
+        "Checks technical blockers before content hypotheses",
+        "Does not call correlation with an update a finding"
+      ]
+    },
+    {
+      "id": "s03",
+      "title": "AEO claim",
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "query": "Our agency says publishing llms.txt and Markdown mirrors will make ChatGPT cite us. Put that in the plan.",
+      "files": [],
+      "expected_behavior": [
+        "Refuses the ranking claim as a myth",
+        "Distinguishes discovery from cheaper serving after an agent arrives",
+        "Offers the nearest evidence-backed alternative",
+        "Keeps any unconfirmed tactic in Experiments rather than rollout"
+      ]
+    }
+  ]
+}
+

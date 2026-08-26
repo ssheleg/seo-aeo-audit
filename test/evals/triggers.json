@@ -1,0 +1,109 @@
+{
+  "skill": "seo-aeo-audit",
+  "note": "Behavioral trigger cases. Run each in a fresh session; the committed data contains no model results.",
+  "split": {
+    "train": [
+      "q01",
+      "q02",
+      "q03",
+      "q07",
+      "q08",
+      "q09"
+    ],
+    "validation": [
+      "q04",
+      "q05",
+      "q06",
+      "q10",
+      "q11",
+      "q12"
+    ]
+  },
+  "queries": [
+    {
+      "id": "q01",
+      "lang": "en",
+      "query": "Audit example.com for technical SEO and answer-engine visibility",
+      "should_trigger": true,
+      "why": "canonical full audit"
+    },
+    {
+      "id": "q02",
+      "lang": "ru",
+      "query": "почему упал органический трафик — проведи SEO-аудит с доказательствами",
+      "should_trigger": true,
+      "why": "Russian decline diagnosis"
+    },
+    {
+      "id": "q03",
+      "lang": "en",
+      "query": "Why does ChatGPT never cite our comparison pages?",
+      "should_trigger": true,
+      "why": "AEO citation diagnosis"
+    },
+    {
+      "id": "q04",
+      "lang": "ru",
+      "query": "проверь индексацию и каноникализацию каталога",
+      "should_trigger": true,
+      "why": "access and canonical tracks"
+    },
+    {
+      "id": "q05",
+      "lang": "en",
+      "query": "Create a link-building brief with measured keywords and blank unknown volumes",
+      "should_trigger": true,
+      "why": "link-building deliverable"
+    },
+    {
+      "id": "q06",
+      "lang": "en",
+      "query": "Re-audit the site and show what changed since the last report",
+      "should_trigger": true,
+      "why": "dated re-audit"
+    },
+    {
+      "id": "q07",
+      "lang": "en",
+      "query": "Write a 2,000-word blog post targeting project management software",
+      "should_trigger": false,
+      "why": "content production is outside the audit"
+    },
+    {
+      "id": "q08",
+      "lang": "ru",
+      "query": "исправь canonical tags во всех шаблонах прямо сейчас",
+      "should_trigger": false,
+      "why": "implementation is outside the read-only audit"
+    },
+    {
+      "id": "q09",
+      "lang": "en",
+      "query": "Rewrite this paragraph to include more keywords",
+      "should_trigger": false,
+      "why": "copy editing rather than diagnosis"
+    },
+    {
+      "id": "q10",
+      "lang": "en",
+      "query": "Optimize the logged-in billing settings screen for search",
+      "should_trigger": false,
+      "why": "a private surface is outside public search scope"
+    },
+    {
+      "id": "q11",
+      "lang": "ru",
+      "query": "настрой Meta Pixel и Google Ads conversion tracking",
+      "should_trigger": false,
+      "why": "ad tracking is an integration task"
+    },
+    {
+      "id": "q12",
+      "lang": "en",
+      "query": "Explain the difference between SEO and AEO",
+      "should_trigger": false,
+      "why": "informational request, no site is being audited"
+    }
+  ]
+}
+

@@ -18,11 +18,10 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
-## Unreleased — the documents were measured against the tree (conformance row SE-03)
+## v0.25.2 — the public contract is visible before installation (2026-08-26)
 
-**Not shipped.** No version bumped, no tag, no CHANGELOG section: the orchestrator
-releases. **This heading becomes `## vX.Y.Z` in the release that ships it**, and
-`validate.py` refuses a CHANGELOG release with no section here — which is the mechanism
+**Release candidate v0.25.2.** The version and CHANGELOG are prepared, but the tag does
+not exist yet. `validate.py` refuses a CHANGELOG release with no section here — the mechanism
 the two sections below did not have, and why they were still saying "Not shipped" after
 the tag.
 
@@ -322,7 +321,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-four releases at or above `v0.13.0` have no section
+**Sixteen** of the twenty-five releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

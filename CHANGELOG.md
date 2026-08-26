@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.25.2 — public trust surface and working context headroom
+
+The detailed reference map moved behind `REFERENCE_INDEX.md`, reducing the
+always-loaded skill body below the family's working budget without removing a
+track. A root skill card, positive and near-miss trigger evals, three behavioral
+scenarios, a generated social preview and a one-command README path now ship.
+CI runs the pinned house audit and a planted eval-schema failure.
+
 ## v0.25.1 — the residue scan, and a command the package cannot run
 
 `test/residue.py` now tags every workspace with the process group that made it, and the
