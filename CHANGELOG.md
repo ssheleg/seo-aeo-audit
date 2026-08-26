@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.25.4 — the shared seam is explicit
+
+Both shared validators now state `diverges: none`, completing the umbrella
+mechanism contract.
+
 ## v0.25.3 — shared guards identify their owner
 
 The eval and social-preview validators now declare their umbrella-owned shared
