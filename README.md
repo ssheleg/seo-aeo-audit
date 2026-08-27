@@ -4,6 +4,7 @@
 [![npm](https://img.shields.io/npm/v/@ssheleg/seo-aeo-audit)](https://www.npmjs.com/package/@ssheleg/seo-aeo-audit)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![site](https://img.shields.io/badge/docs-skills.sshlg.me-8ab0ff)](https://skills.sshlg.me/skills/seo-aeo-audit/)
+[![skills.sh](https://skills.sh/b/ssheleg/seo-aeo-audit)](https://skills.sh/ssheleg/seo-aeo-audit)
 
 **Audit search and answer-engine visibility with evidence, then return a prioritized change plan.**
 
