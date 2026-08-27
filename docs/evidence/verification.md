@@ -18,6 +18,14 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.25.6 — the badge and the homepage reach npm (2026-08-27)
+
+**Release candidate v0.25.6.** No behaviour changed. The `skills.sh` badge and the
+canonical `homepage` landed on `main` in the previous cycle and stopped there — npm
+serves README and metadata from the last publish, so the package page still showed a
+badge-less README and a homepage pointing at GitHub. Confirmed by fetching the published
+package after release, not by reading the tree.
+
 ## v0.25.5 — the run-stamp plant has a stable target (2026-08-26)
 
 **Release candidate v0.25.5.** The `run stamps falling behind` plant now lands
@@ -339,7 +347,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-eight releases at or above `v0.13.0` have no section
+**Sixteen** of the twenty-nine releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
