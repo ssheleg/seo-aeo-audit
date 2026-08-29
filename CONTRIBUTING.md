@@ -43,7 +43,9 @@ Corollaries worth stating:
 
 ## Setup
 
-No dependencies. Python 3.9+ is all you need.
+No dependencies. Python 3.9+ runs the skill and almost all of the gate; Node 16+
+is needed only by `test/test_installer.py`, because the npm installer under test
+is a Node CLI.
 
 ```bash
 git clone https://github.com/ssheleg/seo-aeo-audit && cd seo-aeo-audit
@@ -68,6 +70,7 @@ python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 python3 test/test_agent_surface.py
 python3 test/test_output_contracts.py
+python3 test/test_installer.py
 python3 test/residue_test.py
 ```
 
@@ -160,6 +163,16 @@ URL-scheme guard, which exists because `urlopen` will happily read
 `test_output_contracts.py` holds what all seven owe their caller: a run that
 measured nothing exits non-zero, and no network error reaches generated markdown
 with its newlines intact.
+
+`test_installer.py` runs both installers as processes against throwaway HOMEs.
+The case that earns it its place: an installer asked to write
+`~/.claude/skills/seo-aeo-audit` while the same skill is installed as a Claude
+Code plugin must **refuse with exit 3** and write nothing — a plain copy would
+shadow the plugin and serve its frozen version forever — with the remedy naming
+the real plugin spec from `installed_plugins.json`, `--force` as the deliberate
+override, and a missing or corrupt JSON reading as "no plugin" (fail open,
+never crash). It also holds the success path to its last lines: how the next
+version arrives, and that a restart is needed before a session sees it.
 
 `test/residue_test.py` is the ledger over what a run leaves on disk. Every temp tree in
 this repository comes from `residue.workspace()`, a **failing** case keeps its own tree by

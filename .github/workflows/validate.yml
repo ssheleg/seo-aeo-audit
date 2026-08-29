@@ -755,23 +755,46 @@ jobs:
       - name: npm installer CLI check
         run: node --check bin/seo-aeo-audit.js
 
-      - name: npm installer functional test (fresh / rerun-skip / --force)
+      - name: Installer behavior tests (refusal of the plugin shadow, both channels)
+        run: python3 test/test_installer.py
+
+      - name: Negative self-test (an installer that stops refusing must fail its suite)
         run: |
           set -eu
-          export HOME=/tmp/fakehome
-          mkdir -p "$HOME"
-          node bin/seo-aeo-audit.js
-          test -f "$HOME/.claude/skills/seo-aeo-audit/SKILL.md"
-          test -f "$HOME/.claude/skills/seo-aeo-audit/references/myths.md"
-          test -f "$HOME/.claude/skills/seo-aeo-audit/references/deliverable-templates.md"
-          test -f "$HOME/.claude/skills/seo-aeo-audit/scripts/page_audit.py"
-          test -f "$HOME/.claude/commands/seo-aeo-audit.md"
-          node bin/seo-aeo-audit.js | grep -q '^skip:'
-          node bin/seo-aeo-audit.js --force | grep -q '^Installed'
-          if node bin/seo-aeo-audit.js --wat; then
-            echo "ERROR: unknown arg accepted"; exit 1
+          # The defect under test is the fail-open class: an installer that writes
+          # ~/.claude/skills/seo-aeo-audit while the plugin owns this agent ships a
+          # plain copy that shadows the plugin and serves its frozen version forever.
+          # One plant per channel, each in its own copy, each required to turn the
+          # suite red — a guard nobody has watched fail is indistinguishable from a
+          # guard that cannot.
+          rm -rf /tmp/inst-bin /tmp/inst-bin-residue && cp -R . /tmp/inst-bin && mkdir -p /tmp/inst-bin-residue
+          python3 - <<'PY'
+          p = '/tmp/inst-bin/bin/seo-aeo-audit.js'
+          s = open(p, encoding="utf-8").read()
+          old = 'if ((spec || viaMarketplaceDir) && !force) {'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'if (false) {', 1))
+          PY
+          if TMPDIR=/tmp/inst-bin-residue python3 /tmp/inst-bin/test/test_installer.py; then
+            echo "ERROR: the suite passed while the npm installer writes the shadow"
+            exit 1
+          else
+            echo "OK: the suite catches an npm installer that stopped refusing"
           fi
-          echo "OK: npm installer behaves"
+          rm -rf /tmp/inst-sh /tmp/inst-sh-residue && cp -R . /tmp/inst-sh && mkdir -p /tmp/inst-sh-residue
+          python3 - <<'PY'
+          p = '/tmp/inst-sh/install.sh'
+          s = open(p, encoding="utf-8").read()
+          old = 'if [[ ( -n "$SPEC" || -e "$MARKETPLACE" ) && "$FORCE" -eq 0 ]]; then'
+          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, 'if false; then', 1))
+          PY
+          if TMPDIR=/tmp/inst-sh-residue python3 /tmp/inst-sh/test/test_installer.py; then
+            echo "ERROR: the suite passed while install.sh writes the shadow"
+            exit 1
+          else
+            echo "OK: the suite catches a POSIX installer that stopped refusing"
+          fi
 
       - name: Workflow YAML parses
         run: |
