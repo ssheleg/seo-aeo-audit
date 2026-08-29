@@ -18,6 +18,24 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.25.7 — the installers refuse the shadow they used to write (2026-08-29)
+
+**Release candidate v0.25.7.** SEO-01 and SEO-06 from the family audit; the canon is
+make-skill v0.25.0's installer refusal. Until this release both installers wrote
+`~/.claude/skills/seo-aeo-audit` unconditionally — the fail-open class the canon names —
+and neither said how the next version arrives or that a session must restart to see it.
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| An installer refuses the plugin shadow: exit 3, remedy, nothing written | `installedPluginSpec()` in `bin/seo-aeo-audit.js` and the `sed`-based equivalent in `install.sh`, both consulting `installed_plugins.json` with the marketplaces/ dir as fallback | **planted** + **observed** | `test/test_installer.py` was run against the pre-fix installers first: **7 of 11 cases red**, the plugin-present case writing the shadow and exiting 0 — the real defect, watched. CI then plants the same defect per channel (`if (false)` / `if false`) and requires the suite red; both plants watched catching it locally before commit |
+| The remedy names the real spec from the JSON, not a guessed `<name>@<name>` | the refusal prints `claude plugin update <spec>` read out of `installed_plugins.json` | **planted** + **observed** | the differently-named-marketplace case (`seo-aeo-audit@sshlg-skills`) was red against the pre-fix tree and goes red again under either CI plant; green only when the printed spec is the declared one |
+| A missing or corrupt `installed_plugins.json` reads as "no plugin" | fail open, never crash — the fresh HOME is the common case | **test-only** | two suite cases (absent JSON, `{ this is not json`) pass against the fixed installers; the failure mode they defend against — an installer crashing on a parse error — has not been watched happening here |
+| The success path says how the next version arrives, and that a restart is needed | update lines + session-restart reminder in both installers (SEO-06) | **planted** + **observed** | `grep -ci 'updat\|restart'` printed **0** for each pre-fix installer (`git show HEAD:bin/seo-aeo-audit.js`, `git show HEAD:install.sh`, measured 2026-08-29) — measured, not recalled; both fresh-install cases were red against the pre-fix installers for exactly that absence, and assert both lines now |
+
+**Counts, by parsing the table above: 4 rows — 3 planted+observed · 1 test-only.**
+The `test-only` row is honest about its ceiling: nobody has watched a corrupt JSON
+crash an installer here, because the check was written fail-open from the start.
+
 ## v0.25.6 — the badge and the homepage reach npm (2026-08-27)
 
 **Release candidate v0.25.6.** No behaviour changed. The `skills.sh` badge and the
@@ -347,7 +365,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the twenty-nine releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

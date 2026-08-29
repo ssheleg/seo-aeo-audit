@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.25.7 — the installers refuse the shadow they used to write
+
+- **Both installers now refuse to write `~/.claude/skills/seo-aeo-audit` while the
+  seo-aeo-audit plugin owns this agent** (SEO-01 from the family audit; canon:
+  make-skill v0.25.0). A plain copy beside an installed plugin shadows it and
+  serves its frozen version forever — reproduced live in this family on
+  2026-08-29, when a bare `npx @ssheleg/telegram-dev` shipped three shadows while
+  the plugin was enabled. The check reads `~/.claude/plugins/installed_plugins.json`
+  — the record of what is actually installed — with the `plugins/marketplaces/`
+  directory kept only as a fallback signal, because a directory-sourced
+  marketplace has no dir there and plugin names differ from marketplace names.
+  The refusal exits **3**, names the real plugin spec in its remedy
+  (`claude plugin marketplace update` + `claude plugin update <spec>`, plus the
+  family launcher), and writes nothing. `--force` overrides, deliberately. A
+  missing or corrupt JSON reads as "no plugin" — fail open, never crash.
+- **Both installers now end by saying how the next version arrives, and that a
+  restart is needed** (SEO-06): neither mentioned updates or the
+  session-restart requirement at all, so an install looked finished while the
+  running session kept the old set.
+- `test/test_installer.py` joins the gate: eleven cases against throwaway HOMEs
+  — refusal with nothing written, the differently-named-marketplace spec in the
+  remedy, `--force`, corrupt-JSON fail-open, a prefix-collider that must not
+  false-refuse, and the `install.sh` mirrors. Watched failing 7-of-11 against
+  the pre-fix installers before either fix was written. CI runs the suite plus
+  two planted-defect steps, one per channel, that disarm the refusal and require
+  the suite to go red.
+
 ## v0.25.6 — the channel that sends the installs, on npm too
 
 - The `skills.sh` badge and the canonical `homepage` reached GitHub in the previous cycle and stopped
