@@ -56,6 +56,14 @@ npx skills add ssheleg/seo-aeo-audit
 npx github:ssheleg/seo-aeo-audit
 ```
 
+Both installers (`bin/seo-aeo-audit.js`, `install.sh`) check
+`~/.claude/plugins/installed_plugins.json` first: if the seo-aeo-audit **plugin**
+already owns this agent they refuse with exit 3 instead of writing a plain copy
+that would shadow it and serve a frozen version forever. The refusal prints the
+plugin-channel update commands; `--force` writes the copy anyway, as a deliberate
+choice. On success, the last lines say how the next version arrives and remind
+you to restart the agent — skills are read at session start.
+
 ## Update
 
 **Update the whole family — one package, every agent.** A bundle with one member current and the
@@ -376,6 +384,7 @@ python3 test/test_url_inspection.py  # index verdicts against the documented API
 python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
 python3 test/test_agent_surface.py   # the track-K collector, offline
 python3 test/test_output_contracts.py  # exit status and markdown safety across all seven
+python3 test/test_installer.py       # both installers refuse the plugin shadow, fail open on absence
 python3 test/residue_test.py         # what the run left on disk, and that it said so
 node --check bin/seo-aeo-audit.js
 bash -n install.sh
@@ -428,8 +437,8 @@ evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
 `bash scripts/check-docs.sh` must pass — it runs `python3 test/validate.py`,
 `python3 test/plant_guard_test.py`, `python3 test/test_page_audit.py`,
 `python3 test/test_url_inspection.py`, `python3 test/test_collectors.py`,
-`python3 test/test_agent_surface.py`, `python3 test/test_output_contracts.py` and
-`python3 test/residue_test.py`.
+`python3 test/test_agent_surface.py`, `python3 test/test_output_contracts.py`,
+`python3 test/test_installer.py` and `python3 test/residue_test.py`.
 Everyone taking part is expected to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 

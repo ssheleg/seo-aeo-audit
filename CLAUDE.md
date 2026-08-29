@@ -24,8 +24,8 @@ bash scripts/check-docs.sh
 
 That script is the whole gate — `test/validate.py`, `test/plant_guard_test.py`,
 `test/test_page_audit.py`, `test/test_url_inspection.py`, `test/test_collectors.py`,
-`test/test_agent_surface.py`, `test/test_output_contracts.py` and
-`test/residue_test.py`. CI runs the same set
+`test/test_agent_surface.py`, `test/test_output_contracts.py`,
+`test/test_installer.py` and `test/residue_test.py`. CI runs the same set
 plus a negative self-test per guard. The count is deliberately not written down here:
 it had four homes and went stale in three of them the first time a test file was
 added — and this list itself went two files stale anyway, so `validate.py` now holds

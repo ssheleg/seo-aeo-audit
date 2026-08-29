@@ -9,7 +9,7 @@
 | `SKILL.md` + `references/*.md` | Text. Read by the agent, executes nothing. |
 | `scripts/*.py` — seven of them | Run only when you or the agent invokes one. Python **standard library only** — no dependencies, no install step. None writes a file; every result goes to stdout. Three of them execute `gcloud` as a subprocess — see below. All seven read three environment variables and no others — see below. |
 | `commands/`, `cursor/rules/` | Text read by the host agent. |
-| `bin/seo-aeo-audit.js` (npm installer) | Copies the skill directory and the slash command into `~/.claude/`. No network, no post-install script. |
+| `bin/seo-aeo-audit.js` (npm installer) | Copies the skill directory and the slash command into `~/.claude/`. No network, no post-install script. Reads `~/.claude/plugins/installed_plugins.json` first and refuses (exit 3) when the plugin already owns this agent, because a plain copy would shadow it; `--force` overrides. |
 
 There is no telemetry, no analytics, no phone-home, and nothing writes outside
 the paths above.
