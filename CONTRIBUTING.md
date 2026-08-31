@@ -147,6 +147,17 @@ a whole vocabulary value out, and the prose under it reasoned from the wrong num
 version, and its live instruction count is read from the headings rather than from the
 prune log's arithmetic — the stamps stopped eighteen releases back, which is the file
 every run is told to read first.
+**card version**: `SKILL-CARD.md`'s Version row must equal `plugin.json` — it was the
+fifth version home and outside every sync, so it published `0.25.5` for three releases
+while the manifests shipped `0.25.8`.
+**declared schemas**: each manifest names, at its document ROOT, the one SchemaStore
+address right for its document type — a marketplace is not a plugin manifest — and the
+dead `claude-code-plugin.json` is refused by name. A declaration nested inside a plugin
+entry is inert and therefore also refused. Both manifests declared no `$schema` at all
+through v0.25.8 while `claude plugin validate --strict` stayed green: it does not follow
+`$schema`. This guard is offline and can only pin; `test/check_schemas.py` is the half
+that fetches the addresses and validates each document against what they serve, and CI
+runs it.
 
 Those names are not decoration: the validator asserts that this paragraph still
 mentions each guard family it runs, because a prose summary of a checker is a fact

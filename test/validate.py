@@ -15,6 +15,11 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import residue  # noqa: E402
+# The pinned `$schema` map, imported rather than copied. Its home is the module that
+# also FETCHES those addresses, because this file is a flat script that runs every
+# guard at import — the reverse arrow would run the whole validator inside the fetch
+# check. See test/check_schemas.py for why the direction is what it is.
+from check_schemas import DEAD_SCHEMAS, SCHEMA_FOR  # noqa: E402
 
 residue.open_case("structural validator")
 NAME = "seo-aeo-audit"
@@ -61,7 +66,9 @@ NUMWORDS = {
     18: "eighteen", 19: "nineteen", 20: "twenty", 21: "twenty-one",
     22: "twenty-two", 23: "twenty-three", 24: "twenty-four", 25: "twenty-five",
     26: "twenty-six", 27: "twenty-seven", 28: "twenty-eight", 29: "twenty-nine",
-    30: "thirty",
+    30: "thirty", 31: "thirty-one", 32: "thirty-two", 33: "thirty-three",
+    34: "thirty-four", 35: "thirty-five", 36: "thirty-six", 37: "thirty-seven",
+    38: "thirty-eight", 39: "thirty-nine", 40: "forty",
 }
 _WORD_TO_N = {w: n for n, w in NUMWORDS.items()}
 
@@ -247,6 +254,58 @@ def check_release_gates_on_validate():
 
 check_release_gates_on_validate()
 
+
+def check_schema_addresses_are_pinned_and_at_the_document_root():
+    """A `$schema` that resolves to nothing is worse than no `$schema` at all — and
+    for twenty-five releases both of this repository's manifests declared none at all.
+
+    Nothing failed. `claude plugin validate --strict` was green throughout: it does
+    not follow `$schema`, and an absent one is not a manifest error. So the tree read
+    as conformant while no editor, no CI validator and no reviewer had anything to
+    fetch — the same shape a sibling shipped for eleven releases with a `$schema`
+    pointing at `claude-code-plugin.json`, an address SchemaStore answers with 404.
+
+    Three branches rather than one, because that sibling's marketplace was wrong three
+    ways at once and fixing the address alone would have left two standing: a dead
+    address, the PLUGIN document type declared on a MARKETPLACE document, and a
+    declaration nested inside the plugin entry, where `$schema` is inert — only the
+    root one is ever read. The fourth branch below is the state this repository was
+    actually in: no declaration anywhere.
+
+    This half is offline on purpose — the gate must run without a network — so it can
+    only pin. `test/check_schemas.py` is the half that fetches the addresses and
+    validates each document against what they serve; CI runs it. Both read
+    `SCHEMA_FOR` from that module so the map has one home.
+    """
+    docs = {".claude-plugin/marketplace.json": mkt,
+            f"plugins/{NAME}/.claude-plugin/plugin.json": plg}
+    for rel, want in SCHEMA_FOR.items():
+        doc = docs.get(rel)
+        if doc is None:                      # already reported by load_json
+            continue
+        got = doc.get("$schema")
+        if got is None:
+            fail(f"{rel}: declares no $schema — every editor and validator that would "
+                 f"check this document has nothing to fetch; declare {want}")
+        elif got in DEAD_SCHEMAS:
+            fail(f"{rel}: $schema is {got!r}, which SchemaStore answers with "
+                 f"{DEAD_SCHEMAS[got]} — a dead address reads as conformance while "
+                 f"nothing checks the document; use {want}")
+        elif got != want:
+            fail(f"{rel}: $schema is {got!r}, not the schema for this document type — "
+                 f"a marketplace is not a plugin manifest and the two shapes differ "
+                 f"(a marketplace entry requires `source`, a manifest has no such key); "
+                 f"use {want}")
+    for entry in (mkt or {}).get("plugins", []):
+        if "$schema" in entry:
+            fail(f".claude-plugin/marketplace.json: plugin entry {entry.get('name')!r} "
+                 "carries its own $schema, which is inert — below the document root "
+                 "nothing reads it, so a declaration there is decoration that hides the "
+                 "absence of the root one")
+
+
+check_schema_addresses_are_pinned_and_at_the_document_root()
+
 if len(distinct) > 1:
     fail(f"version mismatch across manifests: {vers}")
 
@@ -260,6 +319,23 @@ else:
         fail("CHANGELOG.md: no '## vX.Y.Z' entry found")
     elif plg_ver and vm.group(1) != plg_ver:
         fail(f"version mismatch: CHANGELOG top entry=v{vm.group(1)} plugin.json={plg_ver!r}")
+
+# The fifth version home, and the one nobody was reading: `SKILL-CARD.md` published
+# `0.25.5` while the tree shipped `0.25.8`. The four-way sync above covers the
+# manifests and the CHANGELOG, and the seven `SKILL_VERSION` literals are compared
+# further down — the card was outside both, so it drifted three releases and stayed
+# green. A public card stating a version that never shipped is the same defect class
+# as a prose count, one document over.
+_card_path = os.path.join(ROOT, "SKILL-CARD.md")
+if not os.path.isfile(_card_path):
+    fail("missing root file: SKILL-CARD.md")
+else:
+    _cm = re.search(r"\|\s*Version\s*\|\s*`([^`]+)`\s*\|", open(_card_path, encoding="utf-8").read())
+    if not _cm:
+        fail("SKILL-CARD.md: no `| Version | `X.Y.Z` |` row to compare")
+    elif plg_ver and _cm.group(1) != plg_ver:
+        fail(f"version mismatch: SKILL-CARD.md says v{_cm.group(1)}, "
+             f"plugin.json says v{plg_ver} — the card is the public identity of the pack")
 
 # slash command with proper frontmatter
 cmd_path = os.path.join(ROOT, f"plugins/{NAME}/commands/{NAME}.md")
@@ -507,6 +583,7 @@ else:
 # add a guard family and leave the summary untouched.
 _GUARD_FAMILIES = (
     "four-way version sync",
+    "card version",
     "standard-library only",
     "tier vocabulary",
     "myth count",
@@ -525,6 +602,7 @@ _GUARD_FAMILIES = (
     "ledger coverage",
     "confirmed tally",
     "run stamps",
+    "declared schemas",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
