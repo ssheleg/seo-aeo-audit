@@ -25,5 +25,6 @@ recommendation) · [tooling.md](references/tooling.md) (check → tool) ·
 [myths.md](references/myths.md) · [benchmarks.md](references/benchmarks.md) (dated 2026
 numbers) · [algorithm-updates.md](references/algorithm-updates.md) (dated timeline) ·
 [prowl-mcp.md](references/prowl-mcp.md) (bulk data through one MCP endpoint) ·
-[growth-plays.md](references/growth-plays.md) ·
+[growth-plays.md](references/growth-plays.md) (the ranked play list — load when the
+plan needs Gains beyond fixes, each play gated by its trigger and tier) ·
 [deliverable-templates.md](references/deliverable-templates.md).

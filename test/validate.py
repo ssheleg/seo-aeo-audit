@@ -170,8 +170,31 @@ else:
                 fail("SKILL.md: description must start with 'Use when …' (canon)")
             if not re.search(r"[а-яё]", desc, re.I):
                 fail("SKILL.md: description must include Russian trigger phrases too (canon)")
-        if len(fm) > 1024:
-            fail(f"SKILL.md: frontmatter is {len(fm)} chars, must be under 1024")
+        # Spec caps, per field — not one cap over the whole block. The old check
+        # capped len(fm) at 1024, which was the DESCRIPTION limit misapplied to the
+        # block: the moment `compatibility` arrived (spec-required here, because the
+        # skill needs the network and optionally GSC/PSI credentials) the block
+        # legitimately outgrew it while every field stayed inside its own cap.
+        cmp_m = re.search(r"^compatibility:\s*(.+)$", fm, re.M)
+        if cmp_m is None or not cmp_m.group(1).strip():
+            fail("SKILL.md: empty/missing compatibility — this skill audits over the "
+                 "network with optional GSC/PSI credentials, and the field that "
+                 "declares that must not drift back out")
+        for _label, _m, _cap in (("description", dm, 1024),
+                                 ("compatibility", cmp_m, 500)):
+            if _m is None or not _m.group(1).strip():
+                continue  # absence already failed above, with its own message
+            _val = _m.group(1).strip()
+            if len(_val) > _cap:
+                fail(f"SKILL.md: {_label} is {len(_val)} chars, the spec cap is {_cap}")
+            # A plain YAML scalar that contains ': ' fails yaml.safe_load — the
+            # umbrella's pin gate parses this front matter, and the family shipped
+            # exactly this defect twice (sheleg-design v1.37.4 and v1.58.0).
+            # Quoted scalars may carry it; unquoted ones may not.
+            if _val[:1] not in ('"', "'") and ": " in _val:
+                fail(f"SKILL.md: {_label} is an unquoted scalar containing ': ' — "
+                     f"that is not valid YAML in a plain scalar (write ' - ' instead; "
+                     f"the family shipped this twice, see sheleg-design v1.58.1)")
 
 # name sync across the three sources of truth
 for label, val in {"marketplace": mkt_name, "plugin.json": plg_name, "frontmatter": fm_name}.items():
