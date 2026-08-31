@@ -18,6 +18,26 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.25.9 — the manifests name the schema that checks them (2026-08-31)
+
+**Release candidate v0.25.9.** The wave-4 row: this was the only member of the family
+whose manifests declared no `$schema` at all (B-36). The recipe is `telegram-dev` v0.1.11's,
+followed rather than reinvented. Everything here was done under lease `SEO-08` on branch
+`feat/declared-schemas`.
+
+| REQ | What shipped | Confirmed | Evidence |
+|---|---|---|---|
+| Each manifest declares, at its document ROOT, the schema for its own document type | `.claude-plugin/marketplace.json` → `claude-code-marketplace.json`; `plugins/seo-aeo-audit/.claude-plugin/plugin.json` → `claude-code-plugin-manifest.json`, both on `json.schemastore.org` | **observed** | both addresses fetched 2026-08-31: `200` following a redirect to `www.schemastore.org`, titles `'Claude Code Plugin Marketplace'` and `'Claude Code Plugin Manifest'`. The plausible guess `claude-code-plugin.json` answered `404` in the same sweep, which is why it is refused by name rather than merely unused |
+| Each document validates against the schema fetched from the address it declares | `test/check_schemas.py` — fetches the declared address, `jsonschema.validators.validator_for` on the served document, then `iter_errors` over the manifest | **observed** | `python3 test/check_schemas.py` → rc 0, `OK: 2 declared schema(s) resolve and validate what declares them`, with "validates against it" printed per manifest. Not a string comparison against a copy: the schema is the one served by the address in the file |
+| The offline half pins what the gate can check without a network | `validate.py` **declared schemas** guard — four branches: no `$schema`, the dead address, the wrong document type, and a declaration nested in a `plugins[]` entry where it is inert | **planted** | all four watched refusing by name, each against a planted defect in a tree copy: `python3 test/negatives.py -k schema` → `PASS: all 4 guards provably reject their planted defect`. The first plant is the state v0.25.8 actually shipped, so the guard is known to fail on this repository's own history |
+| The networked half cannot report an outage as a pass | rc 1 = proven wrong, rc 2 = could not look; the CI step converts rc 2 into `::warning::` and rc 1 into a red job | **observed** + **test-only** | rc 2 observed directly by the design of the import guard (`jsonschema` absent → "Refusing to exit 0"); rc 0 observed locally with `jsonschema` 4.26.0. The rc-2 CI branch itself is **test-only** — no SchemaStore outage has been staged to watch the warning path run |
+| The address map has exactly one home | `SCHEMA_FOR` and `DEAD_SCHEMAS` live in `test/check_schemas.py`; `validate.py` imports them | **observed** | the import direction is the reverse of `telegram-dev`'s for a mechanical reason stated in both files: this `validate.py` is a flat script that runs every guard at import and calls `sys.exit(1)`, so importing it to borrow a constant would run the whole validator inside the fetch check. `grep -c 'json.schemastore.org' test/validate.py` → 0 |
+| The negatives floor matches the suite | `MIN_EXPECTED` 26 → 31 in `test/negatives.py` | **observed** | derived, not asserted: `python3 test/negatives.py --list` prints `31 negative self-tests`, and the full run prints `PASS: all 31 guards provably reject their planted defect` |
+| `SKILL-CARD.md`'s version can no longer drift | new **card version** guard holds the card's Version row equal to `plugin.json`; the card corrected from `0.25.5` to `0.25.9` | **planted** + **observed** | the drift was found by measurement, not by reading: the card published `0.25.5` while the tree shipped `0.25.8` — three releases stale, outside the four-way manifest sync and outside the seven `SKILL_VERSION` literals. The guard was watched failing on that exact pre-fix value before the card was corrected, and a CI plant restores `0.25.5` so it stays watchable: `python3 test/negatives.py -k "SKILL-CARD"` → `PASS: all 1 guards provably reject their planted defect` |
+
+**Counts, by parsing the table above: 7 rows — 1 planted+observed · 1 planted · 4 observed · 1 observed+test-only.**
+The unconfirmed half is the rc-2 warning path: an outage nobody has staged.
+
 ## v0.25.8 — the runtime needs are declared, and the evals finally ran (2026-08-31)
 
 **Release candidate v0.25.8.** SEO-03, SEO-04, SEO-05 and SEO-07 from the family
@@ -384,7 +404,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-one releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

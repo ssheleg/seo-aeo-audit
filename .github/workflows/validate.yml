@@ -833,6 +833,132 @@ jobs:
           claude plugin validate . --strict
           claude plugin validate plugins/seo-aeo-audit --strict
 
+      # Four plants for one guard, because the defect it was written for is four
+      # states wearing one line. Both manifests carried NO `$schema` through v0.25.8
+      # while the step above was green for all twenty-five releases -- `--strict`
+      # does not follow `$schema`, and an absent one is not a manifest error. Each
+      # plant below restores one of the four ways this can be wrong while the tree
+      # still reads as conformant.
+      - name: Negative self-test (a manifest that declares no $schema must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/noschema-copy && mkdir -p /tmp/noschema-copy-residue
+          python3 - <<'PY'
+          import re
+          p = '/tmp/noschema-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json'
+          s = open(p, encoding="utf-8").read()
+          s2, n = re.subn(r'^\s*"\$schema":.*\n', '', s, count=1, flags=re.M)
+          assert n == 1, "PLANT DID NOT LAND: no $schema line in " + p
+          open(p, "w", encoding="utf-8").write(s2)
+          PY
+          if TMPDIR=/tmp/noschema-copy-residue python3 /tmp/noschema-copy/test/validate.py; then
+            echo 'ERROR: validator passed on a manifest with no $schema — the state v0.25.8 shipped'
+            exit 1
+          else
+            echo 'OK: validator requires a $schema on every manifest'
+          fi
+
+      - name: Negative self-test (a dead $schema address must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/deadschema-copy && mkdir -p /tmp/deadschema-copy-residue
+          python3 - <<'PY'
+          p = '/tmp/deadschema-copy/.claude-plugin/marketplace.json'
+          s = open(p, encoding="utf-8").read()
+          assert 'claude-code-marketplace.json' in s, "PLANT DID NOT LAND: no address in " + p
+          open(p, "w", encoding="utf-8").write(
+              s.replace('claude-code-marketplace.json', 'claude-code-plugin.json', 1))
+          PY
+          if TMPDIR=/tmp/deadschema-copy-residue python3 /tmp/deadschema-copy/test/validate.py; then
+            echo 'ERROR: validator passed on a $schema SchemaStore answers with 404'
+            exit 1
+          else
+            echo "OK: validator refuses the dead claude-code-plugin.json by name"
+          fi
+
+      - name: Negative self-test (a $schema naming the wrong document type must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/wrongschema-copy && mkdir -p /tmp/wrongschema-copy-residue
+          python3 - <<'PY'
+          p = '/tmp/wrongschema-copy/plugins/seo-aeo-audit/.claude-plugin/plugin.json'
+          s = open(p, encoding="utf-8").read()
+          assert 'claude-code-plugin-manifest.json' in s, "PLANT DID NOT LAND: no address in " + p
+          open(p, "w", encoding="utf-8").write(
+              s.replace('claude-code-plugin-manifest.json', 'claude-code-marketplace.json', 1))
+          PY
+          if TMPDIR=/tmp/wrongschema-copy-residue python3 /tmp/wrongschema-copy/test/validate.py; then
+            echo "ERROR: validator passed with a marketplace schema declared on a plugin manifest"
+            exit 1
+          else
+            echo "OK: validator pins one schema per document type"
+          fi
+
+      - name: Negative self-test (a $schema in the inert nested position must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/nestedschema-copy && mkdir -p /tmp/nestedschema-copy-residue
+          python3 - <<'PY'
+          p = '/tmp/nestedschema-copy/.claude-plugin/marketplace.json'
+          s = open(p, encoding="utf-8").read()
+          old = '      "name": "seo-aeo-audit",\n'
+          assert old in s, "PLANT DID NOT LAND: no plugin entry in " + p
+          new = ('      "$schema": "https://json.schemastore.org/'
+                 'claude-code-plugin-manifest.json",\n' + old)
+          open(p, "w", encoding="utf-8").write(s.replace(old, new, 1))
+          PY
+          if TMPDIR=/tmp/nestedschema-copy-residue python3 /tmp/nestedschema-copy/test/validate.py; then
+            echo 'ERROR: validator passed on a $schema below the document root, where nothing reads it'
+            exit 1
+          else
+            echo "OK: validator rejects the inert nested declaration"
+          fi
+
+      - name: Negative self-test (a stale SKILL-CARD version must fail)
+        run: |
+          set -eu
+          cp -R . /tmp/card-copy && mkdir -p /tmp/card-copy-residue
+          python3 - <<'PY'
+          import re
+          p = '/tmp/card-copy/SKILL-CARD.md'
+          s = open(p, encoding="utf-8").read()
+          # The exact drift this guard was written for: the card sat three releases
+          # behind the manifests, outside the four-way sync and outside the seven
+          # SKILL_VERSION literals, and nothing read it.
+          s2, n = re.subn(r'\| Version \| `[0-9.]+` \|', '| Version | `0.25.5` |', s, count=1)
+          assert n == 1, "PLANT DID NOT LAND: no Version row in " + p
+          open(p, "w", encoding="utf-8").write(s2)
+          PY
+          if TMPDIR=/tmp/card-copy-residue python3 /tmp/card-copy/test/validate.py; then
+            echo "ERROR: validator passed on a SKILL-CARD version the tree never shipped"
+            exit 1
+          else
+            echo "OK: the card is a version home and is held to plugin.json"
+          fi
+
+      - name: The declared $schema addresses resolve, and the manifests validate against them
+        # Outside the docs gate on purpose: `scripts/check-docs.sh` is stdlib-only and
+        # offline, so its guard can only PIN the two addresses. This is the half that
+        # fetches them and validates each document against what is served.
+        #
+        # rc 1 is a proven wrong address or a document that does not validate, and
+        # fails the job. rc 2 is "could not look" (SchemaStore unreachable, or no
+        # jsonschema), which warns instead: a gate that goes red on somebody else's
+        # outage is one people learn to re-run past, and the offline half is still
+        # holding the line underneath it.
+        run: |
+          set -eu
+          pip install jsonschema
+          set +e
+          python3 test/check_schemas.py
+          rc=$?
+          set -e
+          if [ "$rc" = "2" ]; then
+            echo "::warning::could not reach SchemaStore — the addresses were not resolved this run"
+            exit 0
+          fi
+          exit "$rc"
+
   skill-audit:
     name: House skill audit
     runs-on: ubuntu-latest

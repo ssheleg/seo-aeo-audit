@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.25.9 — the manifests name the schema that checks them
+
+- **Both manifests declare a `$schema`, at the document root.** Neither had one
+  through v0.25.8 — this was the only member of the family in that state — so no
+  editor, no CI validator and no reviewer had anything to fetch, and nothing was
+  checking either document's shape. `claude plugin validate --strict` was green
+  for all twenty-five releases: it does not follow `$schema`, and an absent one is
+  not a manifest error. `.claude-plugin/marketplace.json` names
+  `https://json.schemastore.org/claude-code-marketplace.json` and
+  `plugins/seo-aeo-audit/.claude-plugin/plugin.json` names
+  `claude-code-plugin-manifest.json`; both answer 200 (redirecting to
+  `www.schemastore.org`), while the plausible guess `claude-code-plugin.json` is a
+  404 and is refused by name.
+- **Two halves, because pinning is not proof.** `test/validate.py` gains the
+  **declared schemas** guard — offline, so the docs gate keeps running without a
+  network: it pins one address per document type, refuses the dead one by name, and
+  refuses a declaration nested inside a `plugins[]` entry, where `$schema` is inert
+  and reads as conformance while the root has none. `test/check_schemas.py` is the
+  half that looks: it fetches each declared address and validates the document
+  against what is served with `jsonschema`. It is deliberately outside
+  `scripts/check-docs.sh` and runs in CI, where rc 2 — SchemaStore unreachable or
+  `jsonschema` absent — warns rather than fails, because a gate that goes red on
+  somebody else's outage is one people learn to re-run past. `SCHEMA_FOR` has one
+  home and both halves import it.
+- **Four plants, one per way this can be wrong**, each watched refusing by name:
+  no `$schema` at all (the state v0.25.8 shipped), the dead address restored, the
+  marketplace schema declared on a plugin manifest, and a declaration in the inert
+  nested position. `test/negatives.py`'s floor moves 26 → 31, counted by its own
+  `--list`.
+- **`SKILL-CARD.md` was a fifth version home nobody read**, publishing `0.25.5`
+  while the manifests shipped `0.25.8` — outside the four-way sync and outside the
+  seven `SKILL_VERSION` literals. Corrected, and the new **card version** guard
+  holds it equal to `plugin.json` — with a fifth CI plant that restores the exact
+  stale value, so the floor lands at 31.
+
 ## v0.25.8 — the runtime needs are declared, and the evals finally ran
 
 - **`compatibility:` front matter** (SEO-04): the skill needs network access to
