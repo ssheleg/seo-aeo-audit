@@ -411,6 +411,29 @@ jobs:
             echo "OK: validator rejects stray SKILL.md"
           fi
 
+      - name: Negative self-test (a compatibility that outgrows the spec cap must fail)
+        run: |
+          set -eu
+          rm -rf /tmp/compat-copy /tmp/compat-copy-residue
+          cp -R . /tmp/compat-copy && mkdir -p /tmp/compat-copy-residue
+          cd /tmp/compat-copy
+          # Prepend 501 filler chars to the value rather than naming it, so the plant
+          # survives a reword of the compatibility text (the resub lesson, applied).
+          python3 - <<'PY'
+          p = "plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md"
+          s = open(p, encoding="utf-8").read()
+          needle = "compatibility: "
+          if s.count(needle) != 1:
+              raise SystemExit(f"PLANT DID NOT LAND: {p} carries {s.count(needle)} copies of {needle!r}")
+          open(p, "w", encoding="utf-8").write(s.replace(needle, needle + "x" * 501 + " ", 1))
+          PY
+          if TMPDIR=/tmp/compat-copy-residue python3 test/validate.py; then
+            echo "ERROR: validator passed a compatibility over the 500-char spec cap"
+            exit 1
+          else
+            echo "OK: validator holds compatibility to the spec's 500 chars"
+          fi
+
       - name: Negative self-test (auditor tests must be able to fail)
         run: |
           set -eu
