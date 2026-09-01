@@ -73,7 +73,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all seven.
-SKILL_VERSION = "0.25.9"
+SKILL_VERSION = "0.25.10"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -696,7 +696,30 @@ def _faq_declared_vs_served(doc: Doc) -> dict:
 
     if not answers:
         return {"faq_declared": 0, "faq_declared_served": 0}
-    served = " ".join(re.sub(r"<[^>]+>", " ", p) for kind, p in doc.stream if kind == "text")
+    # VISIBILITY, not read budget. This built `served` from `kind == "text"`
+    # alone — and `Parser.handle_data` deliberately diverts anchor text into
+    # `_anchor_buf` and returns, because the read-budget model counts a link as a
+    # marker rather than as content. Correct there, wrong here: any FAQ answer
+    # carrying an inline link inside its first 60 characters was reported absent
+    # from a page that plainly shows it, and the finding cites Google's policy on
+    # marked-up content the user cannot see. Inline links inside answers are
+    # ordinary, so every run against a real site could hand a client that.
+    #
+    # Measured 2026-09-01 on the family's own `/agents/` page and reproduced from
+    # a minimal document: `faq_declared 1, faq_declared_served 0` with the answer
+    # visible in the served HTML.
+    #
+    # `_visible_text(include_links=True)` is the existing, already-tested way to
+    # read anchor text back out of the marker; a third stream kind would have
+    # double-counted in `_read_budget`, which treats everything that is not
+    # `text` as a link. The read-budget model keeps its own stream untouched.
+    #
+    # This is the second false positive closed in this function. The 2026-08-14
+    # rewrite fixed the ARIA-accordion case by matching a normalized prefix
+    # instead of a proxy, and chose prefix matching so as not to "swap one false
+    # positive for another" — it closed the split-across-elements case and left
+    # this one, because nothing in the corpus had a link inside an answer.
+    served = re.sub(r"<[^>]+>", " ", _visible_text(doc))
     served = " ".join(served.split()).lower()
     found = 0
     for a in answers:

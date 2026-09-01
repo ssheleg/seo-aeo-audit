@@ -12,7 +12,7 @@
       "displayName": "SEO + AEO Audit",
       "source": "./plugins/seo-aeo-audit",
       "description": "Audits a website across ten evidence-based tracks (access & indexation, canonicalization, architecture & link equity, intent, content value, extractability/AEO, entity consensus, experience signals, risk, measurement) and outputs a findings report plus a prioritized change plan with verification steps. Includes a stdlib-only page auditor with answer-engine read-budget analysis.",
-      "version": "0.25.9",
+      "version": "0.25.10",
       "author": {
         "name": "ssheleg",
         "url": "https://x.com/sshlg93"
