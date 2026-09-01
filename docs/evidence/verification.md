@@ -18,6 +18,16 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.25.10 — a visible answer stopped being reported as invisible (2026-09-01)
+
+| id | Claim | Evidence | Confirmed |
+|---|---|---|---|
+| R-56 | An FAQ answer whose first words carry an inline link is found in the served body | nine-line document, answer rendered with `<a href=…>` inside its first 60 characters → `faq_declared 1, faq_declared_served 1`; against the previous commit the same document returned `served 0` and emitted `faq-schema-orphan` at **high**, citing Google's policy on marked-up content the user cannot see | 2026-09-01 |
+| R-57 | The repair did not buy that by going blind the other way | an answer present only in the markup → `served 0` and `faq-schema-orphan` still raised; an answer whose words exist only as navigation labels → `served 0`. Both are fixtures, because trading a false positive for a quieter false negative is the failure mode this function already has a history of | 2026-09-01 |
+| R-58 | The read-budget model is untouched | the fix reuses `_visible_text(include_links=True)`, the existing path that reads anchor text back out of the link marker; a third stream kind would have double-counted in `_read_budget`, which treats every non-`text` entry as a link | 2026-09-01 |
+| R-59 | The new fixtures fail against the code they were written for | `git stash` the fix → `an answer whose first words carry an inline link is served, not absent` fails with `faq_declared_served: 0`; restored → `PASS: page_audit behavior` | 2026-09-01 |
+| R-60 | The absent case is `orphan`, not `partial`, and the fixture says so | asserting `faq-schema-partial` failed; the emitted code is `faq-schema-orphan` because *every* declared answer is missing. The distinction was already kept in this file, and the fixture was corrected rather than the check | 2026-09-01 |
+
 ## v0.25.9 — the manifests name the schema that checks them (2026-08-31)
 
 **Release candidate v0.25.9.** The wave-4 row: this was the only member of the family
@@ -404,7 +414,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-one releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-two releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

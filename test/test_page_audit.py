@@ -628,6 +628,51 @@ check("faq-schema-partial" in _drift_codes,
 check("faq-schema-orphan" not in _drift_codes,
       "a node with SOME answers served is not an orphan")
 
+# 6b. AN INLINE LINK INSIDE AN ANSWER IS NOT AN ABSENT ANSWER.
+#
+# The second false positive this function has produced, and it survived the first
+# repair. `Parser.handle_data` diverts anchor text into `_anchor_buf` and returns —
+# correct for the read-budget model, which counts a link as a marker rather than as
+# content — so `served`, built from `kind == "text"` alone, could not see any answer
+# whose first 60 characters carried a link. Inline links inside answers are ordinary,
+# so every run against a real site could hand a client a `medium` finding invoking
+# Google's policy on marked-up content the user cannot see, about content that is
+# visible. Measured 2026-09-01 on the family's own `/agents/` page.
+_LINK_LD = ('<script type="application/ld+json">{"@context":"https://schema.org",'
+            '"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does it work?",'
+            '"acceptedAnswer":{"@type":"Answer","text":"If it reads the Agent Skills '
+            'standard, yes. Every pack is a plain file on disk."}}]}</script>')
+_LINK_BODY = ('<h2>Does it work?</h2><p>If it reads the '
+              '<a href="https://agentskills.io/specification">Agent Skills</a> standard, '
+              'yes. Every pack is a plain file on disk.</p>')
+_link = analyze_html(f"<html><body>{_FAQ_HEAD}{_LINK_LD}{_LINK_BODY}</body></html>")
+_link_codes = {f["code"] for f in _link["findings"]}
+check(_link["faq_declared"] == 1 and _link["faq_declared_served"] == 1,
+      f"an answer whose first words carry an inline link is served, not absent; got {_link}")
+check("faq-schema-partial" not in _link_codes,
+      "reporting a visible answer as absent hands a client a policy finding about content "
+      "the user CAN see — the exact class the 2026-08-14 rewrite existed to stop making")
+
+# 6c. ...and the repair must not buy that by going blind the other way. An answer
+# genuinely missing from the page still has to be reported, and text that exists only
+# as navigation labels is not the answer appearing on the page.
+_ABSENT_LD = ('<script type="application/ld+json">{"@context":"https://schema.org",'
+              '"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does it work?",'
+              '"acceptedAnswer":{"@type":"Answer","text":"This answer lives only in the '
+              'markup and appears nowhere on the rendered page."}}]}</script>')
+_absent = analyze_html(
+    f"<html><body>{_FAQ_HEAD}{_ABSENT_LD}<h2>Does it work?</h2>"
+    f"<p>Something entirely different is written here instead.</p></body></html>")
+check(_absent["faq_declared"] == 1 and _absent["faq_declared_served"] == 0,
+      f"a genuinely absent answer must still be absent; got {_absent}")
+# `orphan`, not `partial`: every declared answer is missing here, and the file already
+# keeps those two apart — partial is drift between node and page, orphan is a node with
+# nothing behind it. Asserting the wrong one would have passed for the wrong reason.
+check("faq-schema-orphan" in {f["code"] for f in _absent["findings"]},
+      "the true positive must survive the false-positive repair — otherwise this trades "
+      "one wrong answer for a quieter one")
+
+
 # 7. a node whose answers cannot be read at all: absence is not established, so
 # the tier drops. Asserting CONFIRMED here is the mistake this file is about.
 _UNREADABLE = ('<script type="application/ld+json">{"@context":"https://schema.org",'

@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.25.10 — a visible answer stopped being reported as invisible
+
+**The second false positive this check has produced, and it survived the first repair.**
+`_faq_declared_vs_served` asks whether the answers an `FAQPage` declares appear in the
+text that was served. It built that text from `kind == "text"` stream entries alone —
+and `Parser.handle_data` deliberately diverts anchor text into `_anchor_buf` and
+returns, because the read-budget model counts a link as a marker rather than as
+content. Correct there, wrong here: **any answer carrying an inline link inside its
+first 60 characters was reported absent from a page that plainly shows it.**
+
+Inline links inside FAQ answers are ordinary, so this could reach a client on any run.
+And it is worse than a quiet miscount — the finding it produces cites Google's
+structured-data policy on marked-up content the user cannot see. On a page whose only
+declared answer carries a link it is not the `medium` drift finding but
+`faq-schema-orphan` at **`high`**, because *none* of the declared answers is found.
+Measured 2026-09-01 on this family's own `/agents/` page and reproduced from a nine-line
+document: `faq_declared 1, faq_declared_served 0`, with the answer visible in the served
+HTML.
+
+**The repair reuses what was already there.** `_visible_text(include_links=True)` is the
+existing, tested way to read anchor text back out of the link marker. A third stream
+kind would have double-counted in `_read_budget`, which treats everything that is not
+`text` as a link — so the read-budget model is untouched and keeps its own reading.
+
+**Three fixtures, not one, because the danger here is trading one wrong answer for a
+quieter one.** An answer with an inline link is now served; an answer genuinely absent
+from the page is still absent; and an answer whose words exist only as navigation
+labels is still not found. The middle one was watched failing in the direction that
+matters — and it corrected the fixture rather than the check: the fully-absent case is
+`faq-schema-orphan`, not `faq-schema-partial`, a distinction this file already keeps.
+
+The 2026-08-14 rewrite chose prefix matching so as not to *"swap one false positive for
+another"*. It closed the split-across-elements case; nothing in its corpus had a link
+inside an answer, so this one stayed open for eighteen days.
+
 ## v0.25.9 — the manifests name the schema that checks them
 
 - **Both manifests declare a `$schema`, at the document root.** Neither had one
