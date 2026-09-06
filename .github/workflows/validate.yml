@@ -11,7 +11,16 @@ on:
     # `agent-stack v0.13.0`: validate green, release cancelled at 2s, npm still
     # serving the previous version. It is a race, which is why the two siblings
     # with the same shape happened to publish.
-    tags-ignore: ['**']
+    #
+    # `tags-ignore: ['**']` was the first spelling of that rule, and it silently
+    # meant something else: a push filter carrying ONLY tag clauses drops branch
+    # events entirely (GitHub's documented semantics), so main went 18 days with
+    # zero push-time validation — merges #15–#18 landed unvalidated post-merge —
+    # while the comment above believed the opposite. Found by the 2026-09-06
+    # family audit, second round. `branches: [main]` states the same intent from
+    # the branch side: tag refs are not branches, so a tag push still cannot
+    # start this workflow, and main is covered again.
+    branches: [main]
   pull_request:
   # Callable, so `release.yml` gates a publish on THIS suite instead of a
   # copy of it. The negative self-tests live here as steps; running them
