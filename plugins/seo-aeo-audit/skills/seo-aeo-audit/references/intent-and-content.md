@@ -329,6 +329,14 @@ most work. Recommend a rewrite only where density is above the threshold
 `ai-tells.md` sets, because below it the edit costs more than it returns and
 the change-rate guard is likely to fire.
 
+**When super-ux is not installed**, the marker list, the density threshold and
+`brand_lint.py` are names this file cannot resolve: run only the checks stated
+locally in this section — the rhetorical-dash rule with its grammatical
+exceptions above, and the full-stopped title, which is O1's — and report the
+naturalness pass as **NOT RUN — super-ux absent**, never as passed. That is
+non-negotiable #6 applied to a missing sibling exactly as to a missing GSC
+login: a gap in the report, not a silent omission.
+
 ## E5. Freshness is relative, not calendar-based
 
 Leaked ranking parameters score a document's age **against the rest of the result

@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.25.11 — the E-track names its sibling, and says what runs without it
+
+**An undeclared cross-member dependency, found by the family audit 2026-09-06
+(wave AUDIT-WAVE-0906).** `references/intent-and-content.md` E4b delegates the
+naturalness audit's substance to the super-ux member — the `AT-01`..`AT-15`
+marker list, the density threshold that gates every rewrite recommendation, and
+`brand_lint.py` — and that delegation is correct: a second copy of the marker
+list would drift within one release, and the file says so itself. What was
+missing was both halves of declaring it. `compatibility:` named GSC, PSI and
+Prowl as optional-degraded and said nothing about super-ux, so an operator
+installing this member alone had no way to know a whole pass leans on a sibling;
+and E4b gave no instruction for that operator, so the likeliest outcome was the
+one this skill's own non-negotiable #6 forbids — a naturalness pass silently
+skipped, or worse, reported as passed.
+
+Both halves now exist. The front matter declares the sibling the way the family
+words optional companions (sheleg-design's `compatibility:` is the model), at
+493 of the spec's 500 characters — measured by the same per-field cap guard that
+already runs in the gate. And E4b carries the degraded path: without super-ux,
+run only the checks this file states locally (the rhetorical-dash rule with its
+grammatical exceptions, the full-stopped title, which is O1's) and report the
+naturalness pass as **NOT RUN — super-ux absent**, never as passed. Honest
+degradation is this skill's standing answer to a missing credential; a missing
+sibling is the same case.
+
+**Declined in the same wave, on the board's own recorded decision:** the body
+sits at 4643 tokens — 97.7% of the 4750 house limit, re-measured by
+`test/validate.py`, which prints it on every run — and the audit offered a
+debulk. B-27 already holds the answer: at this ceiling the fix is a split, not a
+trim, and no edit in this release touches the SKILL.md body. The row stays open
+and carries the re-measurement.
+
+Checkout hygiene from the same findings list: a `__pycache__/` directory sat
+untracked in the checkout. Removed; `.gitignore` already covers `__pycache__/`
+and the npm tarball was already guarded by `!**/__pycache__`.
+
 ## v0.25.10 — a visible answer stopped being reported as invisible
 
 **The second false positive this check has produced, and it survived the first repair.**
