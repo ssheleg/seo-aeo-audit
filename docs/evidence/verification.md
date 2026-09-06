@@ -18,6 +18,25 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.25.11 — the E-track names its sibling, and says what runs without it (2026-09-06)
+
+Family audit 2026-09-06, wave AUDIT-WAVE-0906, under lease `SEO-AUDITWAVE` on
+branch `rel/audit-wave`. No new guard shipped, so nothing here is `planted`:
+every row is a declaration or a measurement, confirmed by running the thing
+that reads it.
+
+| id | Claim | Evidence | Confirmed |
+|---|---|---|---|
+| R-61 | The super-ux dependency is declared in `compatibility:` as an optional sibling, inside the spec cap | `yaml.safe_load` over the front-matter block → 4-key dict; the field is 493 chars against the 500 cap, measured 2026-09-06 by the same per-field guard that runs in the gate; the wording mirrors sheleg-design's optional-siblings form and carries no `': '` in the unquoted scalar | **observed** |
+| R-62 | E4b states its degraded path, and every anchor in it resolves | `intent-and-content.md:332-338` — without super-ux the audit runs only the locally-stated checks and reports the naturalness pass as **NOT RUN — super-ux absent**, never as passed; the anchors were opened, not assumed: the full-stop title row is `onpage-checks.md:47` (O1, citing E4b back), and non-negotiable #6 is SKILL.md's "State what you could not check" | **observed** |
+| R-63 | The wave's debulk offer was declined on B-27's recorded decision, and the row carries the re-measurement | body at 4643 tokens — 97.7% of the 4750 house limit, 92.9% of the 5000 budget — recomputed 2026-09-06 by `python3 test/validate.py`, which prints it on every run; no edit in this release touches the SKILL.md body, so there was no pending edit needing room; B-27 stays open with the re-measurement and the wave as an added source | **observed** |
+| R-64 | The checkout carries no `__pycache__` and never ships one | `find . -name __pycache__ -not -path './.git/*'` → 0 after removal; `git ls-files` returns no pycache entry, so none was ever tracked; `.gitignore` covers `__pycache__/` and `package.json` `files` already carried `!**/__pycache__` — this was checkout hygiene only | **observed** |
+
+**Counts, by parsing the table above: 4 rows — 4 observed.**
+Nothing `planted` because nothing new can fail: the compatibility cap and the
+body-budget measurement were already guarded, and this release only feeds them
+new values.
+
 ## v0.25.10 — a visible answer stopped being reported as invisible (2026-09-01)
 
 | id | Claim | Evidence | Confirmed |
@@ -414,7 +433,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-two releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-three releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
