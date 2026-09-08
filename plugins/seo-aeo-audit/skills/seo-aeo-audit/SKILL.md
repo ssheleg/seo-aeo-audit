@@ -160,10 +160,13 @@ third-party "agent-readiness score" is a checklist generator rather than a targe
 [agent-readiness.md](references/agent-readiness.md).
 
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
-its own ranking pass, its own gate (two metatags, without which no card renders at
-all) and its own freshness curve, so a site where Discover is a material traffic
-source needs [discover.md](references/discover.md) run as an eleventh pass — and a
-site where it is not can skip it entirely. Check the GSC Discover report before
+its own ranking pass, its own freshness curve, and three checks of three
+different strengths — automatic eligibility, the `max-image-preview:large`/AMP
+large-preview *permission*, and the 1200px image *recommendation*; none of them
+is a render gate, and a missing tag never makes a page "confirmed ineligible".
+A site where Discover is a material traffic source needs
+[discover.md](references/discover.md) run as an eleventh pass — and a site
+where it is not can skip it entirely. Check the GSC Discover report before
 deciding.
 
 **Before any decline diagnosis**, run the date-alignment and update-response

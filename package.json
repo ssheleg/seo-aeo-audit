@@ -2,9 +2,10 @@
   "name": "@ssheleg/seo-aeo-audit",
   "version": "0.25.11",
   "scripts": {
-    "test": "bash scripts/check-docs.sh",
+    "test": "bash scripts/check-docs.sh && npm run test:audit",
     "test:negatives": "python3 test/negatives.py",
-    "test:all": "bash scripts/check-docs.sh && python3 test/negatives.py"
+    "test:all": "bash scripts/check-docs.sh && python3 test/negatives.py && npm run test:audit",
+    "test:audit": "for t in test/audit_regressions/*.py; do python3 \"$t\" || exit 1; done"
   },
   "description": "Evidence-first SEO + AEO/GEO website audit skill: ten audit tracks (access, canonicalization, architecture, intent, content value, extractability, entity consensus, experience, risk, measurement), a triage model and a prioritized change plan. This package is the installer CLI.",
   "bin": {
