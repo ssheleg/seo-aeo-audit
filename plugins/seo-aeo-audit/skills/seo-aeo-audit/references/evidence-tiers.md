@@ -26,9 +26,51 @@ and only the tier enters the triage formula.
 | Tier | Definition | Allowed action | Uncertainty rank |
 |---|---|---|---|
 | **CONFIRMED** | Documented by the engine, or reproduced on this site with an observation you can point at (GSC output, log line, HTTP response, rendered DOM) | Ship it. Blockers of this tier come first. | 1.0 |
-| **STUDY** | Published multi-site data with a stated method and sample size | Ship it where the site matches the study population; state the source and sample in the report | 0.7 |
-| **FIELD** | A single practitioner case, one site, no control | Pilot on one template or a page cohort; measure before rollout | 0.4 |
+| **STUDY** | Published multi-site data with a stated method and sample size | See the rollout policy below — population match AND action risk decide, not the label | 0.7 |
+| **FIELD** | A single practitioner case, one site, no control | See the rollout policy below — pilot scope comes from the action's risk | 0.4 |
 | **HYPOTHESIS** | Mechanism plausible, evidence absent or contradictory | Experiment only, with a control group; never sitewide, never sold as a fix | 0.2 |
+
+## Contents
+
+- [Five axes, one label — what the tier does NOT say](#five-axes-one-label--what-the-tier-does-not-say)
+- [The rollout policy — one home, risk × evidence](#the-rollout-policy--one-home-risk--evidence)
+- [Rules](#rules)
+- [What this looks like in the report](#what-this-looks-like-in-the-report)
+
+## Five axes, one label — what the tier does NOT say
+
+The tier is an ADMISSION label. A finding's record separates five things the
+label used to compress into one word, because observation and transferability
+are different claims (SE-04):
+
+- **source** — who says it: the engine, your own observation, a published
+  study, a vendor estimate, an anecdote;
+- **directness** — observed directly, or modelled/inferred from observations;
+- **population** — this page, this template, this site, or a multi-site
+  population someone measured;
+- **causal support** — effect measured against a control · association only ·
+  mechanism plausible;
+- **uncertainty** — the rank in the table, and nothing else.
+
+A direct HTTP observation is CONFIRMED for what the response contains without
+any console — GSC adds breadth, never permission. And no vendor rank raises a
+claim past what its method supports.
+
+## The rollout policy — one home, risk × evidence
+
+What you may DO with a finding is decided by the ACTION's risk crossed with
+the finding's causal support — never by the tier alone and never by who sold
+the data:
+
+| Action | With causal support (control or engine doc) | Without it |
+|---|---|---|
+| Reversible, scoped (one template, one tag) | ship, verify | pilot with a measurement |
+| Reversible, sitewide | ship, verify | split test first |
+| Hard to reverse (URL moves, removals, markup purges) | ship with a rollback plan | experiment only, whatever the tier |
+
+STUDY ships only where the site matches the study population AND the action
+row above allows it; `SKILL.md`'s Experiments bucket routes by this same
+table.
 
 ## Rules
 
@@ -48,6 +90,10 @@ and only the tier enters the triage formula.
 5. **Leaks and patents describe architecture, not confirmed live weights.** They
    earn STUDY at best, and only when the described mechanism matches something
    you can observe.
+5a. **STUDY is earned by a method, not by being third-party.** A vendor
+   estimate with no published method and sample is a HYPOTHESIS about someone
+   else's property, whoever sells it — an unknown vendor number never becomes
+   STUDY by arriving in a spreadsheet.
 6. **Re-tier on re-audit.** A FIELD play that worked here, measured against a
    control, becomes CONFIRMED **for this site**. Say so explicitly — that is how
    a site-specific playbook accumulates.

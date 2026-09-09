@@ -41,7 +41,7 @@ the plan.
 | 2 · Search Console / Bing / Yandex Webmaster | `CONFIRMED` | the engine's own answer about your property |
 | 3 · full crawl | `CONFIRMED` for what the crawler *saw* (a directive, a status code, a link) · `STUDY` for anything it *models* (internal PageRank, "orphan candidates") | a crawler observes markup and infers structure; the two are different claims |
 | 4 · field performance (CrUX, RUM) | `CONFIRMED` for the distribution it reports · never for a cause | it measures users, not the reason |
-| 5 · third-party indices | `STUDY`, and no higher — two indices agreeing is a stronger `STUDY`, not a `CONFIRMED` | a panel estimate about someone else's property |
+| 5 · third-party indices | `STUDY` only when the method and sample are published, and no higher — two indices agreeing is a stronger `STUDY`, not a `CONFIRMED`; an estimate publishing neither is `HYPOTHESIS`, whoever sells it | a panel estimate about someone else's property |
 | 6 · manual fetch + DevTools | `CONFIRMED` for what the response contains (header, source, rendered DOM) · `HYPOTHESIS` for what it implies about indexing | the lowest rung by *breadth*, not by reliability: one page seen exactly |
 
 Rung 6 sitting at the bottom is about coverage, not truth. A `view-source` showing

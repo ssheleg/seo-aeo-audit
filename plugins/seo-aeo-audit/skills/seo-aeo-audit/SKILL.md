@@ -160,10 +160,13 @@ third-party "agent-readiness score" is a checklist generator rather than a targe
 [agent-readiness.md](references/agent-readiness.md).
 
 **Discover is not one of the ten tracks, and it is not part of track A.** It has
-its own ranking pass, its own gate (two metatags, without which no card renders at
-all) and its own freshness curve, so a site where Discover is a material traffic
-source needs [discover.md](references/discover.md) run as an eleventh pass — and a
-site where it is not can skip it entirely. Check the GSC Discover report before
+its own ranking pass, its own freshness curve, and three checks of three
+different strengths — automatic eligibility, the `max-image-preview:large`/AMP
+large-preview *permission*, and the 1200px image *recommendation*; none of them
+is a render gate, and a missing tag never makes a page "confirmed ineligible".
+A site where Discover is a material traffic source needs
+[discover.md](references/discover.md) run as an eleventh pass — and a site
+where it is not can skip it entirely. Check the GSC Discover report before
 deciding.
 
 **Before any decline diagnosis**, run the date-alignment and update-response
@@ -178,9 +181,15 @@ catches the boring failures afterwards, and only sweep items with an observable
 impact reach the findings table.
 
 **Order matters.** A track-A blocker (site not fetchable, noindex in the
-pre-render source, manual action) makes every other finding moot — a manual
-action is a binary multiplier: nothing you improve counts until it is lifted.
-Work A → B → C before spending time on F/G.
+pre-render source) makes every other finding moot. **A manual action is a
+scoped multiplier, never a binary one**: record its type, the affected URL
+patterns, the surface, its severity and its scope. A SITEWIDE action zeroes
+every improvement until it is lifted, and lifting it stays priority one. A
+PARTIAL action (say, matching `/spam/*`) zeroes only what it covers — a proven
+auth or availability fix on `/checkout` still counts, still ships, and is
+reported with the action noted beside it, not buried under it. Blocking
+dependent work outside the affected patterns is inventing a penalty Google
+did not issue. Work A → B → C before spending time on F/G.
 
 **Evidence ladder** — ordered by **evidence strength, not convenience**, from
 server logs down to a manual fetch; the rungs and their routing are in
@@ -212,13 +221,22 @@ Four things to look for, before any score is computed:
 2. **One root cause wearing two track names.** A render-blocked template surfaces
    as an A, an F and an H finding: three rows, one fix, and the three inflate the
    plan and split its priority.
-3. **A finding whose evidence rung contradicts a neighbour's.** Two rows about one
-   URL at `CONFIRMED` and `HYPOTHESIS` is a fact about the instruments, not the
-   site; the lower rung defers or the disagreement is stated.
-4. **A track that returned nothing where a neighbour implies it should have.** F
-   found no extractability problem on pages E called thin — one of the two did not
-   look properly, and which is worth a minute now rather than a contradiction in
-   the report.
+3. **Two incompatible values of ONE claim key.** Compare rows as claims keyed
+   `(subject, predicate, scope, time, instrument)`: a contradiction exists only
+   when incompatible values hit the SAME predicate on one subject at one
+   snapshot. One URL at `CONFIRMED` and `HYPOTHESIS` on different predicates
+   disagrees about nothing — an HTTP status can be confirmed while the ranking
+   cause stays a hypothesis; the tiers describe the instruments, not the site,
+   and the lower rung defers only within one predicate. Same key, different
+   values — THAT opens a ruling: two instruments disagreeing is stated as an
+   instrument disagreement; one against itself is resolved before the report.
+4. **A track that returned nothing where a neighbour implies it should have —
+   check the predicates before calling it a miss.** F finding no extractability
+   problem on pages E called thin is two COMPATIBLE observations: thin judges
+   content depth, extractable is mechanical, and a short page can extract
+   perfectly. "One did not look properly" applies only when both tracks
+   measured the same predicate and one came back empty — forcing different
+   properties to agree loses real data.
 
 Write the answer either way: `Cross-track: clean`, or the pairs with their
 rulings. A check whose silence is indistinguishable from not having run is not
@@ -240,8 +258,8 @@ Group the output into four buckets, in this order:
 1. **Blockers** — indexation, penalties, hijacks, revenue pages unreachable.
 2. **Leaks** — crawl budget, equity, cannibalization, read-budget waste.
 3. **Gains** — intent fit, information gain, extractability, entity consensus.
-4. **Experiments** — anything below CONFIRMED that deserves a split test rather
-   than a rollout. Design them per
+4. **Experiments** — what the evidence-tiers rollout policy routes here
+   (action risk × causal support, never the tier alone). Design per
    [references/experiments.md](references/experiments.md); never roll a
    HYPOTHESIS sitewide.
 

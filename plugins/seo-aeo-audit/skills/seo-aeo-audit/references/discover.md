@@ -1,37 +1,44 @@
-# Google Discover — a separate surface with a separate gate
+# Google Discover — a separate surface with three separate checks
 
 Discover is not a Search ranking with a different template. It has its own
 ranking pass (`algorithm-updates.md` records the 2026-02-05 Discover core
-update), its own eligibility gate, and a card that will not render at all if two
-tags are absent. A site can rank well and be structurally ineligible for
-Discover, and nothing in a Search-shaped audit says so.
+update) and its own presentation mechanics — and they are **three checks of
+three different strengths**, not one gate. A recommendation reported as a gate
+is how an audit invents blockers: the previous revision of this file called two
+metatags "the whole gate", and a page without them would have been written up
+as confirmed-ineligible for a surface Google documents as automatic.
 
 ## Contents
 
 - [Evidence standing, stated up front](#evidence-standing-stated-up-front)
-- [The two tags without which there is no card](#the-two-tags-without-which-there-is-no-card)
-- [Image requirements](#image-requirements)
+- [Check 1 — eligibility](#check-1--eligibility)
+- [Check 2 — large-preview permission](#check-2--large-preview-permission)
+- [Check 3 — image selection, a recommendation](#check-3--image-selection-a-recommendation)
+- [Card assembly signals (FIELD)](#card-assembly-signals-field)
 - [The two metatags that halt the pipeline entirely](#the-two-metatags-that-halt-the-pipeline-entirely)
 - [Freshness](#freshness)
 - [The audit, in order](#the-audit-in-order)
 - [What not to promise](#what-not-to-promise)
 
 
-Audit it as its own track. The checks below are cheap — they are metatags and
-image dimensions — and the failure mode is binary, which is rare enough in this
-work to be worth spending ten minutes on.
+Audit it as its own track. The checks below are cheap — metatags and image
+dimensions — but their verdicts carry different weights, and the report must
+say which weight each finding carries.
 
 ## Evidence standing, stated up front
 
 Two different tiers are mixed in here and the difference matters when you write
 the report:
 
-- **CONFIRMED** — Google's own documentation: `max-image-preview:large` is
-  required for a large image in the feed, images should be at least **1200px**
-  wide, and generic images (a logo, a stock placeholder) are called out as a
-  problem. Verified against
+- **CONFIRMED** — Google's own documentation, and every CONFIRMED rule below
+  links the exact page that supports it: eligibility is automatic for indexed
+  content within the content policies; `max-image-preview:large` (or AMP) is
+  the documented *permission* for a large preview; images of at least
+  **1200px**, the article's own rather than a logo or stock placeholder, are
+  the documented *recommendation* for the large card. Verified against
   [Get on Discover](https://developers.google.com/search/docs/appearance/google-discover)
-  on 2026-08-06.
+  on 2026-08-06 — three statements of three strengths, and the report keeps
+  them apart.
 - **FIELD** — the parsing order, freshness buckets and internal flag names below
   come from one practitioner's reverse-engineering of the Google app's SDK
   (Metehan Yesilyurt, February 2026), not from documentation and not from a
@@ -44,21 +51,51 @@ The distinction is not pedantry. "Google says images must be 1200px" and "one
 researcher believes the SDK falls back to `twitter:image:src` fourth" carry very
 different weight in a plan someone funds.
 
-## The two tags without which there is no card
+## Check 1 — eligibility
+
+**CONFIRMED, and it is automatic.** Google's documentation
+([Get on Discover](https://developers.google.com/search/docs/appearance/google-discover),
+read 2026-08-06): content is eligible for Discover when it is **indexed and
+meets Discover's content policies**. There is no registration, no required
+metatag, and no tag whose absence makes a page ineligible. Two consequences for
+the report:
+
+- **no page is written up as "confirmed ineligible" for missing `og:` tags** —
+  that verdict has no documented basis, and issuing it turns a recommendation
+  into a gate;
+- what CAN block indexing (noindex, robots, quality) blocks Discover too, but
+  that is track A's finding, cited to track A's sources — not a Discover gate.
+
+## Check 2 — large-preview permission
+
+**CONFIRMED.** For the large image card, Google must be *permitted* to show a
+large preview: `max-image-preview:large` in the robots meta (documented in
+[Get on Discover](https://developers.google.com/search/docs/appearance/google-discover)
+and the [robots meta reference](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag),
+read 2026-08-06) — **or the page is served as AMP**, which is the documented
+alternative. Absence is a **presentation limitation**: the card falls back to a
+small preview or may not be featured large. It is not ineligibility, and the
+finding says "large preview not permitted", never "not eligible".
 
 ```html
-<meta name="robots" content="max-image-preview:large">   <!-- CONFIRMED -->
-<meta property="og:image" content="https://example.com/hero.jpg">
-<meta property="og:title" content="The title as it should appear on the card">
+<meta name="robots" content="max-image-preview:large">   <!-- CONFIRMED: permission -->
 ```
 
-Without `max-image-preview:large`, Google is not permitted to render the large
-image — the card degrades or does not appear. Without an image, there is no card
-to degrade. These two are the whole gate, and both are one line.
+## Check 3 — image selection, a recommendation
 
-Recommended alongside them:
+**CONFIRMED as a recommendation.** The same documentation *recommends* images
+at least **1200px** wide and the article's own imagery over a logo or stock
+placeholder, to improve how (and whether) the large card is selected. A
+recommendation it stays: a smaller image is a "less likely to be featured
+large" finding in the improvement column, never a blocker row.
+
+## Card assembly signals (FIELD)
+
+Useful alongside the three checks, with FIELD standing only:
 
 ```html
+<meta property="og:image" content="https://example.com/hero.jpg">
+<meta property="og:title" content="The title as it should appear on the card">
 <meta property="og:site_name" content="Publication name">
 <meta property="og:locale" content="en_US">
 <meta property="og:image:secure_url" content="https://example.com/hero.jpg">
@@ -84,7 +121,7 @@ no error anywhere.
 
 | Requirement | Value | Tier |
 |---|---|---|
-| Minimum width for the large card | **1200px** | CONFIRMED |
+| Recommended width for the large card | **1200px** | CONFIRMED (a recommendation, not a gate) |
 | Aspect ratio | 16:9 for the hero card | CONFIRMED |
 | Generic images (logo, stock placeholder) | called out as a problem — use the article's own image | CONFIRMED |
 | Below 1200px | degrades to a thumbnail card, materially lower engagement | FIELD |
@@ -132,7 +169,7 @@ Cheapest first — the first two are the ones that produce a binary verdict.
 # 1. the blocking tags — a grep, sitewide
 curl -s "$URL" | grep -iE 'nopagereadaloud|notranslate|<html[^>]*translate="no"'
 
-# 2. the gate
+# 2. large-preview permission (CONFIRMED) and card-assembly signals (FIELD)
 curl -s "$URL" | grep -iE 'max-image-preview|og:image|og:title'
 
 # 3. the image actually resolves, anonymously, and is wide enough
@@ -144,9 +181,13 @@ curl -s "$IMG" | file -                         # dimensions, format
 curl -s "$URL" | grep -oE 'datePublished"[^,]+|article:published_time[^>]+'
 ```
 
-Findings route into the report like any other: gate failures are CONFIRMED
-blockers, the SDK-derived items are FIELD and belong in the pilot column of the
-change plan, not in the blocker list.
+Findings route into the report by their check's strength: a blocked pipeline
+(the two halt metatags) and an indexing blocker are blocker rows; a missing
+large-preview permission is a CONFIRMED **presentation** finding; a small or
+generic image is a CONFIRMED **recommendation**; and the SDK-derived items are
+FIELD and belong in the pilot column of the change plan, not in the blocker
+list. Nothing in this file confirms *ineligibility* — that word needs an
+indexing or policy finding from track A.
 
 ## What not to promise
 
