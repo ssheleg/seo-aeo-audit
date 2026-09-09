@@ -1,0 +1,149 @@
+{
+ "contract": "outcome-case/1 (schemas/outcome-case.schema.json + test/outcome_harness.py in ssheleg/sshlg-skills)",
+ "note": "Outcome corpus for seo-aeo-audit (FIX-EV-01.15). Judged on ARTIFACTS via the family harness: the runner records the actual output oracle verdict AND the raw result per case; with/without-skill arms are the harness's baseline contract. The live-host case goes NOT_RUN where its probe fails — never PASS, never silently skipped. Nothing in the production skill was changed for grader convenience.",
+ "arms": {
+  "baseline": "same prompts, skill absent",
+  "current": "same prompts, skill installed"
+ },
+ "cases": [
+  {
+   "schema_version": "outcome-case/1",
+   "id": "SEO-OUT-001-positive",
+   "skill": "seo-aeo-audit",
+   "prompt": {
+    "text": "Run the seo-aeo audit against the local fixture page test/fixtures/ (no network): report Discover eligibility, large-preview permission and image findings into audit-findings.md."
+   },
+   "environment": {
+    "model": "inherit",
+    "host": "any",
+    "case_digest": "affe966d32a915806106a0c0f5d64e273f4b649e47caf2b8f9e82ed9ae641d3a"
+   },
+   "checks": {
+    "tool": [
+     {
+      "name": "python3 present",
+      "command": "python3 -c 'pass'"
+     }
+    ],
+    "load_trace": {
+     "expect_loaded": [
+      "seo-aeo-audit"
+     ],
+     "expect_not_loaded": []
+    },
+    "outcome": [
+     {
+      "name": "findings artifact exists",
+      "kind": "artifact-exists",
+      "target": "audit-findings.md"
+     },
+     {
+      "name": "permission finding is presentation, not a blocker",
+      "kind": "artifact-contains",
+      "target": "audit-findings.md",
+      "expect": "large preview not permitted"
+     }
+    ]
+   }
+  },
+  {
+   "schema_version": "outcome-case/1",
+   "id": "SEO-OUT-002-negative-routing",
+   "skill": "seo-aeo-audit",
+   "prompt": {
+    "text": "Explain in two sentences what a webhook is."
+   },
+   "environment": {
+    "model": "inherit",
+    "host": "any",
+    "case_digest": "f031a5baa3a17da2fd7f93d16b1525dfbb6c354bb9ce4f4fc310b3405fa8cc6a"
+   },
+   "checks": {
+    "tool": [],
+    "load_trace": {
+     "expect_loaded": [],
+     "expect_not_loaded": [
+      "seo-aeo-audit"
+     ]
+    },
+    "outcome": [
+     {
+      "name": "no audit artifact appears",
+      "kind": "command-exit-0",
+      "target": "test ! -e audit-findings.md"
+     }
+    ]
+   }
+  },
+  {
+   "schema_version": "outcome-case/1",
+   "id": "SEO-OUT-003-noop-clean-page",
+   "skill": "seo-aeo-audit",
+   "prompt": {
+    "text": "Audit the already-clean fixture page (indexed, max-image-preview:large, 1200px own image). Write findings to audit-findings.md; a clean page yields an empty blocker table."
+   },
+   "environment": {
+    "model": "inherit",
+    "host": "any",
+    "case_digest": "1faacd44093897a7351523add1b32a3f5ed81734445c1872a0805172d19b0167"
+   },
+   "checks": {
+    "tool": [
+     {
+      "name": "python3 present",
+      "command": "python3 -c 'pass'"
+     }
+    ],
+    "load_trace": {
+     "expect_loaded": [
+      "seo-aeo-audit"
+     ],
+     "expect_not_loaded": []
+    },
+    "outcome": [
+     {
+      "name": "no invented blockers",
+      "kind": "artifact-contains",
+      "target": "audit-findings.md",
+      "expect": "blockers: none"
+     }
+    ]
+   }
+  },
+  {
+   "schema_version": "outcome-case/1",
+   "id": "SEO-OUT-004-live-host",
+   "skill": "seo-aeo-audit",
+   "prompt": {
+    "text": "Audit https://example.invalid live: crawl, GSC evidence tier, findings with evidence rungs."
+   },
+   "environment": {
+    "model": "inherit",
+    "host": "network",
+    "case_digest": "fd55985a8908e5dac5f099bee8556863ada048ad27c8b83d184caa4cbb9b7f83"
+   },
+   "checks": {
+    "tool": [
+     {
+      "name": "live host reachable",
+      "command": "curl -s --max-time 5 -o /dev/null https://example.invalid"
+     }
+    ],
+    "load_trace": {
+     "expect_loaded": [
+      "seo-aeo-audit"
+     ],
+     "expect_not_loaded": []
+    },
+    "outcome": [
+     {
+      "name": "findings carry evidence tiers",
+      "kind": "artifact-contains",
+      "target": "audit-findings.md",
+      "expect": "evidence:"
+     }
+    ]
+   }
+  }
+ ]
+}
