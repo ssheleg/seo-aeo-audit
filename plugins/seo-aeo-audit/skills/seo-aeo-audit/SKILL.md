@@ -181,9 +181,15 @@ catches the boring failures afterwards, and only sweep items with an observable
 impact reach the findings table.
 
 **Order matters.** A track-A blocker (site not fetchable, noindex in the
-pre-render source, manual action) makes every other finding moot — a manual
-action is a binary multiplier: nothing you improve counts until it is lifted.
-Work A → B → C before spending time on F/G.
+pre-render source) makes every other finding moot. **A manual action is a
+scoped multiplier, never a binary one**: record its type, the affected URL
+patterns, the surface, its severity and its scope. A SITEWIDE action zeroes
+every improvement until it is lifted, and lifting it stays priority one. A
+PARTIAL action (say, matching `/spam/*`) zeroes only what it covers — a proven
+auth or availability fix on `/checkout` still counts, still ships, and is
+reported with the action noted beside it, not buried under it. Blocking
+dependent work outside the affected patterns is inventing a penalty Google
+did not issue. Work A → B → C before spending time on F/G.
 
 **Evidence ladder** — ordered by **evidence strength, not convenience**, from
 server logs down to a manual fetch; the rungs and their routing are in
