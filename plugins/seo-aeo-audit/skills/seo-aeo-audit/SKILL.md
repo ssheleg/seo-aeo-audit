@@ -258,8 +258,8 @@ Group the output into four buckets, in this order:
 1. **Blockers** — indexation, penalties, hijacks, revenue pages unreachable.
 2. **Leaks** — crawl budget, equity, cannibalization, read-budget waste.
 3. **Gains** — intent fit, information gain, extractability, entity consensus.
-4. **Experiments** — anything below CONFIRMED that deserves a split test rather
-   than a rollout. Design them per
+4. **Experiments** — what the evidence-tiers rollout policy routes here
+   (action risk × causal support, never the tier alone). Design per
    [references/experiments.md](references/experiments.md); never roll a
    HYPOTHESIS sitewide.
 
