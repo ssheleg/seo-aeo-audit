@@ -30,6 +30,13 @@ and only the tier enters the triage formula.
 | **FIELD** | A single practitioner case, one site, no control | See the rollout policy below — pilot scope comes from the action's risk | 0.4 |
 | **HYPOTHESIS** | Mechanism plausible, evidence absent or contradictory | Experiment only, with a control group; never sitewide, never sold as a fix | 0.2 |
 
+## Contents
+
+- [Five axes, one label — what the tier does NOT say](#five-axes-one-label--what-the-tier-does-not-say)
+- [The rollout policy — one home, risk × evidence](#the-rollout-policy--one-home-risk--evidence)
+- [Rules](#rules)
+- [What this looks like in the report](#what-this-looks-like-in-the-report)
+
 ## Five axes, one label — what the tier does NOT say
 
 The tier is an ADMISSION label. A finding's record separates five things the
