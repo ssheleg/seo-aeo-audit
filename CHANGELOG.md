@@ -1,3 +1,20 @@
+## v0.26.0 — the audit's own references carry a map a reader can use
+
+Sherlock external-v3 (5 findings) plus the House audit gap the audit's own
+growth introduced.
+
+- `references/evidence-tiers.md` crossed 100 lines during the audit and carried
+  no `## Contents` list — past that length an agent previews with `head` and
+  never learns what the rest holds. It has one now, with anchors that RESOLVE: a
+  heading carrying an em dash slugs to a double hyphen, and collapsing that run
+  gave two addresses pointing at nothing until this repo's own link checker
+  refused them.
+- README.md's "~6,000 non-blank lines of reference material" is a COUNTED figure
+  and the Contents block moved it — 6054, which the README's own stated rounding
+  puts at ~6,100.
+- CI now MEASURES the token budget with a real tokenizer instead of estimating it
+  from character count.
+
 # Changelog
 
 ## v0.25.11 — the E-track names its sibling, and says what runs without it
