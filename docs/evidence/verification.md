@@ -18,6 +18,17 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.0 — the audit's own references carry a map a reader can use (2026-09-10)
+
+Sherlock external-v3 (5 findings) and the House audit gap that surfaced with them.
+
+| What ships | How it was confirmed | Watched |
+|---|---|---|
+| Every sherlock finding assigned here closes with an executable regression | `test/audit_regressions/` holds 5 suites; `npm test` runs all of them and exits 0 | **observed** |
+| `references/evidence-tiers.md` carries a `## Contents` list whose anchors resolve | `audit_skill.py --house` → 0 GAP (it reported `REF_NO_TOC … 111 lines` before). The first attempt collapsed the double hyphen an em-dash heading slugs to, and `check-docs.sh` refused two addresses pointing at nothing — the anchors are what that refusal fixed | **planted** — the link checker rejected the first Contents block |
+| README's reference-material figure stays counted | the Contents block moved it to 6054 non-blank lines; the README's own stated rounding puts that at ~6,100, and the doc guard compares the two | **planted** — the guard refused ~6,000 against 6054 |
+| The house audit MEASURES the token budget in CI | the pinned auditor ran with no tokenizer and issued a verdict from a chars/3.9 estimate. Pin moved to make-skill@5ca5c36 and the job installs tiktoken | **observed** — the estimate gapped skills the measurement clears |
+
 ## v0.25.11 — the E-track names its sibling, and says what runs without it (2026-09-06)
 
 Family audit 2026-09-06, wave AUDIT-WAVE-0906, under lease `SEO-AUDITWAVE` on
@@ -433,7 +444,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-three releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-four releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
