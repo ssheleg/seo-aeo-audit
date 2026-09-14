@@ -40,6 +40,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The body budget is MEASURED, never estimated. The vendored chars/3.9 divisor read
+      # ~4998 where the tokenizer reads 4685 — a number that sat six tokens under the HARD
+      # ceiling for a file with 315 tokens of room, and carried board row B-27 for a month.
+      # Without this step the gate discloses instead of measuring, which is honest and
+      # gates nothing. The skill-audit job installs the same package (make-skill v0.28.0).
+      - name: Install a real tokenizer (the budget is MEASURED, never estimated)
+        run: python3 -m pip install --quiet tiktoken
+
       - name: Structural validator
         run: python3 test/validate.py
       - name: Negative self-test (sed -i must not come back)

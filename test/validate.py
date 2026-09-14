@@ -1819,9 +1819,12 @@ if os.path.isfile(_ALG) and os.path.isfile(_README):
 # uses — so it is vendored rather than cited, and the gate prints the measurement on
 # every run.
 #
-# The HARD limits fail; the house limit only reports. The body is over the house limit
-# today (that is board row B-27) and a gate that goes red on a known, filed, deliberate
-# state teaches everyone to ignore it.
+# The HARD limits fail; the house limit only reports. That asymmetry was written when the
+# body read as over the house limit — board row B-27 — and on 2026-09-14 the measurement
+# showed it never was: the vendored estimator read ~4998 where tiktoken reads 4685. The
+# reporting stays, because a house limit crossed deliberately and filed is exactly the
+# state a red gate teaches everyone to ignore; what changed is that the number it reports
+# is now measured.
 _BODY_MAX_TOKENS, _BODY_HOUSE_TOKENS, _BODY_MAX_LINES, _CHARS_PER_TOKEN = 5000, 4750, 500, 3.9
 _body_tokens = _body_lines = None
 if os.path.isfile(skill_path):
@@ -1829,13 +1832,27 @@ if os.path.isfile(skill_path):
     _fmm = re.match(r"^---\n.*?\n---\n", _sm_txt, re.S)
     if _fmm:
         _body = _sm_txt[_fmm.end():]
-        _body_tokens = int(len(_body) / _CHARS_PER_TOKEN)
+        # MEASURED where a tokenizer is installed, estimated only as a fallback that
+        # says so. The vendored divisor and the authority's tokenizer disagree by up to
+        # 8% on prose carrying Russian and code, always high: measured 2026-09-14, this
+        # body estimates ~4998 and measures 4685 — the estimate reads as three tokens
+        # under the HARD 5000 ceiling for a file with 315 tokens of room. make-skill
+        # v0.28.0 closed the same defect in the family auditor.
+        try:
+            import tiktoken as _tk
+            _body_tokens = len(_tk.get_encoding("cl100k_base").encode(_body))
+            _body_how = "tiktoken:cl100k_base"
+        except Exception:                                # noqa: BLE001 - optional dependency
+            _body_tokens = int(len(_body) / _CHARS_PER_TOKEN)
+            _body_how = f"estimate, {_CHARS_PER_TOKEN} chars/token"
         _body_lines = _body.count("\n") + 1
-        if _body_tokens >= _BODY_MAX_TOKENS:
-            fail(f"SKILL.md body is ~{_body_tokens} tokens ({len(_body)} chars / "
-                 f"{_CHARS_PER_TOKEN}), the budget is < {_BODY_MAX_TOKENS} — move detail "
-                 f"into references/. The answer at this ceiling is a split, not a trim "
-                 f"(B-27)")
+        if _body_how.startswith("estimate"):
+            print(f"  unlooked: SKILL.md body budget NOT MEASURED (~{_body_tokens} tokens "
+                  f"by {_CHARS_PER_TOKEN} chars/token) — `pip install tiktoken` to gate it")
+        elif _body_tokens >= _BODY_MAX_TOKENS:
+            fail(f"SKILL.md body is {_body_tokens} tokens ({_body_how}), the budget is "
+                 f"< {_BODY_MAX_TOKENS} — move detail into references/. The answer at "
+                 f"this ceiling is a split, not a trim (B-27)")
         if _body_lines >= _BODY_MAX_LINES:
             fail(f"SKILL.md body is {_body_lines} lines, the budget is < {_BODY_MAX_LINES}")
 
@@ -2242,8 +2259,8 @@ if errors:
     sys.exit(1)
 _budget_note = ""
 if _body_tokens is not None:
-    _budget_note = (f", SKILL.md body ~{_body_tokens}/{_BODY_MAX_TOKENS} tokens "
-                    f"/ {_body_lines}/{_BODY_MAX_LINES} lines")
+    _budget_note = (f", SKILL.md body {_body_tokens}/{_BODY_MAX_TOKENS} tokens "
+                    f"({_body_how}) / {_body_lines}/{_BODY_MAX_LINES} lines")
     if _body_tokens >= _BODY_HOUSE_TOKENS:
         # Reported, not failed: the body is knowingly past the house limit and B-27
         # holds the remedy. A gate that goes red on a filed, deliberate state is a
