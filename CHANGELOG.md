@@ -1,3 +1,21 @@
+## v0.26.1 — B-27 closes because the body was never over the limit; the estimator was
+
+The gate vendored `make-skill`'s `len(body)/3.9` so its figure would be reproducible
+from this repository. It is reproducible and it is wrong: measured 2026-09-14, the
+estimator reads **~4998** where `cl100k_base` reads **4685** — six tokens under the HARD
+5000 ceiling by the estimate, 315 under it by the measurement.
+
+Every number board row **B-27** carried came from that divisor, including the 4994 it
+opened with and the "97.7% of the house limit" re-measurement of 2026-09-06. The split it
+asked for a month ago is not needed and never was. Closed, with the measurement that
+closed it written into the row rather than the row being deleted.
+
+- `test/validate.py` measures with tiktoken where it is installed, and **discloses**
+  rather than judging where it is not — a verdict from the wrong instrument gets quoted
+  as if it were a measurement. The summary line names the instrument.
+- CI installs the tokenizer before the validator runs, the way the `skill-audit` job has
+  since make-skill v0.28.0.
+
 ## v0.26.0 — the audit's own references carry a map a reader can use
 
 Sherlock external-v3 (5 findings) plus the House audit gap the audit's own
