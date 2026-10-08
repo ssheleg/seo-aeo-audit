@@ -18,6 +18,14 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.2 — source-scoped retrieval and current controls (2026-10-09)
+
+| What ships | How it was confirmed | Watched |
+|---|---|---|
+| Read-window and re-read claims retain their actual units and conditions | Peec primary article, independent source review, [bounded receipt](channel-digest-20261009/README.md) | **observed** — unsupported guarantee removed |
+| Official rollout dates and effective AI control checks | Google incident feed and Search Console help, source URLs in bounded receipt | **observed** |
+| Freshness propagation | Structural gate rejected stale README and the old literal plant before correction | **observed** — final full gate recorded separately |
+
 ## v0.26.1 — B-27 closes because the body was never over the limit (2026-09-14)
 
 From the 2026-09-13 family audit (HK-11).
@@ -454,7 +462,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-five releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-six releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

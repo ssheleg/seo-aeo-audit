@@ -124,6 +124,16 @@ Two 2026 additions to the same duty:
 
 ## I4. Adversarial patterns to detect
 
+**Regional site-reputation policy:** inspect the current
+[Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies)
+and the search user's region. For EEA users, relevant third-party portions may
+be ranked separately without the same manual-action impact; this is not a license
+for link spam or scaled-content abuse. Editorial third-party content is not
+inherently abuse. Keep manipulated links, fake reviews, CTR bots and mass parasite
+publishing out of recommended actions. Record the observed region and policy date
+rather than generalizing a regional rule globally.
+
+
 | Pattern | How it shows up | Defense |
 |---|---|---|
 | Fake DMCA / bogus government takedowns | A target URL vanishes for ~2 weeks per complaint; intraday rank collapse (top-1 → top-10 in 20 minutes) rather than a gradual update pattern; repeat filings keep pages out of the index | Document everything (screenshots, timestamps, removal notices, restoration records, attack patterns), file counter-notices immediately, escalate through the transparency report; note that filing abusive complaints is itself heavily penalized |

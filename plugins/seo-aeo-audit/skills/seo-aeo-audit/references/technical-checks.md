@@ -137,39 +137,29 @@ propagate and can return transient 5xx immediately after deployment.
   agents sign requests cryptographically, which makes spoofed "trusted agents"
   detectable — until it is widely adopted, forward-confirmed reverse DNS stays
   the method.
-- **You cannot block Google's AI use without blocking Google Search.** Googlebot
-  is not split by purpose at Google's end (`CONFIRMED`), so no robots.txt line
-  separates the two. Sites that lost Google visibility were observed losing
-  ChatGPT visibility roughly in proportion (`FIELD`, single case); a Bing-only
-  counter-case points the other way, so the *index dependency* itself is
-  `HYPOTHESIS` — aeo-geo.md F4 owns both observations and the reading rule.
-  Neither reading makes a Googlebot block safe: price the trade-off before it
-  ships, not after.
+- **Separate crawling, search presentation and training.** A robots block of
+  Googlebot affects Search crawling. The separate Search Console generative-AI
+  control can affect AI presentation without that crawl block; inspect its
+  effective setting (aeo-geo.md F3). Never infer a crawler permission from an
+  AI answer or a single missing citation.
 
-- **Behind Cloudflare, a Training block can take Googlebot with it — and on
-  2026-09-15 that becomes a default nobody has to opt into.** Two separate things
-  wear the "Content Signals" name and only one of them stalled. The *robots.txt
-  vocabulary* — `search` / `ai-input` / `ai-train`, announced 2025-09-24 — did see
-  little uptake. The *enforcement layer* did not: Cloudflare's Search / Agent /
-  Training controls went live for **all customers including the free tier** at
-  the second Content Independence Day (2026-07-02), at the network level, where a
-  block is much harder to bypass than a robots.txt line (`CONFIRMED`).
+- **Cloudflare policy is a property of the actual zone.** Inspect the current
+  bot-control setting, plan, advertising scope and verified crawler logs. The
+  [official changelog](https://developers.cloudflare.com/changelog/post/2026-07-01-ai-traffic-options/)
+  and [bot-control documentation](https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/)
+  describe defaults and mixed-purpose classifications. They do not justify
+  assuming every unchanged existing Free zone migrated or naming a particular
+  crawler as blocked without evidence. A request with a spoofed User-Agent is
+  a diagnostic probe, not proof that the real verified crawler is accepted.
+  Training access and search retrieval are separate decisions; do not unblock
+  training crawlers as a blanket SEO repair. Report unavailable zone evidence
+  as UNKNOWN; this audit never changes the setting itself.
 
-  What changes on **2026-09-15** (`CONFIRMED`): Training and Agent are blocked by
-  default on **ad-bearing pages** for new customers and new sites, Search stays
-  allowed — and **existing free customers who have not touched the setting are
-  moved to those defaults**. Multi-purpose crawlers are then judged by their
-  overall behaviour under **the strictest rule that applies**, and Cloudflare
-  names **Googlebot, Bingbot and Applebot** as exactly that: crawlers that do both
-  Search and Training. A site that blocks Training blocks them.
-
-  **So this is a check, not a note.** For any site behind Cloudflare: which plan,
-  which bot-control setting, and does the site carry advertising? A free-tier,
-  ad-bearing site whose operator has changed nothing is the case where Googlebot
-  stops being fetched on a date rather than after a decision. Nothing in
-  robots.txt shows it — the block is upstream of the origin — so read it from the
-  Cloudflare dashboard or from response codes to a verified Googlebot fetch.
-  Filed here rather than in myths.md because the remedy is a setting, not a belief.
+A pSEO deletion case is not a universal `410` or monthly republishing recipe.
+Choose HTTP status according to whether the resource is removed, moved or still
+useful; preserve valuable redirects and track the site's observed recrawl.
+Case-study recovery times do not establish an indexing SLA; consult Google’s
+[crawl-budget guidance](https://developers.google.com/crawling/docs/crawl-budget).
 
 ### Rendering is a second budget, and it is not the crawl budget
 

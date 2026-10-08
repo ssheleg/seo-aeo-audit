@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Pack and skill | `seo-aeo-audit` |
-| Version | `0.26.1` |
+| Version | `0.26.2` |
 | License | MIT |
 | Source | https://github.com/ssheleg/seo-aeo-audit |
 

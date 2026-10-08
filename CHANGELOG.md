@@ -1,3 +1,14 @@
+## v0.26.2 — retrieval observations retain their scope
+
+- Correct the Deep Research read-window unit and the conditional 95% observation;
+  literal keywords no longer promise another read. Navigation retains discovery and accessibility value.
+- Distinguish ChatGPT retrieval routes without labelling the whole labrador index a publisher whitelist.
+- Add the official Search Console generative-AI control check and August/September 2026
+  rollout dates. Google incident records are primary for dates, industry timelines secondary.
+
+- Scope Cloudflare checks to the actual zone; preserve unavailable Search Console values
+  and avoid fixed statistical precision or pSEO deletion recipes from single cases.
+
 ## v0.26.1 — B-27 closes because the body was never over the limit; the estimator was
 
 The gate vendored `make-skill`'s `len(body)/3.9` so its figure would be reproducible

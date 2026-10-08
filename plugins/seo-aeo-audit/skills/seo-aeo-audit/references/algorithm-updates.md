@@ -1,10 +1,8 @@
 # Google update timeline — and how to keep it current
 
-**Sources last re-fetched: 2026-08-16.**
-**Newest row in this file: 2026-09-15.**
-> That date is in the future, and it is the only forward-dated row here. It is kept
-> because this file is read *before* the date, not after: an audit run in August that
-> does not know about a September default ships a client into it.
+**Sources last re-fetched: 2026-10-09** (official ranking incident feed; older
+policy rows retain their original evidence and are not newly certified).
+**Newest row in this file: 2026-10-08.**
 
 ## Contents
 
@@ -23,16 +21,12 @@ must not happen is one date standing in for the other. The next full refresh mov
 both, and `test/validate.py` fails when the newest-row line stops matching the
 newest date in the file.
 
-Primary source, re-fetch it on every refresh:
-<https://www.searchenginejournal.com/google-algorithm-history/> (Search Engine
-Journal, full history back to 2003; the page is organized by year, newest first).
-
-Secondary sources for the same refresh:
-- Google Search Status Dashboard — <https://status.search.google.com/> (official
-  ranking-update feed with start/end timestamps and incident notices)
-- Google Search Central blog — <https://developers.google.com/search/blog>
-- Bing Webmaster blog — <https://blogs.bing.com/webmaster>
-- Yandex Webmaster news (RU market)
+Primary source for rollout dates: [Google Search Status incident feed](https://status.search.google.com/incidents.json).
+Read its `begin`, `end` and latest update together; an absent end is not completion.
+Use UTC timestamps for time-series alignment. The [Search Central blog](https://developers.google.com/search/blog)
+is primary for Google's explanations. [Search Engine Journal's history](https://www.searchenginejournal.com/google-algorithm-history/)
+is a secondary cross-check, not the authority for an official end date.
+Bing Webmaster and Yandex Webmaster news cover their respective engines.
 
 An audit that names an algorithm update without dates is guesswork. Everything
 below is dated so a traffic curve can be aligned against it.
@@ -41,6 +35,8 @@ below is dated so a traffic curve can be aligned against it.
 
 | Update | Rollout start | Complete | Type | What it means for an audit |
 |---|---|---|---|---|
+| September 2026 spam update | 2026-09-24 | 2026-10-08 | Spam | Official feed: 16:15 UTC start, 08:00 UTC end. Align affected cohorts to this window; completion alone does not explain a site's recovery. |
+| August 2026 spam update | 2026-08-18 | 2026-08-21 | Spam | Official feed: 16:27 UTC start, 08:49 UTC end. Keep this window separate from September. |
 | June 2026 spam update | 2026-06-24 | 2026-06-26 | Spam | Fast, global. Spam actions and core-update recovery are **separate systems** — a domain hit here does not recover at the next core update (82% stayed blocked in the March-2026 study). |
 | May 2026 core update | 2026-05-21 | 2026-06-02 | Core | ~12 days. Analysts read it as a re-tuning of *which site type* Google prefers per intent and market, not a quality purge. Sites leaning on self-promotional "best [category]" listicles accelerated downward here. |
 | March 2026 core update | 2026-03-27 | 2026-04-08 | Core | Followed the spam update three days earlier — do not attribute movement to one without separating the windows. |
@@ -89,8 +85,7 @@ reported 2026-07-09).
 | Microsoft **Web IQ** announced: APIs serving live web content to AI systems and agents, organized around semantic representations of content rather than whole documents | 2026-06-04 | The grounding layer is being productized, and the unit of access is the passage, not the page (`HYPOTHESIS` — announcement only, no measurable surface yet). Watch; do not build a plan on it. |
 | GSC reporting incidents clustered on rollouts: Performance impression-count bug acknowledged and fixed (2026-05-03); Links report outage during the May 2026 core update, logged by Google as a database bug and serving week-old data until fixed; ~14-day page-indexing freeze alongside the June 2026 spam update, logged as an internal delay | 2026-05 → 2026-07 | 13 of 26 documented GSC outages since mid-2023 fall inside rollout windows (`STUDY` — correlation; the compute-reallocation explanation for it is `HYPOTHESIS`, and Google denies a link). Since late 2025 the "Due to internal issues, this report has not been updated" banner marks infrastructure, not a penalty. Confirm the report is still producing fresh points before diagnosing (measurement.md). |
 | Google canonicalization documentation updated: pages can stay in a duplicate group **up to two weeks** after the content is fixed, and split faster when the difference is obvious and substantial; the **self-referential canonical** is now the documented recommendation | 2026-07-10 / 2026-07-13 | Set the verification window for any canonical fix at ≥2 weeks before calling it failed (technical-checks.md §B). |
-| **Cloudflare shipped purpose-based crawler controls — Search / Agent / Training — live for all customers including the free tier**, at the second Content Independence Day. The *robots.txt vocabulary* of the same name (2025-09-24) is the part with little uptake; the enforcement layer is separate and is network-level | 2026-07-02 | Googlebot is still not split by purpose **at Google's end**, so no robots.txt line separates AI use from Search. But behind Cloudflare the trade-off is now a dashboard setting, and it cuts the other way: see the 2026-09-15 row. |
-| **Cloudflare's purpose defaults take effect: Training and Agent blocked on ad-bearing pages for new customers and new sites, and existing FREE customers who changed nothing are moved to them.** Multi-purpose crawlers are judged by the strictest rule that applies, and Cloudflare names Googlebot, Bingbot and Applebot as Search + Training | 2026-09-15 | **Check it before this date on every Cloudflare site you audit**, and first on free-tier ad-bearing ones: a site that blocks Training blocks Googlebot with it, at the network level, invisibly to robots.txt. This retires the old reading that the Googlebot/AI trade-off was not actionable (technical-checks.md §A). |
+| Cloudflare AI traffic controls and defaults | 2026-07-01 | Verify current zone configuration and real crawler evidence; do not infer migration of all existing Free zones. Primary changelog and scope are linked in technical-checks.md. |
 | Google experiment masking the destination URL behind a `google.com/goto` redirect in results | 2026-07-08 | If it ships, SERP scraping and some rank trackers break. Check your tracker's collection method before trusting a position series that spans this date (tooling.md). |
 | AI Overviews, AI Mode and Search Live launched in **France**; ~450 news publishers notified on 2026-06-29 that they will be paid for content used in AI answers | 2026-07-22 | AI-surface coverage is not uniform per market and can arrive mid-measurement — record the market with every AI-visibility baseline and re-baseline when a surface launches there. |
 | Yandex Alice AI added in-chat bookings (restaurant tables, salon appointments) | 2026-06-24 | Agentic commerce in RU now completes the task inside the assistant — for those verticals, presence in the assistant's supply is a distribution decision, like YCP above. |
