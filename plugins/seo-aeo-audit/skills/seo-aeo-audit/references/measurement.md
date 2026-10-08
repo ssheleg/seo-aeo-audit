@@ -22,7 +22,7 @@ with its date.
 | Surface | What it gives you | Gotcha |
 |---|---|---|
 | Google Search Console | Clicks/impressions/position; Pages (index status) report; URL Inspection; Links; Manual actions | Sampling, freshness lag, data hiding on large properties; verify **all** property variants |
-| GSC — Search Generative AI performance | Pages and impressions from AI surfaces (rolling out per market) | Partial metrics at first (no clicks/queries in early versions) |
+| GSC — Search Generative AI performance | Pages and impressions from AI surfaces (global rollout documented 2026-08-31) | Check the current report and property; missing report is not zero impressions |
 | GSC — AI display control | Opt-out of AIO/AI Mode display; inherits from the nearest parent property, default from the TLD-level property | Check inheritance before assuming a setting applies |
 | GSC — platform properties | YouTube, Instagram, TikTok and X performance in Search/Discover | Ties social distribution to search visibility |
 | Bing Webmaster Tools — AI Performance | Intents, topics, citation counts and **citation share**, grounding query intents/topics | The most actionable AI reporting available; Bing also feeds ChatGPT |
@@ -30,6 +30,15 @@ with its date.
 | Yandex Webmaster | Query monitoring (hours-level delay), vertical inclusion/exclusion, verification via YTM or GTM | Yandex now presents Direct as a useful signal for search — ads and organic are no longer described as independent |
 | Server logs | Which bots fetch what, when, with which status | The only place AI-crawler behavior is ground truth; use forward-confirmed reverse DNS to filter spoofed agents |
 | Analytics (GA4 etc.) | Sessions, engagement, conversions by landing page and source | AI referrals appear only when the platform passes a referrer; assisted conversions arrive later via brand/direct |
+
+The official [generative-AI report](https://support.google.com/webmasters/answer/16984139)
+documents availability and aggregation. An absent report can reflect insufficient
+impressions; label it UNKNOWN, not zero. Preserve unavailable `~`/`-` values before
+export: a numeric zero in an export can conceal unavailable source data. Keep
+property-level and page-level aggregates distinct. Do not invent unavailable
+clicks or query dimensions. The [control](https://support.google.com/webmasters/answer/16908024)
+inherits from the nearest configured ancestor: record that effective setting,
+not only the property currently open.
 
 Field-data sources worth wiring in: CrUX (`cruxvis.withgoogle.com`) for real
 Chrome performance including form-factor split, and a rank tracker you control

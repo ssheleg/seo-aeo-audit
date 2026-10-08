@@ -145,10 +145,10 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
   inside an image it gives up and cites an aggregator (G2) instead. A JS pricing
   table does not just rank badly — it hands your own numbers to a comparison
   site.
-- **Respect the read budget** (canonical numbers in architecture-and-equity.md): ~5,700 characters
-  for the first read, navigation competes with content, source order beats visual
-  order, `alt` text is the only thing read from images, and literal term presence
-  triggers a second read.
+- **Respect the read budget** (canonical numbers in architecture-and-equity.md): a June-2026 FIELD sample measured a ~5,700-character median first-open
+  plaintext window, not a universal raw-HTML limit. Navigation competes with
+  content; test source-order extraction on the target route. Literal terms can
+  help a `find`, but guarantee neither another read nor a citation.
 - **Extraction cost is a selection factor.** Bloated HTML, JS-gated content and
   slow responses raise parsing cost, and engines prefer sources that yield data
   with less friction.
@@ -160,6 +160,12 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
   documented, effect on citation not measured) — audit it by comparing
   read-budget survival between language versions of the same template, not by
   assuming a penalty.
+- **Check the current Search Console AI control explicitly.** The official
+  [Search generative AI control](https://support.google.com/webmasters/answer/16908024)
+  documents search-surface opt-out and inherited settings. Record the inspected
+  property, effective inherited value and access limitations. This is separate
+  from training controls; do not change it as an audit action. If the setting
+  cannot be inspected, report UNKNOWN instead of assuming on or off.
 - **Preview controls gate everything.** `nosnippet`, `data-nosnippet`,
   `max-snippet` limits and paywalls decide what an engine may quote — audit them
   before concluding a page "is not cited".
@@ -169,8 +175,8 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
 | Engine | Retrieval path | Audit implication |
 |---|---|---|
 | Google AIO / AI Mode | Google index + fan-out; sanctions synced with classic search | Classic ranking is the prerequisite; a Google penalty removes you from AI surfaces too |
-| ChatGPT (search) | Bing partnership + own cache/index. Network-tab forensics (2026-07, FIELD) name the `resultsource` buckets: `serp`; `labrador` (licensed-publisher whitelist — Reuters/WSJ, ~1,080-char snippets you cannot enter by optimizing); `bright` (Bright Data scraper, dominant in shopping/finance/weather); `oxylabs`. A `turnusecase` bucket decides whether the web is consulted at all — some prompts answer from training with an empty network tab | Before diagnosing "not cited", establish which bucket the query even uses: a licensed-publisher or training-only answer is not a page problem. Bing rankings are a first-class path (see the index-dependency conflict below) — but a Bing path is **not** a reason to treat Googlebot as optional: the opposite observation, that an 85% Google traffic loss came with a ~75% ChatGPT loss and that blocking Googlebot cuts ChatGPT proportionally, is equally documented. Never let a plan conclude that blocking Googlebot is AI-neutral (myths.md, technical-checks.md A1) |
-| ChatGPT Deep Research | Bing snippets, three commands, no clicks, ~5,700-char read window, `OAI-SearchBot`. Logged across 10+ accounts, ~June 2026 (FIELD): a successful `find` re-opens the page at the matched line in **95%** of sessions, so a literal term guarantees a second read — miss it and the agent tries another keyword and leaves. A robots-blocked page returns `viewing lines [0-0] of 0` and drops out of the report silently | Optimize source order and literal terms; unblock the right user agent (`OAI-SearchBot` ≠ `GPTBot` — unblocking one does nothing for the other). Treat `[0-0] of 0` as the evidence signature for a robots block, not "no interest" |
+| ChatGPT (search) | Retrieval routes vary by model and task. RESONEO's [route study](https://think.resoneo.com/chatgpt-retrieval/) distinguishes the general `labrador` index from news results; do not equate the entire index with a licensed-publisher whitelist. Snippet lengths and backend labels are FIELD observations, not a provider contract | Record route, model, date and query with each observation. Separate discovery, retrieval and citation; an empty web trace can mean no search was attempted. Reproduce the failure before declaring a site ineligible |
+| ChatGPT Deep Research | [Peec's June-2026 FIELD study](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal) measured returned plaintext windows and no clicks in its sampled text-browser sessions; it does not cover quick Search or browser Agent mode. When a `find` led to a re-read, the new window included the matched line in 95% of that sample | Test extraction and source order on the current target route. A literal term does not guarantee a re-read or citation. Distinguish `OAI-SearchBot` from `GPTBot`; an empty read alone does not diagnose robots blocking—check the response, robots and CDN evidence |
 | Claude | ~86.7% overlap with Brave's organic results; Brave is a listed subprocessor. Field tests (2026-06) show Claude pulling Brave-top pages Google has not indexed yet, and ignoring Bing's top results that sit outside Brave's index | Brave's Web Discovery Project scores **behavior** (query correlation, active time, copy events, scroll, internal-link clicks) and ignores backlinks, social signals, domain age and schema; pages failing its `validDoubleFetch` emit zero signal. The full discard list: no title in **either** fetch; `noindex`; canonical mismatch between the two fetches; authenticated-vs-anonymous HTML length differing by <10% or >90%; a **password field present in the anonymous fetch only**; a **form present in the anonymous fetch only** — the last two are the login-wall signature, and they catch templates that show a sign-in prompt to logged-out visitors. Two mechanics worth auditing: structural data is collected at **5,000ms**, so a slow-rendering template ships a truncated payload; every event needs >1s of active time and is throttled to one increment per second, so click farming does not move it |
 | Gemini | Google index + fan-out; distribution (bundled in Android and Chrome) drives share more than model capability. Leaked system prompts (FIELD) show the most aggressive arbitration of the three: check a **User Corrections History before any other source** and silently overwrite conflicting data, including retrieval. A 2026-06 feature connects a Google Business Profile directly — reviews, customer questions and performance data become assistant context | A per-user memory layer you cannot see or audit means Gemini answers are the least reproducible; record the account state with every observation. For local and service businesses, GBP data quality is now an assistant input, not only a Maps input |
 | Perplexity | Own crawl + retrieval; leaves ~76% of retrieved pages uncited. Correlates weakly with both Brave and the Google top-10 | Track retrieval separately from citation; a Claude/Brave or Google fix does not transfer here. Localization index is low (~9%) — Italian-language prompts run in Italy unlocked 59 additional local citation slots (FIELD, 2026-06), so localize the *prompt set* before concluding absence |

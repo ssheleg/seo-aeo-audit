@@ -173,7 +173,7 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Sources last re-fetched 2026-08-16**. That date has one home —
+- **Sources last re-fetched 2026-10-09**. This refresh covers official ranking dates; older policy rows are not newly certified. That date has one home —
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to

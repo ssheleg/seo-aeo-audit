@@ -138,25 +138,22 @@ Two structural details from the same account (FIELD, 2026-06-18):
 
 ## Read-budget: navigation now costs you twice
 
-Classic crawl budget is not the only tax. ChatGPT **Deep Research** reads raw
-HTML linearly, top to bottom (drops `<head>`, ignores JavaScript), with a first
-read capped at ~5,700 characters (median; max ~8,000). Every link renders inline
-as a marker that consumes the same budget:
+Classic crawl budget is not the only tax. In [Peec's June-2026 Deep Research
+study](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal),
+the median first `open` returned about 5,700 characters of **plaintext**, with an
+observed maximum near 8,000. These are FIELD observations from a particular
+text-browser route, not a universal raw-HTML ceiling or a total per-page limit.
+Navigation and link markers consumed part of those returned windows; repeat the
+measurement on the actual route before recommending a navigation change.
 
-| Links on page | Share of the first read that is your content |
-|---|---|
-| < 20 | ~78% |
-| 20–59 | ~55% |
-| 60+ | ~33% |
-
-It never clicks (so "skip to main content" does nothing), and it uses only
-`search` (Bing snippets), `open` and `find` (Ctrl+F). A successful `find`
-triggers a re-read at the matched line ~95% of the time — **literal presence of
-the term buys a second read**. `alt` attributes render as plain text and are the
-only thing read from images (`alt=""` is skipped as decorative).
+The study's 95% figure describes matched-line inclusion **when a `find` led to a
+re-read**. It does not say that inserting a term guarantees a re-read, ranking or
+citation. The sampled text-browser sessions did not click or execute JavaScript;
+that observation does not describe browser Agent mode. Preserve accessible skip
+links and useful navigation for people while testing source-order extraction.
 
 Consequence: **source order matters more than visual position**. A mega-menu that
-CSS paints at the top but that sits at the end of the source costs nothing; an
+CSS paints at the top but that sits late in source may spare the initial window; an
 answer buried below a large navigation block may never enter the first read.
 
 Documented case: a site with ~1,000 sitewide links at the top of every page cut
@@ -170,13 +167,12 @@ where the navigation sits in the DOM — measure survival inside the read budget
 directly (`scripts/page_audit.py` estimates it) instead of inferring it from a
 link count.
 
-On this surface navigation buys nothing back. Because no link graph is
-recomputed at retrieval time, the internal links an answer engine reads are pure
-cost: they spend budget and return no equity (HYPOTHESIS). In Google the same
-mega-menu at least distributes PageRank; in ChatGPT it only crowds out your
-answer. Deep Research also never opens `.md` links even when they are internally
-linked (FIELD, 2026-06-29), so an internal link to a Markdown mirror is budget
-spent on a page that will never be read — see myths.md.
+Internal links can consume initial-window space **and** help the agent discover
+useful deeper pages; Peec observed link following. No evidence here establishes
+that navigation is a pure cost. Preserve crawl paths, keyboard navigation and
+useful links; test changes against task completion and discovery as well as
+first-window extraction. Absence of `.md` opens in one sample does not establish
+a permanent format exclusion.
 
 Corroborating, weakly, on the Google side: a controlled SEO A/B test cut a
 category template from 48 listed products to 36 with everything else held

@@ -37,6 +37,11 @@ Nothing at FIELD or HYPOTHESIS tier ships sitewide. It ships as a test.
    was 52 days. Sample daily for ≥30 days, and score **retrieval** separately from
    **citation** — Perplexity left 76% of retrieved pages uncited while ChatGPT
    cited 61% of them.
+   Record corpus, engine/mode, date, language, geography and account state.
+   Repeats on the same prompt must not be assumed independent: do not claim a fixed
+   margin of error from a recipe such as 20 prompts × 5 runs. State the estimator,
+   uncertainty method and unit of analysis; distinguish retrieval, mention,
+   citation and attributable conversion.
 9. **Hold the prompt format constant across rounds.** Format moves brand counts
    20–25% (rankings, lists and comparisons surface ~20% more brands;
    keyword-explicit prompts ~25% more) while wording barely matters above ~0.50–0.60
