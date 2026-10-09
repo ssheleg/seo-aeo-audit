@@ -3,6 +3,8 @@
 - Correct the trailing-slash robots example; show positive and negative matches,
   wildcard/end-anchor behavior and the full-file precedence boundary.
 - Qualify blocked-resource rendering checks without promising indexing from an allow rule.
+- Correct Googlebot locale-header assumptions and require corroborating evidence before
+  diagnosing an empty AI retrieval as a robots block.
 - Treat Search Console discovered/crawled labels as observed stages; remove universal
   cause/fix claims and unsupported indexing deadlines from the linked operational guidance.
 

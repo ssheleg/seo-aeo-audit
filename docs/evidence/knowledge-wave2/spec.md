@@ -43,3 +43,21 @@ conformance, source/rubric reread and independent root review. No new keyword-ba
 semantic guard will be presented as proof of Google behavior. Live with/without-skill
 model trials, GSC property tests, crawling/indexing outcomes and release/install are
 NOT_RUN here. Root owns review and delivery; author must not push, merge or tag.
+
+## Review-discovered extension, frozen before its edits
+
+Independent review identified two additional A1 claims on 2026-10-09:
+
+- LOCALE-HEADER: the draft says US-English Accept-Language. Google's current
+  locale-adaptive-pages guidance says Googlebot does not set that header and also
+  uses non-US IPs. Expected: test the absent-header case; do not promise one locale
+  only from origin geography. Source:
+  https://developers.google.com/search/docs/specialty/international/locale-adaptive-pages
+- EMPTY-READ: A1 and growth-plays B9 treat a zero-line read as a robots diagnosis,
+  while aeo-geo already rejects that inference. Expected: empty output remains
+  unavailable content until response, robots and CDN evidence establish a cause.
+  Re-read the primary observation:
+  https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal
+
+Correct those bounded homes, append a correction beside the dated source-distillation
+claim without rewriting its historical extract, and retain the existing candidate version.

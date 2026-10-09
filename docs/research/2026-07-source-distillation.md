@@ -769,6 +769,13 @@ Fix pattern: sitewide nav shows top categories only; subcategories appear on the
 category page (no hidden content), combined with an HTML sitemap and backlinks so
 discovery doesn't suffer. **Source-order matters more than visual position.**
 
+> Correction added 2026-10-09: the historical shorthand above is not a diagnostic
+> rule. Peec's primary observation reports an explicit robots-denial message with
+> the zero-line response, alongside other fetch failures. An empty read alone
+> cannot identify the cause or establish omission from every answer. Current
+> doctrine: technical-checks.md A1 and aeo-geo.md, based on the
+> [re-read primary study](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal).
+
 ### B26. Indexing as a scarce resource (posts 6472, 6491, 6514, 6525, 6536, 6551)
 - Adam Gent: the index is designed to **exclude**; Google raises the quality bar
   when it hits capacity (patent *Managing URLs* US7509315B1) — every new page

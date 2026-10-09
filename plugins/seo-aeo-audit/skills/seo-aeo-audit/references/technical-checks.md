@@ -114,32 +114,26 @@ propagate and can return transient 5xx immediately after deployment.
   URL-like strings wherever it finds them (source HTML, rendered DOM, JSON
   blocks) and queues them. The only reliable controls are `robots.txt` (for
   compliant crawlers) and firewall/WAF rules.
-- **Geo-redirects and content negotiation hide whole locales.** A site that
-  redirects by IP, or serves a different language on `Accept-Language`, shows
-  Googlebot one version and only one: Google crawls predominantly from US IPs
-  with a US-English `Accept-Language`, so every other locale can be
-  simultaneously live for users and **absent from the index**. It is invisible
-  from inside the company, because staff browse from the country whose version
-  works. Check: request a localized URL with a non-US egress and with varied
-  `Accept-Language`, compare status codes and final URLs against a plain
-  request; then confirm against the index rather than the response — the
-  Google-selected canonical and coverage state per locale come from
-  `scripts/url_inspection.py`, and a locale that resolves to another country's
-  URL there is the finding. The fix is the standard one: let every locale live
-  at its own crawlable URL, link them with reciprocal `hreflang`, and offer a
-  *suggestion* banner instead of a redirect. Bing also treats hreflang
-  differently from Google, so verify both when a property matters in each.
+- **Geo-redirects and content negotiation can limit locale discovery.**
+  [Google's locale-adaptive guidance](https://developers.google.com/search/docs/specialty/international/locale-adaptive-pages)
+  says Googlebot sends requests without an `Accept-Language` header; its default
+  IPs appear US-based, but it also crawls from other countries (read 2026-10-09).
+  Do not assume it sees exactly one locale. Test the absent-header response as
+  well as explicit language headers and relevant egress locations; compare
+  response content, status and final URL. Then inspect indexing and canonical
+  evidence per locale with `scripts/url_inspection.py`: a response alone does
+  not prove inclusion. Prefer separate crawlable locale URLs and `hreflang`
+  annotations; investigate automatic redirects that prevent access to them.
 - **AI crawlers are separate user agents.** `OAI-SearchBot` (ChatGPT retrieval)
-  is not `GPTBot` (training); unblocking one does nothing for the other. A
-  robots-blocked page returns `viewing lines [0-0] of 0` to ChatGPT Deep Research
-  and silently vanishes from the report. Verify from logs with
-  forward-confirmed reverse DNS — a crawler hit only proves the URL was fetched,
-  never that a model learned it. Whether the domain appears in **Common Crawl**
-  is a separate check again. Bot identity today rests on a self-reported user
-  agent plus IP; Google's experimental **Web Bot Auth** (announced May 2026) has
-  agents sign requests cryptographically, which makes spoofed "trusted agents"
-  detectable — until it is widely adopted, forward-confirmed reverse DNS stays
-  the method.
+  is not `GPTBot` (training); unblocking one does not unblock the other.
+  An empty read alone does not establish robots blocking or absence from every
+  answer. [Peec's June-2026 FIELD observation](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal)
+  includes an explicit robots-denial message alongside zero returned lines;
+  it also records other unreadable-content failures (re-read 2026-10-09).
+  Preserve the returned error, response, effective robots and CDN evidence before
+  assigning a cause (aeo-geo.md). Verify crawler identity using the provider's
+  documented mechanism and logs, not the user-agent string alone. A verified
+  fetch does not prove citation or training; Common Crawl inclusion is separate.
 - **Separate crawling, search presentation and training.** A robots block of
   Googlebot affects Search crawling. The separate Search Console generative-AI
   control can affect AI presentation without that crawl block; inspect its

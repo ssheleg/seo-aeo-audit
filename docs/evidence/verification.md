@@ -25,6 +25,7 @@ standing instruction #2 encodes, written down as a column.
 | Literal prefix, wildcard and end-anchor examples | Current Google robots specification; frozen positive/negative source review in [bounded spec](knowledge-wave2/spec.md) | **observed** — source comparison, not a live crawl |
 | Rendering restrictions do not guarantee indexing outcome | Current Google JavaScript processing guide; affected-resource inspection required | **observed** — documented behavior, no property test |
 | GSC statuses remain observations rather than causal diagnoses | Current Page indexing report help; unsupported rate/deadline removed from the operational recipe and its linked homes | **observed** — semantic correction; effectiveness NOT_RUN |
+| Locale header and empty-read diagnosis | Current Google locale-adaptive guidance and re-read Peec primary observations; explicit denial distinguished from empty output | **observed** — source comparison; no live crawler trial |
 
 ## v0.26.2 — source-scoped retrieval and current controls (2026-10-09)
 

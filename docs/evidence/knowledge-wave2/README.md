@@ -32,6 +32,17 @@ J5. No new reference was added; existing SKILL.md routing continues to load thes
 references. Metadata and the seven standalone producer-version literals move to
 the same candidate version; no script behavior changed.
 
+## Review extension
+
+Google's [locale-adaptive guidance](https://developers.google.com/search/docs/specialty/international/locale-adaptive-pages)
+was read2026-10-09: absent Accept-Language is now included in the test conditions,
+with geo-distributed crawling acknowledged. [Peec's primary observation](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal)
+was also re-read: an explicit robots-denial accompanies the recorded empty result;
+empty output alone cannot establish that cause. Corrected A1, growth-plays B9 and
+added a dated correction alongside the original source-distillation shorthand.
+The two additional frozen cases in spec.md pass manual artifact/source comparison;
+no live request or model-outcome claim follows.
+
 ## Checks and limits
 
 - Frozen source/rubric cases: all five expected judgments are now supported by the
@@ -44,7 +55,9 @@ the same candidate version; no script behavior changed.
 - `git diff --check`: passed.
 
 The first structural run rejected the ledger's release count36 after the candidate
-made it37; the count was corrected and the full gate rerun. Standalone routed-trigger
+made it37; the count was corrected and the full gate rerun. The review extension
+also reduced reference lines across the README rounding boundary; the native guard
+required its measured total to change from ~6,100 to ~6,000 before passing. Standalone routed-trigger
 checking reports `unlooked` because this checkout has no umbrella above it. No
 routing effectiveness claim is made from that warning or the conformance checks.
 
