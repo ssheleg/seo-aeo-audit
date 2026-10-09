@@ -101,13 +101,12 @@ which is how "+34.7% organic" travels into a plan as a projection.
   contradict itself; split the metric by engine, and hold the schema *type*
   constant — Study B tested one type on homepages only. The canonical stance
   (mark up what is real and required, then stop) stays in myths.md.
-- **"Crawled – currently not indexed": quality rejection or authority deficit?**
-  The two readings prescribe opposite work (rewrite versus link) and neither is
-  settled (technical-checks.md, architecture-and-equity.md). The discriminating
-  design is written up in architecture-and-equity.md: hold content constant, add
-  links from strong nodes to one cohort, leave a matched cohort alone, measure
-  index rate. Rule 2 (comparable cohorts) and rule 5 (control) do the heavy
-  lifting here.
+- **Indexing intervention under an uncertain cause.** A GSC status does not
+  establish a quality or authority diagnosis (technical-checks.md). The linking
+  experiment in architecture-and-equity.md holds content constant and compares
+  matched cohorts. Record initial status and relevant confounders; a measured
+  effect supports that intervention in context, not a general causal theory.
+  Rule 2 (comparable cohorts) and rule 5 (control) apply.
 - **Promotional pages for an unknown entity.** 34 pages / 5 domains / 9,886
   answers, 7 Feb – 31 May 2026: a brand-new conference filled 72 previously empty
   answer slots (82% of the new mentions cited the published pages) while an

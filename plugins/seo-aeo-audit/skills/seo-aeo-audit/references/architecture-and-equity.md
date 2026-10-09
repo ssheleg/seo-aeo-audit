@@ -105,26 +105,20 @@ Documented profile from one crawl-waste cleanup: total budget unchanged at
 Note what did not change: the budget. The whole gain came from where the links
 pointed.
 
-The fastest single lever on a URL stuck in "Discovered – currently not indexed"
-is a contextual **body** link from your most-crawled pages: export GSC Top Pages,
-link from inside their content, and indexing often lands in **24–48 hours**
-(FIELD, 2026-07-09). Placement decides — body and hub links transmit, footer,
-author-bio and comment links transmit far less. The full 72-hour protocol and the
-opposite diagnosis ("Crawled – currently not indexed") live in
-technical-checks.md; the two statuses need opposite fixes, so never treat them as
-one bucket.
+Contextual internal links are a candidate intervention when discovery or crawl
+priority evidence shows a gap. Do not promise a fixed indexing window from a link
+placement anecdote. The official status definitions and investigation scope live
+in technical-checks.md A2: discovered and crawled are different stages, not proof
+of opposite causes or a universal pair of fixes.
 
-One live disagreement, to be tested rather than believed: the engine-side reading
-of "Crawled – currently not indexed" is a **quality rejection**
-(technical-checks.md, quoting Mueller), while a competing practitioner account
-calls it almost purely an **authority deficit** (FIELD, 2026-06-18), arguing from
-the fact that identical content indexes instantly on a strong domain. Both files
-record both readings and neither picks a winner — the cause is **HYPOTHESIS**.
-**Discriminating experiment** (referenced from technical-checks.md, owned here):
-hold content constant, add links from strong nodes to one cohort, leave a matched
-cohort alone, measure index rate. Run it per experiments.md — do not rewrite 500
-pages on either theory. Note what does *not* depend on the outcome: discovery-side
-pushes are the wrong fix under either reading.
+Quality and authority explanations for "Crawled – currently not indexed" remain
+**HYPOTHESIS**. A practitioner comparison across domains cannot isolate either
+cause. **Matched-cohort experiment** (referenced from technical-checks.md, owned
+here): hold content constant, add relevant internal links to one cohort and leave
+a matched cohort alone. Record starting statuses, crawl and indexing outcomes,
+observation window and other changes, following experiments.md. This estimates
+the intervention's effect in that setting; it does not reveal Google's internal
+diagnosis or justify rewriting hundreds of pages from a status label alone.
 
 Two structural details from the same account (FIELD, 2026-06-18):
 

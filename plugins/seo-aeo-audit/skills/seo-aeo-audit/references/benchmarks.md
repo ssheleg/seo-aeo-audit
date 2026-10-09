@@ -172,7 +172,7 @@ implying one.
 | Server error rate | <0.5% | practitioner convention, **undated** |
 | Duplicate-group persistence after a fix | up to 2 weeks | Google canonicalization docs, 2026-07-10 (algorithm-updates.md) — `CONFIRMED` |
 | Out-of-stock crawl deprioritization | 100+ days after the directive is removed | technical-checks.md A2, `FIELD`, Jul 2026 |
-| "Discovered – not indexed" push success | 70–80% indexed within 72h with the full protocol | technical-checks.md A2 / growth-plays L10, `FIELD`, **undated field reports** |
+| "Discovered – not indexed" push success | No general success-rate or deadline target established | Earlier 70–80% / 72h claim came from **undated field reports without an inspectable sample or primary receipt**; not an acceptance threshold. Use technical-checks.md A2 and the bounded hypothesis in growth-plays L10. |
 | Migration traffic loss | ~30% average; ~8% with a disciplined protocol; 67% in the documented failure | technical-checks.md Migrations, `FIELD`; the 67% case is the news-network move of Jan 2022 |
 | Recovery after mass accidental `noindex` | 6–12 weeks, staged | technical-checks.md A2, `FIELD`, Jul 2026 |
 | PageRank damping factor | **0.85 is the share a link is modelled as passing on**, not the share lost | Page & Brin, 1998 — an architecture constant from the original paper, `STUDY` at best for live behaviour. It does not license "85% decays per hop": read that way three hops retain 0.34%, read correctly they retain ~61%, and the two prescribe different architectures. The depth rule stands on its own field evidence (architecture-and-equity.md, `FIELD`, 2026-06-11) and does not need this number |

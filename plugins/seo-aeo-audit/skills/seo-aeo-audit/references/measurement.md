@@ -327,9 +327,9 @@ Quarterly:
 
 | Change | When to look | Typical horizon |
 |---|---|---|
-| Robots/rendering unblock | 24–72h for crawl, days for index | Fast |
+| Robots/rendering unblock | Recheck the affected resource/render after the change, then observe actual recrawl; indexing is a separate outcome | No guaranteed indexing deadline |
 | Canonical/duplicate consolidation | 2 weeks minimum (groups persist after fixes) | Weeks |
-| Internal linking / "Discovered – not indexed" push | 24–72h to index, weeks to rank | Weeks |
+| Internal linking / "Discovered – not indexed" investigation | Set a cohort observation window from site evidence; track crawling, indexing and ranking separately (technical-checks.md A2) | Site-dependent; no fixed push deadline |
 | Quality clean-up after mass noindex or thin content | 6–12 weeks, staged in batches | Months |
 | Migration recovery | 2–8 weeks with a clean protocol; months without | Months |
 | Content/intent rework | One crawl+evaluation cycle, then a core update to fully settle | Quarter |
