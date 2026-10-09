@@ -67,20 +67,23 @@ propagate and can return transient 5xx immediately after deployment.
 
 ## A1. Crawl access and rendering
 
-- **Blocked resources break rendering.** Anything disallowed in `robots.txt` is
-  never downloaded, therefore never rendered. Blocking a framework path (e.g.
-  `/_next`) breaks layout and links for Googlebot; allowing `/_next/static/` and
-  `/_next/image` restores indexing. Verify with GSC URL Inspection / Rich Results
-  Test, DevTools request-blocking, or a robots-aware rendering proxy — **not**
-  your browser.
-- **Wildcards match substrings, not paths.** `Disallow: /*?` blocks every
-  parameterized URL behind it (one store lost ~40% of product pages from the
-  index; a retailer lost 45% of traffic and needed six weeks just to diagnose).
-  `Disallow: /*print` also blocks `/blueprints/`, `/footprint/`, `/imprint/`;
-  `Disallow: /account/` also catches `/account-settings/`.
-  Validate by crawling twice (respecting vs ignoring robots.txt) and diffing the
-  URL sets — every URL that disappears is a page the file hides from Google.
-  Keep `robots.txt` in version control with a dated changelog; audit quarterly.
+- **Blocked required resources can impair rendering.** Google cannot execute
+  JavaScript from files its applicable robots rules block. Check which resources
+  the affected content needs, then inspect the rendered result with GSC URL
+  Inspection; an ordinary browser fetch is not that evidence. Allowing framework
+  resources removes that crawl restriction, but does not guarantee indexing.
+  [Google's JavaScript processing guide](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics), read 2026-10-09.
+- **Distinguish literal prefixes from wildcards.** Google's matching is
+  case-sensitive: `Disallow: /account/` matches `/account/` and `/account/profile`,
+  but not `/account-settings/` or `/account`. Without the trailing slash,
+  `Disallow: /account` matches those four paths. `*` spans zero or more characters:
+  `Disallow: /*print` matches `/blueprints/`, but not `/account/`.
+  `$` anchors the end: `Disallow: /account$` matches `/account`, not `/account/`.
+  These examples assume the rule is in the applicable user-agent group and no
+  competing rule changes the result. Test positive and negative URLs against the
+  complete file, including precedence; a robots block controls crawling, not
+  guaranteed removal from the index. Keep a dated version history.
+  [Google's robots specification](https://developers.google.com/crawling/docs/robots-txt/robots-txt-spec), read 2026-10-09.
 - **A clean `robots.txt` proves nothing if the edge blocks the bot.** CDN, WAF
   and bot-management rules answer crawlers with `403`, `429` or a JS challenge
   while a browser gets `200`. Fetch one URL per template with each bot user agent
@@ -111,32 +114,26 @@ propagate and can return transient 5xx immediately after deployment.
   URL-like strings wherever it finds them (source HTML, rendered DOM, JSON
   blocks) and queues them. The only reliable controls are `robots.txt` (for
   compliant crawlers) and firewall/WAF rules.
-- **Geo-redirects and content negotiation hide whole locales.** A site that
-  redirects by IP, or serves a different language on `Accept-Language`, shows
-  Googlebot one version and only one: Google crawls predominantly from US IPs
-  with a US-English `Accept-Language`, so every other locale can be
-  simultaneously live for users and **absent from the index**. It is invisible
-  from inside the company, because staff browse from the country whose version
-  works. Check: request a localized URL with a non-US egress and with varied
-  `Accept-Language`, compare status codes and final URLs against a plain
-  request; then confirm against the index rather than the response — the
-  Google-selected canonical and coverage state per locale come from
-  `scripts/url_inspection.py`, and a locale that resolves to another country's
-  URL there is the finding. The fix is the standard one: let every locale live
-  at its own crawlable URL, link them with reciprocal `hreflang`, and offer a
-  *suggestion* banner instead of a redirect. Bing also treats hreflang
-  differently from Google, so verify both when a property matters in each.
+- **Geo-redirects and content negotiation can limit locale discovery.**
+  [Google's locale-adaptive guidance](https://developers.google.com/search/docs/specialty/international/locale-adaptive-pages)
+  says Googlebot sends requests without an `Accept-Language` header; its default
+  IPs appear US-based, but it also crawls from other countries (read 2026-10-09).
+  Do not assume it sees exactly one locale. Test the absent-header response as
+  well as explicit language headers and relevant egress locations; compare
+  response content, status and final URL. Then inspect indexing and canonical
+  evidence per locale with `scripts/url_inspection.py`: a response alone does
+  not prove inclusion. Prefer separate crawlable locale URLs and `hreflang`
+  annotations; investigate automatic redirects that prevent access to them.
 - **AI crawlers are separate user agents.** `OAI-SearchBot` (ChatGPT retrieval)
-  is not `GPTBot` (training); unblocking one does nothing for the other. A
-  robots-blocked page returns `viewing lines [0-0] of 0` to ChatGPT Deep Research
-  and silently vanishes from the report. Verify from logs with
-  forward-confirmed reverse DNS — a crawler hit only proves the URL was fetched,
-  never that a model learned it. Whether the domain appears in **Common Crawl**
-  is a separate check again. Bot identity today rests on a self-reported user
-  agent plus IP; Google's experimental **Web Bot Auth** (announced May 2026) has
-  agents sign requests cryptographically, which makes spoofed "trusted agents"
-  detectable — until it is widely adopted, forward-confirmed reverse DNS stays
-  the method.
+  is not `GPTBot` (training); unblocking one does not unblock the other.
+  An empty read alone does not establish robots blocking or absence from every
+  answer. [Peec's June-2026 FIELD observation](https://peec.ai/blog/how-chatgpt-deep-research-reads-your-site-what-the-logs-reveal)
+  includes an explicit robots-denial message alongside zero returned lines;
+  it also records other unreadable-content failures (re-read 2026-10-09).
+  Preserve the returned error, response, effective robots and CDN evidence before
+  assigning a cause (aeo-geo.md). Verify crawler identity using the provider's
+  documented mechanism and logs, not the user-agent string alone. A verified
+  fetch does not prove citation or training; Common Crawl inclusion is separate.
 - **Separate crawling, search presentation and training.** A robots block of
   Googlebot affects Search crawling. The separate Search Console generative-AI
   control can affect AI presentation without that crawl block; inspect its
@@ -166,9 +163,9 @@ Case-study recovery times do not establish an indexing SLA; consult Google’s
 Crawling and rendering are separate passes. Fetching HTML is cheap; executing
 JavaScript is not, so JS-dependent pages queue for a later render that can arrive
 hours or days behind the fetch. Crawl budget counts URLs fetched; the render
-queue decides how many of them ever have their JavaScript run. On a JS template
-this is the ordinary cause behind *Crawled – currently not indexed*: the page was
-read, the content was not.
+queue is a separate stage to inspect. On a JS template, delayed or failed
+rendering is a hypothesis to check against rendered-content evidence;
+*Crawled – currently not indexed* alone does not establish that cause.
 
 **The executable diagnostic.** URL Inspection reports **Last crawl**, and *View
 crawled page* shows the HTML Google stored at that crawl. Compare that stored
@@ -239,34 +236,29 @@ for months — the desktop status is not the one being read. Two checks follow:
 
 ## A2. Indexation economics
 
-Treat the index as a scarce resource. The architecture for it is described in a
-Google patent (*Managing URLs*, US7509315B1): a capacity-bound index that raises its
-quality bar as it fills, so every new page competes for a finite slot. A patent
-describes architecture, not a confirmed live weight — `STUDY` at best, and only where
-the mechanism matches something observable (evidence-tiers.md rule 5). What *is*
-observable, and what the rest of this section rests on: index coverage plateaus on
-large catalogues regardless of content quality, and publishing more pages dilutes
-unless demand grows with them.
+Measure the site's actual index coverage and search demand. The Google patent
+*Managing URLs* (US7509315B1) describes an architecture; it does not establish
+current index capacity, live ranking weights or a universal quality threshold
+(evidence-tiers.md rule 5). A coverage plateau needs site-specific investigation.
+Do not infer a fixed capacity or guaranteed dilution merely because more pages
+were published.
 
-**Split the two GSC exclusion diagnoses — they need opposite fixes:**
+**Separate the reported stages before proposing a cause.** The definitions below
+come from [Google's Page indexing report help](https://support.google.com/webmasters/answer/7440203?hl=en),
+read 2026-10-09. The investigation steps are audit guidance, not Google guarantees.
 
-| Status | Meaning | Fix path |
+| Status | What the status establishes | Investigation path |
 |---|---|---|
-| Discovered – currently not indexed | Crawl budget/priority exhausted | Importance signals: contextual internal links from your most-crawled pages, a priority sitemap with fresh `lastmod`, one external dofollow link from an indexed page, clean server signals (TTFB <200ms, no 5XX, no redirect chains). 70–80% index within 72h in field reports (`FIELD`, undated — benchmarks.md, "Operational benchmarks", carries the row and the caveat). |
-| Crawled – currently not indexed | Fetched and **not selected** — read here as a quality rejection, but the cause is disputed (see below) | Discovery signals will not help either way. Step back to page and sitewide quality: unique value, intent match, thin/duplicate clean-up. John Mueller: when systems doubt sitewide quality they crawl less and index less — that is not a technical bug to patch. |
+| Discovered – currently not indexed | Google knows the URL but has not crawled it yet. Google describes postponement to avoid expected site overload as typical, not an exhaustive diagnosis. | Inspect the URL and report freshness, server availability/logs, crawl evidence and internal discovery paths. Confirm a site-specific problem before prescribing a change; no fixed TTFB threshold or indexing deadline follows from this label. |
+| Crawled – currently not indexed | Google crawled the page but has not indexed it; future inclusion remains uncertain. Google says resubmitting it for crawling is unnecessary. | Inspect the latest available URL evidence and rendered content, then investigate relevant content, canonical and site-level hypotheses. The label alone proves neither poor quality nor an authority deficit, and does not prescribe rewriting or acquiring links. |
 
-**The cause of "Crawled – currently not indexed" is contested.** This file reads
-it as a quality rejection (Mueller's statement above). A competing practitioner
-account (FIELD, 2026-06-18) reads it as almost purely an **authority deficit**,
-arguing from identical content indexing instantly on a strong domain and failing
-on a weak one — the same case recorded in architecture-and-equity.md. Both are
-credible and they prescribe different work (rewrite versus link), so the cause
-drops to **HYPOTHESIS**: do not assert one in a report. The discriminating
-experiment is in architecture-and-equity.md, "Crawl frequency is an architecture
-output" — hold content constant, add links from strong nodes to one cohort,
-leave a matched cohort alone, measure index rate (design it per experiments.md).
-Whichever theory holds, discovery-side pushes are the wrong fix, so the fix path
-above stands while the cause is open.
+**A status is not a causal experiment.** Quality and authority explanations remain
+**HYPOTHESIS** unless the site's evidence supports them. The matched-cohort linking
+experiment in architecture-and-equity.md can test a proposed intervention, but
+cannot by itself identify Google's internal reason. Keep initial status, content,
+observation window and competing changes visible (experiments.md). Do not turn
+undated push-success anecdotes into a universal fix contract; benchmarks.md retains
+their evidence limitation.
 
 **Check the reporting before you diagnose the site.** A page-indexing freeze ran
 for roughly 14 days alongside the June 2026 spam update and was logged by Google
@@ -382,8 +374,9 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
 **Tracking parameters are not facets (mechanism owned here).** `utm_*`, `gclid`,
 `fbclid` and their kin create a duplicate URL that carries no independent demand,
 so the entire job is consolidation — the case canonicals were built for. The
-healthy state for a tracking URL is *crawled and not indexed*: that is the tag
-working, not a leak. Three consequences:
+intended outcome is consolidation onto the preferred URL. A tracking URL being
+crawled but not indexed does not by itself prove that the canonical was accepted;
+check Google-selected canonical evidence with URL Inspection. Three consequences:
 
 - **Do not `Disallow` them.** A block cuts off a crawl Google is performing
   legitimately and cannot improve consolidation — a blocked URL never sees the

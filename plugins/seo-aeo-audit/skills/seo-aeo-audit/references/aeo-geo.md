@@ -204,9 +204,10 @@ into AI Overviews and AI Mode, with a "Highly cited" badge on SERP article links
 optimization reaches. When AI-surface visibility moves without a matching
 ranking change, check for this before writing a cause.
 
-**Licensing is becoming part of the crawler posture.** Two documented moves sit
-on the same axis: ChatGPT's `labrador` bucket serves a licensed-publisher
-whitelist you cannot enter by optimizing (above), and in the UK 31 sites added
+**Keep licensing separate from retrieval-route observations.** RESONEO's
+[route study](https://think.resoneo.com/chatgpt-retrieval/) distinguishes the
+general `labrador` index from news results; it does not establish a licensed-publisher
+whitelist for the whole index. Separately, a UK report says 31 sites added
 **"search-only" license terms** — permitting search indexing while pricing
 unlicensed AI use at £500/article (reported 2026-07, `FIELD`). For an audit that
 means two questions, not one: *which agents are technically allowed* (robots,

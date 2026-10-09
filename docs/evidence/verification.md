@@ -18,6 +18,15 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.3 — crawl matching and status diagnosis (2026-10-09)
+
+| What ships | How it was confirmed | Watched |
+|---|---|---|
+| Literal prefix, wildcard and end-anchor examples | Current Google robots specification; frozen positive/negative source review in [bounded spec](knowledge-wave2/spec.md) | **observed** — source comparison, not a live crawl |
+| Rendering restrictions do not guarantee indexing outcome | Current Google JavaScript processing guide; affected-resource inspection required | **observed** — documented behavior, no property test |
+| GSC statuses remain observations rather than causal diagnoses | Current Page indexing report help; unsupported rate/deadline removed from the operational recipe and its linked homes | **observed** — semantic correction; effectiveness NOT_RUN |
+| Locale header and empty-read diagnosis | Current Google locale-adaptive guidance and re-read Peec primary observations; explicit denial distinguished from empty output | **observed** — source comparison; no live crawler trial |
+
 ## v0.26.2 — source-scoped retrieval and current controls (2026-10-09)
 
 | What ships | How it was confirmed | Watched |
@@ -462,7 +471,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-six releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-seven releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

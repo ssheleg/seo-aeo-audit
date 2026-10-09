@@ -254,7 +254,7 @@ describe how a brand is discovered. Add, and report alongside them:
 | Direct and returning traffic | analytics | The owned-audience moat, immune to SERP composition |
 | Newsletter/community signups | your own systems | The channel nobody can re-rank |
 | Assisted and later-touch conversions | analytics, CRM | AI search has no attribution model; conversion often arrives weeks later via brand or direct |
-| Index health per template | GSC Pages report | Coverage %, time to index, drop-out rate — and diagnose "Crawled – not indexed" (quality) apart from "Discovered – not crawled" (crawl budget) |
+| Index health per template | GSC Pages report | Coverage %, time to index and drop-out rate; separate "Crawled – currently not indexed" from "Discovered – currently not indexed" as observed stages, then investigate site-specific causes using technical-checks.md A2 |
 | Indexed URLs **with** traffic or conversions vs indexed with zero | GSC + analytics | The only index number tied to value; the raw indexed count moves the wrong way on purpose during consolidation |
 | Local outcome signals (calls, direction requests, bookings) | GBP, call tracking | For a local business these replace citations entirely — a citation cannot be booked |
 
@@ -327,9 +327,9 @@ Quarterly:
 
 | Change | When to look | Typical horizon |
 |---|---|---|
-| Robots/rendering unblock | 24–72h for crawl, days for index | Fast |
+| Robots/rendering unblock | Recheck the affected resource/render after the change, then observe actual recrawl; indexing is a separate outcome | No guaranteed indexing deadline |
 | Canonical/duplicate consolidation | 2 weeks minimum (groups persist after fixes) | Weeks |
-| Internal linking / "Discovered – not indexed" push | 24–72h to index, weeks to rank | Weeks |
+| Internal linking / "Discovered – not indexed" investigation | Set a cohort observation window from site evidence; track crawling, indexing and ranking separately (technical-checks.md A2) | Site-dependent; no fixed push deadline |
 | Quality clean-up after mass noindex or thin content | 6–12 weeks, staged in batches | Months |
 | Migration recovery | 2–8 weeks with a clean protocol; months without | Months |
 | Content/intent rework | One crawl+evaluation cycle, then a core update to fully settle | Quarter |
