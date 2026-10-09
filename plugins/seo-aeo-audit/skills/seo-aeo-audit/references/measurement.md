@@ -254,7 +254,7 @@ describe how a brand is discovered. Add, and report alongside them:
 | Direct and returning traffic | analytics | The owned-audience moat, immune to SERP composition |
 | Newsletter/community signups | your own systems | The channel nobody can re-rank |
 | Assisted and later-touch conversions | analytics, CRM | AI search has no attribution model; conversion often arrives weeks later via brand or direct |
-| Index health per template | GSC Pages report | Coverage %, time to index, drop-out rate — and diagnose "Crawled – not indexed" (quality) apart from "Discovered – not crawled" (crawl budget) |
+| Index health per template | GSC Pages report | Coverage %, time to index and drop-out rate; separate "Crawled – currently not indexed" from "Discovered – currently not indexed" as observed stages, then investigate site-specific causes using technical-checks.md A2 |
 | Indexed URLs **with** traffic or conversions vs indexed with zero | GSC + analytics | The only index number tied to value; the raw indexed count moves the wrong way on purpose during consolidation |
 | Local outcome signals (calls, direction requests, bookings) | GBP, call tracking | For a local business these replace citations entirely — a citation cannot be booked |
 

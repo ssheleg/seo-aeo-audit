@@ -177,7 +177,7 @@ agent, not just Claude Code. This is the substance:
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~6,000 non-blank lines** of distilled reference
+  decide whether to trust the rest. **~6,100 non-blank lines** of distilled reference
   material across the twenty-five contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were

@@ -43,6 +43,17 @@ added a dated correction alongside the original source-distillation shorthand.
 The two additional frozen cases in spec.md pass manual artifact/source comparison;
 no live request or model-outcome claim follows.
 
+Final duplicate-home review corrected measurement's index-health row, the matching
+quality-diagnosis clause in myths.md, the rendering-cause claim in technical-checks,
+and canonical-acceptance assertions in technical-checks, growth-plays L13 and myths.
+The same status alone proves neither a cause nor canonical acceptance. A second
+licensed-publisher-whitelist assertion in aeo-geo's licensing paragraph now follows
+its existing RESONEO source scope. Searches covered discovered/crawled with quality,
+budget, rejection, authority, rendering and canonical terms, plus labrador/licensed
+publisher variants across all references. The remaining matching cases were read;
+historical observations and explicit uncertainties were not turned into guarantees.
+The native gate was rerun after these corrections.
+
 ## Checks and limits
 
 - Frozen source/rubric cases: all five expected judgments are now supported by the
@@ -57,7 +68,8 @@ no live request or model-outcome claim follows.
 The first structural run rejected the ledger's release count36 after the candidate
 made it37; the count was corrected and the full gate rerun. The review extension
 also reduced reference lines across the README rounding boundary; the native guard
-required its measured total to change from ~6,100 to ~6,000 before passing. Standalone routed-trigger
+required its rounded total to follow the measured count: the earlier6050-line
+draft rounded to ~6,000; the final6052-line reference set rounds to ~6,100. Standalone routed-trigger
 checking reports `unlooked` because this checkout has no umbrella above it. No
 routing effectiveness claim is made from that warning or the conformance checks.
 

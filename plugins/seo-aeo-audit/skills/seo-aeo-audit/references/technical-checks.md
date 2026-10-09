@@ -163,9 +163,9 @@ Case-study recovery times do not establish an indexing SLA; consult Google’s
 Crawling and rendering are separate passes. Fetching HTML is cheap; executing
 JavaScript is not, so JS-dependent pages queue for a later render that can arrive
 hours or days behind the fetch. Crawl budget counts URLs fetched; the render
-queue decides how many of them ever have their JavaScript run. On a JS template
-this is the ordinary cause behind *Crawled – currently not indexed*: the page was
-read, the content was not.
+queue is a separate stage to inspect. On a JS template, delayed or failed
+rendering is a hypothesis to check against rendered-content evidence;
+*Crawled – currently not indexed* alone does not establish that cause.
 
 **The executable diagnostic.** URL Inspection reports **Last crawl**, and *View
 crawled page* shows the HTML Google stored at that crawl. Compare that stored
@@ -374,8 +374,9 @@ Pause Core Web Vitals work while indexing is broken; it is the wrong bottleneck.
 **Tracking parameters are not facets (mechanism owned here).** `utm_*`, `gclid`,
 `fbclid` and their kin create a duplicate URL that carries no independent demand,
 so the entire job is consolidation — the case canonicals were built for. The
-healthy state for a tracking URL is *crawled and not indexed*: that is the tag
-working, not a leak. Three consequences:
+intended outcome is consolidation onto the preferred URL. A tracking URL being
+crawled but not indexed does not by itself prove that the canonical was accepted;
+check Google-selected canonical evidence with URL Inspection. Three consequences:
 
 - **Do not `Disallow` them.** A block cuts off a crawl Google is performing
   legitimately and cannot improve consolidation — a blocked URL never sees the
