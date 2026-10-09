@@ -37,3 +37,19 @@ No private source bodies or agent-project details enter this public patch.
 Acceptance permits normal merge and publication. Authenticated GSC, live crawler
 outcomes, with/without-skill trials, installed payload and umbrella pin remain
 separate delivery checks; no indexing improvement is claimed.
+
+## Final addendum — ACCEPT at daa591b
+
+Root reread the complete follow-up diff through
+`daa591b155bb03a7924887c323d7f8cac42ec7c6`. The second independent review exposed
+duplicated causal statements outside A2; author corrected measurement's index-health
+row, the matching myth, rendering-cause and canonical-acceptance clauses, and the
+retrieval licensing paragraph. Root caught the final capacity assertion in the
+publishing myth; it now preserves actual demand/value/coverage instead of asserting
+a fixed index capacity. These are the same bounded contracts as the initial review.
+
+The supplied full native gate passed after the last one-row edit. Root's final
+structural validation and whitespace check pass with this addendum. No additional
+script behavior or source fact was introduced. All observed blocking findings in
+this bounded diff are resolved; this is not a complete revalidation of every
+pre-existing SEO claim. Release/install and live-outcome gates remain distinct.
