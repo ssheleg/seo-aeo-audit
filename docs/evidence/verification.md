@@ -18,6 +18,12 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.4 — a lightweight tag cannot publish a release (2026-10-10)
+
+| What ships | How it was confirmed | Watched |
+|---|---|---|
+| `release.yml` refuses a tag whose `git cat-file -t` is not `tag`, before the reachability check, the validator and any publish | The step's `run:` body, extracted by YAML parse from this `release.yml` (identical bytes in the seven family members released 2026-10-10), replayed in a scratch repository: a lightweight `v9.9.9` printed `::error::v9.9.9 is a commit, not an annotated tag object…` and exited 1; an annotated `v9.9.10` printed `v9.9.10 is annotated` and exited 0 | **planted** — the lightweight case watched failing; the pass on the real annotated `v0.26.4` is read on its release run, not here |
+
 ## v0.26.3 — crawl matching and status diagnosis (2026-10-09)
 
 | What ships | How it was confirmed | Watched |
@@ -471,7 +477,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-seven releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-eight releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
