@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
-Status: first B-9 migration slice emits `collector-coverage/1` from
-`page_audit.py` and `url_inspection.py` when collection reaches report emission.
-The remaining five scripts are not migrated; B-9 remains open. This schema is
+Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
+`url_inspection.py` and `sitemap_audit.py` when collection reaches report emission.
+The remaining four scripts are not migrated; B-9 remains open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -58,8 +58,8 @@ observations of that fragment, not totals for the whole page.
 Source: owner B-9 and FW06 code inspection at baseline
 `fbb721b2d26b6cfe1a966b90b093d9ba6e452110`; executable current behavior is covered by
 `test/test_page_audit.py`, `test/test_collectors.py`, `test/test_agent_surface.py`
-and `test/audit_regressions/fw06_probe_provenance.py`. These tests do not yet verify
-the proposed common schema.
+and `test/audit_regressions/fw06_probe_provenance.py`. The later contract helpers below verify the migrated common schema with offline
+and loopback fixtures; the baseline inventory is historical.
 
 ## First migration slice: invocation records
 
@@ -67,7 +67,7 @@ the proposed common schema.
 |---|---|---|---|
 | `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Argument, input-list and local-file opening failures before report creation keep their existing stderr/exit behavior. |
 | `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
-| `sitemap_audit.py` | Migration pending | Sitemap traversal, indexes and samples need their own universe boundary. | No common coverage claim. |
+| `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
 | `agent_surface.py` | Migration pending | Instrument hidden discovery attempts before counting requests. | Displayed checks are not all network attempts. |
 | `gsc_pull.py` | Migration pending | Distinguish API rows, windows and unobserved tails. | No inference of missing rows as zero. |
 | `psi_pull.py` | Migration pending | Define field-data absence separately from lab-response success. | No provider completeness claim. |
@@ -82,12 +82,61 @@ an explicit reason and emits state `unknown`; zero is never its default. Early
 bootstrap failures with no record are not complete coverage and remain a migration
 boundary. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the two standalone
+The small builder/Markdown block is duplicated intentionally in the three migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
-`test/test_output_contracts.py` gate, compares those copies and independently checks
-the schema. Its loopback cases cover redirect hops as one logical input, connection
+`test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
+`test/sitemap_coverage_contract.py`, called by the same gate, compares all three
+copies and adds traversal/transport acceptance cases. Its loopback cases cover redirect hops as one logical input, connection
 failure, HTTP 404, an empty complete body, full/capped/incomplete/corrupt gzip, mixed
 results and duplicates. Mocked URL Inspection cases cover caps, absent index data,
 API failure and exact input deduplication without credentials or provider traffic.
 Markdown and JSON counts/state agree in these fixtures. This does not establish live
 provider, browser or native-host acceptance.
+
+
+## Sitemap document population and failure envelope
+
+The requested set is the root and exact unique sitemap URLs discovered through
+complete XML documents. Deduplication happens when enqueuing, before the attempt
+cap, so a repeated or cyclic reference does not create a skipped item. Successful
+empty XML URL sets count as returned documents; a zero-byte body is not parseable
+XML and does not. Redirect hops are not counted separately and this collector does
+not claim a redirect-chain receipt.
+
+A failed or unvisited document may be an index hiding additional descendants.
+`requested=null` and `unknown_frontier` preserve that uncertainty. The traversal
+object also carries `known_discovered` and `offline_nested_references`. In local
+mode the unit is the single file: nested URL references are separate observations,
+not additional attempted/dropped local files. An offline index can leave the
+reachable declaration unknown even though one local document was returned.
+
+Raw and decompressed reads each use a bounded sentinel byte. Oversize, corrupt or
+cut gzip and short declared HTTP bodies are excluded from returned documents and
+reported as `incomplete_body`. Valid XML with more page entries than the existing
+per-document URL cap counts as one returned document but adds `page_url_cap` and
+partial coverage. The parser remains namespace-agnostic; this is no new claim of
+full Sitemap protocol validation.
+
+Once collection is attempted, error and no-page invocations now emit a report;
+previously they could return before any JSON. Existing `producer`, `sources`,
+`analysis` and `findings` remain; `sources`/`analysis.sitemaps_read` preserve their
+legacy attempted-input meaning, while `coverage.returned` is the usable-document
+count. Partial earlier page observations survive a later failure. Read/parse
+errors and no-page runs still exit 1. A complete empty XML URL set therefore has
+complete document coverage and exit 1: it yielded no page URLs to analyze.
+Nonpositive `--max-maps` is parser usage failure (exit 2), before any fetch.
+
+Evidence: `test/sitemap_coverage_contract.py` exercises actual loopback bodies,
+mocked traversal, local files, JSON/Markdown/exit agreement, copied standalone
+execution and three real-source mutants (duplicate accounting, omitted cap reason,
+false complete state). Its execution receipt lives at
+`docs/evidence/runs/2026-10-13-fw06-sitemap.md`. This is source/fixture acceptance,
+not provider, whole-site or installed-host evidence.
+
+
+A page `<loc>` that Python's URL parser rejects is excluded independently:
+`page_errors` identifies its source, URL and diagnostic, `analysis.urls_invalid`
+counts exclusions, and `invalid_page_url` makes coverage partial. Other page
+observations survive; the fully parsed XML document remains returned. JSON and
+Markdown still emit, with exit 1. This handles parser errors, not every possible
+semantic URL or Sitemap protocol violation.
