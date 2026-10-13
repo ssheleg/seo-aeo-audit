@@ -1,0 +1,48 @@
+{
+  "status": "FOCUSED_PASS_FULL_AND_PEER_PENDING",
+  "base": "00601e620f7d273893b6a97566a26abd9e9b520e",
+  "sourceSha256": {
+    "test/validate.py": "a5c7b315d6730fcdc8dcdd198d0e16a7f1d1fd66a0cd14b6d85c52cc6c9a39da",
+    "test/audit_regressions/fw01_temp_guard.py": "6c7209d5f0cc35cead7cc373c54702d7486511ab9eec47409a901eaa0b35bede",
+    "CONTRIBUTING.md": "4261434dc711e3f563045c3797a81408ae0a7e0092e86ef0848e72cf13aeb7a2",
+    "docs/DOCMAP.md": "496acc7216edae38b5e8c351aafbac4b0596c311baf6f41754e55a14eb9f726a"
+  },
+  "checks": [
+    {
+      "command": [
+        "python3",
+        "-B",
+        "test/audit_regressions/fw01_temp_guard.py"
+      ],
+      "exit": 0,
+      "seconds": 25.45,
+      "output": "OK: shipped alias\nOK: unregistered snapshot\nOK: second ledger maker\nOK: changed ledger shape\nOK: context-manager shape drift\nOK: second context-manager\nOK: legitimate ledger and context managers\nOK: comments and strings\nOK: dependency excluded\nOK: public validator healthy + alias/from-import/exemption-drift controls\nresidue: this run left nothing \u2014 10 temp tree(s) created, 10 removed\nFW01 source guard: 10/10 passed\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-B",
+        "test/validate.py"
+      ],
+      "exit": 0,
+      "seconds": 5.15,
+      "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+    }
+  ],
+  "publishedPayload": {
+    "source": "c5a32d23da41d7717942f33995228b36971d2657",
+    "version": "0.26.6",
+    "files": 46,
+    "allRecordedHashesUnchanged": true
+  },
+  "full": "NOT_RUN; serialized slot held by parent TP",
+  "finalDocsStructural": {
+    "command": [
+      "python3",
+      "-B",
+      "test/validate.py"
+    ],
+    "exit": 0,
+    "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+  }
+}

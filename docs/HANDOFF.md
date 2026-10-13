@@ -1,3 +1,11 @@
+## FW01 source-guard follow-up candidate
+
+The [remaining source-guard packet](evidence/runs/2026-10-13-fw01-source-guard/README.md)
+addresses the unclosed half of agent-stack B-159. Focused actual-validator negative
+controls pass; independent review, coordinated owner aggregate and normal integration
+remain pending. Package 0.26.6 and all 46 published file hashes remain unchanged.
+The accepted publication cut below remains historical fact, not candidate acceptance.
+
 ## FW06 release accepted — 0.26.6
 
 [Final owner receipt](evidence/runs/2026-10-13-fw06-release-readback/README.md):

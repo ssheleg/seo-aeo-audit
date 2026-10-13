@@ -185,12 +185,26 @@ override, and a missing or corrupt JSON reading as "no plugin" (fail open,
 never crash). It also holds the success path to its last lines: how the next
 version arrives, and that a restart is needed before a session sees it.
 
-`test/residue_test.py` is the ledger over what a run leaves on disk. Every temp tree in
-this repository comes from `residue.workspace()`, a **failing** case keeps its own tree by
-name so a plant can be read where it landed, and every gate command ends by printing one
-line naming its residue — `nothing` included, because a clean run that stays silent is how
-the next leak becomes invisible. It runs last, so its final case reads the `$TMPDIR` every
-earlier suite shared.
+`test/residue_test.py` checks the ledger over attributed temporary trees. New tests use
+`residue.workspace()` so a failing case keeps its own tree by name and passing cases
+are removed. Gate commands report their residue, including nothing. The ledger does
+not count independently context-managed scratch directories.
+
+The **temporary-tree source guard** in `test/validate.py` scans repository Python
+sources, including shipped scripts and evidence helpers. Its any-receiver detector
+and exact path/count/call-shape exemptions follow the reviewed family mechanism.
+`TEMP_TREE_ALLOWED` is the only exception registry: the ledger allocator, compiled
+bytecode scratch, offline agent-surface fixture and one historical header proof.
+The latter three keep their existing context-manager cleanup; they do not claim
+failure retention through the ledger. Adding another allocation to one of those
+files, changing its call shape, or copying an exemption elsewhere is refused.
+`test/audit_regressions/fw01_temp_guard.py` includes actual public-validator plants.
+
+This is bounded lexical Python coverage, not runtime observation. Documented cache,
+dependency and fixture directories are excluded; JavaScript/shell, chained receivers,
+stored function references, getattr and multiline renamed imports are outside this
+matcher. Triple-quote blanking is lexical and can hide code after embedded markers.
+The guard does not claim that every possible allocation is accounted for.
 
 CI runs the same set plus negative self-tests that prove each guard can fail.
 **Add a guard and you add its negative self-test**: a guard nobody has watched

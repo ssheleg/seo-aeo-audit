@@ -1,0 +1,31 @@
+{
+  "source": "00601e620f7d273893b6a97566a26abd9e9b520e",
+  "checks": [
+    {
+      "name": "healthy",
+      "exit": 0,
+      "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+    },
+    {
+      "name": "outside-test-alias",
+      "exit": 0,
+      "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+    },
+    {
+      "name": "renamed-from-import",
+      "exit": 0,
+      "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+    },
+    {
+      "name": "ledger-shape-drift",
+      "exit": 0,
+      "output": "  unlooked: routed triggers \u2014 no sshlg-skills umbrella above this checkout\nresidue: this run left nothing \u2014 0 temp tree(s) created, 0 removed\nPASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)\n"
+    }
+  ],
+  "expectedAfterFix": [
+    0,
+    1,
+    1,
+    1
+  ]
+}
