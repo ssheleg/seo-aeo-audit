@@ -132,3 +132,11 @@ execution and three real-source mutants (duplicate accounting, omitted cap reaso
 false complete state). Its execution receipt lives at
 `docs/evidence/runs/2026-10-13-fw06-sitemap.md`. This is source/fixture acceptance,
 not provider, whole-site or installed-host evidence.
+
+
+A page `<loc>` that Python's URL parser rejects is excluded independently:
+`page_errors` identifies its source, URL and diagnostic, `analysis.urls_invalid`
+counts exclusions, and `invalid_page_url` makes coverage partial. Other page
+observations survive; the fully parsed XML document remains returned. JSON and
+Markdown still emit, with exit 1. This handles parser errors, not every possible
+semantic URL or Sitemap protocol violation.

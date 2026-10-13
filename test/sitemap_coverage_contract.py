@@ -164,6 +164,19 @@ def run(check, root, workspace):
         fixture.write_text(body)
         result = subprocess.run([sys.executable, str(copied), '--file', str(fixture), '--format', 'json'], cwd=workspace, capture_output=True, text=True)
         ok(result.returncode == 1 and json.loads(result.stdout)['coverage']['state'] == expected, 'ordinary copied CLI empty/invalid input preserves report and exit')
+    for bad in ('https://[bad', 'https://[::1'):
+        for good in (True, False):
+            body = '<urlset>' + ('<url><loc>https://example.invalid/good</loc></url>' if good else '') + '<url><loc>' + bad + '</loc></url></urlset>'
+            fixture.write_text(body)
+            for fmt in ('json', 'markdown'):
+                result = subprocess.run([sys.executable, str(copied), '--file', str(fixture), '--format', fmt], cwd=workspace, capture_output=True, text=True)
+                ok(result.returncode == 1 and 'Traceback' not in result.stderr and bool(result.stdout), 'actual CLI malformed loc retains report/error exit')
+                if fmt == 'json':
+                    data = json.loads(result.stdout); cov = data['coverage']
+                    ok(not schema_errors(cov) and (cov['requested'], cov['returned'], cov['state']) == (1, 1, 'partial'), 'malformed page does not erase complete document observation')
+                    ok(data['analysis']['urls_total'] == int(good) and data['analysis']['urls_invalid'] == 1 and len(data['page_errors']) == 1 and not data['errors'], 'malformed loc preserves good page and explicit exclusion')
+                else:
+                    ok('invalid_page_url' in result.stdout and 'Excluded page URLs' in result.stdout, 'default malformed loc report includes exclusion and coverage')
     texts = [(path.parent / (n+'.py')).read_text() for n in ('page_audit', 'url_inspection', 'sitemap_audit')]
     blocks = [t.split('# ── collector coverage shared block',1)[-1].split('# ── end collector coverage shared block',1)[0] for t in texts]
     ok(len(set(blocks)) == 1 and 'def collector_coverage(' in blocks[0], 'three standalone copies byte-identical')

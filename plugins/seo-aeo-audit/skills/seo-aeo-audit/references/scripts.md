@@ -265,3 +265,11 @@ later read failures; those invocations now emit a report and retain exit 1.
 `--max-maps` must be positive. `--file` reads one local XML/gzip file and follows no
 nested references. The CLI does not read stdin. `sources` and `sitemaps_read` retain
 the legacy attempted-input count; use `coverage.returned` for usable documents.
+
+
+A page `<loc>` that Python's URL parser rejects is excluded independently:
+`page_errors` identifies its source, URL and diagnostic, `analysis.urls_invalid`
+counts exclusions, and `invalid_page_url` makes coverage partial. Other page
+observations survive; the fully parsed XML document remains returned. JSON and
+Markdown still emit, with exit 1. This handles parser errors, not every possible
+semantic URL or Sitemap protocol violation.

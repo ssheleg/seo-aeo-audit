@@ -417,6 +417,7 @@ def main(argv: list[str]) -> int:
     sources: list[str] = []
     urls: list[str] = []
     errors: list[dict] = []
+    page_errors: list[dict] = []
     reasons: list[dict] = []
     returned = 0
     skipped = 0
@@ -447,7 +448,16 @@ def main(argv: list[str]) -> int:
             print(f"could not read sitemap: {exc}", file=sys.stderr)
             continue
         returned += 1
-        urls += pages
+        # XML completeness does not guarantee every loc can be analyzed as a URL.
+        # Preserve valid observations instead of losing the entire report later.
+        for page in pages:
+            try:
+                urlparse(page)
+            except ValueError as exc:
+                page_errors.append({"source": source, "url": page,
+                                    "code": "invalid_page_url", "detail": str(exc)})
+            else:
+                urls.append(page)
         truncated += capped
         if args.file:
             unfollowed = len(set(maps))
@@ -461,6 +471,8 @@ def main(argv: list[str]) -> int:
                     queue.append(nested)
     for code in sorted({e["code"] for e in errors}):
         reasons.append({"code": code, "detail": f"{sum(e['code'] == code for e in errors)} attempted document(s) did not yield complete parseable XML; see errors."})
+    if page_errors:
+        reasons.append({"code": "invalid_page_url", "detail": f"{len(page_errors)} page URL entries could not be parsed and were excluded; see page_errors. Parsed document counts are unchanged."})
     if unknown_frontier:
         reasons.append({"code": "unknown_frontier", "detail": "Unresolved documents can hide additional descendants; requested is unknown, not the known-discovered count."})
     if truncated:
@@ -480,6 +492,7 @@ def main(argv: list[str]) -> int:
     a["sitemaps_read"] = len(sources)
     a["sitemaps_skipped"] = skipped
     a["urls_truncated"] = truncated
+    a["urls_invalid"] = len(page_errors)
     f = findings(a)
     prov = provenance("sitemap_audit.py", argv,
                       f"{len(urls)} URL(s) from {len(sources)} sitemap(s): "
@@ -488,7 +501,7 @@ def main(argv: list[str]) -> int:
     if args.format == "json":
         print(json.dumps({"producer": prov, "sources": sources,
                           "analysis": a, "findings": f, "coverage": coverage,
-                          "traversal": traversal, "errors": errors}, indent=2))
+                          "traversal": traversal, "errors": errors, "page_errors": page_errors}, indent=2))
     else:
         print(render_markdown(a, f, sources))
         print("\n" + collector_coverage_md(coverage))
@@ -496,8 +509,12 @@ def main(argv: list[str]) -> int:
             print("\n## Collection errors\n")
             for error in errors:
                 print(f"- {_flat(error['source'])}: {_flat(error['detail'])}")
+        if page_errors:
+            print("\n## Excluded page URLs\n")
+            for error in page_errors:
+                print(f"- {_flat(error['url'])}: {_flat(error['detail'])}")
         print("\n" + provenance_md(prov))
-    return 1 if errors or not urls else 0
+    return 1 if errors or page_errors or not urls else 0
 
 
 if __name__ == "__main__":
