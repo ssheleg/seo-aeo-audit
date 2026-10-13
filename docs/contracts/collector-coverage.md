@@ -66,7 +66,7 @@ and loopback fixtures; the baseline inventory is historical.
 | Collector | Unit and input normalization | Usable return and carrier | Remaining boundary |
 |---|---|---|---|
 | `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Argument, input-list and local-file opening failures before report creation keep their existing stderr/exit behavior. |
-| `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
+| `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A usable typed index-status observation under the single `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
 | `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
 | `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
 | `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Credential bootstrap and list-only paths keep their early boundaries. No provider-wide completeness, pagination or live acceptance claim. |
@@ -337,3 +337,25 @@ HTTPError bodies use the same bounds; read failures do not escape to erase other
 operations, and known credential echoes are redacted before diagnostic truncation.
 The preflight JSON budget remains caller-selected. No provider access or universal
 HTTP protocol validation is established by these local transport controls.
+
+
+### URL Inspection field admission
+
+`url_inspection.py:parse` admits recognized enum domains, nonempty coverage text,
+valid absolute HTTP(S) canonical/referring/sitemap URLs and UTC crawl timestamps.
+Unknown-only/scalar payloads, unspecified/reserved statuses alone and empty arrays
+supply no usable index answer. Rich-result information alone does not certify
+index status. Google marks `PARTIAL` reserved; it is not an indexed verdict here.
+The [source notes](../evidence/plans/2026-10-13-url-inspection-admission.md) link the
+API schema and distinguish the collector's conservative admission policy.
+
+A usable sibling survives rejected fields. `payload_errors` lists diagnostic field
+paths and `invalid_index_fields` preserves malformed presence separately from
+absence; arbitrary rejected provider values are not copied into diagnostics.
+An invalid crawl time cannot establish never-crawled, and an invalid declared
+canonical cannot establish that the page omitted it. `payload_fields_unavailable`
+keeps coverage partial even if every input supplies some usable observation. The
+confidence footer refers to admitted fields; unknown siblings remain unknown.
+`test/inspection_payload_contract.py` covers mixed actual main/copy execution,
+wrong-type/reserved/unknown fields and a false-answer source mutation. Credential
+and input-list bootstrap boundaries remain open in the separate B1 packet.

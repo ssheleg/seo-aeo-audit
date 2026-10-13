@@ -5,8 +5,9 @@ Twelve reproduced loopback/pure baseline cases cover framing, decoded budgets,
 provider-body errors and URL Inspection answer admission. Preflight correction
 9d9b166 received independent82 PASS. The parent accepted packet76818f2 for
 implementation. T1 transport now has a [bounded source receipt](evidence/runs/2026-10-13-fw06-transport.md);
-next is its independent source review, then T2 typed inspection and B1 bootstrap
-with separate focused receipts. One composed owner gate and ordinary integration
+T2 now has a [typed-admission source receipt](evidence/runs/2026-10-13-fw06-inspection-payload.md).
+Next: independent T1/T2 source reviews and B1 bootstrap implementation with its
+separate focused receipt. One composed owner gate and ordinary integration
 follow after the serial slot clears.
 Do not claim complete B-9 or provider/native acceptance from this planning branch.
 

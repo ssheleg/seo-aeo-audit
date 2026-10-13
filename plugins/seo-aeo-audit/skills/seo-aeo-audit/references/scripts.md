@@ -348,3 +348,15 @@ cap each provider response at 8,000,000 raw and decoded bytes; hitting that tran
 cap produces an explicit payload gap and preserves independent input results.
 Known token/key echoes in error bodies are redacted before diagnostic truncation.
 No larger provider-row universe is inferred from a body that fits these limits.
+
+
+### URL Inspection typed observations
+
+An arbitrary nonempty response object is not an index answer. The collector admits
+recognized typed status/URL/time fields and preserves usable siblings when another
+field is malformed. JSON exposes `payload_errors` and `invalid_index_fields`;
+default output names the same limitations. Unknown or reserved statuses alone do
+not establish an answer. A malformed crawl date does not mean never-crawled, and
+a malformed declared canonical does not mean the page omitted one. Returned URL
+counts use one predicate, while coverage remains partial for rejected fields.
+The evidence footer applies only to the fields actually admitted from the engine.
