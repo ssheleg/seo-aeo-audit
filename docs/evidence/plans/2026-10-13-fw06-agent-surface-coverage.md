@@ -12,6 +12,9 @@ A local mock of `agent_surface.collect('https://example.invalid')`, returning a
 `fetch` invocations and **47** unique `(URL, Accept, User-Agent)` variants. The
 result had **23** `checks`, `_answered=23` and no common `coverage`. These are
 counts from this finite fixture, not claims about a live site or every branch.
+Reproduce from the checkout with
+`python3 -B docs/evidence/plans/fw06-agent-surface-probe.py`; the tracked script
+replaces the module transport and prints the five measured fields above.
 
 The hidden calls are the entry-point alternatives and near-miss discovery loops.
 `collect` may append a selected response later through `note`; deriving attempts
