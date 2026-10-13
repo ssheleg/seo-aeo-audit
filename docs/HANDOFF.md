@@ -13,8 +13,8 @@ native-host acceptance is claimed.
 Accepted 0.26.5 main `bccb630e79730e2a7058b74a2130ddfe4f4662aa` was merged
 without rewriting this published branch; its standard retro stamp is preserved.
 Owner `npm test` passed at `7976831`, including coverage 115/115; see receipt.
-Next: independent corrected-source verdict, then freeze the candidate for genuine
-required checks and normal PR delivery.
+Independent corrected-source review passed at `7976831` with replayed 115/115.
+Next: freeze the candidate for genuine required checks and normal PR delivery.
 Keep the parent release branch and manifests untouched.
 
 ---
