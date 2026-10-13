@@ -56,3 +56,32 @@ The combined `python3 -B test/test_output_contracts.py` exited 0 with 115 shared
 with 25 references and unchanged SKILL body 4685 tokens / 325 lines; routed
 trigger integration remains explicitly unlooked in this isolated checkout. Broad suite has not been run:
 parent requested a disk/serial hold, so its absence is pending evidence, not a pass.
+
+
+## Independent findings and correction replay
+
+The peer review of `54fe9d523e816e5868cdf68eb771cdf42c7c53a9` reproduced
+three bounded gaps. Latin-1 superscript `²` in Content-Length passed `isdigit`
+but failed `int`: HTTP 200 lost its observed status, and the HTTP 404 handler
+raised before emitting a report. The reader now accepts only ASCII decimal
+syntax and compares normalized decimal strings without unbounded integer
+conversion; malformed lengths preserve status with an explicit incomplete-body
+reason. Actual loopback 200/404 and copied CLI controls preserve the report.
+This is not a complete HTTP framing validator.
+
+The initial missing-path response decides whether to request its markdown
+variant. Failure now marks that conditional frontier unknown: the isolated
+fixture records 46 attempts and requested null, versus 47 calls in its complete
+counterpart. Repeated page-array rows also refuse a competing per-unit carrier,
+including a conflict introduced only in a later row; the legacy repeated-record
+positive remains accepted.
+
+The new focused controls first exited 1 on all three defects (seven failed
+predicates). After correction, `python3 -B test/agent_coverage_contract.py`
+exited 0 with **73 controls**. The first copied CLI test draft used unsupported
+standalone `--api-probe` input and failed before collection; correcting the
+fixture to the supported `--openapi` entry produced the intended transport
+assertion. Both owned failed fixture trees were inspected and removed; no foreign
+residue was removed. Combined `python3 -B test/test_output_contracts.py` then passed 115 shared,
+127 sitemap and 73 agent controls. Structural validation also exited 0.
+Independent acceptance and owner aggregate remain pending.

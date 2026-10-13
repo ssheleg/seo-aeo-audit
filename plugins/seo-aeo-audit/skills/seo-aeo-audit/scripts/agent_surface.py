@@ -468,8 +468,18 @@ def _read_response(url, response, trace):
         raw, complete, error = exc.partial[:MAX_BYTES], False, "HTTP body ended before its declared length"
     except (OSError, ValueError, http.client.HTTPException) as exc:
         complete, error = False, str(exc)
-    declared = response.headers.get("Content-Length", "") if response.headers else ""
-    if len(raw) > MAX_BYTES or (declared.isdigit() and len(raw) < int(declared)):
+    declared = response.headers.get("Content-Length") if response.headers else None
+    short = False
+    if declared is not None:
+        declared = declared.strip(" \t")
+        if not re.fullmatch(r"[0-9]+", declared):
+            complete, error = False, "malformed Content-Length; body completeness is unverified"
+        else:
+            # Decimal comparison avoids Unicode isdigit/int disagreement and an
+            # unbounded conversion of an arbitrarily long header value.
+            normalized, observed = declared.lstrip("0") or "0", str(len(raw))
+            short = (len(normalized), normalized) > (len(observed), observed)
+    if len(raw) > MAX_BYTES or short:
         complete, error = False, "HTTP body is incomplete or exceeds the byte budget"
         raw = raw[:MAX_BYTES]
     encoding = response.headers.get("Content-Encoding", "").strip().lower() if response.headers else ""
@@ -960,7 +970,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
     if origin:
         # --- 1. does a missing path say so ----------------------------------
         missing = f"{origin}/agent-surface-probe-404-check"
-        p = note("404 shape", journal.request(missing))
+        p = note("404 shape", journal.request(missing, discovery=True))
         if p.answered:
             if p.status == 200:
                 add("blocker", "agent-404-soft",
