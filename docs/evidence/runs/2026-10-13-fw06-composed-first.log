@@ -1,0 +1,46 @@
+
+> @ssheleg/seo-aeo-audit@0.26.5 test:all
+> bash scripts/check-docs.sh && python3 test/negatives.py && npm run test:audit
+
+  unlooked: routed triggers — no sshlg-skills umbrella above this checkout
+residue: this run left nothing — 0 temp tree(s) created, 0 removed
+PASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)
+  ok  a content change is seen
+  ok  a MODE-ONLY change is seen (the incident)
+  ok  no change at all is refused, by name
+  ok  a new file is seen
+  ok  a deleted file is seen
+  ok  .git churn is not mistaken for a plant
+  ok  a missing tree refuses rather than approves
+  ok  verify without snap refuses
+  ok  the manifest lives outside the tree
+residue: this run left nothing — 8 temp tree(s) created, 8 removed
+
+PASS: plant_guard — 9 cases
+residue: this run left nothing — 1 temp tree(s) created, 1 removed
+PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + headers, gzip, url-list and error paths, blindness caveat, schema completeness, directive parsing, price provenance, truncation honesty, per-finding tiers)
+residue: this run left nothing — 0 temp tree(s) created, 0 removed
+PASS: url_inspection behavior (documented field names, canonical verdicts, blockers, error rows, visible cap, every excluded state, tier scoped to answers)
+residue: this run left nothing — 1 temp tree(s) created, 1 removed
+PASS: collector behavior (psi field/lab separation, CLS rescale, absent-CrUX honesty, sitemap template families, orphan refusal, sitemap cap in the report, preflight/psi absent-metrics agreement, gsc text parity with json)
+residue: this run left nothing — 0 temp tree(s) created, 0 removed
+PASS: agent_surface behaviour
+B-9 collector coverage: 115/115 controls passed
+B-9 sitemap coverage: 127 controls
+B-9 agent coverage: 73 controls
+B-9 GSC coverage: 76 controls
+B-9 PSI coverage: 67 controls
+B1 bootstrap: 87 controls
+T2 URL Inspection payload: 75 controls
+T1 bounded transport: 170 controls
+B-9 preflight coverage: 82 controls
+R30 SEO board: 28 controls
+residue: 1 of 1 temp tree(s) KEPT — the case did not pass and the copy is the evidence:
+    /tmp/fw06-composed-full-owned/seo-aeo-audit-test-88096-w120eizt-contracts  <- output contracts
+  0 removed. When you are done reading them: rm -rf /tmp/fw06-composed-full-owned/seo-aeo-audit-test-88096-w120eizt-contracts
+FAIL: output contracts
+  - B-9 agent surface: /length-bad-200: malformed length diagnosed explicitly
+  - B-9 agent surface: /length-bad-404: malformed length diagnosed explicitly
+  - B-9 PSI: error-body read failure preserves status and redacts echo
+  - B-9 PSI: no-URL bootstrap remains explicit no-report boundary
+  - B-9 PSI: unreadable list bootstrap remains explicit no-report boundary

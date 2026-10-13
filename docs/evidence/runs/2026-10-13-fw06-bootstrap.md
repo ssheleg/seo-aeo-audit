@@ -64,6 +64,33 @@ Temporary trees use the owner residue ledger. Failed fixture trees were retained
 until logs were read, then only those named owned paths were removed. Final passes
 report cleanup. No foreign state or credential configuration was modified.
 
-Independent B1 source review: pending. One composed owner full gate and normal
-eligible PR admission/merge remain next, before packaging 0.26.6. B-9 stays open
+Independent B1 source review: the parent archived exact `5ab0436cce82c9aca655b3016047ec32e146d24a`,
+reviewed all six scripts/docs and independently replayed 87 controls, exit 0.
+One composed owner full gate and normal eligible PR admission/merge remain next,
+before packaging 0.26.6. B-9 stays open
 until final acceptance; live provider/native/model quality remains NOT_RUN.
+
+
+## First composed gate and fixture reconciliation
+
+`npm run test:all` at exact `5ab0436cce82c9aca655b3016047ec32e146d24a`
+exited 1 after 21.05 seconds. [Raw log](2026-10-13-fw06-composed-first.log)
+and [supervisor result](2026-10-13-fw06-composed-first.json) preserve the failure.
+It reached output contracts and found five old assertions: two expected the old
+Content-Length wording, one expected the old PSI error-body wording, and two
+expected PSI bootstrap to emit no report. T1 and B1 intentionally superseded those
+contracts; status preservation, redaction and unknown populations remain required.
+
+Only the two older test modules changed. The agent controls now assert the named
+malformed-length reason; PSI checks the static read-failure reason while retaining
+HTTP status and secret-redaction assertions. Bootstrap checks now parse the actual
+carrier, require exit 1, no rows, zero attempts/returns and no fetch. Empty inputs
+are known zero/partial; unreadable-list requested/dropped counts are null/unknown.
+The first focused rewrite incorrectly expected partial for unknown population and
+failed once; the assertion was corrected against the unchanged shared schema.
+Focused agent 73 and PSI 67 controls then passed. No implementation was changed.
+
+The gate used an owned TMPDIR and disk monitor; minimum free space was 985280512
+bytes, with no watchdog interruption. Failed fixture copies were inspected before
+removing only their named task-owned paths; logs remain tracked. Corrected composed
+full result is pending, so this record is not aggregate acceptance.

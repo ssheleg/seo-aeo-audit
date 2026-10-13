@@ -8,8 +8,10 @@ implementation. T1 transport now has a [bounded source receipt](evidence/runs/20
 T2 now has a [typed-admission source receipt](evidence/runs/2026-10-13-fw06-inspection-payload.md).
 Independent T1/T2 source reviews passed `6c3403d` (170 controls) and `ce6d4df` (75 controls).
 B1 now has its [bootstrap receipt](evidence/runs/2026-10-13-fw06-bootstrap.md).
-Next: independent B1 review, then one composed full owner gate in the serial slot
-and ordinary integration.
+Independent B1 exact `5ab0436` review passed 87 controls. The first composed gate
+found five superseded fixture expectations, preserved in the bootstrap receipt.
+Next: reviewed fixture reconciliation, corrected composed full gate, then ordinary
+integration and separately reviewed 0.26.6 packaging.
 Do not claim complete B-9 or provider/native acceptance from this planning branch.
 
 ## Preflight integrated candidate — 2026-10-13
