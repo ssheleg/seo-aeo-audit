@@ -41,3 +41,26 @@ used. No-input and per-collector bootstrap envelopes remain separate work;
 preflight success exit still means a report was produced, not universal readiness.
 Next: finish focused review, reconcile accepted PSI/main, freeze the exact source,
 then run the owner gate after the serial slot clears and use normal PR admission.
+
+## Independent framing finding and correction
+
+Parent review of `6e0ff2650dacc1b6a4dec37dd623f0988642d9c0` found false body
+completeness when repeated Content-Length fields disagreed. Three actual-loopback
+predicates were red at that source: lengths 2/900, chunked Transfer-Encoding with
+Content-Length, and a composed PSI/public run where the ambiguous PSI body was
+accepted. Observed HTTP status must survive, but the payload is not complete.
+
+`_read_probe` now reads all length fields, normalizes equal decimal values and
+refuses contradictory/malformed lengths or any TE+CL combination as partial.
+Identical repeated lengths remain a positive case. `python3 -B
+test/preflight_coverage_contract.py` now passes **82 controls**, including all
+three red predicates and the positive. The failed owned fixture was removed after
+recording this evidence. This is a preflight correction; an independent same-class
+probe against accepted agent-surface main found another open transport home, which
+belongs to a separately reviewed follow-up packet rather than retroactively
+changing earlier receipts.
+
+The first correction structural check also refused one agent-surface bytecode file
+created by this run's independent seam probe (that probe omitted `-B`). The owned
+file was removed and the guard rerun; no shipped artifacts or foreign cache were
+removed. This was an inspection-residue failure, separate from body framing.

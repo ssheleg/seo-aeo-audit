@@ -290,6 +290,8 @@ return semantics differ from full-body collectors and are stated in each record'
 scope. Known scheduling by flags is not an unknown site population. Only the first
 declared sitemap or fallback is requested; incomplete robots qualifies selection
 without implying a full crawl. Gzip/raw caps and malformed length remain explicit.
+Preflight admits equal normalized repeated Content-Length values, but marks
+contradictory repeated lengths and TE+CL combinations partial while retaining status.
 
 Typed empty GSC property lists can establish absence. Malformed rows cannot: valid
 matches survive, but unmatched property access stays unattempted/unknown while

@@ -300,15 +300,18 @@ def _read_probe(response, max_bytes, secret=None):
     except (OSError, ValueError, http.client.HTTPException) as exc:
         complete, error = False, safe_detail(exc, secret)
     headers = getattr(response, "headers", None) or {}
-    declared = headers.get("Content-Length")
-    if declared is not None:
-        declared = declared.strip(" \t")
-        if not re.fullmatch(r"[0-9]+", declared):
-            complete, error = False, "malformed Content-Length"
-        else:
-            normalized, observed = declared.lstrip("0") or "0", str(len(raw))
-            if (len(normalized), normalized) > (len(observed), observed):
-                complete, error = False, "incomplete or capped HTTP body"
+    # A first-value lookup hides contradictory repeated framing. Uniform
+    # decimal lengths are admissible; TE plus CL is conservatively ambiguous.
+    declared = headers.get_all("Content-Length", []) if hasattr(headers, "get_all") else ([headers["Content-Length"]] if "Content-Length" in headers else [])
+    lengths = [value.strip(" \t") for field in declared for value in field.split(",")]
+    normalized = [value.lstrip("0") or "0" for value in lengths]
+    framing_bad = bool(lengths) and (any(not re.fullmatch(r"[0-9]+", value) for value in lengths) or len(set(normalized)) != 1 or headers.get("Transfer-Encoding") is not None)
+    if framing_bad:
+        complete, error = False, "ambiguous or malformed HTTP length framing"
+    elif normalized:
+        observed = str(len(raw))
+        if (len(normalized[0]), normalized[0]) > (len(observed), observed):
+            complete, error = False, "incomplete or capped HTTP body"
     if len(raw) > max_bytes:
         raw, complete, error = raw[:max_bytes], False, "body exceeds probe byte budget"
     encoding = headers.get("Content-Encoding", "").strip().lower()

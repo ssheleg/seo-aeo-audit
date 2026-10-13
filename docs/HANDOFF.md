@@ -1,7 +1,7 @@
 ## Preflight integrated candidate — 2026-10-13
 
 The [accepted contract](evidence/plans/2026-10-13-fw06-preflight-coverage.md) now
-has bounded source and 78 focused controls. See the
+has bounded source and 82 focused controls. See the
 [run receipt](evidence/runs/2026-10-13-fw06-preflight-coverage.md).
 PSI and GSC/R30 were normally integrated; accepted main
 `2de0d4042e1a312f4366ada325118b2a4413d760` is composed here. PSI genuine run

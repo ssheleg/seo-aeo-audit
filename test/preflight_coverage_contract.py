@@ -88,6 +88,10 @@ def run(check,root,workspace):
    requests.append(self.path)
    if self.path.startswith('/error'):
     self.send_response(403);self.send_header('Content-Length','²');self.end_headers();self.wfile.write(b'offline/key+secret offline%2Fkey%2Bsecret');return
+   if self.path.startswith('/duplicate-length'):
+    self.send_response(200);self.send_header('Content-Length','2');self.send_header('Content-Length','900' if 'conflict' in self.path else '2');self.end_headers();self.wfile.write(b'{}');return
+   if self.path.startswith('/transfer-and-length'):
+    self.send_response(200);self.send_header('Transfer-Encoding','chunked');self.send_header('Content-Length','2');self.end_headers();self.wfile.write(b'2\r\n{}\r\n0\r\n\r\n');return
    if self.path.startswith('/bad-length'):
     self.send_response(200);self.send_header('Content-Length','²');self.end_headers();self.wfile.write(b'{}');return
    if self.path.startswith('/short'):
@@ -111,6 +115,16 @@ def run(check,root,workspace):
   for suffix,budget in [('/error',4096),('/bad-length',4096),('/short',4096),('/capped',8),('/gzip',40)]:
    response=mod._get(origin+suffix,max_bytes=budget,secret=key)
    ok(response[0] in (200,403) and not response.complete,'actual incomplete/capped/gzip/error body preserves landing status')
+  for suffix in ('/duplicate-length-conflict','/transfer-and-length'):
+   response=mod._get(origin+suffix)
+   ok(response[0]==200 and not response.complete,'conflicting duplicate or TE/CL framing remains partial with observed status')
+  response=mod._get(origin+'/duplicate-length-same')
+  ok(response[0]==200 and response.complete,'identical repeated Content-Length is a determinate positive')
+  journal=mod.ReadinessJournal(None,origin,False)
+  with patch.object(mod,'PSI',origin+'/duplicate-length-conflict'):
+   rows=mod.check_public(origin,journal)+[mod.check_psi(origin,journal)]
+  journal.note_local('python',mod.check_python());cov=journal.records()['network_probe']
+  ok(len(rows)==4 and cov['returned']==4 and cov['state']=='partial' and 'unknown' in rows[-1]['detail'],'ambiguous PSI framing retains other public observations and status counts')
   with patch.object(mod,'GSC_SITES',origin+'/error'):
    rows=mod.check_gsc(key,'sc-domain:example.invalid',None)
   ok(key not in json.dumps(rows) and 'offline%2Fkey%2Bsecret' not in json.dumps(rows) and 'HTTP 403' in rows[0]['detail'],'actual GSC error diagnostics redact plain/encoded token echoes')
