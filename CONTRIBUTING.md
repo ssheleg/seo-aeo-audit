@@ -254,3 +254,20 @@ issue for those.
 
 By contributing you agree that your contributions are licensed under the
 [MIT License](LICENSE).
+
+### Intended failure attribution
+
+The **plant attribution** guard reads the two migrated helper groups in
+`.github/workflows/validate.yml` through the existing `test/negatives.py` parser.
+Every call declares a literal description and expected diagnostic; behavioral
+calls retain their explicit checker. `test/plant_attribution.py` rejects
+anonymous/missing/dynamic declarations, duplicate identities and missing groups.
+Its output matcher accepts reported failure rows, not success text or traceback
+echoes. A nonzero exit without the intended diagnostic is a broken negative test.
+
+`test/audit_regressions/fw06_attribution.py` checks original identity-set retention,
+selector refusal and a real source counterexample: disable only the semantic
+myth-count branch while leaving anchor liveness active. The old exit-only test
+would pass; attributed matching refuses. This bounded shell reader handles the
+workflow's literal opening-line declarations, not arbitrary shell syntax.
+Standalone negative steps outside these two groups retain their existing gates.

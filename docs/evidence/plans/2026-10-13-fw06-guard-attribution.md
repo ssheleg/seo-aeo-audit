@@ -2,7 +2,7 @@
 
 # FW06 next packet: B-33 guard-specific mutation attribution
 
-Status: prepared, not implemented. Source snapshot `5f6efee3cae11558030c0f1a05911413a787d186`,
+Status: implementation in progress; [current execution receipt](../runs/2026-10-13-fw06-attribution.md). The original measured plan below is preserved. Source snapshot `5f6efee3cae11558030c0f1a05911413a787d186`,
 which contains accepted 0.26.5 main plus the first B-9 slice. This packet does not
 alter the coverage branch, published version, workflow or any guard. The B-9
 partial-unknown correction after this snapshot must be integrated before execution.

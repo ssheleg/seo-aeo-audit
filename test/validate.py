@@ -603,6 +603,7 @@ _GUARD_FAMILIES = (
     "confirmed tally",
     "run stamps",
     "declared schemas",
+    "plant attribution",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -2246,6 +2247,19 @@ def check_routed_triggers_still_advertised():
 
 
 check_routed_triggers_still_advertised()
+
+
+# B-33: anonymous helper calls cannot silently re-enter either migrated group.
+# Reuse the owner workflow parser; no second workflow or mutation inventory.
+def check_plant_attribution():
+    from negatives import parse_steps
+    from plant_attribution import calls
+    _, problems = calls(parse_steps(os.path.join(ROOT, '.github/workflows/validate.yml')))
+    for problem in problems:
+        fail('plant attribution: ' + problem)
+
+
+check_plant_attribution()
 
 
 if not errors:

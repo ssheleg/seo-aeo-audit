@@ -11,6 +11,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'test'))
 
 
@@ -19,21 +20,29 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    for path in ('.github/workflows/validate.yml', 'test/negatives.py'):
+    for path in ('.github/workflows/validate.yml', 'test/negatives.py', 'test/plant_attribution.py'):
         committed = subprocess.check_output(['git', 'show', sha + ':' + path], cwd=ROOT)
         if (ROOT / path).read_bytes() != committed:
             raise ValueError('snapshot refuses an uncommitted source: ' + path)
     spec = importlib.util.spec_from_file_location('owner_negatives', ROOT / 'test/negatives.py')
     owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
-    rows = []
-    for step, body in owner.parse_steps(ROOT / '.github/workflows/validate.yml'):
-        for line, text in enumerate(body.splitlines(), 1):
-            if not re.match(r'\s*plantq?\s', text):
-                continue
-            match = re.match(r'\s*(plantq?) "([^"]+)"', text)
-            if not match:
-                raise ValueError('unparsed plant call: ' + step + ':' + str(line))
-            rows.append({'step': step, 'line_in_step': line, 'kind': match[1], 'description': match[2]})
+    from plant_attribution import calls
+    steps = owner.parse_steps(ROOT / '.github/workflows/validate.yml')
+    rows, problems = calls(steps)
+    if problems:
+        raise ValueError(problems)
+    bodies = dict(steps)
+    for row in rows:
+        row['kind'] = 'plantq'
+        lines = bodies[row['step']].splitlines()
+        i = row['line_in_step']
+        command = []
+        while i < len(lines):
+            command.append(lines[i].strip())
+            if not lines[i].rstrip().endswith('\\'):
+                break
+            i += 1
+        row['mutation_command'] = '\n'.join(command)
     workflow = (ROOT / '.github/workflows/validate.yml').read_bytes()
     data = {'schema': 'plant-attribution-inventory/1', 'source_commit': sha,
             'source_path': '.github/workflows/validate.yml', 'source_sha256': hashlib.sha256(workflow).hexdigest(),

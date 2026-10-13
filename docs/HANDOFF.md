@@ -1,3 +1,14 @@
+# FW06 B-33 attribution implementation — 2026-10-13
+
+The [execution receipt](evidence/runs/2026-10-13-fw06-attribution.md) owns current
+status and checks; the [original packet](evidence/plans/2026-10-13-fw06-guard-attribution.md)
+owns scope and baseline inventory. All 63 helper identities now name their intended
+diagnostic; 52 focused controls and both migrated workflow groups pass.
+Independent acceptance and full owner gates remain pending. Keep version 0.26.5; next patch packaging
+belongs after combined accepted B-9/B-33 source. No provider/native claim.
+
+---
+
 # FW06 B-33 preparation, 2026-10-13
 
 Plan-only branch `plan/fw06-guard-attribution` preserves the complete measured

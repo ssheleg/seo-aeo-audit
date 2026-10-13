@@ -321,3 +321,16 @@ who you are pretending to be.
 The cheapest version of this: **run the documented commands, from where the docs say
 you will be standing, before reading any of the code.** Eleven of eleven failed. No
 amount of reading would have surfaced that, because reading a path does not resolve it.
+
+### FW06 B-33 attribution execution — 2026-10-13
+
+The old helper's nonzero-only result was reproduced with the intended myth-count
+branch disabled and anchor-liveness still active. All 63 current helper identities
+now name a diagnostic; the matcher reads failure rows and both actual shell helpers
+refuse unrelated failures, successful checkers and no-op mutations. The table-width
+regex also matched an unrelated heading through unescaped alternation; its mutation
+now uses the existing literal selector. These are the existing standing instructions
+about landing and observing the intended failure applied to their test harness, not
+a new general rule. Details and actual gate outcomes live in the
+[execution receipt](runs/2026-10-13-fw06-attribution.md). No new version stamp: package
+remains 0.26.5 pending a separate combined correction release.
