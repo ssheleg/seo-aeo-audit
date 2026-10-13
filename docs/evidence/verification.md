@@ -24,7 +24,7 @@ standing instruction #2 encodes, written down as a column.
 |---|---|---|
 | Snapshot accounting | [FW01 receipt](runs/2026-10-13-fw01-snapshot.md), accepted PR27 | source verified |
 | Redirect and gzip provenance | [FW06 receipt](runs/2026-10-13-fw06-collectors.md), accepted PR28 at 4f4b530 | fixture and independent review verified |
-| Version packaging | Frozen candidate gate and independent review follow | pending |
+| Version packaging | `npm test` at f7d1dd50ff3e86654711b0efd7e4b9d109603166 exit 0; independent 15-file diff and seven-script byte comparison | observed |
 | Publication and installation | No tag or registry operation in preparation | pending |
 
 ## v0.26.4 — a lightweight tag cannot publish a release (2026-10-10)
