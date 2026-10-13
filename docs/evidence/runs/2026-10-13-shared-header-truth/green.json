@@ -1,0 +1,6 @@
+{
+  "errors": [],
+  "observations": [
+    "copied mechanisms \u2014 2 file name(s) held above the 0.9 floor by exact similarity; the bound is a prefilter only, and everything it over-estimated is reported above rather than gated"
+  ]
+}
