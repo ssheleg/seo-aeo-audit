@@ -76,3 +76,18 @@ test/residue_test.py` replayed all 11 controls successfully, creating/removing f
 owned trees. The first failed run's two fixtures were retained for diagnosis then
 removed after this replay; foreign residue was untouched. This records a failed
 gate and its correction, not a passing verdict for the original source.
+
+Parent independently reviewed the cache-only correction at
+`12ca7004fcebcf8b4197369002989e26fd72c4fc`: child environment and cache are scoped
+to the owned workspace, parent settings unchanged. Bounded PASS.
+
+## Combined corrected owner gate
+
+`TMPDIR=/tmp/fw06-provider-full-owned npm run test:all` exited 0 at
+`12ca7004fcebcf8b4197369002989e26fd72c4fc`. This ran the standalone check-docs
+command, **31 negative groups** and **9 audit regression files**. Output controls:
+shared115, sitemap127, agent73, GSC76 and board28; release27, attribution93,
+provenance14, snapshot3 and residue11 passed. No concurrent broad suite ran.
+This source-only result is not provider or release acceptance. The documentation
+successor freezes these receipts; genuine exact-head PR checks remain necessary
+before normal integration. The first failed full gate above remains evidence.

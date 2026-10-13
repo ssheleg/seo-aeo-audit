@@ -72,3 +72,12 @@ at `de16b2baeb07b22a13af7662fa2ae56a1aa5db06`, returning scoped PASS. Both prior
 peer findings and their red/green evidence remain above. This accepts bounded
 source behavior, not live provider data or the remaining PSI/preflight work.
 The next integration gate is the combined GSC/R30 exact-source owner suite.
+
+## Combined owner gate
+
+GSC was composed with reviewed R30 guards. At
+`12ca7004fcebcf8b4197369002989e26fd72c4fc`, `npm run test:all` exited 0 with
+31 negative groups and 9 audit regression files. The [R30 receipt](2026-10-13-r30-owner-gates.md)
+records the initial cache-residue failure, correction and full exact-source
+counts. Runtime/provider claims remain bounded as above; PSI and preflight are
+separate successors, not implicitly accepted by this gate.

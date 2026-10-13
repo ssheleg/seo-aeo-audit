@@ -1,3 +1,13 @@
+## GSC/R30 owner gate passed — 2026-10-13
+
+Combined implementation and cache correction at `12ca7004fcebcf8b4197369002989e26fd72c4fc`
+passed `npm run test:all`: 31 negative groups, 9 audit regression files. Source
+and correction received independent parent review; receipts below retain failures.
+Next: freeze this documentation head, open/promote one candidate PR, require genuine
+checks, then normal exact-head merge. Release/version remain unchanged at 0.26.5.
+PSI reviewed successor `50e7c3e898602ab221b53cccb66620354fce5aec` waits for accepted
+composition before its own owner gate. Preflight/bootstrap packet remains open.
+
 # Combined GSC and R30 candidate — 2026-10-13
 
 GSC source de16b2baeb07b22a13af7662fa2ae56a1aa5db06 passed independent
