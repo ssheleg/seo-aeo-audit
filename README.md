@@ -319,7 +319,9 @@ must name, anchor discipline, and the CSV column contract.
 
 `gsc_pull.py` preserves earlier dimensions after individual API failures and reports
 API requests separately from unknown row populations, observed exclusions and
-display slices. Credential/list bootstrap boundaries remain explicit.
+display slices. Missing ADC records known operations excluded before attempt;
+explicit `--list --format json` reports one property-list operation, including a
+valid empty result. Missing both `--site` and `--list` makes no credential/network call.
 
 `agent_surface.py` also emits per-unit probe/file coverage. Its request journal
 includes discovery attempts omitted from the display table; redirect hops remain

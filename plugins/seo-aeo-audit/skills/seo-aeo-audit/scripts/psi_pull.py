@@ -528,16 +528,17 @@ def main(argv: list[str]) -> int:
     args = ap.parse_args(argv)
 
     urls = list(args.url)
+    input_errors = []
+    unknown_input = False
     if args.urls_file:
         try:
             with open(args.urls_file, encoding="utf-8") as fh:
-                urls += [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
-        except OSError as e:
-            print(f"cannot read --urls-file: {e}", file=sys.stderr)
-            return 1
-    if not urls:
-        print("no URLs given: pass --url and/or --urls-file", file=sys.stderr)
-        return 1
+                urls += [line for line in (ln.strip() for ln in fh) if line and not line.startswith("#")]
+        except (OSError, UnicodeError) as exc:
+            unknown_input = True
+            input_errors.append({"code": "input_population_unknown", "detail": "Cannot read --urls-file: " + type(exc).__name__})
+    if not urls and not input_errors:
+        input_errors.append({"code": "no_input", "detail": "No URLs resolved; pass --url and/or --urls-file."})
 
     rows = []
     for u in urls:
@@ -545,7 +546,7 @@ def main(argv: list[str]) -> int:
         r["findings"] = findings(r)
         rows.append(r)
 
-    reasons = []
+    reasons = list(input_errors)
     failed = sum("error" in row for row in rows)
     missing_field = sum("error" not in row and row["component_status"]["url_field"] != "observed" for row in rows)
     missing_lab = sum("error" not in row and row["component_status"]["lab"] != "observed" for row in rows)
@@ -559,14 +560,14 @@ def main(argv: list[str]) -> int:
         reasons.append({"code":"lab_unavailable", "detail":f"{missing_lab} URL entries have no usable lab performance score."})
     if malformed:
         reasons.append({"code":"malformed_component", "detail":f"{malformed} responses contain invalid components; valid siblings remain observed."})
-    coverage = collector_coverage("input_url_entry", "Supplied URL entries in order, duplicates retained, " + args.strategy + " strategy. Return requires a valid URL-field percentile or lab score; origin-only context is not a direct URL measurement. Complete does not certify provider/site population.", len(urls), len(rows), returned, 0, reasons)
+    coverage = collector_coverage("input_url_entry", "Supplied URL entries in order, duplicates retained, " + args.strategy + " strategy. Return requires a valid URL-field percentile or lab score; origin-only context is not a direct URL measurement. Complete does not certify provider/site population.", None if unknown_input else len(urls), len(rows), returned, None if unknown_input else 0, reasons)
     prov = provenance("psi_pull.py", argv,
                       f"{len(urls)} URL(s), {args.strategy} strategy: "
                       + ", ".join(urls[:5])
                       + (f" (+{len(urls) - 5} more)" if len(urls) > 5 else ""))
     if args.format == "json":
         print(json.dumps({"producer": prov, "strategy": args.strategy,
-                          "results": rows, "coverage": coverage}, indent=2))
+                          "results": rows, "coverage": coverage, "input_errors": input_errors}, indent=2))
     else:
         print(render_markdown(rows))
         print("\n" + collector_coverage_md(coverage))

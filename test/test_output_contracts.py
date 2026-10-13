@@ -581,6 +581,8 @@ from gsc_coverage_contract import run as check_gsc_coverage
 check_gsc_coverage(check, ROOT, _TMP)
 from psi_coverage_contract import run as check_psi_coverage
 check_psi_coverage(check, ROOT, _TMP)
+from bootstrap_contract import run as check_bootstrap
+check_bootstrap(check, ROOT, _TMP)
 from inspection_payload_contract import run as check_inspection_payload
 check_inspection_payload(check, ROOT, _TMP)
 from transport_contract import run as check_transport

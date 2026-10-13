@@ -6,9 +6,10 @@ provider-body errors and URL Inspection answer admission. Preflight correction
 9d9b166 received independent82 PASS. The parent accepted packet76818f2 for
 implementation. T1 transport now has a [bounded source receipt](evidence/runs/2026-10-13-fw06-transport.md);
 T2 now has a [typed-admission source receipt](evidence/runs/2026-10-13-fw06-inspection-payload.md).
-Next: independent T1/T2 source reviews and B1 bootstrap implementation with its
-separate focused receipt. One composed owner gate and ordinary integration
-follow after the serial slot clears.
+Independent T1/T2 source reviews passed `6c3403d` (170 controls) and `ce6d4df` (75 controls).
+B1 now has its [bootstrap receipt](evidence/runs/2026-10-13-fw06-bootstrap.md).
+Next: independent B1 review, then one composed full owner gate in the serial slot
+and ordinary integration.
 Do not claim complete B-9 or provider/native acceptance from this planning branch.
 
 ## Preflight integrated candidate — 2026-10-13

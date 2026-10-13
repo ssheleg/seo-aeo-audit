@@ -1127,10 +1127,8 @@ def main(argv: list[str]) -> int:
                          "coverage section, or its seeded Provenance block")
     args = ap.parse_args(argv)
 
-    if not args.site and not args.origin:
-        print("pass --site and/or --origin — there is nothing to probe otherwise",
-              file=sys.stderr)
-        return 1
+    no_input = not args.site and not args.origin
+    input_errors = [{"code": "no_input", "detail": "No probe inputs resolved; pass --site and/or --origin."}] if no_input else []
 
     prov = provenance("preflight.py", argv, scope_of(args.site, args.origin))
     # `--format provenance` probes nothing: the block is about the execution, not
@@ -1141,8 +1139,12 @@ def main(argv: list[str]) -> int:
         return 0
 
     journal = ReadinessJournal(args.site, args.origin, args.skip_psi)
-    rows = [check_python()]
-    journal.note_local("python", rows[0])
+    rows = []
+    if no_input:
+        journal.local_requested = 0
+    else:
+        rows.append(check_python())
+        journal.note_local("python", rows[0])
     if args.site:
         gcloud_row, token = check_gcloud()
         rows.append(gcloud_row)
@@ -1154,6 +1156,8 @@ def main(argv: list[str]) -> int:
             rows.append(check_psi(args.origin, journal))
 
     records = journal.records()
+    if no_input:
+        records = {unit: collector_coverage(unit, "No probe inputs resolved; no local or network operations scheduled.", 0, 0, 0, 0, input_errors) for unit in ("local_probe", "network_probe")}
     if args.format == "json":
         print(json.dumps({"producer": prov,
                           "probes": rows,
@@ -1162,7 +1166,7 @@ def main(argv: list[str]) -> int:
                           "tracks": [{"track": t, "label": l} for t, l in TRACKS],
                           "coverage_status": list(COVERAGE_STATUS),
                           "coverage": coverage_seed(rows), "coverage_by_unit": records,
-                          "probe_operations": {"local": journal.local, "network": journal.network}}, indent=2))
+                          "probe_operations": {"local": journal.local, "network": journal.network}, "input_errors": input_errors}, indent=2))
     elif args.format == "coverage":
         print(render_coverage(coverage_seed(rows)))
     else:
@@ -1170,7 +1174,7 @@ def main(argv: list[str]) -> int:
     if args.format != "json":
         for record in records.values():
             print("\n" + collector_coverage_md(record))
-    return 0
+    return 1 if no_input else 0
 
 
 if __name__ == "__main__":

@@ -498,9 +498,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
     args = ap.parse_args(argv)
 
-    if not args.url and not args.file:
-        print("pass --url or --file", file=sys.stderr)
-        return 1
+    no_input = not args.url and not args.file
+    input_errors = [{"code": "no_input", "detail": "No sitemap input resolved; pass --url or --file."}] if no_input else []
 
     if args.max_maps <= 0:
         ap.error("--max-maps must be positive")
@@ -509,13 +508,13 @@ def main(argv: list[str]) -> int:
     urls: list[str] = []
     errors: list[dict] = []
     page_errors: list[dict] = []
-    reasons: list[dict] = []
+    reasons: list[dict] = list(input_errors)
     returned = 0
     skipped = 0
     truncated = 0
     unknown_frontier = False
     unfollowed = 0
-    discovered = {args.file if args.file else args.url}
+    discovered = set() if no_input else {args.file if args.file else args.url}
     queue = deque(discovered)
     while queue:
         if not args.file and len(sources) >= args.max_maps:
@@ -570,7 +569,7 @@ def main(argv: list[str]) -> int:
         reasons.append({"code": "page_url_cap", "detail": f"{truncated} page URL entries beyond the per-document limit were excluded from analysis; document counts are separate."})
         print(f"note: {truncated} URL(s) beyond the {MAX_URLS_PER_MAP}-per-file sitemap limit were not read", file=sys.stderr)
     if not urls:
-        print("sitemap parsed but declared no page URLs", file=sys.stderr)
+        print("no sitemap input resolved" if no_input else "sitemap collection supplied no page URLs", file=sys.stderr)
     scope = ("One local file; returned means complete parseable XML. Nested references are not followed. "
              if args.file else "Exact unique discovered sitemap URLs, including the root; returned means complete parseable XML, including empty URL sets. ")
     scope += "Counts are documents, not page URLs, redirect hops or the site's URL universe."
@@ -584,7 +583,7 @@ def main(argv: list[str]) -> int:
     a["sitemaps_skipped"] = skipped
     a["urls_truncated"] = truncated
     a["urls_invalid"] = len(page_errors)
-    f = findings(a)
+    f = [] if no_input else findings(a)
     prov = provenance("sitemap_audit.py", argv,
                       f"{len(urls)} URL(s) from {len(sources)} sitemap(s): "
                       + ", ".join(sources[:3])
@@ -592,7 +591,7 @@ def main(argv: list[str]) -> int:
     if args.format == "json":
         print(json.dumps({"producer": prov, "sources": sources,
                           "analysis": a, "findings": f, "coverage": coverage,
-                          "traversal": traversal, "errors": errors, "page_errors": page_errors}, indent=2))
+                          "traversal": traversal, "errors": errors, "page_errors": page_errors, "input_errors": input_errors}, indent=2))
     else:
         print(render_markdown(a, f, sources))
         print("\n" + collector_coverage_md(coverage))

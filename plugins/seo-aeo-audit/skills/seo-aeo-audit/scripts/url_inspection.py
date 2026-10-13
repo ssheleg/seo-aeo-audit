@@ -173,14 +173,18 @@ def access_token() -> str:
     try:
         out = subprocess.run(
             ["gcloud", "auth", "application-default", "print-access-token"],
-            capture_output=True, text=True, check=True,
+            capture_output=True, text=True, check=True, timeout=20,
         )
     except FileNotFoundError:
-        raise SystemExit("gcloud not found. Install the Google Cloud SDK, then run the "
-                         "application-default login shown in this script's header.")
-    except subprocess.CalledProcessError as e:
-        raise SystemExit(f"could not mint an access token: {e.stderr.strip()[:200]}")
-    return out.stdout.strip()
+        raise SystemExit("gcloud not found; install the Google Cloud SDK and configure ADC.")
+    except subprocess.CalledProcessError:
+        raise SystemExit("ADC token acquisition failed; check the local gcloud login. Private stderr withheld.")
+    except (subprocess.TimeoutExpired, OSError, UnicodeError):
+        raise SystemExit("ADC token acquisition unavailable or timed out; no provider request was made.")
+    token = out.stdout.strip()
+    if not token:
+        raise SystemExit("ADC returned no access token; no provider request was made.")
+    return token
 
 
 def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
@@ -613,21 +617,22 @@ def main(argv: list[str]) -> int:
         ap.error("--max-urls must be at least 1")
 
     urls = list(args.urls)
+    input_errors = []
+    unknown_input = False
     if args.urls_file:
         try:
             with open(args.urls_file, encoding="utf-8") as fh:
-                urls += [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
-        except OSError as e:
-            print(f"cannot read --urls-file: {e}", file=sys.stderr)
-            return 1
+                urls += [line for line in (ln.strip() for ln in fh) if line and not line.startswith("#")]
+        except (OSError, UnicodeError) as exc:
+            unknown_input = True
+            input_errors.append({"code": "input_population_unknown", "detail": "Cannot read --urls-file: " + type(exc).__name__})
     seen, deduped = set(), []
     for u in urls:
         if u not in seen:
             seen.add(u)
             deduped.append(u)
-    if not deduped:
-        print("no URLs given: pass --urls and/or --urls-file", file=sys.stderr)
-        return 1
+    if not deduped and not input_errors:
+        input_errors.append({"code": "no_input", "detail": "No URLs resolved; pass --urls and/or --urls-file."})
 
     dropped = max(0, len(deduped) - args.max_urls)
     batch = deduped[: args.max_urls]
@@ -635,21 +640,35 @@ def main(argv: list[str]) -> int:
         print(f"note: {dropped} URL(s) beyond --max-urls={args.max_urls} were not "
               f"inspected", file=sys.stderr)
 
-    token = access_token()
-    rows = []
+    token, credential_error = None, None
+    if batch:
+        try:
+            token = access_token()
+            if not isinstance(token, str) or not token.strip():
+                credential_error = "ADC returned no usable token; selected URLs were not attempted."
+        except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
+            credential_error = "ADC acquisition unavailable; selected URLs were not attempted. Check local gcloud login."
+    rows, attempted = [], 0
     for i, u in enumerate(batch):
+        if credential_error:
+            rows.append({"url": u, "attempted": False, "error": credential_error, "findings": []})
+            continue
         if i:
             time.sleep(MIN_INTERVAL)
-        r = parse(inspect(args.site, u, token, args.quota_project), u)
-        r["findings"] = findings(r)
-        rows.append(r)
+        attempted += 1
+        row = parse(inspect(args.site, u, token, args.quota_project), u)
+        row["findings"] = findings(row)
+        rows.append(row)
+    excluded = dropped + (len(batch) if credential_error else 0)
 
     prov = provenance("url_inspection.py", argv,
-                      f"property {args.site}, {len(batch)} URL(s) inspected: "
+                      f"property {args.site}, {attempted} URL(s) attempted, {len(batch)} selected: "
                       + ", ".join(batch[:5])
                       + (f" (+{len(batch) - 5} more)" if len(batch) > 5 else ""))
-    unanswered = len(rows) - len(answered_rows(rows))
-    reasons = []
+    unanswered = attempted - len(answered_rows(rows))
+    reasons = list(input_errors)
+    if credential_error:
+        reasons.append({"code": "prerequisite_excluded", "detail": credential_error})
     if dropped:
         reasons.append({"code": "input_cap", "detail": f"{dropped} unique URL(s) deliberately omitted by --max-urls."})
     payload_gaps = sum(bool(row.get("payload_errors")) for row in rows)
@@ -660,10 +679,10 @@ def main(argv: list[str]) -> int:
     coverage = collector_coverage(
         "unique_input_url",
         "This invocation's unique requested URLs; returned counts usable typed index-status observations, not completeness of every API field or the property's URL universe.",
-        len(deduped), len(rows), len(answered_rows(rows)), dropped, reasons)
+        None if unknown_input else len(deduped), attempted, len(answered_rows(rows)), None if unknown_input else excluded, reasons)
     if args.format == "json":
-        print(json.dumps({"producer": prov, "site": args.site, "inspected": len(rows),
-                          "not_inspected": dropped, "results": rows, "coverage": coverage}, indent=2))
+        print(json.dumps({"producer": prov, "site": args.site, "inspected": attempted,
+                          "not_inspected": excluded, "results": rows, "coverage": coverage, "input_errors": input_errors}, indent=2))
     else:
         print(render_markdown(rows, dropped))
         print("\n" + collector_coverage_md(coverage))

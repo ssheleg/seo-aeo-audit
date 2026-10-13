@@ -37,3 +37,11 @@ error envelopes are redacted while the token is available in the transport adapt
 
 Independent source review: pending. Bootstrap failures remain B1, provider/live
 access remains NOT_RUN. This is not a closure of the whole B-9 backlog row.
+
+## Independent final source acceptance
+
+The parent reviewed typed admission, malformed-presence handling, unknown fields
+and carrier conservation, archived exact `ce6d4df1e2f787683ed33c9752d6c185f5f0054e`,
+and independently replayed all 75 controls with exit0. Bounded T2 source accepted;
+local convenience log `/tmp/seo-inspection-root-exact75.log`. Composed acceptance
+and live/provider behavior remain separate.

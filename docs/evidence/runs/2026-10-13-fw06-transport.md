@@ -61,3 +61,11 @@ Expanded controls cover all seven actual loopback zero-byte gzip responses,
 seven missing-member negatives/seven valid-empty positives and actual local empty
 `.gz` main output. Final transport170 controls PASS. This fixes observed transport
 completeness, not a claim that empty decoded XML is a returned sitemap document.
+
+## Independent final source acceptance
+
+The parent reviewed the common block/adapters and the gzip-member correction,
+archived exact `6c3403dbcce6cd6a1e8b67e5d757df89ffe04045` into its own temporary
+checkout, and independently replayed all 170 controls with exit0. Bounded T1
+source accepted; its log is `/tmp/seo-transport-root-exact170.log` (local convenience).
+Composed acceptance remains separate, and no provider/live claim follows.

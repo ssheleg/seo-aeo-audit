@@ -128,14 +128,13 @@ def run(check,root,workspace):
             code,text,_=capture(mod.main,['--site','sc-domain:example.invalid','--format',fmt])
         ok(code==1 and 'offline-secret' not in text and '<redacted>' in text,'diagnostics redact credential before JSON/text rendering')
     for fmt in ('json','text'):
-        with patch.object(mod,'access_token',side_effect=SystemExit('fixture bootstrap unavailable')):
-            try: capture(mod.main,['--site','sc-domain:example.invalid','--format',fmt])
-            except SystemExit as exc:ok(str(exc)=='fixture bootstrap unavailable','bootstrap retains explicit early boundary')
-            else:ok(False,'bootstrap retains explicit early boundary')
-    for args,expected in [(['--list','--site','sc-domain:example.invalid'],0),(['--list'],1),([],1)]:
+        with patch.object(mod,'access_token',side_effect=SystemExit('fixture bootstrap unavailable')), patch.object(mod,'call',side_effect=AssertionError('bootstrap cannot call provider')):
+            code,text,_=capture(mod.main,['--site','sc-domain:example.invalid','--format',fmt])
+        ok(code==1 and 'prerequisite_excluded' in text,'bootstrap emits an honest report without provider attempts')
+    for args,expected in [(['--list','--site','sc-domain:example.invalid'],0),(['--list'],0),([],1)]:
         with patch.object(mod,'access_token',return_value='fixture'),patch.object(mod,'call',return_value={'siteEntry':[]}):
             code,_,_=capture(mod.main,args)
-        ok(code==expected,'legacy listing/missing-site boundary preserved')
+        ok(code==expected,'explicit listing versus missing-site usage boundary')
     # The copied standalone script uses real HTTP on loopback and a task-owned
     # gcloud executable; no provider endpoint or credential store is consulted.
     import http.server, socketserver, threading, subprocess, sys, os

@@ -1296,7 +1296,7 @@ SEVERITY_ORDER = {"blocker": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 def to_markdown(results: list[dict]) -> str:
     lines: list[str] = []
     for r in results:
-        lines.append(f"## {r['url'] or '(local file)'}")
+        lines.append("## Input resolution" if r.get("record_type") == "input_error" else f"## {r['url'] or '(local file)'}")
         lines.append("")
         if "error" in r:
             lines.append(f"- **fetch failed**: {_flat(r['error'])}")
@@ -1361,14 +1361,19 @@ def main(argv: list[str]) -> int:
         print("warning: --base-url applies to --file only; ignoring it", file=sys.stderr)
 
     results: list[dict] = []
+    requested, attempted, unknown_input = 0, 0, False
+    if args.max_bytes < 1:
+        ap.error("--max-bytes must be positive")
     if args.file:
+        requested = attempted = 1
         try:
-            with open(args.file, encoding="utf-8", errors="replace") as fh:
+            with open(args.file, encoding="utf-8") as fh:
                 html = fh.read()
-        except OSError as exc:
-            print(f"error: cannot read {args.file}: {exc}", file=sys.stderr)
-            return 1
-        results.append(analyze(html, args.base_url))
+        except (OSError, UnicodeError) as exc:
+            results.append({"record_type": "input_error", "url": args.base_url,
+                            "error": "cannot read local HTML: " + type(exc).__name__, "findings": []})
+        else:
+            results.append(analyze(html, args.base_url))
     else:
         urls = [args.url] if args.url else []
         if args.url_list:
@@ -1378,13 +1383,16 @@ def main(argv: list[str]) -> int:
                         line for line in (ln.strip() for ln in fh)
                         if line and not line.startswith("#")
                     ]
-            except OSError as exc:
-                print(f"error: cannot read {args.url_list}: {exc}", file=sys.stderr)
-                return 1
-        if not urls:
-            print("error: no URLs to audit", file=sys.stderr)
-            return 1
+            except (OSError, UnicodeError) as exc:
+                unknown_input = True
+                results.append({"record_type": "input_error", "url": "",
+                                "error": "cannot resolve URL list: " + type(exc).__name__, "findings": []})
+        requested = None if unknown_input else len(urls)
+        if not urls and not results:
+            results.append({"record_type": "input_error", "url": "",
+                            "error": "no URLs resolved from input", "findings": []})
         for url in urls:
+            attempted += 1
             try:
                 html, headers, truncated = fetch(url, args.timeout, args.user_agent,
                                                  args.max_bytes)
@@ -1402,23 +1410,26 @@ def main(argv: list[str]) -> int:
     # was fetched. On a long `--url-list` run those differ by the length of the
     # crawl, and this says so rather than implying per-page precision it does not
     # have.
-    scope = (f"local file {args.file}"
-             + (f" as {args.base_url}" if args.base_url else "")
-             if args.file else
-             f"{len(results)} URL(s): " + ", ".join(r.get("url", "?") for r in results[:5])
-             + (f" (+{len(results) - 5} more)" if len(results) > 5 else ""))
+    scope = (f"local file {args.file}" + (f" as {args.base_url}" if args.base_url else "")
+             if args.file else f"{attempted} URL entry(s) attempted; " +
+             ("requested population unknown due to unresolved list" if unknown_input else f"{requested} entries resolved"))
     prov = provenance("page_audit.py", argv, scope)
     errors = sum("error" in r for r in results)
     incomplete = sum(bool(r.get("truncated")) for r in results if "error" not in r)
     reasons = []
-    if errors:
-        reasons.append({"code": "input_failed", "detail": f"{errors} input(s) could not be read or analyzed; see result errors."})
+    resolution_errors = sum(row.get("record_type") == "input_error" for row in results)
+    if resolution_errors:
+        reasons.append({"code": "input_resolution", "detail": "Input resolution failed or yielded no URLs; see typed input_error rows. These rows are not observed pages."})
+    if errors > resolution_errors:
+        reasons.append({"code": "input_failed", "detail": f"{errors - resolution_errors} fetched input(s) could not be read or analyzed; see result errors."})
     if incomplete:
         reasons.append({"code": "incomplete_body", "detail": f"{incomplete} body/bodies were capped or incompletely decoded; fragment observations are not complete page totals."})
+    if unknown_input:
+        reasons.append({"code": "input_population_unknown", "detail": "Unreadable input list may contain additional entries; requested/dropped are unknown."})
     coverage = collector_coverage(
         "local_file" if args.file else "input_url_entry",
         "This invocation's input entries (duplicates retained); returned counts complete readable HTML bodies, including empty bodies. Does not cover JavaScript rendering or sitewide discovery.",
-        len(results), len(results), len(results) - errors - incomplete, 0, reasons)
+        requested, attempted, len(results) - errors - incomplete, None if unknown_input else 0, reasons)
     if args.format == "json":
         for r in results:
             r["producer"] = prov
