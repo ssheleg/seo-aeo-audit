@@ -60,3 +60,19 @@ and 27 local-Git release controls at
 review command named the wrong test path and exited 2; the correct named commands
 were then run successfully. The next gate is one combined GSC/R30 owner suite;
 no standalone hosted or publication acceptance is claimed by this receipt.
+
+## Combined gate correction
+
+At combined GSC/R30 `f80626fae63df9047fe762e622a31036211f9681`,
+`npm run test:all` exited 1 in `test/residue_test.py`: the nested actual validator
+introduced by `owner_board_contract.py` left tiktoken's `data-gym-cache` outside
+its ledger-owned workspace. All preceding structural/behavior checks and combined
+115/127/73/76/28 output controls passed; negative groups had not run yet.
+
+The validator subprocess now receives `TIKTOKEN_CACHE_DIR` inside that same owned
+workspace, so dependency cache bytes are removed with the case. No production
+behavior changed. `TMPDIR=/tmp/fw06-provider-full-owned python3 -B
+test/residue_test.py` replayed all 11 controls successfully, creating/removing five
+owned trees. The first failed run's two fixtures were retained for diagnosis then
+removed after this replay; foreign residue was untouched. This records a failed
+gate and its correction, not a passing verdict for the original source.

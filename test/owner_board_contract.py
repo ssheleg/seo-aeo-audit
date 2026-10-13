@@ -1,6 +1,7 @@
 """Bounded board grammar plus real structural validator mutation controls."""
 from pathlib import Path
 import shutil
+import os
 import subprocess
 import sys
 from owner_board import board_errors
@@ -37,8 +38,11 @@ def run(check,root,workspace):
         shutil.copyfile(Path(root)/relative,target/relative)
     board=target/'docs/evidence/backlog.md';original=board.read_text()
     lines=original.splitlines(keepends=True);index=next(i for i,line in enumerate(lines) if line.startswith('| B-35 |'));row=lines[index]
+    # tiktoken otherwise writes data-gym-cache in the caller TMPDIR, outside
+    # the residue ledger. Keep validator dependencies under this owned case.
+    env=dict(os.environ, TIKTOKEN_CACHE_DIR=str(Path(workspace)/'tokenizer-cache'))
     def validate():
-        return subprocess.run([sys.executable,'-B','test/validate.py'],cwd=target,capture_output=True,text=True)
+        return subprocess.run([sys.executable,'-B','test/validate.py'],cwd=target,capture_output=True,text=True,env=env)
     result=validate();ok(result.returncode==0,'actual validator repaired baseline')
     for label,replacement,needle in [
         ('duplicate',''.join(lines[:index+1]+[row]+lines[index+1:]),'board duplicate ID B-35'),
