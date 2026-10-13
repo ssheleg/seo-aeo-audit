@@ -1,16 +1,17 @@
-## Unreleased — collector coverage candidate
+## v0.26.6 — collector coverage and preserved partial evidence
 
-- Preserve GSC dimensions after individual API failures; separate request accounting
-  from unknown row populations, invalid/noise exclusions and display slices.
-
-- Journal every agent-surface logical probe, including hidden discovery and CLI-only
-  requests; keep network and offline-file coverage separate, and preserve status
-  evidence when response bodies are incomplete.
-- Count unique discovered sitemap documents and keep unresolved descendants unknown.
-- Bound raw and decompressed reads; retain reports and earlier page observations
-  after document failures or parser-rejected page URLs.
-- Emit common coverage in JSON and Markdown, with offline/loopback and actual-source
-  mutation controls. Version remains 0.26.5 until separate patch packaging.
+- Report requested, attempted, returned, dropped and unknown units across all seven
+  collectors; separate API calls, provider rows, sitemap documents and local files.
+- Preserve independently useful observations after transport, input-list and
+  credential-prerequisite failures. Empty input and unknown input populations remain
+  distinct; GSC property listing now requires explicit `--list`.
+- Bound raw and decoded bodies, reject ambiguous framing and incomplete gzip, and
+  preserve observed HTTP statuses without exposing credential echoes.
+- Admit typed URL Inspection answers and useful PSI measurements without converting
+  missing or malformed provider fields into clean negatives. Isolate GSC derived
+  overflows while retaining other dimensions.
+- Attribute negative tests to their intended guards; reject duplicate/malformed
+  backlog rows and protect annotated, reachable release sources with local fixtures.
 
 ## v0.26.5 — collector provenance and accountable test snapshots
 
