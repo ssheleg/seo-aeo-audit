@@ -416,6 +416,20 @@ def measured_rows(report: dict) -> int:
                ("monthly", "top_queries", "top_pages", "query_page_pairs"))
 
 
+def finite_result(value):
+    """Derived numeric leaves must be representable even if no operation raised."""
+    if isinstance(value, dict):
+        return all(finite_result(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return all(finite_result(item) for item in value)
+    if type(value) in (int, float):
+        try:
+            return math.isfinite(value)
+        except OverflowError:
+            return False
+    return True
+
+
 def finite_sum(values):
     """Refuse unrepresentable aggregate arithmetic without inventing a ceiling."""
     total = sum(values)
@@ -866,7 +880,10 @@ def main(argv: list[str]) -> int:
     derivation_errors = []
     def derive(name, dimension, operation):
         try:
-            return operation()
+            value = operation()
+            if not finite_result(value):
+                raise ValueError("derived result contains a nonfinite numeric value")
+            return value
         except (ArithmeticError, ValueError):
             detail = "Aggregate could not be represented; individually usable rows remain observed."
             derivation_errors.append({"operation": name, "dimension": dimension, "code": "derivation_failed", "detail": detail})

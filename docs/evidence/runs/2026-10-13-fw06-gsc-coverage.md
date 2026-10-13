@@ -53,3 +53,13 @@ GSC command passed **72 controls**, including query/date/query-page overflow in
 both formats, brand/month/cliff/cannibalization paths and absence of nonfinite JSON
 tokens. The two owned failed fixture trees were removed after replay. Independent
 re-review and owner aggregate remain pending.
+
+
+The parent then supplied a finite-over-finite quotient (clicks 1e308, impressions
+1e-308) that became infinity without raising. Two new actual-main predicates
+failed at 78fe9c9. Every derived result now has a recursive finite-numeric-leaf
+check before admission, in addition to finite sums that guard internal control
+flow. JSON/text preserve the report and explicitly refuse the affected position
+aggregate. `python3 -B test/gsc_coverage_contract.py` passes **76 controls** after
+this second correction; no new traffic ceiling or inferred metric consistency
+rule was added.

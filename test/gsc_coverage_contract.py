@@ -106,6 +106,15 @@ def run(check,root,workspace):
                 ok('Infinity' not in json.dumps(out) and 'NaN' not in json.dumps(out),'nonfinite aggregates cannot escape as non-JSON tokens')
             else:
                 ok('UNAVAILABLE' in out and all(name in out for name in expected),'text names failed aggregates without erasing independent evidence')
+    def overflow_ratio(dims,rows):
+        return {'rows':[dict(rows[0],clicks=1e308,impressions=1e-308)] if dims==['query'] else rows}
+    for fmt in ('json','text'):
+        code,out,calls,_=execute(transform=overflow_ratio,fmt=fmt)
+        ok(code==0 and len(calls)==6 and bool(out),'finite operands with overflowing quotient preserve actual main output')
+        if fmt=='json':
+            ok(out['position_split'] is None and any(e['operation']=='position_split' for e in out.get('derivation_errors',[])) and 'Infinity' not in json.dumps(out),'recursive derived-result validation refuses overflowing quotient')
+        else:
+            ok('UNAVAILABLE position_split' in out and 'inf%' not in out.lower(),'text identifies unusable quotient instead of formatting infinity')
     code,out,_,_=execute(failure=3)
     ok(out['rows_dropped_as_noise'] is None,'failed query dimension does not invent aggregate zero noise')
     def zero(dims,rows): return {'rows':[dict(rows[0],clicks=0,impressions=0,ctr=0,position=0)]}
