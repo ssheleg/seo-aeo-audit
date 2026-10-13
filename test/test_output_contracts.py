@@ -581,6 +581,8 @@ from gsc_coverage_contract import run as check_gsc_coverage
 check_gsc_coverage(check, ROOT, _TMP)
 from psi_coverage_contract import run as check_psi_coverage
 check_psi_coverage(check, ROOT, _TMP)
+from owner_board_contract import run as check_owner_board_contract
+check_owner_board_contract(check, ROOT, _TMP)
 
 if not failures:
     residue.close_case("output contracts")
