@@ -24,6 +24,8 @@ empty set. A fetch failure, unvisited page window or missing field is not zero r
 | `reasons` | Machine-readable reason plus bounded human explanation for each gap, failure or unknown count. |
 
 Known counts are nonnegative integers; never silently coerce missing values to zero.
+No known attempted, returned or dropped count may exceed a known requested
+population, even when another quantity is null.
 Where all counts share the same finite input set, attempted plus deliberately dropped
 equals requested. Failed attempts remain attempted and reduce returned; they are not
 counted a second time as dropped. A bounded successful response does not establish

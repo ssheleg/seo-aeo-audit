@@ -20,12 +20,15 @@ implements common invocation coverage in page audit and URL Inspection. Read the
 [schema/migration matrix](contracts/collector-coverage.md). No version or workflow
 change; B-9 remains open for five collectors and pre-report bootstrap failures.
 Baseline two missing-emission controls were red; restored focused controls pass
-103/103, with three intended real-source mutation refusals. No live/provider or
+115/115 after the independent partial-unknown bound correction, with three
+intended real-source mutation refusals. No live/provider or
 native-host acceptance is claimed.
 
 Accepted 0.26.5 main `bccb630e79730e2a7058b74a2130ddfe4f4662aa` was merged
 without rewriting this published branch; its standard retro stamp is preserved.
-Next: independent frozen-source review, serial owner full gate and normal PR delivery.
+Owner `npm test` passed at `7976831`, including coverage 115/115; see receipt.
+Independent corrected-source review passed at `7976831` with replayed 115/115.
+Next: freeze the candidate for genuine required checks and normal PR delivery.
 Keep the parent release branch and manifests untouched.
 
 ---

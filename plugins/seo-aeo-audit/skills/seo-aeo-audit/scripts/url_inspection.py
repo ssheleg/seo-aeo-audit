@@ -244,6 +244,8 @@ def collector_coverage(unit, scope, requested, attempted, returned, dropped, rea
         raise ValueError("coverage reasons need code and detail")
     if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
         raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
     if returned is not None and attempted is not None and returned > attempted:
         raise ValueError("coverage returned cannot exceed attempted")
     unknown = any(v is None for v in counts)
