@@ -573,6 +573,8 @@ check_collector_coverage(pa, ui, check, ROOT, _TMP)
 
 from sitemap_coverage_contract import run as check_sitemap_coverage
 check_sitemap_coverage(check, ROOT, _TMP)
+from agent_coverage_contract import run as check_agent_coverage
+check_agent_coverage(check, ROOT, _TMP)
 
 if not failures:
     residue.close_case("output contracts")

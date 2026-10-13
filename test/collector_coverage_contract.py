@@ -17,6 +17,37 @@ def capture(fn, argv):
     return code, out.getvalue(), err.getvalue()
 
 
+def coverage_records(payload):
+    """Independent reader for explicit carriers, never preflight track statuses."""
+    if isinstance(payload, list):
+        if not payload or any(not isinstance(row, dict) for row in payload):
+            raise ValueError("page carrier has no records")
+        copies = [row.get("coverage") for row in payload]
+        if any(record != copies[0] for record in copies):
+            raise ValueError("repeated invocation records disagree")
+        records = [copies[0]]
+    elif isinstance(payload, dict):
+        singular = payload.get("coverage")
+        common = isinstance(singular, dict) and singular.get("schema") == "collector-coverage/1"
+        collector_like = isinstance(singular, dict) and str(singular.get("schema", "")).startswith("collector-coverage/")
+        if "coverage_by_unit" in payload:
+            mapping = payload["coverage_by_unit"]
+            if collector_like or not isinstance(mapping, dict) or not mapping:
+                raise ValueError("ambiguous or empty per-unit carrier")
+            if any(not isinstance(record, dict) or record.get("unit") != unit for unit, record in mapping.items()):
+                raise ValueError("unit key disagrees with record")
+            records = list(mapping.values())
+        elif common:
+            records = [singular]
+        else:
+            raise ValueError("no collector record; track coverage is a different vocabulary")
+    else:
+        raise ValueError("unsupported collector carrier")
+    if any(schema_errors(record) for record in records):
+        raise ValueError("invalid collector record")
+    return records
+
+
 def basic_emission_checks(pa, ui, check, root):
     args = ['--file', str(Path(root) / 'test/fixtures/good-page.html'), '--format', 'json']
     code, out, _ = capture(pa.main, args)

@@ -1,6 +1,7 @@
 # FW06 next B-9 packet: agent-surface probe accounting
 
-Status: research/plan only; no collector implementation. Source observed at
+Status: implemented in candidate; [execution receipt](../runs/2026-10-13-fw06-agent-coverage.md) owns current checks/review.
+Original planning snapshot: research/plan only; no collector implementation. Source observed at
 `40c95d3c4d3267148e16e4767f28d28664ef3885`, stacked on the sitemap candidate.
 Reconcile accepted sitemap main before implementation. The
 [common contract](../../contracts/collector-coverage.md) remains the schema home.

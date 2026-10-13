@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
 Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
-`url_inspection.py` and `sitemap_audit.py` when collection reaches report emission.
-The remaining four scripts are not migrated; B-9 remains open. This schema is
+`url_inspection.py`, `sitemap_audit.py` and `agent_surface.py` when collection
+reaches report emission. The remaining three scripts are not migrated; B-9 remains open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -68,7 +68,7 @@ and loopback fixtures; the baseline inventory is historical.
 | `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Argument, input-list and local-file opening failures before report creation keep their existing stderr/exit behavior. |
 | `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
 | `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
-| `agent_surface.py` | Migration pending | Instrument hidden discovery attempts before counting requests. | Displayed checks are not all network attempts. |
+| `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
 | `gsc_pull.py` | Migration pending | Distinguish API rows, windows and unobserved tails. | No inference of missing rows as zero. |
 | `psi_pull.py` | Migration pending | Define field-data absence separately from lab-response success. | No provider completeness claim. |
 | `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
@@ -82,10 +82,10 @@ an explicit reason and emits state `unknown`; zero is never its default. Early
 bootstrap failures with no record are not complete coverage and remain a migration
 boundary. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the three migrated standalone
+The small builder/Markdown block is duplicated intentionally in the four migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
 `test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
-`test/sitemap_coverage_contract.py`, called by the same gate, compares all three
+`test/sitemap_coverage_contract.py`, called by the same gate, compares the first three
 copies and adds traversal/transport acceptance cases. Its loopback cases cover redirect hops as one logical input, connection
 failure, HTTP 404, an empty complete body, full/capped/incomplete/corrupt gzip, mixed
 results and duplicates. Mocked URL Inspection cases cover caps, absent index data,
@@ -140,3 +140,49 @@ counts exclusions, and `invalid_page_url` makes coverage partial. Other page
 observations survive; the fully parsed XML document remains returned. JSON and
 Markdown still emit, with exit 1. This handles parser errors, not every possible
 semantic URL or Sitemap protocol violation.
+
+
+## Agent-surface carriers, attempts and usable responses
+
+`agent_surface.py` adds `coverage_by_unit`, a named map. Its `network_probe` value
+is one common record; `local_file` is present only when an offline OpenAPI input
+was supplied. Existing `coverage` object/array carriers in the other collectors
+are unchanged. Preflight's track-coverage object is a different vocabulary and is
+not a collector record. The independent `coverage_records` reader in
+`test/collector_coverage_contract.py` recognizes explicit common carriers,
+collapses repeated page-array copies once and refuses ambiguous competing
+collector records. It never sums units or interprets track rows as probe counts.
+
+The network record counts scheduled logical invocations, not unique URLs or
+rendered checks. Accept/User-Agent variants and repeated calls remain distinct;
+physical redirect/retry hops do not add logical inputs. `network_probes` retains
+requested URL, request variants, observed status/final URL/redirects and body
+completeness/errors. A returned probe has a landing status and complete readable
+body, including empty or 404 bodies. Observed status/headers remain evidence when
+a cap, short body, unsupported encoding or corrupt/cut gzip excludes a complete
+return. Reads and gzip output use separate sentinel bounds. Existing analysis of
+available fragments is qualified by coverage; this is no field-completeness claim.
+
+The chosen finite conditional workflow defines the input population. A failed or
+incomplete homepage, separate markup page, robots file or parent sitemap can hide
+inputs to the next discovery branch: requested is null with `unknown_discovery`.
+Failed fixed inputs remain known attempts without returns. Alternatives made
+unnecessary by successful selection do not become missing requests. Dropped is
+currently zero; unknown descendants are not invented numerical omissions. The
+scope excludes sitewide discovery and JavaScript rendering.
+
+Remote OpenAPI and API-header probes in `main` participate in the same journal.
+The local-file unit measures one supplied read and bounded analyzer acceptance of
+a JSON object, not full OpenAPI validation. Read/parse/analyzer failures produce
+`payload_errors`; other observations survive. Remote response collection and
+OpenAPI payload usability are distinct: the latter can add `unusable_payload`
+while the complete response remains observed.
+
+The documented exit rule now counts observed landing responses across the actual
+journal, including hidden near-miss requests. Previously `_answered` counted
+selected display rows and could say every probe failed when an unlisted one had
+a landing response. Exit 0 still means at least one response or usable offline
+spec, not that every probe or field succeeded. Markdown and JSON emit all present
+unit records. `test/agent_coverage_contract.py` verifies this through mocked
+requests, actual loopback transport, copied CLI runs and executable mutations;
+its receipt is `docs/evidence/runs/2026-10-13-fw06-agent-coverage.md`.

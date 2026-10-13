@@ -1,9 +1,13 @@
-# Next B-9 agent-surface planning packet — 2026-10-13
+# B-9 agent-surface coverage candidate — 2026-10-13
 
-Read [the probe-accounting packet](evidence/plans/2026-10-13-fw06-agent-surface-coverage.md).
-This branch contains planning only, stacked on the sitemap candidate. First task:
-reconcile accepted sitemap source, inventory every network/offline input home,
-and settle the unit/denominator choices before implementation.
+Read [the execution receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md) and
+[the packet](evidence/plans/2026-10-13-fw06-agent-surface-coverage.md). Accepted
+sitemap source is `dd5319a8935d60d0db7b3649b528d31d0b9ac45f` (PR32, genuine run
+38348112306 passed both jobs). This candidate journals hidden probes and keeps
+network/local units separate. Version remains 0.26.5. Next: focused independent
+review, then one owner aggregate only after the serial/disk slot is released,
+frozen genuine PR checks and normal integration. GSC, PSI and preflight remain
+separate migrations with their own denominators/provider boundaries.
 
 ---
 

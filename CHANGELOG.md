@@ -1,5 +1,8 @@
-## Unreleased — sitemap coverage candidate
+## Unreleased — collector coverage candidate
 
+- Journal every agent-surface logical probe, including hidden discovery and CLI-only
+  requests; keep network and offline-file coverage separate, and preserve status
+  evidence when response bodies are incomplete.
 - Count unique discovered sitemap documents and keep unresolved descendants unknown.
 - Bound raw and decompressed reads; retain reports and earlier page observations
   after document failures or parser-rejected page URLs.
