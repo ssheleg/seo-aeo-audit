@@ -1,3 +1,11 @@
+## 0.26.6 packaging preparation — 2026-10-13
+
+Read [the release receipt](evidence/runs/2026-10-13-fw06-release-0266.md).
+This isolated branch is stacked on composed PR36; source acceptance must land first.
+Exact next task: record corrected composed gate and normal merge, merge accepted main
+here, then independently review packaging and run genuine candidate checks. No tag,
+publication, installation or live-provider acceptance has occurred.
+
 ## Transport/bootstrap next packet — 2026-10-13
 
 Read [the source-aware completion packet](evidence/plans/2026-10-13-fw06-bootstrap-transport.md).

@@ -18,6 +18,15 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.6 candidate — coherent collector correction (2026-10-13)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Shared coverage and collector contracts | [Coverage contract](../contracts/collector-coverage.md), [bootstrap receipt](runs/2026-10-13-fw06-bootstrap.md), linked per-collector receipts | source and bounded fixtures reviewed; composed gate pending |
+| Transport and typed Inspection admission | [Transport receipt](runs/2026-10-13-fw06-transport.md), [Inspection receipt](runs/2026-10-13-fw06-inspection-payload.md); independent exact-source 170 and 75 controls | observed in offline/loopback fixtures |
+| Packaging | [0.26.6 release receipt](runs/2026-10-13-fw06-release-0266.md) | preparation; not published |
+| Live provider, model and native runtime quality | No live collection or model/native acceptance in this wave | never |
+
 ## v0.26.5 candidate — FW01/FW06 (2026-10-13)
 
 | What changes | Evidence | State |
