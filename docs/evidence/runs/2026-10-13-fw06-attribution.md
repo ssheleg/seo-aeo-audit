@@ -57,3 +57,13 @@ review, complete owner gates, then deliberate frozen PR promotion and normal mer
 Keep package 0.26.5 until combined coverage/attribution corrections are accepted for
 separate next patch packaging. No provider, browser, installed-host or native model
 acceptance is claimed by source or mutation tests.
+
+## Source checkpoint
+
+Implementation `557ed7a505cb5a33e21ad30412407950ea63dcf5` preserves the exact
+workflow/parser/helper source bound by the generated
+[final call inventory](../plans/fw06-attribution-final-inventory.json), including
+checker, expected diagnostic and mutation command per identity. Accepted B-9
+source `3c3055a9a923f1281943ef54c5e27e9dc9089bb8` was merged normally into the
+already published branch; the HANDOFF conflict preserved the newer task history
+and accepted coverage receipt. No force/rebase or release version change.
