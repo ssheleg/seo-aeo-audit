@@ -2,8 +2,8 @@
 
 Implementation of the reviewed provider packet is focused-green; see
 [evidence](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and the
-[contract](contracts/collector-coverage.md). Accepted agent coverage is now integrated at e8aa59e. Next:
-run final focused/combined checks, obtain independent review, then request one
+[contract](contracts/collector-coverage.md). Accepted agent coverage is now integrated at e8aa59e. Final combined checks
+115/127/73/54 and structural validation passed. Next: obtain independent review, then request one
 serialized owner gate and genuine PR admission. PSI and preflight remain open;
 R30 SEO duplicate/width board-parser repair is separately queued from the family
 audit. No live provider or release claim; package remains 0.26.5.

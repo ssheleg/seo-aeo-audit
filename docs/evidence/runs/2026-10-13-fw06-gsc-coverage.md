@@ -23,8 +23,9 @@ positions, zero/malformed envelopes, invalid/zero/huge numeric rows, noise/displ
 arithmetic, cap uncertainty, early branches, credential redaction, real loopback
 HTTP503 through the copied standalone CLI, and two executable accounting mutants.
 Only a task-owned fake gcloud printed a fake sentinel; no user credentials were read.
-`test/test_collectors.py` and structural validation passed. Combined output tests
-passed at the earlier 35-control boundary; final combined replay remains pending.
+`test/test_collectors.py` and structural validation passed. After merging accepted agent coverage e8aa59e, combined
+`python3 -B test/test_output_contracts.py` passed 115 shared, 127 sitemap, 73 agent
+and 54 GSC controls. Structural validation passed on that integrated source.
 
 The fifth common coverage block needs GSC's seventh `_flat` home. DOCMAP and its
 negative plant follow the measured count; the standalone provenance comment was
