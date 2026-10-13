@@ -1,30 +1,17 @@
 name: validate
 
 on:
-  push:
-    # A TAG push must not start this workflow. `release.yml` calls it through
-    # `workflow_call`, and both runs land in the same concurrency group
-    # (`validate-${{ github.ref }}`) — so the push-triggered one cancels the
-    # release's own call, `release` and `publish` are SKIPPED for a `needs:` that
-    # was cancelled rather than failed, and the tag ships nothing while the run
-    # list shows a green validate beside it. Measured 2026-08-20 on
-    # `agent-stack v0.13.0`: validate green, release cancelled at 2s, npm still
-    # serving the previous version. It is a race, which is why the two siblings
-    # with the same shape happened to publish.
-    #
-    # `tags-ignore: ['**']` was the first spelling of that rule, and it silently
-    # meant something else: a push filter carrying ONLY tag clauses drops branch
-    # events entirely (GitHub's documented semantics), so main went 18 days with
-    # zero push-time validation — merges #15–#18 landed unvalidated post-merge —
-    # while the comment above believed the opposite. Found by the 2026-09-06
-    # family audit, second round. `branches: [main]` states the same intent from
-    # the branch side: tag refs are not branches, so a tag push still cannot
-    # start this workflow, and main is covered again.
-    branches: [main]
+  schedule:
+    - cron: "0 23 * * *"
+      timezone: "Europe/Warsaw"
+  # Operator policy: routine complete CI is nightly. One frozen explicit candidate
+  # may be dispatched for genuine required-status evidence before integration.
+  workflow_dispatch:
+  # Required PR checks need a PR event. Promote a frozen draft candidate once;
+  # ordinary PR edits/pushes do not run the complete suite.
   pull_request:
-  # Callable, so `release.yml` gates a publish on THIS suite instead of a
-  # copy of it. The negative self-tests live here as steps; running them
-  # from the release workflow any other way means a second home per plant.
+    types: [ready_for_review]
+  # Release publication still calls this same suite, including its negative controls.
   workflow_call:
 
 permissions:
