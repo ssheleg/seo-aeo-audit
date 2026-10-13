@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""COPIED VERBATIM from `task-pipeline/test/negatives.py`, 2026-08-24. Four things
-differ: the step floor (24, not 412), the property-check floor (0 -- this repository
-has none yet), the lock name, and the success marker is matched case-insensitively
-because this repository's plants print `ok:` where the original's print `OK:`. Everything else is the same file, because
-two implementations of one runner is the defect this family keeps finding in its own
-history.
+"""Runner derived from `task-pipeline/test/negatives.py`, 2026-08-24.
+The workflow floors, lock name and case-insensitive success vocabulary are local.
+Since FW01 (2026-10-13), this copy also accounts for the suite snapshot through
+`residue`: clean runs remove it; failed or interrupted Python runs keep and name it.
+Other copies require their own owner-reviewed port; the shared-mechanism check below
+compares module constants, not function-body equivalence.
 
 It exists because of the other half of that lesson. On 2026-08-24 the `v0.25.0`
 release failed in CI AFTER the tag was public, on a plant that could not land, while
@@ -43,6 +43,8 @@ import re
 import shutil
 import subprocess
 import sys
+
+import residue
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOW = os.path.join(ROOT, ".github/workflows/validate.yml")
@@ -192,7 +194,10 @@ def main(argv):
     #
     # So the suite copies ROOT once into a snapshot and runs every test with cwd there.
     # Editing while it runs is now harmless.
-    _snap = tempfile.mkdtemp(prefix="tp-negatives-snap-")
+    # Keep the snapshot on failure, including copy/setup exceptions. The ledger
+    # reports it at process exit; only a fully green run may dispose of evidence.
+    residue.open_case("negative-suite snapshot")
+    _snap = residue.workspace("negatives-snap")
     _base = os.path.join(_snap, "repo")
     shutil.copytree(ROOT, _base, ignore=shutil.ignore_patterns(
         "node_modules", "graphify-out", ".git"), symlinks=True)
@@ -356,12 +361,11 @@ def main(argv):
                     print("      " + line)
             print()
 
-    shutil.rmtree(_snap, ignore_errors=True)
-
     if failed or broken or prop_failed:
         print(f"FAIL: {len(failed)} guard(s) did not fire, {len(broken)} test(s) broken"
               + (f", {len(prop_failed)} property check(s) silent" if prop_failed else ""))
         return 1
+    residue.close_case("negative-suite snapshot")
     # "all 0 guards ... provably reject" is a pass over an empty set, which is the
     # shape this repository calls a refused measurement. Say what actually ran.
     _parts = ([f"all {len(tests)} guards provably reject their planted defect"] if tests else [])
