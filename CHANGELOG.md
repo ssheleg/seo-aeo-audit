@@ -1,3 +1,11 @@
+## Unreleased — sitemap coverage candidate
+
+- Count unique discovered sitemap documents and keep unresolved descendants unknown.
+- Bound raw and decompressed reads; retain reports and earlier page observations
+  after document failures or parser-rejected page URLs.
+- Emit common coverage in JSON and Markdown, with offline/loopback and actual-source
+  mutation controls. Version remains 0.26.5 until separate patch packaging.
+
 ## v0.26.5 — collector provenance and accountable test snapshots
 
 - Record observed redirect hops, final response URLs and collection provenance

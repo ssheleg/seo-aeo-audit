@@ -277,6 +277,12 @@ ships, derived from its own URLs rather than a guessed taxonomy. It does not
 detect orphans; a sitemap carries no link graph, and inferring them from path
 shape would be a guess wearing the clothes of a finding.
 
+Source now also reports document coverage, known skipped documents and unknown
+descendants. Complete XML documents and page URL entries have separate counts;
+partial earlier observations survive later failures. JSON and default Markdown
+include the same coverage state. See [the collector contract](docs/contracts/collector-coverage.md)
+for exact units, error exits and the remaining migration boundaries.
+
 `scripts/psi_pull.py` — Core Web Vitals with field (CrUX) and lab (Lighthouse)
 reported separately, judged at the 75th percentile. Where CrUX has no data for a
 URL that is reported as absent, never as a pass, and the lab score never stands

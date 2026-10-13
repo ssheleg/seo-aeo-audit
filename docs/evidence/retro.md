@@ -334,3 +334,14 @@ about landing and observing the intended failure applied to their test harness, 
 a new general rule. Details and actual gate outcomes live in the
 [execution receipt](runs/2026-10-13-fw06-attribution.md). No new version stamp: package
 remains 0.26.5 pending a separate combined correction release.
+
+
+### FW06 sitemap coverage execution — 2026-10-13
+
+The frozen packet separated documents from page entries and known omissions from
+unknown descendants. Independent review then found a malformed page loc that
+still erased the whole report after successful XML collection. Actual copied-CLI
+mixed/bad-only controls now preserve good observations and name the exclusion.
+This applies standing rules 9 and 12 to the collector's error path; no additional
+standing rule is introduced. The [receipt](runs/2026-10-13-fw06-sitemap.md) records
+both corrected acceptance and the interrupted, uncounted runner invocation.
