@@ -33,3 +33,23 @@ updated identically in all seven scripts, without changing that shared function.
 One NOTHING MEASURED literal plant was updated to its changed honest wording.
 Workflow events/jobs are unchanged. These affected negative groups still require
 owner replay before integration.
+
+
+## Aggregate-overflow review correction
+
+Parent review of `53019f8618f23d1c48c730ee324d2374bbfc4f56` supplied two
+individually finite query rows with clicks/impressions 1e308. Their sum overflowed
+and erased both output formats despite six completed API operations. Extended
+controls also showed nonfinite monthly/cannibalization JSON results and text
+failure. The new tests first failed ten intended predicates after capturing these
+actual main paths; an initial assertion assumed the not-yet-present error field
+and was corrected to record its absence explicitly.
+
+Finite-sum checks now refuse unrepresentable aggregates; isolated derivations
+retain other dimensions and individually usable rows. Failed derived fields are
+null with explicit operation/dimension errors and row-count qualification. No
+arbitrary traffic ceiling or zero substitution was introduced. The final focused
+GSC command passed **72 controls**, including query/date/query-page overflow in
+both formats, brand/month/cliff/cannibalization paths and absence of nonfinite JSON
+tokens. The two owned failed fixture trees were removed after replay. Independent
+re-review and owner aggregate remain pending.

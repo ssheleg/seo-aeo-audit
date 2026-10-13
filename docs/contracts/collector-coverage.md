@@ -203,8 +203,7 @@ shape failures are separate diagnostics; their valid siblings remain available.
 Four row records keep `requested=null`: a single page cannot enumerate the
 provider population, including when fewer than the configured cap arrive.
 `attempted` counts received rows after valid noise rows are deliberately excluded;
-invalid rows remain attempted without usable returns. `returned` counts usable
-analyzed rows, and `dropped` counts known noise only. An unavailable row envelope
+invalid rows remain attempted without usable returns. `returned` counts individually usable rows admitted to analysis, and `dropped` counts known noise only. An unavailable row envelope
 leaves all row counts null. An actually empty list permits measured zero counts.
 `row_observations` reports received, invalid, noise and analyzed counts separately.
 The aggregate noise count is null when either noise-bearing dimension is unknown.
@@ -227,3 +226,14 @@ redaction, early branches and real loopback transport through copied standalone
 CLI invocations. Provider behavior and pagination performance remain NOT_RUN.
 Primary-source interpretation is recorded in
 `docs/evidence/plans/2026-10-13-fw06-provider-coverage.md`.
+
+
+Finite individual values can still overflow an aggregate. Each GSC derivation is
+isolated, and sums refuse nonfinite results without imposing a traffic ceiling.
+A failed calculation has a null derived value and a named `derivation_errors`
+entry; its row observation and coverage reasons qualify that failure. Other
+calculations and raw usable rows survive. `analyzed` counts individually usable
+input rows admitted to the analysis, not successfully computed aggregates.
+JSON never uses Infinity/NaN to represent an unavailable aggregate, and text names
+the failed calculation instead of reporting a clean negative. Monthly, cliff,
+position, brand and cannibalization aggregate paths have explicit controls.

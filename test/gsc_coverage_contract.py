@@ -35,7 +35,7 @@ def run(check,root,workspace):
             return transform(dims,rows) if transform else {'rows':rows}
         with patch.object(mod,'access_token',return_value='offline-sentinel'),patch.object(mod,'call',side_effect=fake):
             try:code,out,err=capture(mod.main,['--site','sc-domain:example.invalid','--format',fmt,*extra])
-            except (SystemExit,TypeError,KeyError,ValueError) as exc:return None,None,calls,str(exc)
+            except (SystemExit,TypeError,KeyError,ValueError,OverflowError) as exc:return None,None,calls,str(exc)
         return code,json.loads(out) if fmt=='json' else out,calls,err
     code,data,calls,_=execute()
     ok(code==0 and len(calls)==6,'six independent full-report operations')
@@ -86,6 +86,26 @@ def run(check,root,workspace):
             try:code,_,_=capture(mod.main,['--site','sc-domain:example.invalid','--days',days])
             except SystemExit as exc:code=exc.code
         ok(code!=0,'invalid date window refused before credentials')
+    for dimension,expected in [('query',{'position_split','branded_split'}),('date',{'monthly','cliff'}),('query_page',{'cannibalization'})]:
+        def overflowing(dims,rows):
+            name='_'.join(dims)
+            if name!=dimension:return {'rows':rows}
+            values=[]
+            for number in range(22 if name=='date' else 2):
+                keys=([f'2026-01-{number+1:02}'] if name=='date' else [f'fixture-{number}'] if name=='query' else ['fixture',f'https://example.invalid/{number}'])
+                values.append(dict(rows[0],keys=keys,clicks=1e308,impressions=1e308))
+            return {'rows':values}
+        for fmt in ('json','text'):
+            code,out,calls,_=execute(transform=overflowing,fmt=fmt,extra=('--brand-terms','fixture'))
+            ok(code==0 and len(calls)==6 and bool(out),'aggregate overflow preserves actual main report and other dimensions')
+            if not out:continue
+            if fmt=='json':
+                failed={entry['operation'] for entry in out.get('derivation_errors',[])}
+                ok(expected <= failed and all(out[name] is None for name in expected),'failed aggregates are explicit null with named derivation error')
+                ok(out['coverage_by_unit']['api_request']['returned']==6 and out['top_pages'] and out['row_observations'][dimension].get('derivation_errors'),'envelope and individually usable row counts qualified separately from failed aggregates')
+                ok('Infinity' not in json.dumps(out) and 'NaN' not in json.dumps(out),'nonfinite aggregates cannot escape as non-JSON tokens')
+            else:
+                ok('UNAVAILABLE' in out and all(name in out for name in expected),'text names failed aggregates without erasing independent evidence')
     code,out,_,_=execute(failure=3)
     ok(out['rows_dropped_as_noise'] is None,'failed query dimension does not invent aggregate zero noise')
     def zero(dims,rows): return {'rows':[dict(rows[0],clicks=0,impressions=0,ctr=0,position=0)]}

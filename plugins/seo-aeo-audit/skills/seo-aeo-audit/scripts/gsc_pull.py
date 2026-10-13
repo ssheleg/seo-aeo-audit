@@ -393,7 +393,7 @@ def observe_rows(name, rows, dimensions, cap, display_limit):
         reasons.append({"code":"invalid_rows", "detail":f"{invalid} received rows failed shape/finite-value validation and were not analyzed."})
     if noise:
         reasons.append({"code":"noise_filter", "detail":f"{noise} valid noise rows deliberately excluded before analysis attempts."})
-    record = collector_coverage(name + "_row", "Single dimension/window provider population is unknown. Attempts are received rows after known noise exclusion; returned are usable analyzed rows; display slices do not drop analysis inputs.", None, len(rows)-noise, len(accepted), noise, reasons)
+    record = collector_coverage(name + "_row", "Single dimension/window provider population is unknown. Attempts are received rows after known noise exclusion; returned are individually usable rows admitted to analysis; derivation errors qualify aggregates separately. Display slices do not drop analysis inputs.", None, len(rows)-noise, len(accepted), noise, reasons)
     return accepted, observation, record
 
 
@@ -416,14 +416,22 @@ def measured_rows(report: dict) -> int:
                ("monthly", "top_queries", "top_pages", "query_page_pairs"))
 
 
+def finite_sum(values):
+    """Refuse unrepresentable aggregate arithmetic without inventing a ceiling."""
+    total = sum(values)
+    if not math.isfinite(total):
+        raise OverflowError("aggregate is not finite")
+    return total
+
+
 def monthly_rollup(rows: list[dict]) -> list[dict]:
     """Group date-keyed rows by calendar month, ascending."""
     acc: dict[str, dict] = {}
     for r in rows:
         m = r["keys"][0][:7]
         a = acc.setdefault(m, {"month": m, "clicks": 0.0, "impressions": 0.0})
-        a["clicks"] += r["clicks"]
-        a["impressions"] += r["impressions"]
+        a["clicks"] = finite_sum((a["clicks"], r["clicks"]))
+        a["impressions"] = finite_sum((a["impressions"], r["impressions"]))
     return sorted(acc.values(), key=lambda a: a["month"])
 
 
@@ -515,7 +523,7 @@ def derive_cannibalization(rows: list[dict], min_impressions: float = 100.0,
     for q, pages in by_query.items():
         if len(pages) < 2:
             continue
-        total_impr = sum(p["impressions"] for p in pages)
+        total_impr = finite_sum(p["impressions"] for p in pages)
         if total_impr < min_impressions:
             continue
         pages.sort(key=lambda p: (-p["clicks"], p["position"]))
@@ -542,10 +550,10 @@ def derive_branded_split(rows: list[dict], brand_terms: list[str]) -> dict:
            "non_branded": {"clicks": 0.0, "impressions": 0.0, "queries": 0}}
     for r in rows:
         k = "branded" if classify_branded(r["keys"][0], brand_terms) else "non_branded"
-        acc[k]["clicks"] += r.get("clicks", 0.0)
-        acc[k]["impressions"] += r.get("impressions", 0.0)
+        acc[k]["clicks"] = finite_sum((acc[k]["clicks"], r.get("clicks", 0.0)))
+        acc[k]["impressions"] = finite_sum((acc[k]["impressions"], r.get("impressions", 0.0)))
         acc[k]["queries"] += 1
-    total_clicks = acc["branded"]["clicks"] + acc["non_branded"]["clicks"]
+    total_clicks = finite_sum((acc["branded"]["clicks"], acc["non_branded"]["clicks"]))
     acc["available"] = True
     acc["branded_click_share"] = (round(acc["branded"]["clicks"] / total_clicks, 4)
                                   if total_clicks else None)
@@ -566,8 +574,8 @@ def position_split(rows: list[dict]) -> dict:
         bands[key].append(r)
     out = {}
     for k, rs in bands.items():
-        imp = sum(r["impressions"] for r in rs)
-        clk = sum(r["clicks"] for r in rs)
+        imp = finite_sum(r["impressions"] for r in rs)
+        clk = finite_sum(r["clicks"] for r in rs)
         out[k] = {"queries": len(rs), "impressions": round(imp),
                   "clicks": round(clk), "ctr": (clk / imp) if imp else 0.0}
     return out
@@ -585,7 +593,7 @@ def find_cliff(rows: list[dict], min_drop: float = 0.9, min_baseline: float = 50
     if len(daily) < window + hold_days + 1:
         return None
     for i in range(window, len(daily) - hold_days):
-        baseline = sum(r["impressions"] for r in daily[i - window:i]) / window
+        baseline = finite_sum(r["impressions"] for r in daily[i - window:i]) / window
         if baseline < min_baseline:
             continue
         today = daily[i]["impressions"]
@@ -593,7 +601,7 @@ def find_cliff(rows: list[dict], min_drop: float = 0.9, min_baseline: float = 50
         if drop < min_drop:
             continue
         hold = daily[i:i + hold_days]
-        if (sum(r["impressions"] for r in hold) / hold_days) > baseline * (1 - min_drop):
+        if (finite_sum(r["impressions"] for r in hold) / hold_days) > baseline * (1 - min_drop):
             continue
         return {"before": daily[i - 1]["keys"][0], "after": daily[i]["keys"][0],
                 "before_impressions": round(daily[i - 1]["impressions"]),
@@ -652,6 +660,9 @@ def render_text(report: dict) -> str:
                 "resources) and the",
                 "  window: one that predates verification returns nothing. Exit status is 1."]
 
+    failed_derivations = {entry["operation"] for entry in report.get("derivation_errors", [])}
+    for entry in report.get("derivation_errors", []):
+        out.append(f"UNAVAILABLE {entry['operation']}: {_flat(entry['detail'])}")
     observations = report.get("row_observations", {})
     unavailable = lambda name: name in observations and not observations[name].get("analyzed")
     for name, obs in observations.items():
@@ -661,8 +672,8 @@ def render_text(report: dict) -> str:
     ps = report["position_split"]
     out += ["", "position split (recent window) — rank the brief by THIS, not by impressions:"]
     for band, label in (("top20", "<= 20"), ("striking_21_30", "21-30"), ("beyond_30", "> 30")):
-        if unavailable("query"):
-            out.append("  UNAVAILABLE — no usable query rows; zero buckets are not measured negatives")
+        if unavailable("query") or ps is None:
+            out.append("  UNAVAILABLE — query inputs or aggregate computation unavailable; zero buckets are not measured negatives")
             break
         b = ps[band]
         out.append(f"  pos {label:<6} queries={b['queries']:<5} impressions={n(b['impressions']):>9} "
@@ -688,17 +699,17 @@ def render_text(report: dict) -> str:
         out += ["  A cliff that holds is site-level, not an algorithmic update. Check which",
                 "  URLs ranked before it and whether they still resolve. Manual Actions and",
                 "  Index Coverage are web-UI only — the API cannot clear them."]
-    elif unavailable("date"):
-        out.append("UNAVAILABLE — no usable date rows; collapse was not assessed")
+    elif unavailable("date") or "cliff" in failed_derivations:
+        out.append("UNAVAILABLE — date inputs or aggregate computation unavailable; collapse was not assessed")
     else:
         out.append(f"no collapse detected — sensitivity: {CLIFF_SENSITIVITY}")
 
     out += ["", "month      clicks  impressions"]
-    for m in report["monthly"]:
+    for m in report["monthly"] or []:
         out.append(f"  {m['month']}  {n(m['clicks']):>6}  {n(m['impressions']):>11}")
 
     # ── the four derivations that used to exist only in json ──────────────────
-    bs = report.get("branded_split") or {}
+    bs = report.get("branded_split") or ({"why":"aggregate computation failed; see derivation_errors"} if "branded_split" in failed_derivations else {})
     out += ["", "--- branded / non-branded ---"]
     if bs.get("available"):
         share = bs.get("branded_click_share")
@@ -712,8 +723,9 @@ def render_text(report: dict) -> str:
                    f"{'—' if share is None else f'{share*100:.1f}%'}")
     else:
         out.append(f"  UNAVAILABLE — {bs.get('why', 'no brand terms given')}")
-        out.append("  Pass --brand-terms \"brand,brand app\" to measure it. It is not "
-                   "estimated here on purpose.")
+        if "branded_split" not in failed_derivations:
+            out.append("  Pass --brand-terms \"brand,brand app\" to measure it. It is not "
+                       "estimated here on purpose.")
 
     curve = report.get("ctr_curve") or {}
     out += ["", "--- this property's own CTR curve (never an industry table) ---"]
@@ -739,7 +751,7 @@ def render_text(report: dict) -> str:
     cann = report.get("cannibalization") or []
     out += ["", f"--- cannibalization ({len(cann)} query/queries with several URLs) ---"]
     if not cann:
-        out.append("  UNAVAILABLE — no usable query x page rows" if unavailable("query_page") else "  none found in the query x page rows pulled for this window")
+        out.append("  UNAVAILABLE — no usable query x page rows" if unavailable("query_page") or "cannibalization" in failed_derivations else "  none found in the query x page rows pulled for this window")
     for c in cann[:20]:
         inc = c["incumbent"]
         out.append(f"  \"{str(c['query'])[:48]}\"  {c['urls']} URLs, "
@@ -851,6 +863,28 @@ def main(argv: list[str]) -> int:
             valid_sitemaps.append(item)
     coverage["api_request"] = journal.record()
 
+    derivation_errors = []
+    def derive(name, dimension, operation):
+        try:
+            return operation()
+        except (ArithmeticError, ValueError):
+            detail = "Aggregate could not be represented; individually usable rows remain observed."
+            derivation_errors.append({"operation": name, "dimension": dimension, "code": "derivation_failed", "detail": detail})
+            observations[dimension].setdefault("derivation_errors", []).append(name)
+            coverage[dimension + "_row"]["reasons"].append({"code": "derivation_failed", "detail": name + ": " + detail})
+            return None
+    derived = {}
+    for name, dimension, operation in (
+        ("monthly", "date", lambda: monthly_rollup(daily)),
+        ("cliff", "date", lambda: find_cliff(daily)),
+        ("position_split", "query", lambda: position_split(queries)),
+        ("ctr_curve", "query", lambda: ctr_curve(queries)),
+        ("ctr_gaps", "query", lambda: derive_ctr_gaps(queries, derived["ctr_curve"] or {})),
+        ("cannibalization", "query_page", lambda: derive_cannibalization(pairs)),
+        ("branded_split", "query", lambda: derive_branded_split(queries, [t.strip() for t in (args.brand_terms or "").split(",") if t.strip()])),
+    ):
+        derived[name] = derive(name, dimension, operation)
+
     report = {
         "producer": provenance(
             "gsc_pull.py", argv,
@@ -861,14 +895,8 @@ def main(argv: list[str]) -> int:
         "site": site,
         "recent_window": {"start": start_recent, "end": end},
         "history_window": {"start": start_hist, "end": end},
-        "monthly": monthly_rollup(daily),
-        "cliff": find_cliff(daily),
-        "position_split": position_split(queries),
-        "ctr_curve": ctr_curve(queries),
-        "ctr_gaps": derive_ctr_gaps(queries, ctr_curve(queries)),
-        "cannibalization": derive_cannibalization(pairs),
-        "branded_split": derive_branded_split(
-            queries, [t.strip() for t in (args.brand_terms or "").split(",") if t.strip()]),
+        **derived,
+        "derivation_errors": derivation_errors,
         "top_queries": sorted(queries, key=lambda r: -r["impressions"])[:100],
         "top_pages": sorted(pages, key=lambda r: -r["clicks"])[:100],
         "query_page_pairs": pairs[:5000],
