@@ -1,10 +1,20 @@
-## 0.26.6 packaging preparation — 2026-10-13
+## 0.26.6 release candidate — 2026-10-13
 
 Read [the release receipt](evidence/runs/2026-10-13-fw06-release-0266.md).
-This isolated branch is stacked on composed PR36; source acceptance must land first.
-Exact next task: record corrected composed gate and normal merge, merge accepted main
-here, then independently review packaging and run genuine candidate checks. No tag,
-publication, installation or live-provider acceptance has occurred.
+[PR36](https://github.com/ssheleg/seo-aeo-audit/pull/36) merged normally as
+`524e3552d03a865d4e061eac439d2f6c889cedcb` after genuine full validation
+[38365449655](https://github.com/ssheleg/seo-aeo-audit/actions/runs/38365449655)
+passed exact `058d2f7f8b5c9b6cb69cc9881622e8fe52f3a64d`. Both precursor leases
+were released. B-9's bounded shared-source contract is accepted; B-33's helper
+attribution was already accepted in PR31. Provider/native/model acceptance stays NOT_RUN.
+
+Independent packaging review accepted `1a1667d` versus the final source candidate.
+Accepted main is merged here. Exact next task: freeze focused metadata/provenance
+checks and receipt, promote draft PR37 once, normal merge after genuine checks,
+then annotated v0.26.6, publication and immutable payload readback. No tag or package
+publication has occurred yet. The older handoffs below are historical source cuts.
+
+## Historical implementation handoffs
 
 ## Transport/bootstrap next packet — 2026-10-13
 
