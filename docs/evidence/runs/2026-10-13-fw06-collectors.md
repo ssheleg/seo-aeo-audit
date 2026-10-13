@@ -70,11 +70,23 @@ account, foreign repository/configuration or installed skill was modified. New
 regression files create no temporary tree. Existing owner tests retain their residue
 ledger. The lease is local/advisory, not enforced across machines.
 
+## Independent review
+
+Parent reviewer `/root` reports bounded **PASS** for implementation
+`269d09ab8087a0b8f56cfffad29e1dd0d64b059b`. The reviewer inspected the
+fetch/Probe/render/contract diff and independently replayed all 14 provenance
+controls plus the page-audit behavior suite, exit 0 with owned temporary files
+cleaned. Three additional loopback controls passed: 303 to 410 preserves query
+and hop evidence; 302 without Location does not invent a hop; non-HTTP refusal
+has null landing URL. No findings remain in this slice. This review does not
+close common coverage migration or establish live-provider acceptance.
+
 ## Next task and bounds
 
-Independent reviewer checks the frozen diff and replays the provenance regression,
-especially success/error/transport-failure distinctions and ordinary direct responses.
-Parent owns integration, complete candidate CI, release and installed readback.
+Independent review is complete for the implementation above. The continuation agent
+opens a draft PR, promotes the frozen reviewed candidate once for eligible validation,
+and merges only its exact passing head under the owner's policy. Parent owns release
+and installed readback.
 Then implement B-9 from its contract and convert remaining B-33 plants with guard-specific
 negative controls. Partial-byte reads, unattempted alternate URLs and provider row
 windows must remain visible uncertainty until those collectors are migrated.
