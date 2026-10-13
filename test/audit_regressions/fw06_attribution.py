@@ -51,6 +51,16 @@ for step in STEPS:
         _, problems = calls([(s, b.replace(first, bad, 1) if s == step else b) for s,b in steps])
         check(bool(problems), 'active backticks refused in literal field')
     suffix = ' "$C"' if step == STEPS[1] else ''
+    for expansion in ('*', '?', '[abc]', '{a,b}', '~', '<(printf needle)',
+                      '>(printf needle)', 'needle;true', 'needle|true'):
+        bad = 'plantq "description" '+expansion+suffix+' \\'
+        _, problems = calls([(s, b.replace(first, bad, 1) if s == step else b) for s,b in steps])
+        check(bool(problems), 'unquoted expansion/operator refused: '+expansion)
+    for literal in ("'*'", '"<(printf needle)"', r'\*'):
+        added = 'plantq "new literal '+literal.replace('"','')+'" '+literal+suffix+' \\'
+        _, problems = calls([(s, b+'\n'+added if s == step else b) for s,b in steps])
+        check(not problems, 'quoted/escaped expansion characters stay literal')
+    suffix = ' "$C"' if step == STEPS[1] else ''
     added = "plantq 'new valid case' 'literal `file.py` needle'" + suffix + ' \\'
     _, problems = calls([(s, b+'\n'+added if s == step else b) for s,b in steps])
     check(not problems, 'new attributed call with single-quoted literal backticks allowed')

@@ -48,7 +48,10 @@ def static_tokens(text):
             active, dynamic = False, False
         else:
             active = True
-            if char in '$`':
+            # Only a conservative bare-word alphabet is literal here. Other
+            # punctuation must be quoted/escaped: globs, brace/tilde expansion,
+            # process substitutions and shell operators are not declarations.
+            if not (char.isalnum() or char in '_./:=-+'):
                 dynamic = True
     if active:
         tokens.append(not dynamic)
