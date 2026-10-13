@@ -1,3 +1,39 @@
+## Transport/bootstrap next packet — 2026-10-13
+
+Read [the source-aware completion packet](evidence/plans/2026-10-13-fw06-bootstrap-transport.md).
+Twelve reproduced loopback/pure baseline cases cover framing, decoded budgets,
+provider-body errors and URL Inspection answer admission. Preflight correction
+9d9b166 received independent82 PASS. The parent accepted packet76818f2 for
+implementation. T1 transport now has a [bounded source receipt](evidence/runs/2026-10-13-fw06-transport.md);
+T2 now has a [typed-admission source receipt](evidence/runs/2026-10-13-fw06-inspection-payload.md).
+Independent T1/T2 source reviews passed `6c3403d` (170 controls) and `ce6d4df` (75 controls).
+B1 now has its [bootstrap receipt](evidence/runs/2026-10-13-fw06-bootstrap.md).
+Independent B1 exact `5ab0436` review passed 87 controls. The first composed gate
+found five superseded fixture expectations, preserved in the bootstrap receipt.
+Both fixture corrections were independently accepted. Split local coverage passed:
+complete structure/behavior, 30 unchanged negatives, corrected canonical negative
+and nine audit regressions. Both full attempts remain FAILED as recorded.
+Next: freeze/promote PR36 once for full genuine CI, normal integration, then
+separately reviewed 0.26.6 packaging.
+Do not claim complete B-9 or provider/native acceptance from this planning branch.
+
+## Preflight integrated candidate — 2026-10-13
+
+The [accepted contract](evidence/plans/2026-10-13-fw06-preflight-coverage.md) now
+has bounded source and 82 focused controls. See the
+[run receipt](evidence/runs/2026-10-13-fw06-preflight-coverage.md).
+PSI and GSC/R30 were normally integrated; accepted main
+`2de0d4042e1a312f4366ada325118b2a4413d760` is composed here. PSI genuine run
+[38356315862](https://github.com/ssheleg/seo-aeo-audit/actions/runs/38356315862)
+passed exact b57f9a4 before normal PR35 merge and lease release.
+
+Next: independent preflight source review, then one serial owner gate after
+TP/UX release the slot, frozen genuine PR checks and normal exact-head merge.
+Bootstrap envelopes remain separate source-aware work; preserve page arrays and
+unknown input populations. Package remains 0.26.5; no provider/native acceptance.
+
+## Historical PSI handoff
+
 ## PSI coverage integrated candidate — 2026-10-13
 
 PSI source 50e7c3e passed parent independent review and 67 focused controls,

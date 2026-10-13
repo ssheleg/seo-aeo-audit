@@ -27,7 +27,7 @@ account and the siteUrl.
 Usage:
   gsc_pull.py --site sc-domain:example.com [--quota-project my-proj]
   gsc_pull.py --site https://example.com/ --days 90 --format json
-  gsc_pull.py --list                      # properties this account can see
+  gsc_pull.py --list --format json        # explicit one-operation property listing
 
 What it cannot give you: Manual Actions, Security Issues and the Index Coverage
 report are web-UI only, at every scope. An unexplained cliff needs a human to
@@ -38,7 +38,9 @@ error, or every dimension came back empty. "Ran" is not the useful question here
 number this script prints below the position split is derived from rows, so a property
 that answered nothing renders a full report in which no cliff, no cannibalization and no
 CTR gap were found — a document that reads like a clean site and is a measurement of
-nothing. The report and the exit status read one predicate, `measured_rows`.
+nothing. Full-report exit status reads `measured_rows`. Explicit --list instead
+exits 0 for a typed observed listing, including empty; missing both --site and
+--list is usage before credentials or network.
 
 Every output carries a **producer block** — `skill` (this tool's version), `script`,
 `observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
@@ -171,6 +173,106 @@ def provenance_md(prov: dict) -> str:
 # ── end provenance shared block ──────────────────────────────────────────────
 
 
+MAX_RESPONSE_BYTES = 8_000_000  # raw and decoded JSON response bytes
+
+
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
+
+
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
 
@@ -242,14 +344,18 @@ def access_token() -> str:
     try:
         out = subprocess.run(
             ["gcloud", "auth", "application-default", "print-access-token"],
-            capture_output=True, text=True, check=True,
+            capture_output=True, text=True, check=True, timeout=20,
         )
     except FileNotFoundError:
-        raise SystemExit("gcloud not found. Install the Google Cloud SDK, then run the "
-                         "application-default login shown in this script's header.")
-    except subprocess.CalledProcessError as e:
-        raise SystemExit(f"could not mint an access token: {e.stderr.strip()[:200]}")
-    return out.stdout.strip()
+        raise SystemExit("gcloud not found; install the Google Cloud SDK and configure ADC.")
+    except subprocess.CalledProcessError:
+        raise SystemExit("ADC token acquisition failed; check the local gcloud login. Private stderr withheld.")
+    except (subprocess.TimeoutExpired, OSError, UnicodeError):
+        raise SystemExit("ADC token acquisition unavailable or timed out; no provider request was made.")
+    token = out.stdout.strip()
+    if not token:
+        raise SystemExit("ADC returned no access token; no provider request was made.")
+    return token
 
 
 def call(path: str, token: str, quota_project: str | None,
@@ -265,9 +371,10 @@ def call(path: str, token: str, quota_project: str | None,
     )
     try:
         with urllib.request.urlopen(req, timeout=90) as r:
-            return json.load(r)
+            return _transport_json(r, MAX_RESPONSE_BYTES)
     except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")
+        with e:
+            detail = _transport_error(e, MAX_RESPONSE_BYTES, token)
         if e.code == 403 and "quota project" in detail:
             raise SystemExit(
                 "403: no quota project. Pass --quota-project <gcp-project> where "
@@ -317,12 +424,16 @@ def collection_rows(payload, key):
 
 
 class CollectionJournal:
-    def __init__(self, token):
+    def __init__(self, token, prerequisite_error=None):
         self.token, self.entries, self.errors = token, [], []
+        self.prerequisite_error = prerequisite_error
 
     def request(self, name, operation):
-        entry = {"operation": name, "usable_envelope": False}
+        entry = {"operation": name, "usable_envelope": False, "attempted": not bool(self.prerequisite_error)}
         self.entries.append(entry)
+        if self.prerequisite_error:
+            self.errors.append({"operation": name, "code": "prerequisite_excluded", "detail": self.prerequisite_error})
+            return None
         try:
             rows = operation()
             if not isinstance(rows, list):
@@ -331,16 +442,21 @@ class CollectionJournal:
             return rows
         except (SystemExit, OSError, ValueError, TypeError, KeyError) as exc:
             detail = str(exc)
-            for secret in (self.token, urllib.parse.quote(self.token, safe="")):
+            for secret in (self.token, urllib.parse.quote(self.token or "", safe="")):
                 if secret:
                     detail = detail.replace(secret, "<redacted>")
             self.errors.append({"operation": name, "code": "input_failed", "detail": detail[:200]})
             return None
 
-    def record(self):
-        reasons = [{"code": "input_failed", "detail": f"{len(self.errors)} collection diagnostics; failed operations and invalid auxiliary rows are listed separately in collection_errors."}] if self.errors else []
-        return collector_coverage("api_request", "Six full-report operations after credential bootstrap; a usable typed collection envelope, including empty, is returned. Retries are not extra inputs; row usability is separate.",
-                                  6, len(self.entries), sum(e["usable_envelope"] for e in self.entries), 0, reasons)
+    def record(self, requested=6):
+        reasons = [{"code": "input_failed", "detail": f"{len(self.errors)} collection diagnostics; see collection_errors."}] if self.errors else []
+        dropped = sum(not entry["attempted"] for entry in self.entries)
+        if dropped:
+            reasons.append({"code": "prerequisite_excluded", "detail": f"{dropped} known operations excluded before attempt because ADC was unavailable."})
+        scope = ("One explicit property-list operation" if requested == 1 else "Six full-report operations")
+        scope += "; a usable typed collection envelope, including empty, is returned. Missing credentials exclude known operations before attempt. Retries and row populations are separate."
+        return collector_coverage("api_request", scope, requested,
+                                  sum(entry["attempted"] for entry in self.entries), sum(e["usable_envelope"] for e in self.entries), dropped, reasons)
 
 
 def valid_analytics_row(row, dimensions):
@@ -831,23 +947,39 @@ def main(argv: list[str]) -> int:
         start_hist = iso_days_before(REPORTING_LAG_DAYS + args.history_days, today)
     except (ValueError, OverflowError):
         ap.error("day windows must be positive and fit supported calendar dates")
-    token = access_token()
+    if not args.site and not args.list:
+        print("Pass --site to pull a property, or explicit --list to list properties.", file=sys.stderr)
+        return 1
+    token, credential_error = None, None
+    try:
+        token = access_token()
+        if not isinstance(token, str) or not token.strip():
+            credential_error = "ADC returned no usable token; provider operations were not attempted."
+    except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
+        credential_error = "ADC acquisition unavailable; provider operations were not attempted. Check local gcloud login."
     qp = args.quota_project
-
-    if args.list or not args.site:
-        sites = collection_rows(call("/sites", token, qp), "siteEntry")
-        for s in sites:
-            print(f"  {s.get('permissionLevel','?'):<22} {s['siteUrl']}")
-        if not args.site:
-            # A usage error, and the docstring has always said usage errors exit 1.
-            # It returned 0, so an agent whose invocation lost `--site` read success
-            # from output containing nothing but a property list.
-            print("\nPass --site to pull a property.", file=sys.stderr)
-            return 1
-        return 0
+    journal = CollectionJournal(token, credential_error)
+    if args.list:
+        listed = journal.request("properties", lambda: collection_rows(call("/sites", token, qp), "siteEntry"))
+        sites = [row for row in listed or [] if isinstance(row, dict) and isinstance(row.get("siteUrl"), str) and row["siteUrl"].strip() and (row.get("permissionLevel") is None or isinstance(row["permissionLevel"], str))]
+        observed = listed is not None and len(sites) == len(listed)
+        if listed is not None and not observed:
+            journal.errors.append({"operation": "properties", "code": "invalid_rows", "detail": "Invalid property rows excluded; valid siblings retained. Membership is incomplete."})
+        record = journal.record(1)
+        prov = provenance("gsc_pull.py", argv, "Explicit property-list mode; no analytics or sitemap population requested.")
+        if args.format == "json":
+            print(json.dumps({"producer": prov, "mode": "list", "sites": sites, "properties_observed": observed,
+                              "coverage_by_unit": {"api_request": record}, "collection_errors": journal.errors,
+                              "api_operations": journal.entries}, indent=2))
+        else:
+            print("Visible properties" if observed else "Property listing incomplete or unavailable")
+            for row in sites:
+                print(f"  {_flat(row.get('permissionLevel') or '?'):<22} {_flat(row['siteUrl'])}")
+            print("\n" + collector_coverage_md(record))
+            print("\n" + provenance_md(prov))
+        return 0 if observed or sites else 1
 
     site = args.site
-    journal = CollectionJournal(token)
     sites = journal.request("properties", lambda: collection_rows(call("/sites", token, qp), "siteEntry"))
     properties_observed = sites is not None and all(isinstance(s, dict) and isinstance(s.get("siteUrl"), str) for s in sites)
     if sites is not None and not properties_observed:

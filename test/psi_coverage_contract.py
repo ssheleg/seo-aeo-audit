@@ -79,7 +79,7 @@ def run(check,root,workspace):
     err=urllib.error.HTTPError('https://example.invalid',503,'fixture',{},BrokenBody())
     with patch.object(mod.urllib.request,'urlopen',side_effect=err):
         payload=mod.fetch('https://example.invalid','mobile','fake/key+sentinel')
-    ok('HTTP 503' in payload['_error'] and 'fake/key+sentinel' not in payload['_error'] and 'body unavailable' in payload['_error'],'error-body read failure preserves status and redacts echo')
+    ok('HTTP 503' in payload['_error'] and 'fake/key+sentinel' not in payload['_error'] and 'HTTP body read failed' in payload['_error'],'error-body read failure preserves status and redacts echo')
     requests=[]
     class Handler(BaseHTTPRequestHandler):
         def log_message(self,*args):pass
@@ -122,8 +122,10 @@ def run(check,root,workspace):
     blocks=[(path.parent/(home+'.py')).read_text().split('# ── collector coverage shared block',1)[1].split('# ── end collector coverage shared block',1)[0] for home in homes]
     ok(len(set(blocks))==1,'all six standalone common coverage blocks stay byte-identical')
     with patch.object(mod,'fetch',side_effect=AssertionError('bootstrap must not make a request')):
-        code,out,_=capture(mod.main,[]);ok(code==1 and not out,'no-URL bootstrap remains explicit no-report boundary')
-        code,out,_=capture(mod.main,['--urls-file',str(Path(workspace)/'absent')]);ok(code==1 and not out,'unreadable list bootstrap remains explicit no-report boundary')
+        for args,requested,dropped,reason in [([],0,0,'no_input'), (['--urls-file',str(Path(workspace)/'absent')],None,None,'input_population_unknown')]:
+            code,out,_=capture(mod.main,[*args,'--format','json'])
+            report=json.loads(out);cov=coverage_records(report)[0]
+            ok(code==1 and report['results']==[] and (cov['requested'],cov['attempted'],cov['returned'],cov['dropped'],cov['state'])==(requested,0,0,dropped,'unknown' if requested is None else 'partial') and any(r['code']==reason for r in cov['reasons']),'bootstrap report preserves empty versus unknown population without provider calls')
     print(f'B-9 PSI coverage: {count} controls')
 
 

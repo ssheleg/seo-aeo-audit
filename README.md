@@ -177,7 +177,7 @@ agent, not just Claude Code. This is the substance:
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~6,100 non-blank lines** of distilled reference
+  decide whether to trust the rest. **~6,200 non-blank lines** of distilled reference
   material across the twenty-five contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
@@ -319,7 +319,9 @@ must name, anchor discipline, and the CSV column contract.
 
 `gsc_pull.py` preserves earlier dimensions after individual API failures and reports
 API requests separately from unknown row populations, observed exclusions and
-display slices. Credential/list bootstrap boundaries remain explicit.
+display slices. Missing ADC records known operations excluded before attempt;
+explicit `--list --format json` reports one property-list operation, including a
+valid empty result. Missing both `--site` and `--list` makes no credential/network call.
 
 `agent_surface.py` also emits per-unit probe/file coverage. Its request journal
 includes discovery attempts omitted from the display table; redirect hops remain

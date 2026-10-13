@@ -189,6 +189,103 @@ READ_BUDGET_BASIS = (
 # really is `noindex, nofollow`, and `max-image-preview:none` really is not — a
 # word-boundary match over the whole string cannot tell them apart, and it
 # reported a track-A blocker on pages that say `index, follow`.
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
+
+
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
 
@@ -1146,21 +1243,12 @@ def collapse_headers(items) -> dict:
     return out
 
 
-def _gunzip(raw: bytes) -> tuple[bytes, bool]:
-    """Decompress a gzip body. Returns (bytes, salvaged_from_truncated_stream)."""
-    try:
-        return gzip.decompress(raw), False
-    except Exception:  # noqa: BLE001 - truncated stream: salvage what decoded
-        try:
-            salvaged = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw)
-        except zlib.error:
-            salvaged = b""
-        if not salvaged:
-            raise ValueError(
-                "gzip response could not be decompressed (raise --max-bytes if the page is larger)"
-            ) from None
-        return salvaged, True
-
+def _gunzip(raw: bytes, max_bytes: int = 8_000_000) -> tuple[bytes, bool]:
+    """Bound gzip inflation, preserving eligible fragments on incomplete input."""
+    decoded, complete, error = _bounded_gzip(raw, max_bytes, salvage=True)
+    if not decoded and not complete:
+        raise ValueError(error)
+    return decoded, not complete
 
 def fetch(url: str, timeout: float, user_agent: str,
           max_bytes: int) -> tuple[str, dict, bool]:
@@ -1187,15 +1275,16 @@ def fetch(url: str, timeout: float, user_agent: str,
         declared = resp.headers.get("Content-Type")
         if declared and declared.split(";")[0].strip().lower() not in HTML_CONTENT_TYPES:
             raise ValueError(f"not an HTML document (Content-Type: {declared.strip()})")
-        raw = resp.read(max_bytes + 1)
-        truncated = len(raw) > max_bytes
-        raw = raw[:max_bytes]
+        raw, complete, error = _bounded_response(resp, max_bytes, salvage=True)
+        if not raw and not complete:
+            raise ValueError(error)
         headers = collapse_headers(resp.headers.items())
-        if (headers.get("content-encoding") or "").lower() == "gzip":
-            raw, salvaged = _gunzip(raw)
-            truncated = truncated or salvaged
         charset = resp.headers.get_content_charset() or "utf-8"
-    return raw.decode(charset, errors="replace"), headers, truncated
+    try:
+        text = raw.decode(charset)
+    except (UnicodeError, LookupError):
+        text, complete = raw.decode("utf-8", errors="replace"), False
+    return text, headers, not complete
 
 
 # `low` sat between `medium` and `info` in every message this file writes and
@@ -1207,7 +1296,7 @@ SEVERITY_ORDER = {"blocker": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 def to_markdown(results: list[dict]) -> str:
     lines: list[str] = []
     for r in results:
-        lines.append(f"## {r['url'] or '(local file)'}")
+        lines.append("## Input resolution" if r.get("record_type") == "input_error" else f"## {r['url'] or '(local file)'}")
         lines.append("")
         if "error" in r:
             lines.append(f"- **fetch failed**: {_flat(r['error'])}")
@@ -1272,14 +1361,19 @@ def main(argv: list[str]) -> int:
         print("warning: --base-url applies to --file only; ignoring it", file=sys.stderr)
 
     results: list[dict] = []
+    requested, attempted, unknown_input = 0, 0, False
+    if args.max_bytes < 1:
+        ap.error("--max-bytes must be positive")
     if args.file:
+        requested = attempted = 1
         try:
-            with open(args.file, encoding="utf-8", errors="replace") as fh:
+            with open(args.file, encoding="utf-8") as fh:
                 html = fh.read()
-        except OSError as exc:
-            print(f"error: cannot read {args.file}: {exc}", file=sys.stderr)
-            return 1
-        results.append(analyze(html, args.base_url))
+        except (OSError, UnicodeError) as exc:
+            results.append({"record_type": "input_error", "url": args.base_url,
+                            "error": "cannot read local HTML: " + type(exc).__name__, "findings": []})
+        else:
+            results.append(analyze(html, args.base_url))
     else:
         urls = [args.url] if args.url else []
         if args.url_list:
@@ -1289,13 +1383,16 @@ def main(argv: list[str]) -> int:
                         line for line in (ln.strip() for ln in fh)
                         if line and not line.startswith("#")
                     ]
-            except OSError as exc:
-                print(f"error: cannot read {args.url_list}: {exc}", file=sys.stderr)
-                return 1
-        if not urls:
-            print("error: no URLs to audit", file=sys.stderr)
-            return 1
+            except (OSError, UnicodeError) as exc:
+                unknown_input = True
+                results.append({"record_type": "input_error", "url": "",
+                                "error": "cannot resolve URL list: " + type(exc).__name__, "findings": []})
+        requested = None if unknown_input else len(urls)
+        if not urls and not results:
+            results.append({"record_type": "input_error", "url": "",
+                            "error": "no URLs resolved from input", "findings": []})
         for url in urls:
+            attempted += 1
             try:
                 html, headers, truncated = fetch(url, args.timeout, args.user_agent,
                                                  args.max_bytes)
@@ -1313,23 +1410,26 @@ def main(argv: list[str]) -> int:
     # was fetched. On a long `--url-list` run those differ by the length of the
     # crawl, and this says so rather than implying per-page precision it does not
     # have.
-    scope = (f"local file {args.file}"
-             + (f" as {args.base_url}" if args.base_url else "")
-             if args.file else
-             f"{len(results)} URL(s): " + ", ".join(r.get("url", "?") for r in results[:5])
-             + (f" (+{len(results) - 5} more)" if len(results) > 5 else ""))
+    scope = (f"local file {args.file}" + (f" as {args.base_url}" if args.base_url else "")
+             if args.file else f"{attempted} URL entry(s) attempted; " +
+             ("requested population unknown due to unresolved list" if unknown_input else f"{requested} entries resolved"))
     prov = provenance("page_audit.py", argv, scope)
     errors = sum("error" in r for r in results)
     incomplete = sum(bool(r.get("truncated")) for r in results if "error" not in r)
     reasons = []
-    if errors:
-        reasons.append({"code": "input_failed", "detail": f"{errors} input(s) could not be read or analyzed; see result errors."})
+    resolution_errors = sum(row.get("record_type") == "input_error" for row in results)
+    if resolution_errors:
+        reasons.append({"code": "input_resolution", "detail": "Input resolution failed or yielded no URLs; see typed input_error rows. These rows are not observed pages."})
+    if errors > resolution_errors:
+        reasons.append({"code": "input_failed", "detail": f"{errors - resolution_errors} fetched input(s) could not be read or analyzed; see result errors."})
     if incomplete:
         reasons.append({"code": "incomplete_body", "detail": f"{incomplete} body/bodies were capped or incompletely decoded; fragment observations are not complete page totals."})
+    if unknown_input:
+        reasons.append({"code": "input_population_unknown", "detail": "Unreadable input list may contain additional entries; requested/dropped are unknown."})
     coverage = collector_coverage(
         "local_file" if args.file else "input_url_entry",
         "This invocation's input entries (duplicates retained); returned counts complete readable HTML bodies, including empty bodies. Does not cover JavaScript rendering or sitewide discovery.",
-        len(results), len(results), len(results) - errors - incomplete, 0, reasons)
+        requested, attempted, len(results) - errors - incomplete, None if unknown_input else 0, reasons)
     if args.format == "json":
         for r in results:
             r["producer"] = prov

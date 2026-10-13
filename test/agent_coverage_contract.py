@@ -137,7 +137,7 @@ def run(check, root, workspace):
                     ok(False,route+': malformed header must not erase observed response'); continue
                 ok(probe.status==status and probe.body_complete==complete, route+': landing status separate from complete body')
                 if not complete: ok(bool(probe.body_error),route+': named body limitation')
-                if route.startswith('/length-bad'): ok('Content-Length' in probe.body_error,route+': malformed length diagnosed explicitly')
+                if route.startswith('/length-bad'): ok('malformed HTTP length framing' in probe.body_error,route+': malformed length diagnosed explicitly')
                 if route=='/redirect':ok(len(probe.redirects)==1 and probe.final_url==origin+'/ok','actual redirect chain observed once')
             copied=Path(workspace)/'agent_surface.py';copied.write_bytes(path.read_bytes())
             result=subprocess.run([sys.executable,str(copied),'--openapi',origin+'/spec','--format','json'],cwd=workspace,capture_output=True,text=True)

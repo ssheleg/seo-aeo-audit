@@ -81,7 +81,8 @@ The auditor is the one that fetches arbitrary URLs, so its guard is the strictes
   no requests at all, which is how the test suite runs.
 - No cookies, no credentials, no auth headers; a plain User-Agent that identifies
   the tool.
-- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB). A declared
+- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB),
+  independently for raw and decoded gzip bytes. A declared
   content type that is not HTML/XHTML/XML is refused rather than parsed.
 - Read-only: results go to stdout. The script never writes a file. The only files
   it ever **reads** are the two you name yourself (`--file`, `--url-list`).
@@ -115,15 +116,15 @@ grep -rnE "urlopen|build_opener|opener\.open|subprocess\.|socket|os\.environ|os\
   plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/
 ```
 
-The second command prints **34 lines and that is all of it**, and it breaks down
+The second command prints **37 lines and that is all of it**, and it breaks down
 exactly:
 
 | lines | what they are |
 |---|---|
-| 14 | `urllib` — 6 `urlopen` call lines, 2 `build_opener` construction lines and 2 `opener.open` request lines for the page scheme guard and agent-surface redirect trace. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
-| 7 | the three `subprocess.run` blocks that call `gcloud`, with their error branches — 2 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`, which also catches a timeout |
-| 7 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:161-163`), so seven scripts give seven lines. Three fields per script would be 21 |
-| 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). Two additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 34 and a per-pattern sum gives 36 |
+| 13 | `urllib` — 5 `urlopen` call lines, 2 `build_opener` construction lines and 2 `opener.open` request lines for the page scheme guard and agent-surface redirect trace. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
+| 11 | the three `subprocess.run` blocks that call `gcloud`, with timeout/error branches and bootstrap containment — 4 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`. These are grep matches, not eleven credential requests |
+| 7 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:166-168`), so seven scripts give seven lines. Three fields per script would be 21 |
+| 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). Two additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 37 and a per-pattern sum gives 39 |
 
 No `os.system`, no `eval`, no `exec`, no raw sockets, no shell string. Everything
 else under `plugins/` is markdown.

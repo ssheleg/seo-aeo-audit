@@ -581,6 +581,14 @@ from gsc_coverage_contract import run as check_gsc_coverage
 check_gsc_coverage(check, ROOT, _TMP)
 from psi_coverage_contract import run as check_psi_coverage
 check_psi_coverage(check, ROOT, _TMP)
+from bootstrap_contract import run as check_bootstrap
+check_bootstrap(check, ROOT, _TMP)
+from inspection_payload_contract import run as check_inspection_payload
+check_inspection_payload(check, ROOT, _TMP)
+from transport_contract import run as check_transport
+check_transport(check, ROOT, _TMP)
+from preflight_coverage_contract import run as check_preflight_coverage
+check_preflight_coverage(check, ROOT, _TMP)
 from owner_board_contract import run as check_owner_board_contract
 check_owner_board_contract(check, ROOT, _TMP)
 

@@ -171,6 +171,106 @@ THRESHOLDS = {
 }
 
 
+MAX_RESPONSE_BYTES = 8_000_000  # raw and decoded JSON response bytes
+
+
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
+
+
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
 
@@ -264,12 +364,10 @@ def fetch(url: str, strategy: str, key: str | None) -> dict:
     qs = urllib.parse.urlencode(params) + "&category=PERFORMANCE"
     try:
         with urllib.request.urlopen(f"{API}?{qs}", timeout=90) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            return _transport_json(resp, MAX_RESPONSE_BYTES)
     except urllib.error.HTTPError as e:
-        try:
-            detail = safe_diagnostic(e.read().decode("utf-8", "replace"), key)
-        except Exception as exc:  # preserve status if even the error body cannot be read
-            detail = "error body unavailable: " + safe_diagnostic(exc, key)
+        with e:
+            detail = _transport_error(e, MAX_RESPONSE_BYTES, key)
         hint = ("429 — PSI rate limit. Pass --key for automated runs"
                 if e.code == 429 else f"HTTP {e.code}")
         return {"_error": f"{hint}: {detail}"}
@@ -430,16 +528,17 @@ def main(argv: list[str]) -> int:
     args = ap.parse_args(argv)
 
     urls = list(args.url)
+    input_errors = []
+    unknown_input = False
     if args.urls_file:
         try:
             with open(args.urls_file, encoding="utf-8") as fh:
-                urls += [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
-        except OSError as e:
-            print(f"cannot read --urls-file: {e}", file=sys.stderr)
-            return 1
-    if not urls:
-        print("no URLs given: pass --url and/or --urls-file", file=sys.stderr)
-        return 1
+                urls += [line for line in (ln.strip() for ln in fh) if line and not line.startswith("#")]
+        except (OSError, UnicodeError) as exc:
+            unknown_input = True
+            input_errors.append({"code": "input_population_unknown", "detail": "Cannot read --urls-file: " + type(exc).__name__})
+    if not urls and not input_errors:
+        input_errors.append({"code": "no_input", "detail": "No URLs resolved; pass --url and/or --urls-file."})
 
     rows = []
     for u in urls:
@@ -447,7 +546,7 @@ def main(argv: list[str]) -> int:
         r["findings"] = findings(r)
         rows.append(r)
 
-    reasons = []
+    reasons = list(input_errors)
     failed = sum("error" in row for row in rows)
     missing_field = sum("error" not in row and row["component_status"]["url_field"] != "observed" for row in rows)
     missing_lab = sum("error" not in row and row["component_status"]["lab"] != "observed" for row in rows)
@@ -461,14 +560,14 @@ def main(argv: list[str]) -> int:
         reasons.append({"code":"lab_unavailable", "detail":f"{missing_lab} URL entries have no usable lab performance score."})
     if malformed:
         reasons.append({"code":"malformed_component", "detail":f"{malformed} responses contain invalid components; valid siblings remain observed."})
-    coverage = collector_coverage("input_url_entry", "Supplied URL entries in order, duplicates retained, " + args.strategy + " strategy. Return requires a valid URL-field percentile or lab score; origin-only context is not a direct URL measurement. Complete does not certify provider/site population.", len(urls), len(rows), returned, 0, reasons)
+    coverage = collector_coverage("input_url_entry", "Supplied URL entries in order, duplicates retained, " + args.strategy + " strategy. Return requires a valid URL-field percentile or lab score; origin-only context is not a direct URL measurement. Complete does not certify provider/site population.", None if unknown_input else len(urls), len(rows), returned, None if unknown_input else 0, reasons)
     prov = provenance("psi_pull.py", argv,
                       f"{len(urls)} URL(s), {args.strategy} strategy: "
                       + ", ".join(urls[:5])
                       + (f" (+{len(urls) - 5} more)" if len(urls) > 5 else ""))
     if args.format == "json":
         print(json.dumps({"producer": prov, "strategy": args.strategy,
-                          "results": rows, "coverage": coverage}, indent=2))
+                          "results": rows, "coverage": coverage, "input_errors": input_errors}, indent=2))
     else:
         print(render_markdown(rows))
         print("\n" + collector_coverage_md(coverage))

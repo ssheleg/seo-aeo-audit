@@ -252,9 +252,9 @@ read one copy rather than summing it. Its returned count includes complete empty
 and excludes capped or incompletely decoded bodies. URL Inspection preserves its JSON
 object and adds `coverage`; requested URLs are deduplicated before the cap, and a
 usable return requires index-status data. Redirect/retry hops do not add logical
-inputs. Markdown prints the same bounded counts and state. Early argument, input-file
-or credential bootstrap errors can still exit before a record is produced; absence
-is not complete coverage. Sitemap traversal is described below; the other collectors are still migrating.
+inputs. Markdown prints the same bounded counts and state. Input-resolution and
+credential failures emit bootstrap records; parser/help and explicit usage exits
+remain non-collection boundaries. Absence of a record is never complete coverage.
 
 
 ## Sitemap traversal coverage
@@ -319,5 +319,67 @@ reported as observations, not provider totals. A failed request preserves other
 dimensions and cannot become a clean negative. Actual empty responses differ from
 unavailable envelopes. Noise is excluded before attempted analysis; display cuts
 happen after it. The report retains existing keys and qualifies derived output
-with `row_observations`. Credential bootstrap and list-only branches remain early
-boundaries; provider acceptance is not established by local fixtures.
+with `row_observations`. Missing ADC excludes known API operations before attempt.
+Explicit `--list` has one-operation coverage; provider acceptance is not established
+by local fixtures.
+
+### Preflight collection coverage
+
+`preflight.py` keeps its `coverage` audit-track list. Separate `coverage_by_unit`
+records count local prerequisite outcomes and logical network operations. An HTTP
+status is a returned readiness probe, not usable provider data: failed access,
+incomplete bodies and malformed required JSON still make coverage partial. Missing
+ADC excludes one known property-list operation; its derived property row does not
+count twice. Both records appear in default output and JSON, and beside the seeded
+table in `--format coverage`. `--format provenance` remains no-network. Exit 0
+means the report was produced, including blockers; it does not certify readiness.
+
+### Response completeness and byte budgets
+
+Every collector uses bounded raw and decoded reads. Equal repeated HTTP lengths
+are allowed; contradictory/malformed lengths, Transfer-Encoding plus length and
+unsupported encodings make body completeness unavailable. Plain identity and gzip
+content are supported. A landing HTTP status can remain observed while its body is
+unusable. This does not establish that the source supplied a complete dataset.
+
+For page audit, `--max-bytes` limits compressed **and** decoded bytes separately.
+Recovered HTML fragments retain partial status and suppress whole-page negatives.
+Sitemap collection requires a complete XML document. PSI, GSC and URL Inspection
+cap each provider response at 8,000,000 raw and decoded bytes; hitting that transport
+cap produces an explicit payload gap and preserves independent input results.
+Known token/key echoes in error bodies are redacted before diagnostic truncation.
+No larger provider-row universe is inferred from a body that fits these limits.
+
+
+### URL Inspection typed observations
+
+An arbitrary nonempty response object is not an index answer. The collector admits
+recognized typed status/URL/time fields and preserves usable siblings when another
+field is malformed. JSON exposes `payload_errors` and `invalid_index_fields`;
+default output names the same limitations. Unknown or reserved statuses alone do
+not establish an answer. A malformed crawl date does not mean never-crawled, and
+a malformed declared canonical does not mean the page omitted one. Returned URL
+counts use one predicate, while coverage remains partial for rejected fields.
+The evidence footer applies only to the fields actually admitted from the engine.
+
+
+### Input and credential failures
+
+Unreadable URL lists emit unknown requested/dropped counts and keep any explicitly
+supplied URL entries. Readable empty lists are known zero with a gap reason. Page
+audit preserves its array: `record_type=input_error` rows are input diagnostics,
+not observed pages; use coverage rather than array length as the denominator.
+Local HTML open/decode failure counts one attempted local file. PSI preserves
+duplicates, while URL Inspection deduplicates before its cap. Missing ADC excludes
+known selected inputs before attempt and never turns unknown provider rows into zero.
+
+Property listing is explicit and accepts JSON:
+
+```bash
+python3 "$SKILL_DIR/scripts/gsc_pull.py" --list --format json
+```
+
+A valid empty property list exits0. Missing both `--site` and `--list` is usage and
+makes no credential/network call. Parsed no-input PSI/sitemap/preflight invocations
+emit zero partial coverage; preflight leaves tracks unlooked and does not even run
+local prerequisite checks. Parser/help exits remain outside collection.

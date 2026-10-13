@@ -1,0 +1,10 @@
+{
+  "source": "5ab0436cce82c9aca655b3016047ec32e146d24a",
+  "command": "npm run test:all",
+  "exit": 1,
+  "disk_watchdog_interrupted": false,
+  "elapsed_seconds": 21.05,
+  "minimum_free_bytes": 985280512,
+  "log": "/tmp/fw06-composed-full.log",
+  "owned_tmpdir": "/tmp/fw06-composed-full-owned"
+}

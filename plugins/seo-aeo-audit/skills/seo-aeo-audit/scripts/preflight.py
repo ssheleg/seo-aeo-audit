@@ -42,6 +42,11 @@ Exit codes: 0 = probes ran (even if some failed — that IS the report),
 from __future__ import annotations
 
 import argparse
+import gzip
+import http.client
+import io
+import math
+import zlib
 import json
 import os
 import re
@@ -205,6 +210,103 @@ GSC = "https://searchconsole.googleapis.com/v1"
 PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 
 
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
+
+
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
 
@@ -224,34 +326,174 @@ def probe(name: str, ok: bool, detail: str, gate: str | None = None,
             "gate": gate, "blocks": blocks}
 
 
-def _get(url: str, timeout: int = 20, max_bytes: int = 4096) -> tuple[int, str]:
-    """A probe reads only what it needs. `max_bytes` is explicit because a decision
-    taken on a prefix of a large JSON body is a coin flip wearing a verdict."""
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
+
+
+class ProbeResponse(tuple):
+    """Legacy (status, body) pair plus explicit body/transport limitations."""
+    def __new__(cls, status, body, complete=True, error=""):
+        obj = super().__new__(cls, (status, body))
+        obj.complete = bool(status) and complete
+        obj.error = error
+        return obj
+
+
+def safe_detail(value, secret=None, limit=200):
+    text = str(value)
+    if secret:
+        for needle in (secret, urllib.parse.quote(secret, safe=""), urllib.parse.quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _read_probe(response, max_bytes, secret=None):
+    status = getattr(response, "status", None) or getattr(response, "code", 0)
+    raw, complete, error = _bounded_response(response, max_bytes)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, r.read(max_bytes).decode("utf-8", "replace")
-    except urllib.error.HTTPError as e:
-        return e.code, e.read(400).decode("utf-8", "replace")
-    except Exception as exc:  # noqa: BLE001 - a failed probe is a result
-        return 0, str(exc)[:200]
+        body = raw.decode("utf-8")
+    except UnicodeError:
+        body, complete, error = raw.decode("utf-8", "replace"), False, "invalid UTF-8 body"
+    return ProbeResponse(status, body, complete, safe_detail(error, secret))
+
+def _get(url: str, timeout: int = 20, max_bytes: int = 4096,
+         headers=None, secret=None) -> tuple[int, str]:
+    """Bounded read with landing status preserved on incomplete/error bodies."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Encoding": "identity", **(headers or {})})
+        if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
+            return ProbeResponse(0, "refused: not an HTTP(S) URL", False, "unsupported URL scheme")
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            return _read_probe(response, max_bytes, secret)
+    except urllib.error.HTTPError as exc:
+        with exc:
+            return _read_probe(exc, max_bytes, secret)
+    except Exception as exc:  # one failed probe remains a reportable outcome
+        detail = safe_detail(exc, secret)
+        return ProbeResponse(0, detail, False, detail)
+
+
+class ReadinessJournal:
+    """Probe operations, not visible report rows or physical redirect hops."""
+    def __init__(self, site, origin, skip_psi):
+        self.local_requested = 1 + bool(site)
+        self.network_requested = bool(site) + (3 + (not skip_psi) if origin else 0)
+        self.local = []
+        self.network = []
+        self.limitations = []
+
+    def note_local(self, name, row):
+        self.local.append({"operation": name, "outcome_observed": True,
+                           "prerequisite_available": bool(row["reachable"])})
+
+    def skip_network(self, name):
+        self.network.append({"operation": name, "attempted": False, "status": None,
+                             "body_complete": None, "limitation": "missing prerequisite"})
+
+    def request(self, name, url, **kwargs):
+        result = _get(url, **kwargs)
+        status, _ = result
+        complete = getattr(result, "complete", None)
+        self.network.append({"operation": name, "attempted": True,
+                             "status": status or None, "body_complete": complete,
+                             "limitation": getattr(result, "error", "")})
+        return result
+
+    def limit(self, operation, detail):
+        self.limitations.append({"operation": operation, "detail": detail})
+
+    def records(self):
+        local_reasons = []
+        if any(not row["prerequisite_available"] for row in self.local):
+            local_reasons.append({"code": "local_prerequisite_unavailable", "detail": "A local outcome was observed but the prerequisite is unavailable; this is not credential success."})
+        network_reasons = []
+        skipped = sum(not row["attempted"] for row in self.network)
+        attempted = sum(row["attempted"] for row in self.network)
+        returned = sum(row["status"] is not None for row in self.network)
+        if skipped:
+            network_reasons.append({"code": "prerequisite_excluded", "detail": f"{skipped} known network operation(s) excluded before attempt because ADC was unavailable."})
+        if returned != attempted:
+            network_reasons.append({"code": "no_landing_status", "detail": f"{attempted-returned} attempted operation(s) obtained no landing HTTP status."})
+        if any(row["attempted"] and row["status"] is not None and row["status"] != 200 for row in self.network):
+            network_reasons.append({"code": "non_success_status", "detail": "A landing response was observed but it did not establish requested source access."})
+        if any(row["attempted"] and row["status"] is not None and row["body_complete"] is not True for row in self.network):
+            network_reasons.append({"code": "incomplete_body", "detail": "At least one response body was capped, incomplete, undecodable or its completeness unverified; status remains observed."})
+        network_reasons += [{"code": "payload_unavailable", "detail": row["operation"] + ": " + row["detail"]} for row in self.limitations]
+        return {
+            "local_probe": collector_coverage("local_probe", "Scheduled Python inspection and optional local ADC acquisition. Returned means a determined local outcome, not a successful prerequisite or usable credentials.", self.local_requested, len(self.local), len(self.local), 0, local_reasons),
+            "network_probe": collector_coverage("network_probe", "Flag-selected logical readiness operations: property list, robots, first declared/fallback sitemap, homepage and optional PSI. Return means observed landing HTTP status, not useful provider payload; limits remain reasons. No full crawl, redirect-hop or retry denominator.", self.network_requested, attempted, returned, skipped, network_reasons),
+        }
+
+
+def request_probe(journal, name, url, **kwargs):
+    return journal.request(name, url, **kwargs) if journal else _get(url, **kwargs)
+
+
+def finite_measurement(value, maximum=None):
+    if type(value) not in (int, float) or value < 0:
+        return False
+    try:
+        return math.isfinite(value) and (maximum is None or value <= maximum)
+    except OverflowError:
+        return False
 
 
 def has_crux_field_data(payload: dict) -> bool:
-    """Does this PageSpeed response actually carry CrUX field data?
-
-    PSI returns the `loadingExperience` block whether or not CrUX has data for the
-    URL — with no `metrics` child when it does not. Testing for the *key* (or worse,
-    for the string in a truncated body) reports field data that is not there, and
-    the negative branch then explains the absence with a cause nobody established
-    ("too little traffic"). psi_pull.py has always read `metrics`; this is the same
-    rule, so the two instruments cannot disagree about what was measured.
-    """
-    block = payload.get("loadingExperience")
-    if not isinstance(block, dict):
+    """At least one recognized finite URL-field percentile, never key presence."""
+    if not isinstance(payload, dict):
         return False
-    metrics = block.get("metrics")
-    return isinstance(metrics, dict) and bool(metrics)
+    block = payload.get("loadingExperience")
+    metrics = block.get("metrics") if isinstance(block, dict) else None
+    keys = ("LARGEST_CONTENTFUL_PAINT_MS", "INTERACTION_TO_NEXT_PAINT", "CUMULATIVE_LAYOUT_SHIFT_SCORE")
+    return isinstance(metrics, dict) and any(isinstance(metrics.get(key), dict) and
+        finite_measurement(metrics[key].get("percentile")) for key in keys)
+
+
+def has_lab_score(payload):
+    current = payload
+    for key in ("lighthouseResult", "categories", "performance"):
+        current = current.get(key) if isinstance(current, dict) else None
+    return isinstance(current, dict) and finite_measurement(current.get("score"), 1)
 
 
 def check_python() -> dict:
@@ -271,12 +513,19 @@ def check_gcloud() -> tuple[dict, str | None]:
         return probe("gcloud ADC", False, "gcloud not on PATH", "install",
                      "Search Console: no queries, no URL Inspection"), None
     except subprocess.CalledProcessError as e:
-        return probe("gcloud ADC", False, e.stderr.strip()[:160] or "token mint failed",
+        return probe("gcloud ADC", False, f"token mint failed (exit {e.returncode}); provider stderr withheld",
                      "login", "Search Console: no queries, no URL Inspection"), None
     except subprocess.TimeoutExpired:
         return probe("gcloud ADC", False, "timed out minting a token", "login",
                      "Search Console: no queries, no URL Inspection"), None
-    return probe("gcloud ADC", True, "access token minted"), out.stdout.strip()
+    except (OSError, UnicodeError) as exc:
+        return probe("gcloud ADC", False, "token acquisition failed: " + type(exc).__name__,
+                     "login", "Search Console: no queries, no URL Inspection"), None
+    token = out.stdout.strip()
+    if not token:
+        return probe("gcloud ADC", False, "token command returned no token", "login",
+                     "Search Console: no queries, no URL Inspection"), None
+    return probe("gcloud ADC", True, "access token minted"), token
 
 
 def _unattempted_property(site: str | None) -> list[dict]:
@@ -292,47 +541,66 @@ def _unattempted_property(site: str | None) -> list[dict]:
     if not site:
         return []
     return [probe(f"property {site}", False,
-                  "not attempted — the property list call did not succeed, so this "
+                  "not attempted — a complete usable property list was unavailable, so this "
                   "check never ran", "unattempted",
                   "everything first-party for this site")]
 
 
-def check_gsc(token: str | None, site: str | None, quota_project: str | None) -> list[dict]:
+def check_gsc(token: str | None, site: str | None, quota_project: str | None,
+              journal=None) -> list[dict]:
     if not token:
+        if journal:
+            journal.skip_network("property_list")
         return [probe("Search Console", False, "no token to try with", "login",
                       "query data, position history, URL Inspection")] + _unattempted_property(site)
     headers = {"Authorization": f"Bearer {token}"}
     if quota_project:
         headers["x-goog-user-project"] = quota_project
-    req = urllib.request.Request(f"{GSC_SITES}/sites", headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            entries = json.loads(r.read().decode()).get("siteEntry", [])
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", "replace")[:200]
-        # The gates fail independently and most of them say "403". `quota-project`
-        # is the one that has to be named separately: local Application Default
-        # Credentials are refused by this API until a quota project is bound, and
-        # the fix is `gcloud auth application-default set-quota-project <id>` or
-        # `--quota-project`, not a permission grant on the property. Read as
-        # "permission", it sends an auditor to the wrong screen entirely.
-        low = body.lower()
-        gate = ("quota-project" if "quota project" in low or "serviceusage" in low
+    response = request_probe(journal, "property_list", f"{GSC_SITES}/sites",
+                             timeout=30, max_bytes=8_000_000, headers=headers, secret=token)
+    status, body = response
+    if status != 200:
+        detail = safe_detail(body, token)
+        low = detail.lower()
+        gate = ("network" if not status else
+                "quota-project" if "quota project" in low or "serviceusage" in low
                 else "scope" if "insufficient" in low or "scope" in low
                 else "api-not-enabled" if "disabled" in low or "has not been used" in low
                 else "permission")
-        return [probe("Search Console", False, f"HTTP {e.code}: {body}", gate,
+        return [probe("Search Console", False, f"HTTP {status}: {detail}", gate,
                       "query data, position history, URL Inspection")] + _unattempted_property(site)
-    except Exception as exc:  # noqa: BLE001
-        return [probe("Search Console", False, str(exc)[:160], "network",
-                      "query data, position history, URL Inspection")] + _unattempted_property(site)
-
-    out = [probe("Search Console", True, f"{len(entries)} property/properties visible")]
+    try:
+        if getattr(response, "complete", True) is not True:
+            raise ValueError("property response body incomplete or undecodable")
+        payload = json.loads(body)
+        if not isinstance(payload, dict) or "error" in payload:
+            raise ValueError("property response is not a usable object")
+        entries = payload.get("siteEntry", [])
+        if not isinstance(entries, list):
+            raise ValueError("property response has malformed siteEntry list")
+        valid = [row for row in entries if isinstance(row, dict) and
+                 isinstance(row.get("siteUrl"), str) and row["siteUrl"].strip() and
+                 ("permissionLevel" not in row or isinstance(row["permissionLevel"], str))]
+        invalid = len(entries) - len(valid)
+        entries = valid
+        if invalid and journal:
+            journal.limit("property_list", f"{invalid} malformed row(s); valid matches retained, absence unknown")
+    except (ValueError, RecursionError) as exc:
+        # The provider body is never copied into this diagnostic: malformed rows
+        # cannot establish that the requested property is absent.
+        detail = "property list unusable: " + type(exc).__name__
+        if journal:
+            journal.limit("property_list", detail)
+        return [probe("Search Console", True, "HTTP 200; " + detail)] + _unattempted_property(site)
+    out = [probe("Search Console", True, f"{len(entries)} valid property/properties visible"
+                 + (f"; {invalid} malformed row(s), listing incomplete" if invalid else ""))]
     if site:
-        match = next((e for e in entries if e.get("siteUrl") == site), None)
+        match = next((row for row in entries if row["siteUrl"] == site), None)
         if match:
             out.append(probe(f"property {site}", True,
-                             f"permission: {match.get('permissionLevel','?')}"))
+                             f"permission: {safe_detail(match.get('permissionLevel','?'), token)}"))
+        elif invalid:
+            out += _unattempted_property(site)
         else:
             out.append(probe(f"property {site}", False,
                              "not in this account's list — a property can be "
@@ -342,10 +610,13 @@ def check_gsc(token: str | None, site: str | None, quota_project: str | None) ->
     return out
 
 
-def check_public(origin: str) -> list[dict]:
+def check_public(origin: str, journal=None) -> list[dict]:
     origin = origin.rstrip("/")
     out = []
-    status, body = _get(f"{origin}/robots.txt")
+    response = request_probe(journal, "robots", f"{origin}/robots.txt")
+    status, body = response
+    if journal and getattr(response, "complete", True) is not True:
+        journal.limit("robots", "first-sitemap selection used incomplete or unavailable robots body")
     out.append(probe("robots.txt", status == 200,
                      f"HTTP {status}" + ("" if status == 200 else f" — {body[:80]}"),
                      None if status == 200 else "http",
@@ -356,45 +627,54 @@ def check_public(origin: str) -> list[dict]:
             if line.lower().startswith("sitemap:"):
                 sitemaps.append(line.split(":", 1)[1].strip())
     guess = sitemaps[0] if sitemaps else f"{origin}/sitemap.xml"
-    s_status, s_body = _get(guess)
+    s_status, s_body = request_probe(journal, "sitemap", guess)
     out.append(probe("sitemap", s_status == 200,
                      f"{guess} — HTTP {s_status}"
                      + ("" if s_status == 200 else f" — {s_body[:60]}"),
                      None if s_status == 200 else "http",
                      "" if s_status == 200 else "the published-URL inventory (sitemap_audit.py)"))
-    h_status, _ = _get(origin + "/")
+    h_status, _ = request_probe(journal, "homepage", origin + "/")
     out.append(probe("homepage", h_status == 200, f"HTTP {h_status}",
                      None if h_status == 200 else "http",
                      "" if h_status == 200 else "every page-level check"))
     return out
 
 
-def check_psi(origin: str | None) -> dict:
+def check_psi(origin: str | None, journal=None) -> dict:
     if not origin:
         return probe("PageSpeed Insights", False, "no --origin given", "usage",
                      "field CWV (psi_pull.py)")
     q = urllib.parse.urlencode({"url": origin, "strategy": "mobile"})
-    # The whole body, parsed: the field-data question is answered by a nested key,
-    # so a byte-capped read can only guess at it.
-    status, body = _get(f"{PSI}?{q}&category=PERFORMANCE", timeout=90,
-                        max_bytes=8_000_000)
+    response = request_probe(journal, "psi", f"{PSI}?{q}&category=PERFORMANCE",
+                             timeout=90, max_bytes=8_000_000)
+    status, body = response
     if status != 200:
         return probe("PageSpeed Insights", False, f"HTTP {status} — {body[:120]}",
-                     "rate-limit" if status == 429 else "http",
-                     "field CWV (psi_pull.py)")
+                     "rate-limit" if status == 429 else "http", "field CWV (psi_pull.py)")
     try:
+        if getattr(response, "complete", True) is not True:
+            raise ValueError("incomplete PSI body")
         payload = json.loads(body)
-    except ValueError:
-        return probe("PageSpeed Insights", True,
-                     "reachable, but the response did not parse as JSON — cannot say "
-                     "whether CrUX field data exists for this URL")
-    if has_crux_field_data(payload):
-        return probe("PageSpeed Insights", True,
-                     "reachable; CrUX field data present for this URL")
-    return probe("PageSpeed Insights", True,
-                 "reachable; no CrUX field data for this URL — the response carries no "
-                 "field metrics, so this page is lab-only. That is absence, not a pass: "
-                 "psi_pull.py will report it as absent and offer the origin aggregate")
+        if not isinstance(payload, dict) or "error" in payload:
+            raise ValueError("unusable PSI envelope")
+    except (ValueError, RecursionError):
+        detail = "reachable, but PSI response is incomplete or unusable JSON; field/lab availability is unknown"
+        if journal:
+            journal.limit("psi", "field/lab availability is unknown: incomplete or unusable response")
+        return probe("PageSpeed Insights", True, detail)
+    field = has_crux_field_data(payload)
+    origin_field = has_crux_field_data({"loadingExperience": payload.get("originLoadingExperience")})
+    lab = has_lab_score(payload)
+    details = ["reachable", "valid URL-field percentiles present" if field else
+               "no usable URL-field percentile observed; absence cause unestablished",
+               "valid lab score present" if lab else "no usable lab score observed",
+               "origin field context present (not this URL)" if origin_field else "no usable origin context observed"]
+    metrics = (payload.get("loadingExperience") or {}).get("metrics") if isinstance(payload.get("loadingExperience"), dict) else None
+    expected = ("LARGEST_CONTENTFUL_PAINT_MS", "INTERACTION_TO_NEXT_PAINT", "CUMULATIVE_LAYOUT_SHIFT_SCORE")
+    field_complete = isinstance(metrics, dict) and all(isinstance(metrics.get(key), dict) and finite_measurement(metrics[key].get("percentile")) for key in expected)
+    if journal and (not field_complete or not lab):
+        journal.limit("psi", "some URL-field percentiles or lab score unavailable; origin context never substitutes")
+    return probe("PageSpeed Insights", True, "; ".join(details))
 
 
 # ── the report's coverage table ──────────────────────────────────────────────
@@ -847,10 +1127,8 @@ def main(argv: list[str]) -> int:
                          "coverage section, or its seeded Provenance block")
     args = ap.parse_args(argv)
 
-    if not args.site and not args.origin:
-        print("pass --site and/or --origin — there is nothing to probe otherwise",
-              file=sys.stderr)
-        return 1
+    no_input = not args.site and not args.origin
+    input_errors = [{"code": "no_input", "detail": "No probe inputs resolved; pass --site and/or --origin."}] if no_input else []
 
     prov = provenance("preflight.py", argv, scope_of(args.site, args.origin))
     # `--format provenance` probes nothing: the block is about the execution, not
@@ -860,16 +1138,26 @@ def main(argv: list[str]) -> int:
         print(render_provenance(prov))
         return 0
 
-    rows = [check_python()]
+    journal = ReadinessJournal(args.site, args.origin, args.skip_psi)
+    rows = []
+    if no_input:
+        journal.local_requested = 0
+    else:
+        rows.append(check_python())
+        journal.note_local("python", rows[0])
     if args.site:
         gcloud_row, token = check_gcloud()
         rows.append(gcloud_row)
-        rows += check_gsc(token, args.site, args.quota_project)
+        journal.note_local("adc", gcloud_row)
+        rows += check_gsc(token, args.site, args.quota_project, journal)
     if args.origin:
-        rows += check_public(args.origin)
+        rows += check_public(args.origin, journal)
         if not args.skip_psi:
-            rows.append(check_psi(args.origin))
+            rows.append(check_psi(args.origin, journal))
 
+    records = journal.records()
+    if no_input:
+        records = {unit: collector_coverage(unit, "No probe inputs resolved; no local or network operations scheduled.", 0, 0, 0, 0, input_errors) for unit in ("local_probe", "network_probe")}
     if args.format == "json":
         print(json.dumps({"producer": prov,
                           "probes": rows,
@@ -877,12 +1165,16 @@ def main(argv: list[str]) -> int:
                           "total": len(rows),
                           "tracks": [{"track": t, "label": l} for t, l in TRACKS],
                           "coverage_status": list(COVERAGE_STATUS),
-                          "coverage": coverage_seed(rows)}, indent=2))
+                          "coverage": coverage_seed(rows), "coverage_by_unit": records,
+                          "probe_operations": {"local": journal.local, "network": journal.network}, "input_errors": input_errors}, indent=2))
     elif args.format == "coverage":
         print(render_coverage(coverage_seed(rows)))
     else:
         print(render(rows, prov))
-    return 0
+    if args.format != "json":
+        for record in records.values():
+            print("\n" + collector_coverage_md(record))
+    return 1 if no_input else 0
 
 
 if __name__ == "__main__":

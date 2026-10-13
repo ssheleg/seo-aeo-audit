@@ -173,14 +173,18 @@ def access_token() -> str:
     try:
         out = subprocess.run(
             ["gcloud", "auth", "application-default", "print-access-token"],
-            capture_output=True, text=True, check=True,
+            capture_output=True, text=True, check=True, timeout=20,
         )
     except FileNotFoundError:
-        raise SystemExit("gcloud not found. Install the Google Cloud SDK, then run the "
-                         "application-default login shown in this script's header.")
-    except subprocess.CalledProcessError as e:
-        raise SystemExit(f"could not mint an access token: {e.stderr.strip()[:200]}")
-    return out.stdout.strip()
+        raise SystemExit("gcloud not found; install the Google Cloud SDK and configure ADC.")
+    except subprocess.CalledProcessError:
+        raise SystemExit("ADC token acquisition failed; check the local gcloud login. Private stderr withheld.")
+    except (subprocess.TimeoutExpired, OSError, UnicodeError):
+        raise SystemExit("ADC token acquisition unavailable or timed out; no provider request was made.")
+    token = out.stdout.strip()
+    if not token:
+        raise SystemExit("ADC returned no access token; no provider request was made.")
+    return token
 
 
 def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
@@ -193,9 +197,14 @@ def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
                                  data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            raw = _transport_json(resp, MAX_RESPONSE_BYTES)
+            if isinstance(raw, dict) and ("error" in raw or "_error" in raw):
+                detail = _transport_detail(raw.get("error", raw.get("_error")), token)
+                return {"_error": detail or "provider returned an error envelope"}
+            return raw
     except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")[:300]
+        with e:
+            detail = _transport_error(e, MAX_RESPONSE_BYTES, token)
         # The three failure gates are independent and their messages are unhelpful
         # on their own; name which one was hit so the run is diagnosable.
         if e.code == 403:
@@ -209,7 +218,107 @@ def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
             hint = f"HTTP {e.code}"
         return {"_error": f"{hint}: {detail}"}
     except Exception as exc:  # noqa: BLE001 - one bad URL must not end the run
-        return {"_error": str(exc)[:300]}
+        return {"_error": _transport_detail(exc, token)}
+
+
+MAX_RESPONSE_BYTES = 8_000_000  # raw and decoded JSON response bytes
+
+
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
 
 
 def _flat(text: str, limit: int = 200) -> str:
@@ -288,49 +397,124 @@ def _as_list(v) -> list:
     return v if isinstance(v, list) else []
 
 
+# Schema source and bounded admission policy:
+# docs/evidence/plans/2026-10-13-url-inspection-admission.md.
+INDEX_ENUMS = {
+    "verdict": {"VERDICT_UNSPECIFIED", "PASS", "PARTIAL", "FAIL", "NEUTRAL"},
+    "robotsTxtState": {"ROBOTS_TXT_STATE_UNSPECIFIED", "ALLOWED", "DISALLOWED"},
+    "indexingState": {"INDEXING_STATE_UNSPECIFIED", "INDEXING_ALLOWED", "BLOCKED_BY_META_TAG", "BLOCKED_BY_HTTP_HEADER", "BLOCKED_BY_ROBOTS_TXT"},
+    "pageFetchState": {"PAGE_FETCH_STATE_UNSPECIFIED", "SUCCESSFUL", "SOFT_404", "BLOCKED_ROBOTS_TXT", "NOT_FOUND", "ACCESS_DENIED", "SERVER_ERROR", "REDIRECT_ERROR", "ACCESS_FORBIDDEN", "BLOCKED_4XX", "INTERNAL_CRAWL_ERROR", "INVALID_URL"},
+    "crawledAs": {"CRAWLING_USER_AGENT_UNSPECIFIED", "DESKTOP", "MOBILE"},
+}
+INDEX_FIELDS = {
+    "verdict": "verdict", "coverageState": "coverage_state",
+    "indexingState": "indexing_state", "robotsTxtState": "robots_txt_state",
+    "pageFetchState": "page_fetch_state", "lastCrawlTime": "last_crawl_time",
+    "crawledAs": "crawled_as", "googleCanonical": "google_canonical",
+    "userCanonical": "user_canonical", "referringUrls": "referring_urls",
+    "sitemap": "sitemaps",
+}
+
+
+def _inspection_url(value):
+    if not isinstance(value, str) or not value or any(c.isspace() for c in value):
+        return False
+    try:
+        parsed = urllib.parse.urlsplit(value)
+        return parsed.scheme in ("http", "https") and bool(parsed.hostname) and (parsed.port is None or 0 < parsed.port < 65536)
+    except ValueError:
+        return False
+
+
+def _inspection_timestamp(value):
+    import re
+    from datetime import datetime
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,9})?Z", value):
+        return False
+    try:
+        datetime.strptime(value[:19], "%Y-%m-%dT%H:%M:%S")
+        return True
+    except ValueError:
+        return False
+
+
 def parse(raw: dict, url: str) -> dict:
-    """Field names per the Search Console API reference. `userCanonical` is the
-    documented spelling — a widely copied third-party parser reads
-    `userDeclaredCanonical`, which is always absent and so always reports the
-    declared canonical as missing."""
-    if "_error" in raw:
-        return {"url": url, "error": raw["_error"]}
-    inspection = _as_dict(raw.get("inspectionResult"))
-    idx = _as_dict(inspection.get("indexStatusResult"))
-    rich = _as_dict(inspection.get("richResultsResult"))
-    rich_types = []
-    for item in _as_list(rich.get("detectedItems")):
-        name = _as_dict(item).get("richResultType")
-        if name:
-            rich_types.append(name)
-    return {
-        "url": url,
-        # Whether the index answered at all, kept apart from what it answered: with
-        # no indexStatusResult every field below parses to None, and "all fields
-        # absent" used to come out as the finding "never crawled".
-        "has_index_status": bool(idx),
-        "verdict": idx.get("verdict"),
-        "coverage_state": idx.get("coverageState"),
-        "indexing_state": idx.get("indexingState"),
-        "robots_txt_state": idx.get("robotsTxtState"),
-        "page_fetch_state": idx.get("pageFetchState"),
-        "last_crawl_time": idx.get("lastCrawlTime"),
-        "crawled_as": idx.get("crawledAs"),
-        "google_canonical": idx.get("googleCanonical"),
-        "user_canonical": idx.get("userCanonical"),
-        "referring_urls": _as_list(idx.get("referringUrls")),
-        "sitemaps": _as_list(idx.get("sitemap")),
-        "rich_results_verdict": rich.get("verdict"),
-        "rich_result_types": rich_types,
-    }
+    """Admit typed observations; malformed presence is never valid absence."""
+    errors, invalid = [], []
+    def problem(path, detail):
+        errors.append(path + ": " + detail)
+    if isinstance(raw, dict) and "_error" in raw:
+        return {"url": url, "error": str(raw["_error"]) or "provider returned an error envelope"}
+    if not isinstance(raw, dict):
+        problem("response", "expected an object")
+        raw = {}
+    inspection = raw.get("inspectionResult", {})
+    if not isinstance(inspection, dict):
+        problem("inspectionResult", "expected an object")
+        inspection = {}
+    idx = inspection.get("indexStatusResult", {})
+    if not isinstance(idx, dict):
+        problem("indexStatusResult", "expected an object")
+        idx = {}
+    result = {"url": url, "has_index_status": False}
+    for field, output in INDEX_FIELDS.items():
+        result[output] = [] if field in ("referringUrls", "sitemap") else None
+        if field not in idx:
+            continue
+        value = idx[field]
+        valid = False
+        if field in ("referringUrls", "sitemap"):
+            if isinstance(value, list):
+                result[output] = [item for item in value if _inspection_url(item)]
+                valid = len(result[output]) == len(value)
+            if not valid:
+                problem("indexStatusResult." + field, "expected an array of absolute HTTP(S) URLs; usable members retained")
+        else:
+            valid = isinstance(value, str) and bool(value.strip())
+            if field in INDEX_ENUMS:
+                valid = valid and value in INDEX_ENUMS[field] and not value.endswith("_UNSPECIFIED") and value not in ("PARTIAL", "BLOCKED_BY_ROBOTS_TXT")
+            elif field in ("googleCanonical", "userCanonical"):
+                valid = _inspection_url(value)
+            elif field == "lastCrawlTime":
+                valid = _inspection_timestamp(value)
+            if valid:
+                result[output] = value
+            else:
+                problem("indexStatusResult." + field, "unavailable: wrong type, invalid value or unspecified/unknown status")
+        if not valid:
+            invalid.append(field)
+    result["has_index_status"] = any(bool(result[output]) for output in INDEX_FIELDS.values())
+    rich = inspection.get("richResultsResult", {})
+    if not isinstance(rich, dict):
+        problem("richResultsResult", "expected an object")
+        rich = {}
+    verdict = rich.get("verdict")
+    result["rich_results_verdict"] = verdict if isinstance(verdict, str) and verdict in INDEX_ENUMS["verdict"] and not verdict.endswith("_UNSPECIFIED") and verdict != "PARTIAL" else None
+    if "verdict" in rich and result["rich_results_verdict"] is None:
+        problem("richResultsResult.verdict", "unavailable: invalid or unknown status")
+    items = rich.get("detectedItems", [])
+    if not isinstance(items, list):
+        problem("richResultsResult.detectedItems", "expected an array")
+        items = []
+    result["rich_result_types"] = []
+    for item in items:
+        name = item.get("richResultType") if isinstance(item, dict) else None
+        if isinstance(name, str) and name.strip():
+            result["rich_result_types"].append(name)
+        else:
+            problem("richResultsResult.detectedItems.richResultType", "expected a nonempty string")
+    result["payload_errors"] = errors
+    result["invalid_index_fields"] = invalid
+    return result
 
 
 # Google documents the coverage states; the verdict field is the engine's own
-# summary of them. PASS and PARTIAL are indexed; FAIL and NEUTRAL are not, and
+# summary of them. PASS is indexed; PARTIAL is reserved, not an indexed answer.
+# FAIL and NEUTRAL are not indexed, and
 # NEUTRAL is where every *exclusion* lands — duplicates, canonical alternates,
 # `noindex`, unknown URLs. Substring-matching "not indexed" caught two of those
 # and silently passed the rest.
-INDEXED_VERDICTS = frozenset({"PASS", "PARTIAL"})
+INDEXED_VERDICTS = frozenset({"PASS"})
 NOT_INDEXED_VERDICTS = frozenset({"FAIL", "NEUTRAL"})
 
 
@@ -345,7 +529,7 @@ def findings(r: dict) -> list[dict]:
         return out
     if not r.get("has_index_status"):
         add("high", "no-index-status",
-            "the API answered without an indexStatusResult, so nothing about this URL's "
+            "the API supplied no usable typed index status, so nothing about this URL's "
             "index state was returned. This is a gap in the report, not a verdict about "
             "the page — re-run it, and check the property and URL match")
         return out
@@ -354,7 +538,8 @@ def findings(r: dict) -> list[dict]:
         add("blocker", "canonical-disagreement",
             f"Google selected {gc} but the page declares {uc} — the declaration "
             "was not accepted, so signals consolidate somewhere you did not choose")
-    if uc in (None, "") and gc:
+    invalid = set(r.get("invalid_index_fields", []))
+    if uc in (None, "") and gc and "userCanonical" not in invalid:
         add("high", "canonical-undeclared",
             f"no user-declared canonical; Google picked {gc} on its own")
     _verdict = (r.get("verdict") or "").upper()
@@ -370,7 +555,7 @@ def findings(r: dict) -> list[dict]:
         add("blocker", "robots-disallowed", "robots.txt disallows this URL")
     if r.get("page_fetch_state") not in (None, "SUCCESSFUL"):
         add("high", "fetch-failed", f"page fetch state: {r['page_fetch_state']}")
-    if not r.get("last_crawl_time"):
+    if not r.get("last_crawl_time") and "lastCrawlTime" not in invalid:
         add("medium", "never-crawled", "no last crawl time recorded for this URL")
     return out
 
@@ -392,6 +577,8 @@ def render_markdown(rows: list[dict], dropped: int) -> str:
         lines.append(f"- robots: `{r.get('robots_txt_state')}` · fetch: "
                      f"`{r.get('page_fetch_state')}` · crawled as: `{r.get('crawled_as')}`")
         lines.append(f"- last crawl: `{r.get('last_crawl_time')}`")
+        for problem in r.get("payload_errors", []):
+            lines.append(f"- **payload limitation**: {_flat(problem)}")
         for f in r.get("findings", []):
             lines.append(f"  - **{f['severity']}** [{f['code']}] {f['message']}")
         lines.append("")
@@ -401,7 +588,7 @@ def render_markdown(rows: list[dict], dropped: int) -> str:
     answered = answered_rows(rows)
     if answered:
         lines.append(f"Evidence tier: CONFIRMED for the {len(answered)} of {len(rows)} URL(s) "
-                     f"the index answered for — those are the engine's own answers, not "
+                     f"the index answered for — scoped to admitted typed fields; rejected sibling fields remain unknown. These are engine answers, not "
                      f"inferences from a fetch. Record the date beside them.")
         if len(answered) != len(rows):
             lines.append(f"The remaining {len(rows) - len(answered)} produced no index answer "
@@ -430,21 +617,22 @@ def main(argv: list[str]) -> int:
         ap.error("--max-urls must be at least 1")
 
     urls = list(args.urls)
+    input_errors = []
+    unknown_input = False
     if args.urls_file:
         try:
             with open(args.urls_file, encoding="utf-8") as fh:
-                urls += [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
-        except OSError as e:
-            print(f"cannot read --urls-file: {e}", file=sys.stderr)
-            return 1
+                urls += [line for line in (ln.strip() for ln in fh) if line and not line.startswith("#")]
+        except (OSError, UnicodeError) as exc:
+            unknown_input = True
+            input_errors.append({"code": "input_population_unknown", "detail": "Cannot read --urls-file: " + type(exc).__name__})
     seen, deduped = set(), []
     for u in urls:
         if u not in seen:
             seen.add(u)
             deduped.append(u)
-    if not deduped:
-        print("no URLs given: pass --urls and/or --urls-file", file=sys.stderr)
-        return 1
+    if not deduped and not input_errors:
+        input_errors.append({"code": "no_input", "detail": "No URLs resolved; pass --urls and/or --urls-file."})
 
     dropped = max(0, len(deduped) - args.max_urls)
     batch = deduped[: args.max_urls]
@@ -452,32 +640,49 @@ def main(argv: list[str]) -> int:
         print(f"note: {dropped} URL(s) beyond --max-urls={args.max_urls} were not "
               f"inspected", file=sys.stderr)
 
-    token = access_token()
-    rows = []
+    token, credential_error = None, None
+    if batch:
+        try:
+            token = access_token()
+            if not isinstance(token, str) or not token.strip():
+                credential_error = "ADC returned no usable token; selected URLs were not attempted."
+        except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
+            credential_error = "ADC acquisition unavailable; selected URLs were not attempted. Check local gcloud login."
+    rows, attempted = [], 0
     for i, u in enumerate(batch):
+        if credential_error:
+            rows.append({"url": u, "attempted": False, "error": credential_error, "findings": []})
+            continue
         if i:
             time.sleep(MIN_INTERVAL)
-        r = parse(inspect(args.site, u, token, args.quota_project), u)
-        r["findings"] = findings(r)
-        rows.append(r)
+        attempted += 1
+        row = parse(inspect(args.site, u, token, args.quota_project), u)
+        row["findings"] = findings(row)
+        rows.append(row)
+    excluded = dropped + (len(batch) if credential_error else 0)
 
     prov = provenance("url_inspection.py", argv,
-                      f"property {args.site}, {len(batch)} URL(s) inspected: "
+                      f"property {args.site}, {attempted} URL(s) attempted, {len(batch)} selected: "
                       + ", ".join(batch[:5])
                       + (f" (+{len(batch) - 5} more)" if len(batch) > 5 else ""))
-    unanswered = len(rows) - len(answered_rows(rows))
-    reasons = []
+    unanswered = attempted - len(answered_rows(rows))
+    reasons = list(input_errors)
+    if credential_error:
+        reasons.append({"code": "prerequisite_excluded", "detail": credential_error})
     if dropped:
         reasons.append({"code": "input_cap", "detail": f"{dropped} unique URL(s) deliberately omitted by --max-urls."})
+    payload_gaps = sum(bool(row.get("payload_errors")) for row in rows)
+    if payload_gaps:
+        reasons.append({"code": "payload_fields_unavailable", "detail": f"{payload_gaps} URL(s) included invalid/unknown fields; valid siblings were retained, rejected fields support no findings."})
     if unanswered:
         reasons.append({"code": "no_index_answer", "detail": f"{unanswered} attempted URL(s) failed or supplied no index status; see result rows."})
     coverage = collector_coverage(
         "unique_input_url",
-        "This invocation's unique requested URLs; returned counts nonempty index-status answers, not completeness of every API field or the property's URL universe.",
-        len(deduped), len(rows), len(answered_rows(rows)), dropped, reasons)
+        "This invocation's unique requested URLs; returned counts usable typed index-status observations, not completeness of every API field or the property's URL universe.",
+        None if unknown_input else len(deduped), attempted, len(answered_rows(rows)), None if unknown_input else excluded, reasons)
     if args.format == "json":
-        print(json.dumps({"producer": prov, "site": args.site, "inspected": len(rows),
-                          "not_inspected": dropped, "results": rows, "coverage": coverage}, indent=2))
+        print(json.dumps({"producer": prov, "site": args.site, "inspected": attempted,
+                          "not_inspected": excluded, "results": rows, "coverage": coverage, "input_errors": input_errors}, indent=2))
     else:
         print(render_markdown(rows, dropped))
         print("\n" + collector_coverage_md(coverage))

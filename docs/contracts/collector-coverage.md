@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
 Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py`, `gsc_pull.py` and `psi_pull.py` when collection
-reaches report emission. The remaining preflight script is not migrated; B-9 remains open. This schema is
+`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py`, `gsc_pull.py`, `psi_pull.py` and `preflight.py` when collection
+reaches report emission. All seven collection paths emit records, including parsed-invocation bootstrap failures. Final composed acceptance keeps B-9 open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -65,24 +65,23 @@ and loopback fixtures; the baseline inventory is historical.
 
 | Collector | Unit and input normalization | Usable return and carrier | Remaining boundary |
 |---|---|---|---|
-| `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Argument, input-list and local-file opening failures before report creation keep their existing stderr/exit behavior. |
-| `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
+| `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Parser errors/help remain non-collection boundaries. Input-list/local-file failures emit typed input_error rows; unknown list population stays null. |
+| `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A usable typed index-status observation under the single `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential/input-file failures emit a report, preserving known selected inputs and unknown list population. Nonpositive caps are rejected before credential access. |
 | `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
 | `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
-| `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Credential bootstrap and list-only paths keep their early boundaries. No provider-wide completeness, pagination or live acceptance claim. |
+| `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Unavailable ADC excludes six known operations before attempt. Explicit --list has one-operation coverage; missing site without --list is a no-network usage boundary. No provider-wide completeness, pagination or live acceptance claim. |
 | `psi_pull.py` | `input_url_entry`, singular `coverage` | Supplied entries retain duplicates; return requires valid URL-field percentile or lab score. | Origin-only context is preserved but not a direct URL measurement; missing field/lab is partial. |
-| `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
+| `preflight.py` | `local_probe` and `network_probe` under additive `coverage_by_unit` | Local returns are determined prerequisite outcomes; network returns are observed landing HTTP statuses. Visible rows are not the denominator. | Existing track-list `coverage` stays intact. Non-success access, incomplete bodies and unavailable required payloads are limitations, even with observed status. |
 
 For the first two collectors the finite inputs are accounted as requested =
 attempted + dropped; network/API failures remain attempted. `returned` excludes
 failures and unusable/incomplete responses rather than converting them into dropped
 inputs. Machine reasons currently include `input_failed`, `incomplete_body`,
 `input_cap` and `no_index_answer`. The shared builder supports null counts only with
-an explicit reason and emits state `unknown`; zero is never its default. Early
-bootstrap failures with no record are not complete coverage and remain a migration
-boundary. A consumer must require an actual record, not infer success from its absence.
+an explicit reason and emits state `unknown`; zero is never its default. Argument-parser errors/help and GSC missing-site usage remain explicit non-collection
+boundaries. Absence of a record is never complete coverage. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the six migrated standalone
+The small builder/Markdown block is duplicated intentionally in the seven migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
 `test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
 `test/sitemap_coverage_contract.py`, called by the same gate, compares the first three
@@ -261,13 +260,145 @@ survive. Unknown recognized metrics stay present with null p75/unknown band.
 Transport/API errors preserve their entry; raw and URL-encoded supplied-key echoes
 are redacted before diagnostic truncation. HTTP error-body read failure preserves
 the status and reports an unavailable body. Default Markdown and JSON include the
-same counts and component limitations. No-URL/unreadable-list bootstrap branches
-still precede report creation and remain open boundaries. Preflight has not yet
-migrated its broader presence heuristic; historical R-4 evidence is not a current
-claim of semantic equivalence to this stricter PSI measurement predicate.
+same counts and component limitations. No-URL and unreadable-list cases now emit
+bootstrap records, preserving explicit entries alongside an unknown list population.
+The following preflight slice aligns recognized finite measurement presence;
+historical R-4 evidence alone does not prove the current predicate.
 
 `test/psi_coverage_contract.py`, called by `test/test_output_contracts.py`, checks
 these predicates, six standalone block copies, a false-success mutation and an
 actual copied CLI against loopback. Live provider/installed-host evidence is
 NOT_RUN. The frozen task packet is
 `docs/evidence/plans/2026-10-13-fw06-psi-coverage.md`.
+
+## Preflight readiness accounting
+
+`preflight.py` preserves its JSON `coverage` track list and adds `coverage_by_unit`
+with two common records. `probe_operations` records local prerequisite outcomes
+and logical network attempts without credentials or provider bodies. Local scope
+is Python plus optional ADC when `--site` is supplied. A local return means a
+determined outcome, including unavailable credentials; the latter remains partial.
+Network scope is one property-list request for `--site`, three public requests for
+`--origin`, and PSI unless skipped. A missing ADC excludes exactly one known
+network operation before attempt. The property-match display row is derived from
+the same property-list response and never counts twice.
+
+Here a network return means an observed landing HTTP status. It does not mean a
+useful provider payload. Transport failure returns none; non-200, incomplete/capped
+or undecodable body and unusable required JSON add explicit limitations. These
+return semantics differ from full-body collectors and are stated in each record's
+scope. Known scheduling by flags is not an unknown site population. Only the first
+declared sitemap or fallback is requested; incomplete robots qualifies selection
+without implying a full crawl. Gzip/raw caps and malformed length remain explicit.
+Preflight admits equal normalized repeated Content-Length values, but marks
+contradictory repeated lengths and TE+CL combinations partial while retaining status.
+
+Typed empty GSC property lists can establish absence. Malformed rows cannot: valid
+matches survive, but unmatched property access stays unattempted/unknown while
+other probes continue. PSI scalar/wrong JSON and nested components never erase
+previous results. Finite recognized URL-field percentiles, origin context and lab
+score remain distinct; no field absence cause or synthetic score is invented.
+Known token echoes are redacted before truncation and failed ADC stderr is withheld.
+
+JSON/default Markdown show common records; `--format coverage` still performs
+probes and prints the track seed, then the common records. `--format provenance`
+remains a no-probe seed, without invented collection records. Exit 0 means a
+preflight report was produced, not that every prerequisite/source succeeded.
+A no-input parsed invocation emits zero partial records, no local/network probes and
+unlooked track statuses, then exits1. Provenance-only mode remains a no-probe seed.
+
+`test/preflight_coverage_contract.py`, integrated into output contracts, exercises
+the flags, measured versus inferred states, seven byte-identical builder copies,
+an actual accounting mutation and a standalone copy with loopback/fake ADC. No
+provider keys, live service acceptance or native-host evidence are involved.
+
+### Shared bounded transport admission
+
+All seven standalone collectors carry the same byte reader; they retain their
+own return units. `test/transport_contract.py` compares the copies and exercises
+actual loopback responses, copied scripts and false-completeness/uncapped-read
+mutations. Equal normalized repeated/comma-separated Content-Length values are
+admitted. Malformed or conflicting values, Transfer-Encoding combined with
+Content-Length, unsupported transfer codings and repeated/unsupported content
+encodings cannot certify a complete body. Supported chunked framing is decoded
+by urllib. Identity and gzip are the supported content encodings.
+
+The reader limits raw bytes and gzip output independently, requesting one sentinel
+byte beyond each budget. Page audit uses `--max-bytes` for **both** budgets; a small
+compressed representation does not authorize a larger decoded report. A recoverable
+HTML prefix remains partial and supports only existing fragment findings; an
+incomplete body with no recovered bytes is a failed fetch. Sitemap XML requires a
+complete body. Agent-surface/preflight retain observed status while naming body
+limitations. Their different returned-unit definitions above still apply.
+
+PSI, GSC and URL Inspection use `MAX_RESPONSE_BYTES = 8_000_000` for both raw and
+decoded provider JSON. This bounds one response, not provider population or traffic.
+An incomplete body supplies no usable JSON envelope and no typed empty row set.
+HTTPError bodies use the same bounds; read failures do not escape to erase other
+operations, and known credential echoes are redacted before diagnostic truncation.
+The preflight JSON budget remains caller-selected. No provider access or universal
+HTTP protocol validation is established by these local transport controls.
+
+
+### URL Inspection field admission
+
+`url_inspection.py:parse` admits recognized enum domains, nonempty coverage text,
+valid absolute HTTP(S) canonical/referring/sitemap URLs and UTC crawl timestamps.
+Unknown-only/scalar payloads, unspecified/reserved statuses alone and empty arrays
+supply no usable index answer. Rich-result information alone does not certify
+index status. Google marks `PARTIAL` reserved; it is not an indexed verdict here.
+The [source notes](../evidence/plans/2026-10-13-url-inspection-admission.md) link the
+API schema and distinguish the collector's conservative admission policy.
+
+A usable sibling survives rejected fields. `payload_errors` lists diagnostic field
+paths and `invalid_index_fields` preserves malformed presence separately from
+absence; arbitrary rejected provider values are not copied into diagnostics.
+An invalid crawl time cannot establish never-crawled, and an invalid declared
+canonical cannot establish that the page omitted it. `payload_fields_unavailable`
+keeps coverage partial even if every input supplies some usable observation. The
+confidence footer refers to admitted fields; unknown siblings remain unknown.
+`test/inspection_payload_contract.py` covers mixed actual main/copy execution,
+wrong-type/reserved/unknown fields and a false-answer source mutation. Credential
+and input-list handling follows the B1 contract below.
+
+
+### B1: input resolution, credentials and explicit list mode
+
+Successful argument parsing can still fail to resolve inputs. Those invocations
+emit the usual carrier with diagnostics; they never invent attempted probes.
+`input_errors` records no-input/unreadable-list problems for object collectors.
+An unreadable list has unknown requested/dropped population, even when explicit
+known URLs are processed. A readable empty list has known zero inputs and an
+explicit partial reason. Indented comments and blanks are not URL entries.
+
+Page audit retains an array. Its error-only paths emit a `record_type=input_error`
+row with an empty URL label or the supplied local base URL. This is an input-resolution
+record, not a fetched page; array length is not the input denominator. Unreadable URL
+lists have zero attempts and unknown population. An unreadable/undecodable explicitly
+selected local HTML file counts one attempted local input and zero returned bodies.
+Successful page rows retain their previous shape, and all rows repeat the same
+invocation coverage. Consumers can continue selecting `.[].url` and must use coverage
+and `record_type` to distinguish input errors from page observations.
+
+PSI retains explicit duplicates. URL Inspection deduplicates then caps known inputs;
+a failed optional file does not erase that known selection. Missing ADC means no API
+attempt. Known selected/capped exclusions remain visible in `not_inspected` and
+per-input `attempted=false` rows; a failed list keeps total dropped unknown. ADC
+acquisition has a20-second subprocess timeout, rejects empty output and withholds raw
+private stderr. Unknown provider populations do not become zero when credentials fail.
+
+GSC requires `--site` for the full report or explicit `--list` for property listing.
+Missing both exits1 as usage before credential acquisition/network; it no longer
+implicitly lists properties. `--list --format json` returns an object with `mode=list`,
+`sites`, membership observability, one `api_request` record and diagnostics. A valid
+empty listing exits0; unavailable/malformed-only listing exits1. Valid siblings of
+malformed rows survive with partial status. Full-report ADC failure excludes the six
+known API operations before attempt; each row population remains unknown.
+
+Sitemap no-input records zero documents without a phantom root. Preflight no-input
+records zero local/network operations and leaves track statuses unlooked, including
+no Python/ADC checks. `--format provenance` remains a no-probe seed. Page, Inspection
+and agent-surface required-argument parser errors, all parser/help exits, and GSC
+missing-site usage are explicitly outside collection; no success follows from no
+record. `test/bootstrap_contract.py` checks these bounds under outer credential/HTTP
+deny guards, then copied standalone CLIs with fake ADC and denied network entry points.
