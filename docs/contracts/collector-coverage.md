@@ -1,17 +1,20 @@
 # Collector coverage migration contract
 
-Status: defined for the next B-9 migration, **not emitted uniformly by the current
-collectors**. The FW06 provenance slice changes redirect evidence and adds gzip
-integration fixtures; it does not close B-9. This is the single proposed schema home
-for that migration, separate from the existing audit-track coverage vocabulary.
+Status: first B-9 migration slice emits `collector-coverage/1` from
+`page_audit.py` and `url_inspection.py` when collection reaches report emission.
+The remaining five scripts are not migrated; B-9 remains open. This schema is
+separate from the existing audit-track coverage vocabulary. The earlier FW06
+provenance slice preserves its redirect and gzip evidence.
 
-Every future collector coverage record must declare its unit and scope before its
+Every migrated collector coverage record declares its unit and scope before its
 counts. URLs, response bodies, API rows and checks are different units and must not
 be summed. Use `null` for an unknown quantity, with a reason. Zero requires a counted
 empty set. A fetch failure, unvisited page window or missing field is not zero rows.
 
 | Field | Meaning |
 |---|---|
+| `schema` | Fixed identifier `collector-coverage/1`. |
+| `scope` | The invocation, input normalization and meaning of a usable return; never an implicit whole-site claim. |
 | `unit` | What one item means, for example an input URL or returned API row. |
 | `requested` | Known input items requested by the operator, before a local cap; null if the remote universe is not enumerable. |
 | `attempted` | Known items actually attempted. Retries and redirect hops belong in transport evidence, not extra logical items. |
@@ -55,3 +58,34 @@ Source: owner B-9 and FW06 code inspection at baseline
 `test/test_page_audit.py`, `test/test_collectors.py`, `test/test_agent_surface.py`
 and `test/audit_regressions/fw06_probe_provenance.py`. These tests do not yet verify
 the proposed common schema.
+
+## First migration slice: invocation records
+
+| Collector | Unit and input normalization | Usable return and carrier | Remaining boundary |
+|---|---|---|---|
+| `page_audit.py` | `input_url_entry`; duplicates retained exactly as input, or `local_file` for offline HTML | A complete readable HTML body, including a genuinely empty body. A cap or incomplete gzip stream is partial, even when recovered text can be analyzed. The existing JSON array is preserved; each element repeats the **same invocation coverage record**, like its producer block. Read it once; never sum the copies. Markdown prints it once. | Completeness excludes JavaScript rendering and sitewide discovery. Argument, input-list and local-file opening failures before report creation keep their existing stderr/exit behavior. |
+| `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
+| `sitemap_audit.py` | Migration pending | Sitemap traversal, indexes and samples need their own universe boundary. | No common coverage claim. |
+| `agent_surface.py` | Migration pending | Instrument hidden discovery attempts before counting requests. | Displayed checks are not all network attempts. |
+| `gsc_pull.py` | Migration pending | Distinguish API rows, windows and unobserved tails. | No inference of missing rows as zero. |
+| `psi_pull.py` | Migration pending | Define field-data absence separately from lab-response success. | No provider completeness claim. |
+| `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
+
+For the first two collectors the finite inputs are accounted as requested =
+attempted + dropped; network/API failures remain attempted. `returned` excludes
+failures and unusable/incomplete responses rather than converting them into dropped
+inputs. Machine reasons currently include `input_failed`, `incomplete_body`,
+`input_cap` and `no_index_answer`. The shared builder supports null counts only with
+an explicit reason and emits state `unknown`; zero is never its default. Early
+bootstrap failures with no record are not complete coverage and remain a migration
+boundary. A consumer must require an actual record, not infer success from its absence.
+
+The small builder/Markdown block is duplicated intentionally in the two standalone
+scripts. `test/collector_coverage_contract.py`, invoked by the existing
+`test/test_output_contracts.py` gate, compares those copies and independently checks
+the schema. Its loopback cases cover redirect hops as one logical input, connection
+failure, HTTP 404, an empty complete body, full/capped/incomplete/corrupt gzip, mixed
+results and duplicates. Mocked URL Inspection cases cover caps, absent index data,
+API failure and exact input deduplication without credentials or provider traffic.
+Markdown and JSON counts/state agree in these fixtures. This does not establish live
+provider, browser or native-host acceptance.

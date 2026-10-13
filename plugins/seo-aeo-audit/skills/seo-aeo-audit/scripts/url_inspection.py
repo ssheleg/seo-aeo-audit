@@ -225,6 +225,48 @@ def _flat(text: str, limit: int = 200) -> str:
     return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
 
 
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
+
+
 def answered_rows(rows: list[dict]) -> list[dict]:
     """The rows the index actually answered for.
 
@@ -382,6 +424,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--quota-project", help="GCP project that meters the API calls")
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
     args = ap.parse_args(argv)
+    if args.max_urls < 1:
+        ap.error("--max-urls must be at least 1")
 
     urls = list(args.urls)
     if args.urls_file:
@@ -419,11 +463,22 @@ def main(argv: list[str]) -> int:
                       f"property {args.site}, {len(batch)} URL(s) inspected: "
                       + ", ".join(batch[:5])
                       + (f" (+{len(batch) - 5} more)" if len(batch) > 5 else ""))
+    unanswered = len(rows) - len(answered_rows(rows))
+    reasons = []
+    if dropped:
+        reasons.append({"code": "input_cap", "detail": f"{dropped} unique URL(s) deliberately omitted by --max-urls."})
+    if unanswered:
+        reasons.append({"code": "no_index_answer", "detail": f"{unanswered} attempted URL(s) failed or supplied no index status; see result rows."})
+    coverage = collector_coverage(
+        "unique_input_url",
+        "This invocation's unique requested URLs; returned counts nonempty index-status answers, not completeness of every API field or the property's URL universe.",
+        len(deduped), len(rows), len(answered_rows(rows)), dropped, reasons)
     if args.format == "json":
         print(json.dumps({"producer": prov, "site": args.site, "inspected": len(rows),
-                          "not_inspected": dropped, "results": rows}, indent=2))
+                          "not_inspected": dropped, "results": rows, "coverage": coverage}, indent=2))
     else:
         print(render_markdown(rows, dropped))
+        print("\n" + collector_coverage_md(coverage))
         print("\n" + provenance_md(prov))
     # The report already says the run supports nothing; the exit status has to say
     # it too. SKILL.md's own invocation redirects stdout to a file, so an agent that
