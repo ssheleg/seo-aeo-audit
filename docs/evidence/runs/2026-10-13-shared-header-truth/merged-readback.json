@@ -1,0 +1,11 @@
+{
+  "merge": "00601e620f7d273893b6a97566a26abd9e9b520e",
+  "pr": "https://github.com/ssheleg/seo-aeo-audit/pull/39",
+  "published_source": "c5a32d23da41d7717942f33995228b36971d2657",
+  "version": "0.26.6",
+  "integrity": "sha512-lfziRCbJU2M1iC2cbUxBnxvjagbpHHbyF8ywA9ELg7wx5PwqxVkFWlJqcU42N3ZWZTP7D514K4sYVygZMfIPqw==",
+  "files": 46,
+  "bytes": 1119910,
+  "whole_payload_equal": true,
+  "scope": "complete merged-tree npm payload paths, SHA256, sizes and modes versus immutable 0.26.6 registry receipt; no provider/native/model claim"
+}

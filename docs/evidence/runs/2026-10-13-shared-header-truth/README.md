@@ -32,3 +32,11 @@ Focused guard source: hub commit 2c4f099958269900cacc6a436c18e4b05b35ff12,
 `test/validate.py`. Reproduce the current focused verdict with
 `python3 docs/evidence/runs/2026-10-13-shared-header-truth/reproduce.py /path/to/hub/test/validate.py`
 from the owner checkout; inspect the selected hub source before changing that input.
+
+## Normal integration readback
+
+PR39 normally merged at `00601e620f7d273893b6a97566a26abd9e9b520e` after genuine
+pull-request validation. [Merged-tree readback](merged-readback.json) compares all
+46 npm payload files (1,119,910 bytes), paths, SHA256, sizes and modes to the immutable
+0.26.6 registry receipt: equal. No new version or tag is needed for this source-comment
+and evidence successor. No provider, native-host or model result is inferred.
