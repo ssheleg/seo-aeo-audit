@@ -77,3 +77,46 @@ Separately observed runner hygiene issue: `test/negatives.py --help` is not a he
 path; unrecognized options currently start all groups. Use its documented
 `--list`/`-k` interface. Any future CLI argument fix belongs to a separate bounded
 runner packet with no-allocation negatives, not this collector migration.
+
+## Carrier and denominator decisions after consumer inventory
+
+The current three migrated collectors and their tests access `coverage` as one
+record. `preflight.py` already emits a different track-vocabulary object under
+that name. No existing carrier or schema is repurposed. Agent-surface will add
+`coverage_by_unit`, a named map containing `network_probe` and, when an offline
+spec was supplied, `local_file`. Each value is the unchanged strict
+`collector-coverage/1` record. The independent reader will explicitly recognize
+these supported carriers without interpreting preflight track coverage as a
+collector record. Ambiguous competing collector carriers must refuse.
+
+The network unit is one scheduled logical request invocation in this bounded
+collector workflow, including hidden alternatives and distinct Accept/UA
+variants. Repeated identical invocations remain separate: the count describes
+what actually ran. Physical redirect hops/retries belong to transport evidence,
+not extra logical attempts. A returned item means an observed landing status and
+complete response body (including an empty body); it does not assert that every
+analysis field answered or that a 200 document belongs to this product. A 404
+can be a returned probe answering absence; status/headers remain observed even
+when incomplete body excludes that request from complete returned responses.
+
+Requested counts are scoped to this conditional workflow, not all site URLs.
+A body/fetch failure that prevents a discovery-dependent branch from resolving
+its input set requires unknown requested population and an explicit branch
+reason. A failed fixed input remains a known attempted item without a returned
+response. Alternatives deliberately unnecessary after successful selection are
+outside the selected workflow's requested set, not failed probes. Instrument the
+branch boundary, never infer this distinction from the number of rendered rows.
+No cap currently exists over invocation count, so do not invent numeric drops for
+unseen descendants; known omitted items alone can be dropped.
+
+The local-file record is independent: one supplied OpenAPI file, one attempted
+read, returned only when usable for the declared JSON-object analysis. Network
+and local counts are never summed. An absent local-file input produces no local
+record, not a fabricated failure. Existing findings/checks and producer keys stay
+unchanged; JSON and Markdown carry all present per-unit records.
+
+Before implementing, freeze tests for the 47/23 counterexample, header variants,
+selected alternates, fixed versus blocked-discovery failures, mixed offline/network
+runs and old singular-carrier compatibility. The whole-site unknown universe is
+not a numeric requested denominator, and this packet does not certify provider
+or native-host behavior.
