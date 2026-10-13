@@ -1,3 +1,12 @@
+## R30 SEO owner contracts — 2026-10-13
+
+Board grammar/status parsing and release ancestry/full-history protection are
+focused-green: 28 real-validator/table controls plus 27 local-Git release controls.
+See [receipt](evidence/runs/2026-10-13-r30-owner-gates.md) and
+[packet](evidence/plans/2026-10-13-r30-owner-gates.md). Next: independent review,
+compose with separately reviewed GSC candidate, one exact owner full gate and
+normal genuine PR integration. No package version or publication action here.
+
 ## Agent-surface independent correction acceptance — 2026-10-13
 
 Core source `8e2ee005fa21a3f1dc289c919b26d506a58c22d6` passed independent

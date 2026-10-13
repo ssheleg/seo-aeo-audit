@@ -114,3 +114,14 @@ python3 test/residue_test.py
 
 Read its exit status as its own command, not behind a pipe (standing instruction
 #6).
+
+
+## Owner board and release grammar
+
+`test/owner_board.py` owns bounded ID-table grammar; `test/validate.py` consumes it
+and uses its cell tokenizer for status lookup. The board keeps explicit headers
+for each declaration block. `test/owner_release.py` protects the supported live
+ancestry/full-history step shape. `test/owner_board_contract.py`, called by the
+existing output-contract gate, proves real validator negatives; the audit
+regression `r30_owner_release.py` separately executes annotated/ancestry shell
+against local Git. This is source/fixture evidence, not a hosted publication claim.
