@@ -566,6 +566,11 @@ for _rel in ("templates/audit-report.template.md",
           f"{_rel}: {pre.validate_provenance(_txt)}")
 
 
+# B-9 common coverage contract, staged separately from track coverage.
+from collector_coverage_contract import run as check_collector_coverage
+check_collector_coverage(pa, ui, check, ROOT, _TMP)
+
+
 if not failures:
     residue.close_case("output contracts")
 residue.report()

@@ -462,6 +462,50 @@ class Parser(HTMLParser):
 # --- analysis --------------------------------------------------------------
 
 
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
+
+
 def _visible_text(doc: Doc, include_links: bool = True) -> str:
     """Extractable text in source order.
 
@@ -1275,12 +1319,25 @@ def main(argv: list[str]) -> int:
              f"{len(results)} URL(s): " + ", ".join(r.get("url", "?") for r in results[:5])
              + (f" (+{len(results) - 5} more)" if len(results) > 5 else ""))
     prov = provenance("page_audit.py", argv, scope)
+    errors = sum("error" in r for r in results)
+    incomplete = sum(bool(r.get("truncated")) for r in results if "error" not in r)
+    reasons = []
+    if errors:
+        reasons.append({"code": "input_failed", "detail": f"{errors} input(s) could not be read or analyzed; see result errors."})
+    if incomplete:
+        reasons.append({"code": "incomplete_body", "detail": f"{incomplete} body/bodies were capped or incompletely decoded; fragment observations are not complete page totals."})
+    coverage = collector_coverage(
+        "local_file" if args.file else "input_url_entry",
+        "This invocation's input entries (duplicates retained); returned counts complete readable HTML bodies, including empty bodies. Does not cover JavaScript rendering or sitewide discovery.",
+        len(results), len(results), len(results) - errors - incomplete, 0, reasons)
     if args.format == "json":
         for r in results:
             r["producer"] = prov
+            r["coverage"] = coverage
         print(json.dumps(results, ensure_ascii=False, indent=2))
     else:
         print(to_markdown(results))
+        print("\n" + collector_coverage_md(coverage))
         print("\n" + provenance_md(prov))
     # A run that analyzed nothing is not a success, whatever the docstring used to
     # say. Partial failure keeps exit 0 — the error rows are the report — but a run

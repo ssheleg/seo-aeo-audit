@@ -229,3 +229,19 @@ invocation, flags, quotas and the per-script limits.
 Moved out of `SKILL.md` on 2026-08-16 for the body budget. Every invocation was
 already documented here; what was in the body was the summary of this file.
 
+
+## Invocation coverage in page and index inspection
+
+`page_audit.py` and `url_inspection.py` additionally emit `collector-coverage/1`:
+`unit`, explicit `scope`, `requested`, `attempted`, `returned`, `dropped`, `state`
+and `reasons`. Counts belong to one invocation, never the whole site. A null count
+means unknown and requires a reason. A failed attempt is attempted, not dropped.
+
+Page audit preserves its JSON array and repeats one batch record on each element;
+read one copy rather than summing it. Its returned count includes complete empty HTML
+and excludes capped or incompletely decoded bodies. URL Inspection preserves its JSON
+object and adds `coverage`; requested URLs are deduplicated before the cap, and a
+usable return requires index-status data. Redirect/retry hops do not add logical
+inputs. Markdown prints the same bounded counts and state. Early argument, input-file
+or credential bootstrap errors can still exit before a record is produced; absence
+is not complete coverage. Other collectors are still migrating.

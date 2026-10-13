@@ -1,3 +1,24 @@
+# FW06 common coverage first slice, 2026-10-13
+
+Branch `fix/fw06-collector-coverage`, based on release candidate `6a443b4`,
+implements common invocation coverage in page audit and URL Inspection. Read the
+[task receipt](evidence/runs/2026-10-13-fw06-coverage.md) and
+[schema/migration matrix](contracts/collector-coverage.md). No version or workflow
+change; B-9 remains open for five collectors and pre-report bootstrap failures.
+Baseline two missing-emission controls were red; restored focused controls pass
+115/115 after the independent partial-unknown bound correction, with three
+intended real-source mutation refusals. No live/provider or
+native-host acceptance is claimed.
+
+Accepted 0.26.5 main `bccb630e79730e2a7058b74a2130ddfe4f4662aa` was merged
+without rewriting this published branch; its standard retro stamp is preserved.
+Owner `npm test` passed at `7976831`, including coverage 115/115; see receipt.
+Independent corrected-source review passed at `7976831` with replayed 115/115.
+Next: freeze the candidate for genuine required checks and normal PR delivery.
+Keep the parent release branch and manifests untouched.
+
+---
+
 # FW01/FW06 patch release candidate, 2026-10-13
 
 Branch `release/fw06-0.26.5` prepares 0.26.5 from accepted main
