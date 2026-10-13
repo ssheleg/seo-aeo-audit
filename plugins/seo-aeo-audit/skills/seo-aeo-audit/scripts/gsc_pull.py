@@ -187,6 +187,8 @@ def _bounded_gzip(raw, max_bytes, salvage=False):
     import gzip
     import io
     import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
     try:
         with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
             decoded = stream.read(max_bytes + 1)

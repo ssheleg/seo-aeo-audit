@@ -49,3 +49,15 @@ Logs are local convenience copies; commands, controls and this report are tracke
 
 Independent T1 review: pending. Aggregate full gate/eligible PR/merge: pending for
 the coherent composed wave. Provider/live/native effectiveness: NOT_RUN.
+
+## Independent review correction — absent gzip member
+
+The parent reproduced `_bounded_gzip(b"",128)` incorrectly returning complete at
+`e6ffe05074287a792031874920469d9bf4394c41`: Python's GzipFile treats an absent stream
+as empty output. Admission now requires a gzip member header before bounded
+inflation. A valid member encoding an empty payload remains a positive. Sitemap's
+local `.gz` decoder uses the same helper, retaining a distinct XML parse decision.
+Expanded controls cover all seven actual loopback zero-byte gzip responses,
+seven missing-member negatives/seven valid-empty positives and actual local empty
+`.gz` main output. Final transport170 controls PASS. This fixes observed transport
+completeness, not a claim that empty decoded XML is a returned sitemap document.

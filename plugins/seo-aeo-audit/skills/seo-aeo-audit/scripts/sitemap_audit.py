@@ -174,6 +174,8 @@ def _bounded_gzip(raw, max_bytes, salvage=False):
     import gzip
     import io
     import zlib
+    if not raw.startswith(b"\x1f\x8b"):
+        return b"", False, "gzip body has no valid member"
     try:
         with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
             decoded = stream.read(max_bytes + 1)
@@ -329,13 +331,9 @@ def decode_body(raw: bytes, zipped: bool) -> str:
     if len(raw) > MAX_BYTES_PER_MAP:
         raise IncompleteBody("raw body exceeds the byte budget")
     if zipped:
-        try:
-            with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
-                raw = stream.read(MAX_BYTES_PER_MAP + 1)
-        except (OSError, EOFError, zlib.error) as exc:
-            raise IncompleteBody("gzip stream is corrupt or incomplete") from exc
-        if len(raw) > MAX_BYTES_PER_MAP:
-            raise IncompleteBody("uncompressed body exceeds the byte budget")
+        raw, complete, error = _bounded_gzip(raw, MAX_BYTES_PER_MAP)
+        if not complete:
+            raise IncompleteBody(error)
     return raw.decode("utf-8", "replace")
 
 

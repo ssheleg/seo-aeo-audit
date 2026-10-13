@@ -52,10 +52,11 @@ def run(check, root, workspace):
             if mode in ('gzip', 'gzip-cap', 'gzip-short'): raw = gzip.compress(raw)
             if mode == 'gzip-short': raw = raw[:-6]
             if mode == 'gzip-corrupt': raw = b'bad gzip'
+            if mode == 'gzip-absent': raw = b''
             if mode == 'error': raw = (key + ' offline%2Fkey%2Btransport').encode()
             self.send_response(403 if mode == 'error' else 200)
             self.send_header('Content-Type', 'text/html' if name == 'page_audit' else 'application/json')
-            if mode in ('gzip', 'gzip-cap', 'gzip-short', 'gzip-corrupt'): self.send_header('Content-Encoding', 'gzip')
+            if mode in ('gzip', 'gzip-cap', 'gzip-short', 'gzip-corrupt', 'gzip-absent'): self.send_header('Content-Encoding', 'gzip')
             if mode == 'encoding': self.send_header('Content-Encoding', 'br')
             if mode == 'content-repeat':
                 self.send_header('Content-Encoding', 'identity'); self.send_header('Content-Encoding', 'br')
@@ -101,7 +102,7 @@ def run(check, root, workspace):
             for mode in ('good', 'equal', 'gzip', 'chunked'):
                 valid, result = invoke(name, mode)
                 ok(valid, name + ' admits complete ' + mode)
-            for mode in ('conflict', 'malformed', 'te-cl', 'te-unknown', 'encoding', 'content-repeat', 'gzip-short', 'gzip-corrupt', 'raw-cap', 'gzip-cap'):
+            for mode in ('conflict', 'malformed', 'te-cl', 'te-unknown', 'encoding', 'content-repeat', 'gzip-short', 'gzip-corrupt', 'gzip-absent', 'raw-cap', 'gzip-cap'):
                 valid, result = invoke(name, mode, 128 if mode.endswith('cap') else 4096)
                 ok(not valid, name + ' refuses complete-body claim for ' + mode)
                 if name in ('agent_surface', 'preflight'):
@@ -158,6 +159,22 @@ def run(check, root, workspace):
         isolated = importlib.util.module_from_spec(spec); sys.modules[spec.name] = isolated; spec.loader.exec_module(isolated)
         raw, complete, _ = isolated._bounded_response(Response(b'{}', [('Content-Length', '2'), ('Content-Length', '900')]), 64)
         ok(raw == b'{}' and not complete, name + ' standalone copy executes transport without sibling module')
+    for name in HOMES:
+        raw, complete, _ = mods[name]._bounded_gzip(b'', 128)
+        ok(not complete, name + ' requires an actual gzip member')
+        raw, complete, _ = mods[name]._bounded_gzip(gzip.compress(b''), 128)
+        ok(raw == b'' and complete, name + ' valid compressed empty payload stays complete')
+    sitemap = mods['sitemap_audit']
+    try: sitemap.decode_body(b'', True)
+    except sitemap.IncompleteBody: ok(True, 'local absent gzip member is incomplete transport')
+    else: ok(False, 'local absent gzip member is incomplete transport')
+    ok(sitemap.decode_body(gzip.compress(b''), True) == '', 'local compressed empty stream has complete transport, separately invalid XML')
+    from collector_coverage_contract import capture
+    empty_map = Path(workspace) / 'empty.xml.gz'; empty_map.write_bytes(b'')
+    code, output, _ = capture(sitemap.main, ['--file', str(empty_map), '--format', 'json'])
+    report = json.loads(output)
+    ok(code == 1 and report['coverage']['attempted'] == 1 and report['coverage']['returned'] == 0 and 'valid member' in output, 'actual local empty .gz report records failure without losing carrier')
+
     original_gzip = gzip.GzipFile
     class BudgetedGzip(original_gzip):
         def read(self, size=-1):
