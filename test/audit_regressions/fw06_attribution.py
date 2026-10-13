@@ -134,6 +134,21 @@ for group_index, step in enumerate(STEPS):
 # landed while only its semantic branch is disabled. Anchor liveness still fails.
 repo = box/'repo'
 shutil.copytree(ROOT, repo, ignore=shutil.ignore_patterns('.git','__pycache__','node_modules'))
+# The historic missing-producer mutation also made Python invalid. Keep the
+# same identity but require a compiling mutant, so an unrelated syntax failure
+# cannot terminate the legitimate diagnostic section ahead of its intended row.
+sitemap = repo/'plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/sitemap_audit.py'
+sitemap_original = sitemap.read_bytes()
+producer_idx = next(i for i,l in enumerate(lines) if 'plantq "a script emitting a payload with no producer block"' in l)
+producer_command = lines[producer_idx+1].strip()
+mutant = subprocess.run(['bash','-c','S=plugins/seo-aeo-audit/skills/seo-aeo-audit\n'+producer_command],cwd=repo,capture_output=True,text=True)
+check(mutant.returncode == 0, 'producer mutation landed')
+compile(sitemap.read_text(), str(sitemap), 'exec')
+check(sitemap.read_bytes() != sitemap_original, 'producer mutation compiles and changes source')
+producer_run = subprocess.run([sys.executable,'-B','test/validate.py'],cwd=repo,capture_output=True,text=True)
+check(producer_run.returncode != 0 and matches(producer_run.stdout+producer_run.stderr,
+      'sitemap_audit.py never calls provenance('), 'compiling producer mutation names intended refusal')
+sitemap.write_bytes(sitemap_original)
 skillfile = repo/'plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md'
 sub(str(skillfile), 'most-requested of the **33**', 'most-requested of the **30**')
 validator = repo/'test/validate.py'

@@ -97,3 +97,13 @@ helper is undergoing affected group replays before final independent acceptance.
 The workflow and all 63 current needle/mutation mappings remain byte-identical to
 the source-bound inventory. No general shell interpretation or log authenticity
 guarantee is claimed beyond the documented owner grammar.
+
+The stricter matcher then exposed an old mutation's collateral syntax error: the
+sitemap missing-producer plant replaced a positional call with a keyword-plus-
+positional `dict` call. The compiling replacement now uses `dict(args=argv,
+scope=...)`, preserving the intended missing-provenance-call defect. A dedicated
+replay executes the exact workflow command, compiles the mutant, and requires the
+semantic diagnostic. Focused controls now pass 69/69; the earlier full-suite pass
+did not establish this corrected mutant. Affected workflow groups are replayed
+again before acceptance. This changes one mutation command and requires the next
+source-bound inventory snapshot; the prior inventory remains historical evidence.
