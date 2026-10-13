@@ -221,9 +221,9 @@ jobs:
           python3 - <<'PY'
           p = '/tmp/canon-copy/plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/url_inspection.py'
           s = open(p, encoding="utf-8").read()
-          old = 'idx.get("userCanonical")'
-          assert old in s, "PLANT DID NOT LAND: " + old[:40] + " not in " + p
-          open(p, "w", encoding="utf-8").write(s.replace(old, 'idx.get("userDeclaredCanonical")', 1))
+          old = '"userCanonical": "user_canonical"'
+          assert s.count(old) == 1, "PLANT DID NOT LAND uniquely: " + old[:40] + " in " + p
+          open(p, "w", encoding="utf-8").write(s.replace(old, '"userDeclaredCanonical": "user_canonical"', 1))
           PY
           if TMPDIR=/tmp/canon-copy-residue python3 /tmp/canon-copy/test/test_url_inspection.py; then
             echo "ERROR: tests passed while reading a field the API does not return"
