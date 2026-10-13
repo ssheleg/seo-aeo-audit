@@ -1,0 +1,15 @@
+OK: shipped alias
+OK: unregistered snapshot
+OK: second ledger maker
+OK: changed ledger shape
+OK: context-manager shape drift
+OK: second context-manager
+OK: legitimate ledger and context managers
+OK: comments and strings
+FAIL: unreadable source directory ('unreadable source directory', [])
+OK: dependency excluded
+OK: public validator healthy + alias/from-import/exemption-drift controls
+residue: 1 of 11 temp tree(s) KEPT — the case did not pass and the copy is the evidence:
+    /var/folders/3r/yrdx_c051cv22q3r3k0ylvdm0000gn/T/seo-aeo-audit-test-7553-k8y2tptp-temp-guard  <- unreadable source directory
+  10 removed. When you are done reading them: rm -rf /var/folders/3r/yrdx_c051cv22q3r3k0ylvdm0000gn/T/seo-aeo-audit-test-7553-k8y2tptp-temp-guard
+FW01 source guard: 10/11 passed

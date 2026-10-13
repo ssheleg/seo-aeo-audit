@@ -604,6 +604,7 @@ _GUARD_FAMILIES = (
     "run stamps",
     "declared schemas",
     "plant attribution",
+    "temporary-tree source guard",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -2283,6 +2284,121 @@ def check_plant_attribution():
 
 check_plant_attribution()
 
+
+# ------------------------------ every temp tree has a reviewed owner (FW01)
+# Port of make-skill c6b047057559f8dd2fe12dec59e4a4bee374fac2 / agent-stack AG-06a.
+# SEO keeps three exact context-manager exceptions; no file-wide exemption.
+#
+# `test/residue.py` accounts only for trees taken through `workspace()`. FW01
+# extends the family source guard to repository Python sources. Shipped scripts
+# and helpers outside test/ used to escape this check. Each exception has an exact
+# path, count and call shape, not a whole-file exclusion. This is a source lint,
+# not runtime proof.
+# Explicit dependency/generated/fixture exclusions are below. JS/shell allocations
+# are not scanned. As in agent-stack's reference implementation, the lexical matcher
+# misses chained receivers, stored function references, getattr and parenthesised
+# multi-line renaming imports. Its triple-double-quote blanking is lexical, not a
+# Python parse: embedded quote markers can hide code. A green run does not prove
+# absence of allocations expressed in unsupported forms.
+#
+# The pattern is assembled from parts on purpose: spelled out, it would contain the very
+# literals it looks for, and this file is inside the set it scans.
+# Any receiver counts (`tempfile.`, an alias such as `tf.`, or none after a from-import), and
+# a from-import that renames one of the two is refused outright: `as m` would hide the call.
+TEMP_MAKERS = re.compile(r"(?<![\w.])(?:[A-Za-z_]\w*\.)?(?:" + "mkdtemp" + "|Temporary"
+                         + "Directory" + r")\s*\(|\bfrom\s+tempfile\s+import\b[^\n]*\b(?:"
+                         + "mkdtemp" + "|Temporary" + "Directory" + r")\s+as\b")
+TEMP_SCAN_SKIP_DIRS = {".git", "node_modules", "__pycache__", "fixtures", ".venv",
+                       "venv", ".tox", ".pytest_cache", ".mypy_cache", "build", "dist"}
+TEMP_TREE_ALLOWED = {
+    os.path.join("test", "residue.py"): (1, "the ledger allocates attributed trees", "ledger"),
+    os.path.join("test", "validate.py"): (1, "context-managed compiled-bytecode scratch", "compile"),
+    os.path.join("test", "test_agent_surface.py"): (1, "context-managed offline spec fixture", "agent_surface"),
+    os.path.join("docs", "evidence", "runs", "2026-10-13-shared-header-truth", "reproduce.py"):
+        (1, "historical context-managed header proof, retained unchanged", "header_proof"),
+}
+# Pin the one maker's attributed call, not just its count. Accounting/cleanup behavior
+# remains the job of residue_test.py; this guard does not prove append/atexit semantics.
+TEMP_LEDGER_FORM = re.compile(
+    r"^\s*path\s*=\s*tempfile\." + "mkdtemp" +
+    r"\(prefix=PREFIX \+ RUN_TAG, suffix=[\"']-[\"'] \+ tag\)\s*$")
+TEMP_FORMS = {
+    "ledger": TEMP_LEDGER_FORM,
+    "compile": re.compile(r"^\s*with tempfile\.TemporaryDirectory\(\) as _tmp:\s*$"),
+    "agent_surface": re.compile(r"^\s*with tempfile\.TemporaryDirectory\(\) as tmp:\s*$"),
+    "header_proof": re.compile(r"^\s*with tempfile\.TemporaryDirectory\(prefix='seo-shared-header-'\) as folder:\s*$"),
+}
+
+
+def temp_maker_hits(text):
+    """Lexical maker hits with source line numbers; see bounds above."""
+    code = "\n".join("" if ln.lstrip().startswith("#") else ln for ln in text.split("\n"))
+    code = re.sub(r'"""(?:.|\n)*?"""', lambda m: "\n" * m.group(0).count("\n"), code)
+    return [(hit.group(0), code[:hit.start()].count("\n") + 1)
+            for hit in TEMP_MAKERS.finditer(code)]
+
+
+def temp_maker_hit(text):
+    hits = temp_maker_hits(text)
+    return hits[0] if hits else None
+
+
+def temp_scan_files(root):
+    found = []
+    def cannot_read(error):
+        relative = os.path.relpath(error.filename or root, root)
+        fail(f"{relative}: temp tree scan cannot read directory ({error.__class__.__name__})")
+    for dirpath, dirnames, filenames in os.walk(root, onerror=cannot_read):
+        dirnames[:] = sorted(d for d in dirnames if d not in TEMP_SCAN_SKIP_DIRS)
+        found.extend(os.path.join(dirpath, f) for f in filenames if f.endswith(".py"))
+    return sorted(found)
+
+
+def check_temp_trees_go_through_the_residue_ledger(root):
+    files = temp_scan_files(root)
+    rels = [os.path.relpath(p, root) for p in files]
+    if not any(rel.startswith("test" + os.sep) for rel in rels):
+        fail("test/: no python files — the suite cannot be checked for temp-tree accounting")
+        return
+    for path, rel in zip(files, rels):
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        hits = temp_maker_hits(text)
+        allowed, why, shape = TEMP_TREE_ALLOWED.get(rel, (0, "", None))
+        if len(hits) != allowed:
+            where = f" at line {hits[min(allowed, len(hits) - 1)][1]}" if hits else ""
+            fail(f"{rel}: temp tree allocation count {len(hits)}, expected {allowed}{where}" +
+                 (f" ({why})" if allowed else
+                  ". Creates a temp tree outside the residue ledger; use residue.workspace(tag) "
+                  "in tests. A shipped tool needs its own reviewed cleanup contract and an "
+                  "exact-path/count/shape exception, not a whole-file skip."))
+        if shape is not None:
+            lines = text.splitlines()
+            for hit, line in hits:
+                if not TEMP_FORMS[shape].fullmatch(lines[line - 1]):
+                    fail(f"{rel}: temp tree call at line {line} changed the reviewed "
+                         f"allocation shape ({shape})")
+    for rel in sorted(TEMP_TREE_ALLOWED):
+        if rel not in rels:
+            fail(f"{rel}: temp tree exception names an absent or unscanned file")
+
+
+# Negative controls, computed on every run: a guard nobody has watched refuse is not one.
+_plant = "import tempfile\nd = tempfile." + "mkdtemp" + "()\n"
+if not temp_maker_hit(_plant) or temp_maker_hit(_plant)[1] != 2:
+    fail("FW01 self-test: a planted bare temp-dir call was not found at line 2")
+if not temp_maker_hit("with Temporary" + "Directory() as d:\n    pass\n"):
+    fail("FW01 self-test: a planted context-manager temp dir was not found")
+if not temp_maker_hit("import tempfile as tf\nd = tf." + "mkdtemp" + "()\n"):
+    fail("FW01 self-test: a temp-dir call through a module alias was not found")
+if not temp_maker_hit("from tempfile import " + "mkdtemp" + " as m\nd = m()\n"):
+    fail("FW01 self-test: a renamed from-import of a temp-dir maker was not found")
+if temp_maker_hit('"""why ' + "mkdtemp" + '() is banned"""\n# or ' + "mkdtemp" + "()\n"):
+    fail("FW01 self-test: an explanation in a docstring/comment was read as a violation")
+check_temp_trees_go_through_the_residue_ledger(ROOT)
+
+
+# ------------------------------ final structural result
 
 if not errors:
     residue.close_case("structural validator")
