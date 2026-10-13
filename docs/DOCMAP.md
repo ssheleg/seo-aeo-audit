@@ -15,6 +15,7 @@ duplicated into commit messages or the changelog — those reference it.
 |---|---|---|
 | Planned collector requested/returned/dropped semantics | `docs/contracts/collector-coverage.md` | B-9 remains open until all collector outputs migrate; this is distinct from audit-track coverage and is not a claim of current uniform emission |
 | The audit doctrine (non-negotiables) | `plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` | `cursor/rules/*.mdc` **and** `plugins/*/commands/*.md` each carry a full copy for a different consumer — both count-checked by `validate.py`, neither summarized. The command was the unguarded third channel: it restated two and read as the list |
+| Intended diagnostic per helper mutation | `.github/workflows/validate.yml` literal `plantq` calls | `test/plant_attribution.py` reads calls via `test/negatives.py:parse_steps`; structural gate checks declarations; audit regression preserves the original identity set and replays the anchor-liveness counterexample. No second needle map |
 | The myth count | the rows of `references/myths.md` | four prose homes — README twice, SKILL.md, the Cursor rule — plus the size of the two short lists. `validate.py` reads every one; it used to read one, and was green while three were wrong |
 | The play count | the rows of `references/growth-plays.md` | README's knowledge table — checked |
 | The Prowl provider-tool count | `references/prowl-mcp.md` | `tooling.md` and README quote it — all three compared |

@@ -1,0 +1,585 @@
+{
+  "schema": "plant-attribution-inventory/1",
+  "source_commit": "b7eaf474f0e59937059a84d911c7d81f135683e7",
+  "source_path": ".github/workflows/validate.yml",
+  "source_sha256": "eacec878d7d99f663c533444eb28c2608e30fe1a5ebeca12ead87ea495a32a2c",
+  "parser": "test/negatives.py:parse_steps",
+  "scope": "Shell plant/plantq calls only; individual standalone negative steps are not included.",
+  "calls": [
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 32,
+      "description": "myth count drifting in SKILL.md (not the README home)",
+      "needle": "the myth-guard section says 30 myths",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/SKILL.md\" \"most-requested of the **33**\" \"most-requested of the **30**\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 34,
+      "description": "myth count drifting in the Cursor channel",
+      "needle": "the Cursor channel says 29 myths",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub cursor/rules/seo-aeo-audit.mdc \"out of 33 refuted claims\" \"out of 29 refuted claims\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 36,
+      "description": "the two myth short lists disagreeing in size",
+      "needle": "cursor/rules says 13 most-asked myths",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 -c \"p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 38,
+      "description": "play count drifting from the table",
+      "needle": "README.md says 60 plays",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub README.md \"| **Growth plays** | 61 plays\" \"| **Growth plays** | 60 plays\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 40,
+      "description": "the Prowl tool count disagreeing across homes",
+      "needle": "the Prowl provider-tool count disagrees across its homes",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub README.md \"~448 provider tools\" \"~408 provider tools\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 42,
+      "description": "a table row with more cells than its header",
+      "needle": "table row has",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/references/growth-plays.md\" \"| B1 | Manual action present |\" \"| B1 | Manual action present | extra |\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 44,
+      "description": "CONTRIBUTING naming a subset of the gate",
+      "needle": "CONTRIBUTING.md does not mention `test/test_collectors.py`",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline CONTRIBUTING.md \"python3 test/test_collectors.py\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 46,
+      "description": "a section id defined in two references",
+      "needle": "section id D1 is defined in",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/references/onpage-checks.md\" \"## O1. Can crawlers\" \"## D1. Can crawlers\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 48,
+      "description": "a row appended without moving the newest-row line",
+      "needle": "algorithm-updates.md says its newest row is 2000-01-01",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 -c \"import re;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(\\*\\*Newest row in this file:\\s*)20\\d\\d-\\d\\d-\\d\\d',r'\\g<1>2000-01-01',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 50,
+      "description": "a finding emitted with no evidence tier",
+      "needle": "page_audit.py emits finding 'truncated-read' with no entry in FINDING_TIERS",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/page_audit.py\" '    \"truncated-read\": \"CONFIRMED\",' \"\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 52,
+      "description": "the CWV thresholds drifting from their documented home",
+      "needle": "psi_pull.py: LCP thresholds are no longer",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/psi_pull.py\" '(\"LCP\", 2500, 4000' '(\"LCP\", 2000, 4000'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 54,
+      "description": "a backticked references/ pointer resolving to nothing",
+      "needle": "backticked pointer `references/mythz.md` resolves to no file",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/references/linkbuilding.md\" '`references/myths.md`' '`references/mythz.md`'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 56,
+      "description": "a prose reference count going stale",
+      "needle": "CONTRIBUTING.md: says 'two' references",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 -c \"import re;p='CONTRIBUTING.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(mostly \\*\\*knowledge\\*\\* \u2014 )[a-z-]+',r'\\g<1>two',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 58,
+      "description": "the slash command losing a non-negotiable",
+      "needle": "slash command carries 7 non-negotiable(s)",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md \"8. **Know each instrument\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 70,
+      "description": "a coverage status outside the closed vocabulary",
+      "needle": "coverage row 'E': 'checked' is outside the closed vocabulary",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py sub \"$f\" \"| E content value | unlooked |\" \"| E content value | checked |\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 72,
+      "description": "the coverage table one row short of the tracks SKILL.md declares",
+      "needle": "the coverage table lists tracks",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py delline \"$f\" \"| K agent surface | unlooked | |\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 74,
+      "description": "a blank Status cell \u2014 the defect this vocabulary replaced",
+      "needle": "coverage row 'E': blank Status",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py sub \"$f\" \"| E content value | unlooked |\" \"| E content value |  |\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 76,
+      "description": "a probe emitting a gate COVERAGE_GATES does not declare",
+      "needle": "preflight.py emits gate(s) ['unattempted']",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/preflight.py\" '\"network\", \"unattempted\", \"http\",' '\"network\", \"http\",'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 82,
+      "description": "a gate emitted through a variable, undeclared",
+      "needle": "preflight.py emits gate(s) ['api-not-enabled']",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/preflight.py\" '\"api-not-enabled\", \"permission\", \"network\",' '\"permission\", \"network\",'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 84,
+      "description": "a track declared in SKILL.md and absent from preflight's TRACKS",
+      "needle": "SKILL.md step 2 declares tracks",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline \"$S/scripts/preflight.py\" '    (\"K\", \"agent surface\"),'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 86,
+      "description": "a track with no TRACK_SOURCES entry, which can never read blocked-by",
+      "needle": "preflight.py: track(s) ['K'] have no TRACK_SOURCES entry",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline \"$S/scripts/preflight.py\" '    \"K\": (\"robots.txt\", \"homepage\"),'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 93,
+      "description": "a script emitting a payload with no producer block",
+      "needle": "sitemap_audit.py never calls provenance(",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/sitemap_audit.py\" 'prov = provenance(\"sitemap_audit.py\", argv,' 'prov = dict(args=argv, scope='"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 95,
+      "description": "the provenance shared block missing from one script",
+      "needle": "psi_pull.py carries no provenance shared block",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py truncate \"$S/scripts/psi_pull.py\" '# \u2500\u2500 provenance: the execution that produced this payload \u2500\u2500 shared block \u2500\u2500\u2500\u2500\u2500\u2500'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 97,
+      "description": "a script carrying the block and never calling it under its own name",
+      "needle": "agent_surface.py never calls provenance(",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/agent_surface.py\" 'prov = provenance(\"agent_surface.py\", argv,' 'prov = provenance(\"preflight.py\", argv,'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 101,
+      "description": "the shared block edited in one copy only",
+      "needle": "the provenance shared block differs in ['gsc_pull.py']",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/gsc_pull.py\" 'SECRET_FLAGS = (\"--key\",)' 'SECRET_FLAGS = ()'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 103,
+      "description": "observed_at dropped from the closed field set",
+      "needle": "preflight.py: PRODUCER_FIELDS has no 'observed_at'",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$S\"'/scripts/*.py; do python3 test/plant_edit.py sub \"$f\" \"PRODUCER_FIELDS = (\\\"skill\\\", \\\"script\\\", \\\"observed_at\\\", \\\"runtime\\\", \\\"args\\\", \\\"scope\\\",\" \"PRODUCER_FIELDS = (\\\"skill\\\", \\\"script\\\", \\\"runtime\\\", \\\"args\\\", \\\"scope\\\",\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 116,
+      "description": "a SKILL_VERSION literal drifting from the manifests",
+      "needle": "SKILL_VERSION is '0.0.1-drift'",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$S\"'/scripts/*.py; do python3 test/plant_edit.py sub \"$f\" \"SKILL_VERSION = \\\"'\"$V\"'\\\"\" \"SKILL_VERSION = \\\"0.0.1-drift\\\"\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 120,
+      "description": "a skeleton losing the command that seeds the block",
+      "needle": "`## Provenance` does not carry the command that seeds it",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py sub \"$f\" \"  --format provenance\" \"  --format json\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 122,
+      "description": "a skeleton losing an invalidator",
+      "needle": "`## Provenance` never names the invalidator 'policy'",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py delline \"$f\" \"| **policy** | a core or AI-surface update changed the rules the evidence was read under |\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 124,
+      "description": "a skeleton no longer naming every producer field",
+      "needle": "`## Provenance` never names the field 'scope'",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$SKEL\"'; do python3 test/plant_edit.py sub \"$f\" \"\\`args\\` \u00b7 \\`scope\\` \u00b7 \\`actor\\` \u00b7 \\`model\\` \u00b7 \\`trace\\`\" \"\\`args\\` \u00b7 \\`actor\\` \u00b7 \\`model\\` \u00b7 \\`trace\\`\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 130,
+      "description": "SECURITY.md's script count going stale",
+      "needle": "SECURITY.md: the headline says 'six' scripts",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 132,
+      "description": "SECURITY.md's I/O line count going stale",
+      "needle": "I/O grep prints",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py resub SECURITY.md 'prints \\*\\*[0-9]+ lines and that is all of it\\*\\*' 'prints **22 lines and that is all of it**'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 134,
+      "description": "a script with no row in SECURITY.md's I/O table",
+      "needle": "SECURITY.md: no row for `agent_surface.py`",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline SECURITY.md '| `agent_surface.py` | the origin, API host, page and OpenAPI URL **you** pass | no | no |'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 139,
+      "description": "the published I/O regex narrowed away from its own count",
+      "needle": "I/O grep prints",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub SECURITY.md 'socket|os\\.environ|os\\.system' 'socket|os\\.system'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 149,
+      "description": "the script count going stale in the README's security posture",
+      "needle": "the security-posture sentence says",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub README.md 'Text plus **seven** standard-library' 'Text plus **six** standard-library'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 151,
+      "description": "a shipped script the README's security posture does not name",
+      "needle": "does not name `agent_surface.py`",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub README.md '`sitemap_audit.py`, `agent_surface.py`)' '`sitemap_audit.py`)'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 153,
+      "description": "the script count going stale in CLAUDE.md",
+      "needle": "the opening description says",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub CLAUDE.md 'knowledge plus seven standard-library scripts' 'knowledge plus six standard-library scripts'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 155,
+      "description": "CLAUDE.md naming a subset of the gate",
+      "needle": "CLAUDE.md does not mention `test/plant_guard_test.py`",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub CLAUDE.md '`test/plant_guard_test.py`,' ''"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 157,
+      "description": "DOCMAP's gate block naming a subset of the gate",
+      "needle": "docs/DOCMAP.md does not mention `test/test_agent_surface.py`",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline docs/DOCMAP.md 'python3 test/test_agent_surface.py'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 159,
+      "description": "DOCMAP counting the gate's homes wrong",
+      "needle": "the single-home row says the gate commands have",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub docs/DOCMAP.md 'appear in all six of them' 'appear in all five of them'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 161,
+      "description": "DOCMAP's _flat copy count drifting from the scripts",
+      "needle": "scripts define one; measured",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` \u2014 five of the seven scripts define one' '`_flat()` \u2014 seven of the seven scripts define one'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 163,
+      "description": "the README's freshness stamp drifting from the reference that owns it",
+      "needle": "says the sources were last re-fetched",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py resub README.md '\\*\\*Sources last re-fetched [0-9]{4}-[0-9]{2}-[0-9]{2}\\*\\*' '**Sources last re-fetched 2026-08-10**'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 165,
+      "description": "the README's corpus size restated instead of counted",
+      "needle": "non-blank lines of reference material",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py resub README.md '\\*\\*~[0-9],[0-9]00 non-blank lines\\*\\*' '**~1,100 non-blank lines**'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 167,
+      "description": "a SKILL.md body over the 5000-token budget",
+      "needle": "the budget is < 5000",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 -c \"p='plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md';s=open(p,encoding='utf-8').read();a='## Step 3 \u2014 Triage';assert a in s,'PLANT DID NOT LAND: '+a;open(p,'w',encoding='utf-8').write(s.replace(a,'<!-- '+('budget '*900)+'-->'+chr(10)+chr(10)+a,1))\""
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 169,
+      "description": "prose calling an OPEN board row closed",
+      "needle": "calls B-17 closed",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-17, closed 2026-08-19)'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 171,
+      "description": "a board id that resolves to no row",
+      "needle": "cites B-99 and the board has no such row",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub SECURITY.md '(B-25, closed in v0.23.0)' '(B-99, closed in v0.23.0)'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 173,
+      "description": "the newest release with no verification-ledger section",
+      "needle": "section, and that is CHANGELOG.md",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_newest_section.py"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 175,
+      "description": "a release missing from the declared unrecorded list",
+      "needle": "the declared unrecorded-release list disagrees",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline docs/evidence/verification.md '- `v0.18.0`'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 177,
+      "description": "the unrecorded-release count restated instead of counted",
+      "needle": "releases are unrecorded; measured",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py resub docs/evidence/verification.md '\\*\\*[A-Z][a-z]+\\*\\* of the [a-z-]+ releases' '**Fifteen** of the twenty-one releases'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 179,
+      "description": "a ledger tally disagreeing with its own Confirmed column",
+      "needle": "and its rows give",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub docs/evidence/verification.md '21 rows \u2014 5 observed \u00b7 6 test-only \u00b7 4 planted+observed \u00b7 1 planted \u00b7 5 never' '22 rows \u2014 5 observed \u00b7 6 test-only \u00b7 5 planted+observed \u00b7 6 never'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 181,
+      "description": "a ledger section with rows and no tally at all",
+      "needle": "no tally is a tally nobody can check",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub docs/evidence/verification.md '**Counts, by parsing the table above: 12 rows \u2014 4 observed' 'Counts, by parsing the table above: 12 rows \u2014 4 observed'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 183,
+      "description": "run stamps falling behind the shipped version",
+      "needle": "newest run stamp is v",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py resub docs/evidence/retro.md '\\*\\*[0-9]{4}-[0-9]{2}-[0-9]{2} \\(`v[0-9.]+`\\)\\*\\*\\s*$' '**2026-08-20 (`v0.14.1`)**'"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 185,
+      "description": "the prune log's instruction count drifting from the headings",
+      "needle": "last prune entry says the list stands at",
+      "checker": "test/validate.py",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub docs/evidence/retro.md 'so the list stands at **ten** \u2014 exactly the cap' 'so the list stands at **eleven** \u2014 one over the cap'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 30,
+      "description": "a producer block with no observed_at",
+      "needle": "preflight.provenance must emit exactly PRODUCER_FIELDS in order",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'python3 test/plant_edit.py sub '\"$S\"'/scripts/preflight.py \"\\\"observed_at\\\": time.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\", time.gmtime()),\" \"\" 7'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 32,
+      "description": "observed_at written as free text",
+      "needle": "preflight.provenance observed_at is",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'python3 test/plant_edit.py sub '\"$S\"'/scripts/preflight.py \"time.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\", time.gmtime())\" \"\\\"recently\\\"\" 7'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 37,
+      "description": "a harness-owned field guessed instead of reported unavailable",
+      "needle": "while SEO_AEO_AUDIT_ACTOR is unset",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$S\"'/scripts/*.py; do python3 test/plant_edit.py sub \"$f\" \"out[_name] = _val or f\\\"unavailable: {_var} is not set by this harness ({_what})\\\"\" \"out[_name] = _val or \\\"a-model-nobody-ran\\\"\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 39,
+      "description": "a --key value echoed into the producer block",
+      "needle": "provenance echoed a --key value into args",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'for f in '\"$S\"'/scripts/*.py; do python3 test/plant_edit.py sub \"$f\" \"\\\"args\\\": redact(argv),\" \"\\\"args\\\": list(argv),\"; done'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 45,
+      "description": "the producer block dropped from one renderer's default format",
+      "needle": "psi_pull.py prints no producer block in its DEFAULT format",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py delline \"$S/scripts/psi_pull.py\" '        print(\"\\n\" + provenance_md(prov))'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 51,
+      "description": "a gsc_pull run that measured nothing exiting 0",
+      "needle": "gsc_pull must exit 1 when every dimension came back empty",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "bash -c 'python3 test/plant_edit.py sub '\"$S\"'/scripts/gsc_pull.py \"    rc = 0 if measured_rows(report) else 1\" \"    rc = 0\"'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 53,
+      "description": "the nothing-measured banner dropped from the gsc_pull report",
+      "needle": "gsc_pull's default report must say the API answered nothing",
+      "checker": "$C",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub \"$S/scripts/gsc_pull.py\" '\"NOTHING MEASURED \u2014 the API answered zero rows for every dimension \"' '\"the API answered zero rows for every dimension \"'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 62,
+      "description": "a suite that leaks its temp trees again",
+      "needle": "plant_guard_test left",
+      "checker": "$R",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub test/plant_guard_test.py 'd = residue.workspace(\"plant-guard\")' 'import tempfile; d = tempfile.mkdtemp()'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 64,
+      "description": "a passing case whose tree is kept anyway",
+      "needle": "a passing case leaves nothing, and the path is gone: the workspace outlived a passing run",
+      "checker": "$R",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub test/residue.py '        if _keep(owner):' '        if True:'"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 66,
+      "description": "the residue line dropped from a clean run",
+      "needle": "a clean run still says what it left:",
+      "checker": "$R",
+      "kind": "plantq",
+      "mutation_command": "python3 test/plant_edit.py sub test/residue.py '    if not kept:' '    if kept and False:'"
+    }
+  ],
+  "counts": {
+    "Negative self-tests for the provenance behaviour contracts": {
+      "plantq": 10
+    },
+    "Negative self-tests for the reconciliation guards": {
+      "plantq": 53
+    }
+  }
+}

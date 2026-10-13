@@ -507,34 +507,12 @@ jobs:
         run: |
           set -eu
           S=plugins/seo-aeo-audit/skills/seo-aeo-audit
-          # Each row plants one defect the guard exists for and requires a non-zero
+          # Each row plants one defect and requires its named diagnostic plus non-zero
           # exit. A guard nobody has watched fail is indistinguishable from a guard
           # that cannot — and the 2026-08-10 audit found guards written against one
           # home of a fact that lived in four, all of them green.
-          plant() {
-            desc="$1"; shift
-            rm -rf /tmp/neg /tmp/neg-residue && cp -R . /tmp/neg && mkdir -p /tmp/neg-residue
-            python3 test/plant_guard.py snap /tmp/neg
-            ( cd /tmp/neg && "$@" )
-            # Instruction #6's corollary, once for every call site. The comparison is
-            # `test/plant_guard.py`, not an inline `diff`: five hand-written variants of
-            # this check produced five different bugs, one of them a content-only
-            # comparison against a plant whose whole effect is `chmod`.
-            python3 test/plant_guard.py verify /tmp/neg "$desc"
-            if TMPDIR=/tmp/neg-residue python3 /tmp/neg/test/validate.py >/dev/null 2>&1; then
-              echo "BROKEN GUARD: $desc — validator still passes"; exit 1
-            fi
-            echo "ok: $desc"
-          }
-          # `plant` asks only "does the validator now fail". That is not enough for a
-          # plant that edits a DOCUMENT: this workflow's own anchor-liveness guard
-          # notices that the literal a plant substitutes is no longer in the file, so
-          # every literal-anchored document plant makes the validator fail for a second
-          # reason whether its own guard works or not. Measured 2026-08-20: the
-          # run-stamp plant lowered one stamp of several, its guard (which takes the
-          # newest) correctly did not fire, and `plant` reported ok. `plantq` requires
-          # the refusal to NAME the defect. The 39 older calls are left on `plant` and
-          # the weakness is filed as B-33 rather than left implicit.
+          # B-33: every call names its intended diagnostic. A different failure,
+          # including anchor liveness, does not certify the semantic guard.
           plantq() {
             desc="$1"; needle="$2"; shift 2
             rm -rf /tmp/neg /tmp/neg-residue && cp -R . /tmp/neg && mkdir -p /tmp/neg-residue
@@ -544,7 +522,7 @@ jobs:
             if out=$( cd /tmp/neg && TMPDIR=/tmp/neg-residue python3 test/validate.py 2>&1 ); then
               echo "BROKEN GUARD: $desc — validator still passes"; exit 1
             fi
-            if ! printf '%s' "$out" | grep -qF "$needle"; then
+            if ! printf '%s' "$out" | python3 test/plant_attribution.py match "$needle"; then
               echo "BROKEN GUARD: $desc — the validator failed and never named it."
               echo "  expected to see: $needle"
               printf '%s\n' "$out" | head -25
@@ -558,33 +536,33 @@ jobs:
           # plant_guard refused rather than reporting a pass — which is the guard
           # working, and also the reminder: bump the numbers here in the same
           # commit that adds a myth row.
-          plant "myth count drifting in SKILL.md (not the README home)" \
+          plantq "myth count drifting in SKILL.md (not the README home)" 'the myth-guard section says 30 myths' \
             python3 test/plant_edit.py sub "$S/SKILL.md" "most-requested of the **33**" "most-requested of the **30**"
-          plant "myth count drifting in the Cursor channel" \
+          plantq "myth count drifting in the Cursor channel" 'the Cursor channel says 29 myths' \
             python3 test/plant_edit.py sub cursor/rules/seo-aeo-audit.mdc "out of 33 refuted claims" "out of 29 refuted claims"
-          plant "the two myth short lists disagreeing in size" \
+          plantq "the two myth short lists disagreeing in size" 'cursor/rules says 13 most-asked myths' \
             python3 -c "p='cursor/rules/seo-aeo-audit.mdc';s=open(p,encoding='utf-8').read();assert 'The fourteen asked for most often' in s,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s.replace('The fourteen asked for most often','The thirteen asked for most often',1))"
-          plant "play count drifting from the table" \
+          plantq "play count drifting from the table" 'README.md says 60 plays' \
             python3 test/plant_edit.py sub README.md "| **Growth plays** | 61 plays" "| **Growth plays** | 60 plays"
-          plant "the Prowl tool count disagreeing across homes" \
+          plantq "the Prowl tool count disagreeing across homes" 'the Prowl provider-tool count disagrees across its homes' \
             python3 test/plant_edit.py sub README.md "~448 provider tools" "~408 provider tools"
-          plant "a table row with more cells than its header" \
-            python3 -c "import re,io;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/growth-plays.md';s=open(p,encoding='utf-8').read();s2,n=re.subn('^| B1 | Manual action present |','| B1 | Manual action present | extra |',s,count=1,flags=re.M);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
-          plant "CONTRIBUTING naming a subset of the gate" \
+          plantq "a table row with more cells than its header" 'table row has' \
+            python3 test/plant_edit.py sub "$S/references/growth-plays.md" "| B1 | Manual action present |" "| B1 | Manual action present | extra |"
+          plantq "CONTRIBUTING naming a subset of the gate" 'CONTRIBUTING.md does not mention `test/test_collectors.py`' \
             python3 test/plant_edit.py delline CONTRIBUTING.md "python3 test/test_collectors.py"
-          plant "a section id defined in two references" \
+          plantq "a section id defined in two references" 'section id D1 is defined in' \
             python3 test/plant_edit.py sub "$S/references/onpage-checks.md" "## O1. Can crawlers" "## D1. Can crawlers"
-          plant "a row appended without moving the newest-row line" \
+          plantq "a row appended without moving the newest-row line" 'algorithm-updates.md says its newest row is 2000-01-01' \
             python3 -c "import re;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(\*\*Newest row in this file:\s*)20\d\d-\d\d-\d\d',r'\g<1>2000-01-01',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
-          plant "a finding emitted with no evidence tier" \
+          plantq "a finding emitted with no evidence tier" 'page_audit.py emits finding '"'"'truncated-read'"'"' with no entry in FINDING_TIERS' \
             python3 test/plant_edit.py sub "$S/scripts/page_audit.py" '    "truncated-read": "CONFIRMED",' ""
-          plant "the CWV thresholds drifting from their documented home" \
+          plantq "the CWV thresholds drifting from their documented home" 'psi_pull.py: LCP thresholds are no longer' \
             python3 test/plant_edit.py sub "$S/scripts/psi_pull.py" '("LCP", 2500, 4000' '("LCP", 2000, 4000'
-          plant "a backticked references/ pointer resolving to nothing" \
+          plantq "a backticked references/ pointer resolving to nothing" 'backticked pointer `references/mythz.md` resolves to no file' \
             python3 test/plant_edit.py sub "$S/references/linkbuilding.md" '`references/myths.md`' '`references/mythz.md`'
-          plant "a prose reference count going stale" \
+          plantq "a prose reference count going stale" 'CONTRIBUTING.md: says '"'"'two'"'"' references' \
             python3 -c "import re;p='CONTRIBUTING.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(mostly \*\*knowledge\*\* — )[a-z-]+',r'\g<1>two',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
-          plant "the slash command losing a non-negotiable" \
+          plantq "the slash command losing a non-negotiable" 'slash command carries 7 non-negotiable(s)' \
             python3 test/plant_edit.py truncate plugins/seo-aeo-audit/commands/seo-aeo-audit.md "8. **Know each instrument"
           # The coverage vocabulary. Three of these edit BOTH skeleton homes in one
           # command, deliberately: change one and the template-drift guard fires
@@ -596,40 +574,40 @@ jobs:
           # is why plant_edit.py exists, and why every plant's failure message is
           # read rather than counted.
           SKEL='templates/audit-report.template.md plugins/seo-aeo-audit/skills/seo-aeo-audit/references/deliverable-templates.md'
-          plant "a coverage status outside the closed vocabulary" \
+          plantq "a coverage status outside the closed vocabulary" 'coverage row '"'"'E'"'"': '"'"'checked'"'"' is outside the closed vocabulary' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "| E content value | unlooked |" "| E content value | checked |"; done'
-          plant "the coverage table one row short of the tracks SKILL.md declares" \
+          plantq "the coverage table one row short of the tracks SKILL.md declares" 'the coverage table lists tracks' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py delline "$f" "| K agent surface | unlooked | |"; done'
-          plant "a blank Status cell — the defect this vocabulary replaced" \
+          plantq "a blank Status cell — the defect this vocabulary replaced" 'coverage row '"'"'E'"'"': blank Status' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "| E content value | unlooked |" "| E content value |  |"; done'
-          plant "a probe emitting a gate COVERAGE_GATES does not declare" \
+          plantq "a probe emitting a gate COVERAGE_GATES does not declare" 'preflight.py emits gate(s) ['"'"'unattempted'"'"']' \
             python3 test/plant_edit.py sub "$S/scripts/preflight.py" '"network", "unattempted", "http",' '"network", "http",'
           # The same defect one indirection away, and it is the one that was silently
           # passing: check_gsc classifies into a local `gate` before calling probe(),
           # so a guard reading only probe()'s arguments left this green while the
           # probe still emitted the gate a coverage row would then be refused for.
-          plant "a gate emitted through a variable, undeclared" \
+          plantq "a gate emitted through a variable, undeclared" 'preflight.py emits gate(s) ['"'"'api-not-enabled'"'"']' \
             python3 test/plant_edit.py sub "$S/scripts/preflight.py" '"api-not-enabled", "permission", "network",' '"permission", "network",'
-          plant "a track declared in SKILL.md and absent from preflight's TRACKS" \
+          plantq "a track declared in SKILL.md and absent from preflight's TRACKS" 'SKILL.md step 2 declares tracks' \
             python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    ("K", "agent surface"),'
-          plant "a track with no TRACK_SOURCES entry, which can never read blocked-by" \
+          plantq "a track with no TRACK_SOURCES entry, which can never read blocked-by" 'preflight.py: track(s) ['"'"'K'"'"'] have no TRACK_SOURCES entry' \
             python3 test/plant_edit.py delline "$S/scripts/preflight.py" '    "K": ("robots.txt", "homepage"),'
           # Provenance (SE-02). The producer block is COPIED into all seven scripts
           # rather than imported — the installed layout has nothing to import from —
           # so the plants below break the copy, the call, the version literal and both
           # skeleton homes in turn. Five more, whose checker is the behaviour suite
           # rather than the validator, live in the next step.
-          plant "a script emitting a payload with no producer block" \
-            python3 test/plant_edit.py sub "$S/scripts/sitemap_audit.py" 'prov = provenance("sitemap_audit.py", argv,' 'prov = dict(argv=argv,  # noqa'
-          plant "the provenance shared block missing from one script" \
+          plantq "a script emitting a payload with no producer block" 'sitemap_audit.py never calls provenance(' \
+            python3 test/plant_edit.py sub "$S/scripts/sitemap_audit.py" 'prov = provenance("sitemap_audit.py", argv,' 'prov = dict(args=argv, scope='
+          plantq "the provenance shared block missing from one script" 'psi_pull.py carries no provenance shared block' \
             python3 test/plant_edit.py truncate "$S/scripts/psi_pull.py" '# ── provenance: the execution that produced this payload ── shared block ──────'
-          plant "a script carrying the block and never calling it under its own name" \
+          plantq "a script carrying the block and never calling it under its own name" 'agent_surface.py never calls provenance(' \
             python3 test/plant_edit.py sub "$S/scripts/agent_surface.py" 'prov = provenance("agent_surface.py", argv,' 'prov = provenance("preflight.py", argv,'
           # The whole reason seven copies are compared byte for byte: one edited copy
           # is seven versions of one function, and six of them keep passing.
-          plant "the shared block edited in one copy only" \
+          plantq "the shared block edited in one copy only" 'the provenance shared block differs in ['"'"'gsc_pull.py'"'"']' \
             python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" 'SECRET_FLAGS = ("--key",)' 'SECRET_FLAGS = ()'
-          plant "observed_at dropped from the closed field set" \
+          plantq "observed_at dropped from the closed field set" 'preflight.py: PRODUCER_FIELDS has no '"'"'observed_at'"'"'' \
             bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "PRODUCER_FIELDS = (\"skill\", \"script\", \"observed_at\", \"runtime\", \"args\", \"scope\"," "PRODUCER_FIELDS = (\"skill\", \"script\", \"runtime\", \"args\", \"scope\","; done'
           # Seven more homes for one semver. Literals rather than a runtime lookup
           # because `bin/seo-aeo-audit.js` installs `scripts/` with no manifest beside
@@ -642,30 +620,30 @@ jobs:
           # plant anchored on a value that moves describes the tree it was written
           # against; anchor on where the value lives instead.
           V="$(python3 -c 'import json;print(json.load(open("package.json"))["version"])')"
-          plant "a SKILL_VERSION literal drifting from the manifests" \
+          plantq "a SKILL_VERSION literal drifting from the manifests" 'SKILL_VERSION is '"'"'0.0.1-drift'"'"'' \
             bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "SKILL_VERSION = \"'"$V"'\"" "SKILL_VERSION = \"0.0.1-drift\""; done'
           # Both skeletons in one command, as the coverage plants do: change one and
           # the template-drift guard fires instead, proving a different guard works.
-          plant "a skeleton losing the command that seeds the block" \
+          plantq "a skeleton losing the command that seeds the block" '`## Provenance` does not carry the command that seeds it' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "  --format provenance" "  --format json"; done'
-          plant "a skeleton losing an invalidator" \
+          plantq "a skeleton losing an invalidator" '`## Provenance` never names the invalidator '"'"'policy'"'"'' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py delline "$f" "| **policy** | a core or AI-surface update changed the rules the evidence was read under |"; done'
-          plant "a skeleton no longer naming every producer field" \
+          plantq "a skeleton no longer naming every producer field" '`## Provenance` never names the field '"'"'scope'"'"'' \
             bash -c 'for f in '"$SKEL"'; do python3 test/plant_edit.py sub "$f" "\`args\` · \`scope\` · \`actor\` · \`model\` · \`trace\`" "\`args\` · \`actor\` · \`model\` · \`trace\`"; done'
           # B-25 (this comment said B-17 until 2026-08-20 — an open row about a
           # different defect). Two numbers in SECURITY.md that a reader consults
           # *because* they will not read the code, and that said six/22 against
           # seven/26 for four releases.
-          plant "SECURITY.md's script count going stale" \
+          plantq "SECURITY.md's script count going stale" 'SECURITY.md: the headline says '"'"'six'"'"' scripts' \
             python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'
           plantq "SECURITY.md's I/O line count going stale" 'I/O grep prints' \
             python3 test/plant_edit.py resub SECURITY.md 'prints \*\*[0-9]+ lines and that is all of it\*\*' 'prints **22 lines and that is all of it**'
-          plant "a script with no row in SECURITY.md's I/O table" \
+          plantq "a script with no row in SECURITY.md's I/O table" 'SECURITY.md: no row for `agent_surface.py`' \
             python3 test/plant_edit.py delline SECURITY.md '| `agent_surface.py` | the origin, API host, page and OpenAPI URL **you** pass | no | no |'
           # The regex is read out of SECURITY.md and RUN, so narrowing the published
           # pattern breaks the count it claims — a guard with its own copy of the
           # pattern would only prove its copy agrees with itself.
-          plant "the published I/O regex narrowed away from its own count" \
+          plantq "the published I/O regex narrowed away from its own count" 'I/O grep prints' \
             python3 test/plant_edit.py sub SECURITY.md 'socket|os\.environ|os\.system' 'socket|os\.system'
           # ── the evidence documents, one plant per family ────────────────────
           # Eleven documented facts were false on 2026-08-20 with the gate green. Each
@@ -718,19 +696,24 @@ jobs:
         run: |
           set -eu
           S=plugins/seo-aeo-audit/skills/seo-aeo-audit
-          # Same harness as the step above with the checker as a parameter: these five
+          # Same harness as above with an explicit checker and diagnostic: these
           # defects are BEHAVIOUR — a guessed field, an echoed credential, a block that
           # never reaches markdown — and the structural validator cannot see any of
           # them. The comparison is still `plant_guard.py`, which is the part that had
           # five hand-written variants and five bugs.
-          plant() {
-            desc="$1"; checker="$2"; shift 2
+          plantq() {
+            desc="$1"; needle="$2"; checker="$3"; shift 3
             rm -rf /tmp/negb /tmp/negb-residue && cp -R . /tmp/negb && mkdir -p /tmp/negb-residue
             python3 test/plant_guard.py snap /tmp/negb
             ( cd /tmp/negb && "$@" )
             python3 test/plant_guard.py verify /tmp/negb "$desc"
-            if ( cd /tmp/negb && TMPDIR=/tmp/negb-residue python3 "$checker" >/dev/null 2>&1 ); then
+            if out=$( cd /tmp/negb && TMPDIR=/tmp/negb-residue python3 "$checker" 2>&1 ); then
               echo "BROKEN GUARD: $desc — $checker still passes"; exit 1
+            fi
+            if ! printf '%s' "$out" | python3 test/plant_attribution.py match "$needle"; then
+              echo "BROKEN GUARD: $desc — $checker failed without its intended diagnostic"
+              printf '%s\n' "$out" | head -25
+              exit 1
             fi
             echo "ok: $desc"
           }
@@ -740,30 +723,30 @@ jobs:
           # today's. Both plants hit the seventh copy of the shared block — preflight's
           # — because a single-copy edit is what the byte comparison one step up
           # catches, and this step is measuring something else.
-          plant "a producer block with no observed_at" "$C" \
+          plantq "a producer block with no observed_at" 'preflight.provenance must emit exactly PRODUCER_FIELDS in order' "$C" \
             bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/preflight.py "\"observed_at\": time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime())," "" 7'
-          plant "observed_at written as free text" "$C" \
+          plantq "observed_at written as free text" 'preflight.provenance observed_at is' "$C" \
             bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/preflight.py "time.strftime(\"%Y-%m-%dT%H:%M:%SZ\", time.gmtime())" "\"recently\"" 7'
           # The manifesto asks for provenance that can be investigated, not for a field
           # filled in to look complete. A guessed `model` is the worst case: the wrong
           # vendor id sends an investigation to a model that never ran.
-          plant "a harness-owned field guessed instead of reported unavailable" "$C" \
+          plantq "a harness-owned field guessed instead of reported unavailable" 'while SEO_AEO_AUDIT_ACTOR is unset' "$C" \
             bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "out[_name] = _val or f\"unavailable: {_var} is not set by this harness ({_what})\"" "out[_name] = _val or \"a-model-nobody-ran\""; done'
-          plant "a --key value echoed into the producer block" "$C" \
+          plantq "a --key value echoed into the producer block" 'provenance echoed a --key value into args' "$C" \
             bash -c 'for f in '"$S"'/scripts/*.py; do python3 test/plant_edit.py sub "$f" "\"args\": redact(argv)," "\"args\": list(argv),"; done'
           # Watched under-reporting before it was trusted: asserting `provenance_md`
           # EXISTS left this green when the print was deleted from a renderer, because
           # nothing ran a default-format main() and read its output. Now every
           # collector is driven through both formats.
-          plant "the producer block dropped from one renderer's default format" "$C" \
+          plantq "the producer block dropped from one renderer's default format" 'psi_pull.py prints no producer block in its DEFAULT format' "$C" \
             python3 test/plant_edit.py delline "$S/scripts/psi_pull.py" '        print("\n" + provenance_md(prov))'
           # gsc_pull had three `return 0`s and no `return 1`: a property that answered
           # zero rows for every dimension rendered a report finding no cliff, no
           # cannibalization and no CTR gap, and exited success. The renderer and the
           # status read one predicate, so both plants below break both at once.
-          plant "a gsc_pull run that measured nothing exiting 0" "$C" \
+          plantq "a gsc_pull run that measured nothing exiting 0" 'gsc_pull must exit 1 when every dimension came back empty' "$C" \
             bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/gsc_pull.py "    rc = 0 if measured_rows(report) else 1" "    rc = 0"'
-          plant "the nothing-measured banner dropped from the gsc_pull report" "$C" \
+          plantq "the nothing-measured banner dropped from the gsc_pull report" "gsc_pull's default report must say the API answered nothing" "$C" \
             python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" '"NOTHING MEASURED — the API answered zero rows for every dimension "' '"the API answered zero rows for every dimension "' 
 
           # ── the residue ledger: a leak, and a silence about it ───────────────
@@ -772,11 +755,11 @@ jobs:
           # The first plant restores the leak, the second the silence — a clean run
           # that says nothing is how the next leak becomes invisible again.
           R=test/residue_test.py
-          plant "a suite that leaks its temp trees again" "$R" \
+          plantq "a suite that leaks its temp trees again" 'plant_guard_test left' "$R" \
             python3 test/plant_edit.py sub test/plant_guard_test.py 'd = residue.workspace("plant-guard")' 'import tempfile; d = tempfile.mkdtemp()'
-          plant "a passing case whose tree is kept anyway" "$R" \
+          plantq "a passing case whose tree is kept anyway" 'a passing case leaves nothing, and the path is gone: the workspace outlived a passing run' "$R" \
             python3 test/plant_edit.py sub test/residue.py '        if _keep(owner):' '        if True:'
-          plant "the residue line dropped from a clean run" "$R" \
+          plantq "the residue line dropped from a clean run" 'a clean run still says what it left:' "$R" \
             python3 test/plant_edit.py sub test/residue.py '    if not kept:' '    if kept and False:'
 
       - name: install.sh syntax check

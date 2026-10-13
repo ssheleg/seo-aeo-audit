@@ -1,3 +1,34 @@
+# FW06 B-33 attribution implementation — 2026-10-13
+
+The [execution receipt](evidence/runs/2026-10-13-fw06-attribution.md) owns current
+status and exact checks; the [packet](evidence/plans/2026-10-13-fw06-guard-attribution.md)
+owns baseline scope. All 63 helper identities name their intended diagnostic.
+Final focused 93 controls and independent 19 extras pass at `22dc235`; corrected
+real groups pass 53 structural and 10 behavioral calls. The earlier full
+`npm run test:all` passed at `4364c48`, including all 31 negative groups.
+
+Next: deliberately promote frozen PR31 once, observe genuine required checks,
+then normal integration. Keep version 0.26.5 until separate combined coverage/
+attribution packaging. Continue the separately pushed sitemap coverage packet
+on accepted source without waiting for an unrelated release. Provider/native
+acceptance and standalone negative-step attribution remain outside this packet.
+
+---
+
+# FW06 B-33 preparation, 2026-10-13
+
+Plan-only branch `plan/fw06-guard-attribution` preserves the complete measured
+helper-call population and the next implementation packet in
+[the attribution plan](evidence/plans/2026-10-13-fw06-guard-attribution.md).
+Current measurement: 33 anonymous structural, 20 named structural and 10 anonymous
+behavioral calls. A table-row selector also matches unrelated input; not repaired
+here. No workflow or guard implementation changes in this preparation.
+
+Next: integrate accepted B-9 correction, claim the separate B-33 task, then execute
+the packet's selector/attribution controls before broad suites or release work.
+
+---
+
 # FW06 common coverage first slice, 2026-10-13
 
 Branch `fix/fw06-collector-coverage`, based on release candidate `6a443b4`,
