@@ -44,6 +44,14 @@ def run(check, root, workspace):
         data = mod.collect('', 'https://api.invalid')
     cov = data.get('coverage_by_unit', {}).get('network_probe')
     ok(cov and not schema_errors(cov) and (cov['requested'],cov['attempted'],cov['returned'],cov['state']) == (1,1,0,'partial'), 'fixed failed input is known partial, not an invented unknown universe')
+    def missing_prerequisite(url, **kwargs):
+        if url.endswith('/agent-surface-probe-404-check'):
+            return mod.Probe(url,None,error='fixture missing-path response failed')
+        return fake(url, **kwargs)
+    with patch.object(mod,'fetch',side_effect=missing_prerequisite):
+        data=mod.collect('https://example.invalid')
+    cov=data['coverage_by_unit']['network_probe']
+    ok(cov['requested'] is None and cov['attempted']==46 and cov['state']=='unknown' and any(r['code']=='unknown_discovery' for r in cov['reasons']), 'missing-path prerequisite failure retains unknown conditional negotiation frontier')
     file = Path(workspace) / 'openapi.json'
     good = {'openapi':'3.0.0','info':{'title':'Fixture','version':'1'},'paths':{}}
     for obj, returned, state, expected_code in [(good,1,'complete',0), ([],0,'partial',1)]:
@@ -84,7 +92,7 @@ def run(check, root, workspace):
     local = mod.collector_coverage('local_file','fixture',1,1,1,0,[])
     for payload, expected in [({'coverage':base},1),([{'coverage':base},{'coverage':base}],1),({'coverage_by_unit':{'network_probe':base,'local_file':local}},2),({'coverage':{'track':'unlooked'},'coverage_by_unit':{'network_probe':base}},1)]:
         ok(len(coverage_records(payload)) == expected, 'reader preserves supported carriers without summing units/copies')
-    for payload in [{'coverage':base,'coverage_by_unit':{'network_probe':base}}, {'coverage':dict(base,schema='collector-coverage/2'),'coverage_by_unit':{'network_probe':base}}, {'coverage_by_unit':{}}, {'coverage_by_unit':{'wrong':base}}, {'coverage':{'track':'unlooked'}}, [{'coverage':base},{'coverage':local}], {'coverage_by_unit':{'network_probe':dict(base,state='unknown')}}]:
+    for payload in [{'coverage':base,'coverage_by_unit':{'network_probe':base}}, {'coverage':dict(base,schema='collector-coverage/2'),'coverage_by_unit':{'network_probe':base}}, {'coverage_by_unit':{}}, {'coverage_by_unit':{'wrong':base}}, {'coverage':{'track':'unlooked'}}, [{'coverage':base},{'coverage':local}], [{'coverage':base,'coverage_by_unit':{'local_file':local}}], [{'coverage':base},{'coverage':base,'coverage_by_unit':{'local_file':local}}], {'coverage_by_unit':{'network_probe':dict(base,state='unknown')}}]:
         try: coverage_records(payload)
         except ValueError: ok(True,'reader refuses ambiguous/malformed/track-only carrier')
         else: ok(False,'reader refuses ambiguous/malformed/track-only carrier')
@@ -113,23 +121,32 @@ def run(check, root, workspace):
             if zipped: body=gzip.compress(body)
             if self.path=='/gzip-cut': body=body[:-8]
             if self.path=='/gzip-bad': body=b'bad gzip'
-            self.send_response(404 if self.path=='/missing' else 200)
+            self.send_response(404 if self.path in ('/missing','/length-bad-404') else 200)
             if zipped:self.send_header('Content-Encoding','gzip')
             self.send_header('Content-Type','application/json' if self.path=='/spec' else 'text/plain')
-            self.send_header('Content-Length',str(len(body)+(20 if self.path=='/short' else 0)))
+            self.send_header('Content-Length','²' if self.path.startswith('/length-bad') else str(len(body)+(20 if self.path=='/short' else 0)))
             self.end_headers(); self.wfile.write(body)
     with socketserver.TCPServer(('127.0.0.1',0),Handler) as server:
         thread=threading.Thread(target=server.serve_forever,daemon=True); thread.start()
         try:
             origin=f'http://127.0.0.1:{server.server_address[1]}'
-            for route,complete,status in [('/ok',True,200),('/empty',True,200),('/missing',True,404),('/redirect',True,200),('/gzip',True,200),('/large',False,200),('/gzip-large',False,200),('/gzip-cut',False,200),('/gzip-bad',False,200),('/short',False,200)]:
-                with patch.object(mod,'MAX_BYTES',200): probe=mod.fetch(origin+route)
+            for route,complete,status in [('/ok',True,200),('/empty',True,200),('/missing',True,404),('/redirect',True,200),('/gzip',True,200),('/large',False,200),('/gzip-large',False,200),('/gzip-cut',False,200),('/gzip-bad',False,200),('/short',False,200),('/length-bad-200',False,200),('/length-bad-404',False,404)]:
+                try:
+                    with patch.object(mod,'MAX_BYTES',200): probe=mod.fetch(origin+route)
+                except ValueError:
+                    ok(False,route+': malformed header must not erase observed response'); continue
                 ok(probe.status==status and probe.body_complete==complete, route+': landing status separate from complete body')
                 if not complete: ok(bool(probe.body_error),route+': named body limitation')
+                if route.startswith('/length-bad'): ok('Content-Length' in probe.body_error,route+': malformed length diagnosed explicitly')
                 if route=='/redirect':ok(len(probe.redirects)==1 and probe.final_url==origin+'/ok','actual redirect chain observed once')
             copied=Path(workspace)/'agent_surface.py';copied.write_bytes(path.read_bytes())
             result=subprocess.run([sys.executable,str(copied),'--openapi',origin+'/spec','--format','json'],cwd=workspace,capture_output=True,text=True)
             ok(result.returncode==0 and json.loads(result.stdout)['coverage_by_unit']['network_probe']['returned']==1,'standalone copied CLI includes external-to-collect OpenAPI request')
+            for route, status in [('/length-bad-200',200),('/length-bad-404',404)]:
+                result=subprocess.run([sys.executable,str(copied),'--openapi',origin+route,'--format','json'],cwd=workspace,capture_output=True,text=True)
+                out=json.loads(result.stdout); record=out['coverage_by_unit']['network_probe']
+                ok(result.returncode==0 and out['network_probes'][0]['status']==status and record['attempted']==1 and record['returned']==0 and record['state']=='partial' and any(r['code']=='incomplete_body' for r in record['reasons']),route+': actual copied CLI retains landing observation and partial report')
+
         finally: server.shutdown();thread.join()
     for url in ('https://[bad','file:///not-used'):
         probe=mod.fetch(url)

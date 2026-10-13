@@ -22,6 +22,8 @@ def coverage_records(payload):
     if isinstance(payload, list):
         if not payload or any(not isinstance(row, dict) for row in payload):
             raise ValueError("page carrier has no records")
+        if any("coverage_by_unit" in row for row in payload):
+            raise ValueError("page rows cannot carry competing per-unit records")
         copies = [row.get("coverage") for row in payload]
         if any(record != copies[0] for record in copies):
             raise ValueError("repeated invocation records disagree")

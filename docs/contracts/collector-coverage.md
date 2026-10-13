@@ -151,7 +151,8 @@ are unchanged. Preflight's track-coverage object is a different vocabulary and i
 not a collector record. The independent `coverage_records` reader in
 `test/collector_coverage_contract.py` recognizes explicit common carriers,
 collapses repeated page-array copies once and refuses ambiguous competing
-collector records. It never sums units or interprets track rows as probe counts.
+collector records, including competing carriers inside a repeated page-array row.
+It never sums units or interprets track rows as probe counts.
 
 The network record counts scheduled logical invocations, not unique URLs or
 rendered checks. Accept/User-Agent variants and repeated calls remain distinct;
@@ -159,12 +160,13 @@ physical redirect/retry hops do not add logical inputs. `network_probes` retains
 requested URL, request variants, observed status/final URL/redirects and body
 completeness/errors. A returned probe has a landing status and complete readable
 body, including empty or 404 bodies. Observed status/headers remain evidence when
-a cap, short body, unsupported encoding or corrupt/cut gzip excludes a complete
+a cap, short body, malformed Content-Length, unsupported encoding or corrupt/cut gzip excludes a complete
 return. Reads and gzip output use separate sentinel bounds. Existing analysis of
 available fragments is qualified by coverage; this is no field-completeness claim.
 
 The chosen finite conditional workflow defines the input population. A failed or
-incomplete homepage, separate markup page, robots file or parent sitemap can hide
+incomplete initial missing-path response, homepage, separate markup page, robots
+file or parent sitemap can hide
 inputs to the next discovery branch: requested is null with `unknown_discovery`.
 Failed fixed inputs remain known attempts without returns. Alternatives made
 unnecessary by successful selection do not become missing requests. Dropped is
