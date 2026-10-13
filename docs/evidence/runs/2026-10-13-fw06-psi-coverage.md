@@ -57,3 +57,15 @@ The no-URL/unreadable-list and preflight boundaries remain explicit follow-up;
 the subsequent offline packet also reproduces the invalid-UTF8 list exception.
 The shipped scripts reference now states the same entry/component semantics.
 This documentation successor does not replace exact-source owner/PR gates.
+
+## Integrated owner gate
+
+Accepted GSC/R30 main `3fac9d67e12c367b19d8f2cfcecaaed6badc2dd7` was merged
+without changing reviewed PSI behavior. Both helper calls and the accepted cache
+ownership correction are present. `TMPDIR=/tmp/fw06-psi-full-owned npm run test:all`
+exited 0 at `d690b296164372c407fa7b65b2faa5d21146cd0b`: **31 negative groups** and
+**9 audit regression files**, shared115/sitemap127/agent73/GSC76/PSI67/board28,
+release27, attribution93, provenance14, snapshot3 and residue11. One serial broad
+slot was held and released after completion. The final documentation head still
+requires genuine eligible PR checks before normal integration; no release/provider
+claim follows from this local gate.
