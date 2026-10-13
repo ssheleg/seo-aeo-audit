@@ -31,8 +31,8 @@ check(len(rows) == len({(r['step'], r['description']) for r in rows}), 'unique i
 # a fixed numerical floor. The snapshot is historical evidence, not new needles.
 import json
 baseline = json.loads((ROOT / 'docs/evidence/plans/fw06-attribution-inventory.json').read_text())
-check({(r['step'], r['description']) for r in rows} ==
-      {(r['step'], r['description']) for r in baseline['calls']}, 'all original identities retained')
+check({(r['step'], r['description']) for r in baseline['calls']} <=
+      {(r['step'], r['description']) for r in rows}, 'all original identities retained; new attributed calls are allowed')
 for step in STEPS:
     body = dict(steps)[step]
     first = next(l for l in body.splitlines() if re.match(r'^\s*plantq\s', l))
@@ -41,6 +41,29 @@ for step in STEPS:
                    'plantq "description" "" \\', 'plantq "description" "$EXPECTED" \\'):
         _, problems = calls([(s, b.replace(first, broken, 1) if s == step else b) for s,b in steps])
         check(bool(problems), 'refuse missing/dynamic needle: ' + broken)
+    for field in (1, 2):
+        # Keep an active command substitution inside DOUBLE quotes: single
+        # quotes intentionally allow Markdown backticks as literal needle text.
+        literal = ['plantq', '"description"', '"needle"']
+        literal[field] = '"`printf injected`"'
+        suffix = ' "$C"' if step == STEPS[1] else ''
+        bad = ' '.join(literal) + suffix + ' \\'
+        _, problems = calls([(s, b.replace(first, bad, 1) if s == step else b) for s,b in steps])
+        check(bool(problems), 'active backticks refused in literal field')
+    suffix = ' "$C"' if step == STEPS[1] else ''
+    for expansion in ('*', '?', '[abc]', '{a,b}', '~', '<(printf needle)',
+                      '>(printf needle)', 'needle;true', 'needle|true'):
+        bad = 'plantq "description" '+expansion+suffix+' \\'
+        _, problems = calls([(s, b.replace(first, bad, 1) if s == step else b) for s,b in steps])
+        check(bool(problems), 'unquoted expansion/operator refused: '+expansion)
+    for literal in ("'*'", '"<(printf needle)"', r'\*'):
+        added = 'plantq "new literal '+literal.replace('"','')+'" '+literal+suffix+' \\'
+        _, problems = calls([(s, b+'\n'+added if s == step else b) for s,b in steps])
+        check(not problems, 'quoted/escaped expansion characters stay literal')
+    suffix = ' "$C"' if step == STEPS[1] else ''
+    added = "plantq 'new valid case' 'literal `file.py` needle'" + suffix + ' \\'
+    _, problems = calls([(s, b+'\n'+added if s == step else b) for s,b in steps])
+    check(not problems, 'new attributed call with single-quoted literal backticks allowed')
     _, problems = calls([(s, b.replace(first, first+'\n'+first, 1) if s == step else b) for s,b in steps])
     check(any('duplicate' in p for p in problems), 'duplicate identity')
     _, problems = calls([(s, '# plant "comment only"\nplant() {\n true\n}\n'+b if s == step else b) for s,b in steps])
@@ -101,6 +124,8 @@ for group_index, step in enumerate(STEPS):
         ('unrelated failure', 'FAIL: fixture\n - unrelated', 1, True, 1),
         ('success with needle', 'FAIL: fixture\n - expected semantic refusal', 0, True, 1),
         ('no mutation', 'FAIL: fixture\n - expected semantic refusal', 1, False, 1),
+        ('trace after failure', 'FAIL: unrelated\nTraceback (most recent call last):\n    - expected semantic refusal\nSyntaxError: invalid syntax', 1, True, 1),
+        ('progress after failure', 'FAIL: unrelated\nnote: diagnostic example follows\n - expected semantic refusal', 1, True, 1),
     ):
         (harness/'test/validate.py').write_text('print('+repr(output)+')\nraise SystemExit('+str(code)+')\n')
         command = "python3 -c \"open('changed', 'w').write('x')\"" if mutate else 'true'
@@ -119,6 +144,21 @@ for group_index, step in enumerate(STEPS):
 # landed while only its semantic branch is disabled. Anchor liveness still fails.
 repo = box/'repo'
 shutil.copytree(ROOT, repo, ignore=shutil.ignore_patterns('.git','__pycache__','node_modules'))
+# The historic missing-producer mutation also made Python invalid. Keep the
+# same identity but require a compiling mutant, so an unrelated syntax failure
+# cannot terminate the legitimate diagnostic section ahead of its intended row.
+sitemap = repo/'plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/sitemap_audit.py'
+sitemap_original = sitemap.read_bytes()
+producer_idx = next(i for i,l in enumerate(lines) if 'plantq "a script emitting a payload with no producer block"' in l)
+producer_command = lines[producer_idx+1].strip()
+mutant = subprocess.run(['bash','-c','S=plugins/seo-aeo-audit/skills/seo-aeo-audit\n'+producer_command],cwd=repo,capture_output=True,text=True)
+check(mutant.returncode == 0, 'producer mutation landed')
+compile(sitemap.read_text(), str(sitemap), 'exec')
+check(sitemap.read_bytes() != sitemap_original, 'producer mutation compiles and changes source')
+producer_run = subprocess.run([sys.executable,'-B','test/validate.py'],cwd=repo,capture_output=True,text=True)
+check(producer_run.returncode != 0 and matches(producer_run.stdout+producer_run.stderr,
+      'sitemap_audit.py never calls provenance('), 'compiling producer mutation names intended refusal')
+sitemap.write_bytes(sitemap_original)
 skillfile = repo/'plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md'
 sub(str(skillfile), 'most-requested of the **33**', 'most-requested of the **30**')
 validator = repo/'test/validate.py'

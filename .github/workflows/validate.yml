@@ -598,7 +598,7 @@ jobs:
           # skeleton homes in turn. Five more, whose checker is the behaviour suite
           # rather than the validator, live in the next step.
           plantq "a script emitting a payload with no producer block" 'sitemap_audit.py never calls provenance(' \
-            python3 test/plant_edit.py sub "$S/scripts/sitemap_audit.py" 'prov = provenance("sitemap_audit.py", argv,' 'prov = dict(argv=argv,  # noqa'
+            python3 test/plant_edit.py sub "$S/scripts/sitemap_audit.py" 'prov = provenance("sitemap_audit.py", argv,' 'prov = dict(args=argv, scope='
           plantq "the provenance shared block missing from one script" 'psi_pull.py carries no provenance shared block' \
             python3 test/plant_edit.py truncate "$S/scripts/psi_pull.py" '# ── provenance: the execution that produced this payload ── shared block ──────'
           plantq "a script carrying the block and never calling it under its own name" 'agent_surface.py never calls provenance(' \

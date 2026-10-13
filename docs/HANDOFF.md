@@ -11,11 +11,17 @@ before instrumenting traversal. Existing B-33 handoff below remains its own stat
 # FW06 B-33 attribution implementation — 2026-10-13
 
 The [execution receipt](evidence/runs/2026-10-13-fw06-attribution.md) owns current
-status and checks; the [original packet](evidence/plans/2026-10-13-fw06-guard-attribution.md)
-owns scope and baseline inventory. All 63 helper identities now name their intended
-diagnostic; 52 focused controls and both migrated workflow groups pass.
-Independent acceptance and full owner gates remain pending. Keep version 0.26.5; next patch packaging
-belongs after combined accepted B-9/B-33 source. No provider/native claim.
+status and exact checks; the [packet](evidence/plans/2026-10-13-fw06-guard-attribution.md)
+owns baseline scope. All 63 helper identities name their intended diagnostic.
+Final focused 93 controls and independent 19 extras pass at `22dc235`; corrected
+real groups pass 53 structural and 10 behavioral calls. The earlier full
+`npm run test:all` passed at `4364c48`, including all 31 negative groups.
+
+Next: deliberately promote frozen PR31 once, observe genuine required checks,
+then normal integration. Keep version 0.26.5 until separate combined coverage/
+attribution packaging. Continue the separately pushed sitemap coverage packet
+on accepted source without waiting for an unrelated release. Provider/native
+acceptance and standalone negative-step attribution remain outside this packet.
 
 ---
 
