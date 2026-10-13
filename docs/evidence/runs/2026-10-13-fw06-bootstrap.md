@@ -113,3 +113,28 @@ implementation. `python3 -B test/negatives.py -k canonical` passed: the actual w
 field mapping is rejected by the existing behavior suite. The failed full snapshot
 was read, then only its exact task-owned path removed; logs remain tracked.
 Corrected aggregate acceptance is still pending.
+
+
+## Composed local coverage — split replay, not a passing full command
+
+The parent independently accepted both test reconciliations. At exact
+`fdfc2ce2682e0ba311323085f1457a14995f4533`, `npm run test:audit` passed all nine
+regression files (exit 0, 6.02 seconds). [Suffix log](2026-10-13-fw06-composed-suffix.log)
+and [result](2026-10-13-fw06-composed-suffix.json) preserve this run. The local matrix is:
+
+| Scope | Source and result |
+|---|---|
+| Complete structure/docs/behavior phase | `aa99195`, PASS inside second full attempt |
+| Thirty unchanged negative groups | `aa99195`, PASS inside second full attempt |
+| Corrected canonical negative group | corrected working diff, committed as `fdfc2ce`; `python3 -B test/negatives.py -k canonical`, PASS |
+| Nine audit regression files, previously unreached | exact `fdfc2ce`, `npm run test:audit`, PASS |
+
+No runtime code changed between these source cuts; only the canonical test selector
+and failure receipts changed. Both full attempts remain FAILED. This explicit split
+coverage avoids repeating unchanged expensive checks after a test-only selector edit.
+It does not claim one passing local full command at final head. Full genuine PR
+candidate CI is still required before normal integration and the subsequent tag.
+
+Independent source acceptance covers T1 exact `6c3403d` /170, T2 exact `ce6d4df` /75
+and B1 exact `5ab0436` /87. Preparation/prerequisites are covered by offline/loopback
+fixtures; live provider/model/native acceptance remains NOT_RUN.

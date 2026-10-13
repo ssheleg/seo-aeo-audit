@@ -1,0 +1,10 @@
+{
+  "source": "fdfc2ce2682e0ba311323085f1457a14995f4533",
+  "command": "npm run test:audit",
+  "exit": 0,
+  "disk_watchdog_interrupted": false,
+  "elapsed_seconds": 6.02,
+  "minimum_free_bytes": 1018769408,
+  "log": "/tmp/fw06-composed-suffix.log",
+  "owned_tmpdir": "/tmp/fw06-composed-suffix-owned"
+}

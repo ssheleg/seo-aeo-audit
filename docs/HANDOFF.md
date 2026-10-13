@@ -10,8 +10,11 @@ Independent T1/T2 source reviews passed `6c3403d` (170 controls) and `ce6d4df` (
 B1 now has its [bootstrap receipt](evidence/runs/2026-10-13-fw06-bootstrap.md).
 Independent B1 exact `5ab0436` review passed 87 controls. The first composed gate
 found five superseded fixture expectations, preserved in the bootstrap receipt.
-Next: reviewed fixture reconciliation, corrected composed full gate, then ordinary
-integration and separately reviewed 0.26.6 packaging.
+Both fixture corrections were independently accepted. Split local coverage passed:
+complete structure/behavior, 30 unchanged negatives, corrected canonical negative
+and nine audit regressions. Both full attempts remain FAILED as recorded.
+Next: freeze/promote PR36 once for full genuine CI, normal integration, then
+separately reviewed 0.26.6 packaging.
 Do not claim complete B-9 or provider/native acceptance from this planning branch.
 
 ## Preflight integrated candidate — 2026-10-13

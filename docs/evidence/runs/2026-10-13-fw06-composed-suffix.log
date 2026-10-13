@@ -1,0 +1,50 @@
+
+> @ssheleg/seo-aeo-audit@0.26.5 test:audit
+> for t in test/audit_regressions/*.py; do python3 "$t" || exit 1; done
+
+  ok  every case is structurally valid, none is name-picking
+  ok  the negative and no-op cases hold their shape
+  ok  the live-host case is probe-gated (NOT_RUN offline)
+  ok  the manifest records oracle/raw/arms/grader rules
+  ok  the family harness validates each case (where present)
+
+all green
+  ok  the doctrine splits eligibility / permission / recommendation
+  ok  every CONFIRMED rule names its exact primary source
+  ok  a page without og tags is never confirmed ineligible
+  ok  a missing permission is a presentation finding
+  ok  AMP satisfies the permission as documented
+  ok  a small image stays a recommendation
+  ok  only indexing (track A) can block
+  ok  SDK reverse-engineering stays FIELD
+OK (8 checks)
+  ok  the doctrine scopes the multiplier
+  ok  a partial /spam/* action does not block /checkout
+  ok  sitewide blocks everything and reads differently
+  ok  removal stays priority one, the fix ships beside it
+  ok  the record carries type/patterns/surface/severity/scope
+OK (5 checks)
+  ok  the doctrine states the claim key and drops forced agreement
+  ok  thin + extractable coexist
+  ok  different predicates/tiers on one URL coexist
+  ok  same key, different values opens a ruling; instruments named
+  ok  different snapshots are change, not conflict
+  ok  nothing incompatible is silently merged
+OK (6 checks)
+  ok  the doctrine separates the five axes
+  ok  a vendor estimate without a method is not STUDY
+  ok  one rollout policy is shared by the table and SKILL.md
+  ok  admission behaviour: rank never substitutes for method
+  ok  rollout behaviour: risk × causal support decides
+  ok  the definition cells stay verbatim with CONTRIBUTING.md
+OK (6 checks)
+OK: pass
+OK: fail
+OK: exception
+residue: this run left nothing — 3 temp tree(s) created, 3 removed
+FW01 snapshot: 3/3 passed
+PASS: FW06 attribution 93 controls
+residue: this run left nothing — 1 temp tree(s) created, 1 removed
+FW06 provenance: 14/14 controls passed
+PASS: owner release 27 focused controls (local Git; no publication)
+residue: this run left nothing — 1 temp tree(s) created, 1 removed
