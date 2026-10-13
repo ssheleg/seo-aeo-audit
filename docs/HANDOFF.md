@@ -1,21 +1,21 @@
-## GSC coverage candidate — 2026-10-13
+# Combined GSC and R30 candidate — 2026-10-13
 
-Implementation of the reviewed provider packet is focused-green; see
-[evidence](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and the
-[contract](contracts/collector-coverage.md). Accepted agent coverage is now integrated at e8aa59e. Final combined checks
-115/127/73/54 and structural validation passed. Next: obtain independent review, then request one
-serialized owner gate and genuine PR admission. PSI and preflight remain open;
-R30 SEO duplicate/width board-parser repair is separately queued from the family
-audit. No live provider or release claim; package remains 0.26.5.
+GSC source de16b2baeb07b22a13af7662fa2ae56a1aa5db06 passed independent
+76-control review after both aggregate overflow findings were repaired. R30 source
+99653a0b211e737ad43a0884f2e801742666d0e5 passed independent 28 board/validator
+and 27 local-Git release controls. See the separate
+[GSC receipt](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and
+[R30 receipt](evidence/runs/2026-10-13-r30-owner-gates.md).
 
-# Next B-9 provider/readiness packet — 2026-10-13
+Next: run one exact combined owner `npm run test:all` after the serial slot clears,
+then freeze/push the evidence, promote one genuine PR candidate and watch normal
+integration. Package remains 0.26.5; provider/native acceptance remains NOT_RUN.
+Agent-surface PR33 already landed normally at e8aa59e with genuine checks.
+PSI implementation is on separate plan/fw06-psi-coverage, whose approved packet
+is `docs/evidence/plans/2026-10-13-fw06-psi-coverage.md` at 29041dc.
+Preflight and early bootstrap envelopes remain open. No complete FW06 claim.
 
-Read [the provider coverage packet](evidence/plans/2026-10-13-fw06-provider-coverage.md).
-This branch is planning only. First reconcile accepted agent-surface source, then
-freeze GSC full-report versus listing/bootstrap units and response carriers before
-implementation. No provider credentials or traffic are needed for the first slice.
-
----
+## Historical task context
 
 # B-9 agent-surface coverage candidate — 2026-10-13
 

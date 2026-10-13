@@ -63,3 +63,12 @@ flow. JSON/text preserve the report and explicitly refuse the affected position
 aggregate. `python3 -B test/gsc_coverage_contract.py` passes **76 controls** after
 this second correction; no new traffic ceiling or inferred metric consistency
 rule was added.
+
+
+## Independent bounded acceptance
+
+Parent reviewer independently read the diff and replayed all 76 focused controls
+at `de16b2baeb07b22a13af7662fa2ae56a1aa5db06`, returning scoped PASS. Both prior
+peer findings and their red/green evidence remain above. This accepts bounded
+source behavior, not live provider data or the remaining PSI/preflight work.
+The next integration gate is the combined GSC/R30 exact-source owner suite.

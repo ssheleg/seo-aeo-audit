@@ -579,6 +579,8 @@ from agent_coverage_contract import run as check_agent_coverage
 check_agent_coverage(check, ROOT, _TMP)
 from gsc_coverage_contract import run as check_gsc_coverage
 check_gsc_coverage(check, ROOT, _TMP)
+from owner_board_contract import run as check_owner_board_contract
+check_owner_board_contract(check, ROOT, _TMP)
 
 if not failures:
     residue.close_case("output contracts")
