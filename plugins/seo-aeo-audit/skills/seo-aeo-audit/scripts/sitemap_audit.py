@@ -16,7 +16,7 @@ links. Tools that report "orphan candidates" from a sitemap are inferring from
 path shape; that is a guess wearing the clothes of a finding, and it fails
 non-negotiable #1. Orphans need a crawl — architecture-and-equity.md says how.
 
-stdlib only, no auth. Reads a URL, a local file, or stdin.
+stdlib only, no auth. Reads a URL or a local file.
 
 Usage:
   sitemap_audit.py --url https://example.com/sitemap.xml
@@ -33,12 +33,15 @@ unavailable is indistinguishable from one nobody checked. `observed_at` is the f
 that decides whether a finding has expired; the report's own `## Provenance` block adds
 the four invalidators (see references/preflight.md).
 
-Exit codes: 0 = ran, 1 = usage/fetch/parse error.
+Exit codes: 0 = analyzed page URLs, 1 = fetch/parse error or no page URLs,
+2 = invalid arguments. Attempted collection emits a report even on exit 1.
 """
 from __future__ import annotations
 
 import argparse
 import gzip
+import io
+import http.client
 import json
 import os
 import re
@@ -47,7 +50,8 @@ import time
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from collections import Counter
+import zlib
+from collections import Counter, deque
 from urllib.parse import urlparse
 
 
@@ -146,9 +150,9 @@ def provenance_md(prov: dict) -> str:
         v = prov.get(f, "")
         if isinstance(v, list):
             v = " ".join(v)
-        # Flattened here rather than through `_flat`: only five of the seven scripts
-        # define one, and a shared block resting on a name two of its homes lack
-        # would crash in exactly the two least-exercised renderers.
+        # Flattened here rather than through `_flat`: not all seven scripts define one,
+        # and this shared block must render independently of that helper.
+        # test/validate.py counts the actual helper homes.
         cell = " ".join(str(v).split()).replace("|", "\\|")
         if len(cell) > 300:
             cell = cell[:299].rstrip() + "…"
@@ -156,6 +160,62 @@ def provenance_md(prov: dict) -> str:
     return "\n".join(lines)
 # ── end provenance shared block ──────────────────────────────────────────────
 
+
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
+
+
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
 
 UA = "seo-aeo-audit/sitemap_audit (+https://github.com/ssheleg/seo-aeo-audit)"
 # A sitemap file may hold 50,000 URLs and 50 MB uncompressed (sitemaps.org).
@@ -166,17 +226,37 @@ _NUM = re.compile(r"^\d+$")
 _SLUGGY = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+){1,}$")
 
 
+class IncompleteBody(ValueError):
+    """Transport or decompression did not provide a complete document."""
+
+
+def decode_body(raw: bytes, zipped: bool) -> str:
+    if len(raw) > MAX_BYTES_PER_MAP:
+        raise IncompleteBody("raw body exceeds the byte budget")
+    if zipped:
+        try:
+            with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+                raw = stream.read(MAX_BYTES_PER_MAP + 1)
+        except (OSError, EOFError, zlib.error) as exc:
+            raise IncompleteBody("gzip stream is corrupt or incomplete") from exc
+        if len(raw) > MAX_BYTES_PER_MAP:
+            raise IncompleteBody("uncompressed body exceeds the byte budget")
+    return raw.decode("utf-8", "replace")
+
+
 def fetch(url: str) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": UA,
                                                "Accept-Encoding": "gzip"})
     with urllib.request.urlopen(req, timeout=45) as resp:
-        raw = resp.read(MAX_BYTES_PER_MAP)
-        if resp.headers.get("Content-Encoding") == "gzip" or url.endswith(".gz"):
-            try:
-                raw = gzip.decompress(raw)
-            except OSError:
-                pass  # not actually gzipped, or truncated — parse what we have
-    return raw.decode("utf-8", "replace")
+        try:
+            raw = resp.read(MAX_BYTES_PER_MAP + 1)
+        except http.client.IncompleteRead as exc:
+            raise IncompleteBody("HTTP body ended before its declared length") from exc
+        declared = resp.headers.get("Content-Length", "")
+        if declared.isdigit() and len(raw) < int(declared):
+            raise IncompleteBody("HTTP body is incomplete or exceeds the byte budget")
+        zipped = resp.headers.get("Content-Encoding", "").strip().lower() == "gzip" or urlparse(url).path.endswith(".gz")
+    return decode_body(raw, zipped)
 
 
 def parse_sitemap(text: str) -> tuple[list[str], list[str], int]:
@@ -331,51 +411,70 @@ def main(argv: list[str]) -> int:
         print("pass --url or --file", file=sys.stderr)
         return 1
 
+    if args.max_maps <= 0:
+        ap.error("--max-maps must be positive")
+
     sources: list[str] = []
     urls: list[str] = []
+    errors: list[dict] = []
+    reasons: list[dict] = []
+    returned = 0
     skipped = 0
     truncated = 0
-    try:
-        if args.file:
-            with open(args.file, encoding="utf-8") as fh:
-                text = fh.read()
-            sources.append(args.file)
+    unknown_frontier = False
+    unfollowed = 0
+    discovered = {args.file if args.file else args.url}
+    queue = deque(discovered)
+    while queue:
+        if not args.file and len(sources) >= args.max_maps:
+            skipped = len(queue)
+            unknown_frontier = True
+            reasons.append({"code": "document_cap", "detail": f"{skipped} known documents were not attempted after --max-maps={args.max_maps}."})
+            break
+        source = queue.popleft()
+        sources.append(source)
+        try:
+            if args.file:
+                with open(source, "rb") as fh:
+                    text = decode_body(fh.read(MAX_BYTES_PER_MAP + 1), source.endswith(".gz"))
+            else:
+                text = fetch(source)
             pages, maps, capped = parse_sitemap(text)
-            urls += pages
-            truncated += capped
-            if maps:
-                print(f"note: {len(maps)} nested sitemap(s) referenced; pass --url to "
-                      f"follow them", file=sys.stderr)
+        except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as exc:
+            code = "incomplete_body" if isinstance(exc, IncompleteBody) else "input_failed"
+            errors.append({"source": source, "code": code, "detail": str(exc)})
+            unknown_frontier = True
+            print(f"could not read sitemap: {exc}", file=sys.stderr)
+            continue
+        returned += 1
+        urls += pages
+        truncated += capped
+        if args.file:
+            unfollowed = len(set(maps))
+            if unfollowed:
+                unknown_frontier = True
+                reasons.append({"code": "offline_index", "detail": f"{unfollowed} nested references are not followed in --file mode; they may hide descendants."})
         else:
-            queue = [args.url]
-            seen = set()
-            while queue:
-                if len(sources) >= args.max_maps:
-                    skipped = len(queue)
-                    break
-                m = queue.pop(0)
-                if m in seen:
-                    continue
-                seen.add(m)
-                sources.append(m)
-                pages, maps, capped = parse_sitemap(fetch(m))
-                urls += pages
-                truncated += capped
-                queue += [x for x in maps if x not in seen]
-    except (urllib.error.URLError, OSError, ValueError) as e:
-        print(f"could not read sitemap: {e}", file=sys.stderr)
-        return 1
-
-    if skipped:
-        print(f"note: {skipped} nested sitemap(s) beyond --max-maps={args.max_maps} "
-              f"were not read", file=sys.stderr)
+            for nested in maps:
+                if nested not in discovered:
+                    discovered.add(nested)
+                    queue.append(nested)
+    for code in sorted({e["code"] for e in errors}):
+        reasons.append({"code": code, "detail": f"{sum(e['code'] == code for e in errors)} attempted document(s) did not yield complete parseable XML; see errors."})
+    if unknown_frontier:
+        reasons.append({"code": "unknown_frontier", "detail": "Unresolved documents can hide additional descendants; requested is unknown, not the known-discovered count."})
     if truncated:
-        # A silent cap reads as "this is the whole site" and it is not.
-        print(f"note: {truncated} URL(s) beyond the {MAX_URLS_PER_MAP}-per-file "
-              f"sitemap limit were not read", file=sys.stderr)
+        reasons.append({"code": "page_url_cap", "detail": f"{truncated} page URL entries beyond the per-document limit were excluded from analysis; document counts are separate."})
+        print(f"note: {truncated} URL(s) beyond the {MAX_URLS_PER_MAP}-per-file sitemap limit were not read", file=sys.stderr)
     if not urls:
         print("sitemap parsed but declared no page URLs", file=sys.stderr)
-        return 1
+    scope = ("One local file; returned means complete parseable XML. Nested references are not followed. "
+             if args.file else "Exact unique discovered sitemap URLs, including the root; returned means complete parseable XML, including empty URL sets. ")
+    scope += "Counts are documents, not page URLs, redirect hops or the site's URL universe."
+    coverage = collector_coverage("local_file" if args.file else "unique_sitemap_document", scope,
+                                  None if unknown_frontier else len(discovered), len(sources), returned, skipped, reasons)
+    traversal = {"known_discovered": len(discovered), "unknown_frontier": unknown_frontier,
+                 "offline_nested_references": unfollowed}
 
     a = analyze(urls)
     a["sitemaps_read"] = len(sources)
@@ -388,11 +487,17 @@ def main(argv: list[str]) -> int:
                       + (f" (+{len(sources) - 3} more)" if len(sources) > 3 else ""))
     if args.format == "json":
         print(json.dumps({"producer": prov, "sources": sources,
-                          "analysis": a, "findings": f}, indent=2))
+                          "analysis": a, "findings": f, "coverage": coverage,
+                          "traversal": traversal, "errors": errors}, indent=2))
     else:
         print(render_markdown(a, f, sources))
+        print("\n" + collector_coverage_md(coverage))
+        if errors:
+            print("\n## Collection errors\n")
+            for error in errors:
+                print(f"- {_flat(error['source'])}: {_flat(error['detail'])}")
         print("\n" + provenance_md(prov))
-    return 0
+    return 1 if errors or not urls else 0
 
 
 if __name__ == "__main__":

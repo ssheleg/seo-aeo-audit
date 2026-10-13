@@ -77,6 +77,7 @@ ui = load("url_inspection")
 psi = load("psi_pull")
 pa = load("page_audit")
 ags = load("agent_surface")
+sm = load("sitemap_audit")
 
 # A Google error page: the thing that actually arrives, not a synthetic string.
 HOSTILE = (
@@ -88,7 +89,7 @@ HOSTILE = (
 # ── 1. every renderer flattens before it interpolates ────────────────────────
 for name, mod in (("preflight", pre), ("url_inspection", ui),
                   ("psi_pull", psi), ("page_audit", pa),
-                  ("agent_surface", ags)):
+                  ("agent_surface", ags), ("sitemap_audit", sm)):
     fn = getattr(mod, "_flat", None)
     if fn is None:
         failures.append(f"{name}.py must define _flat() — error text reaches its markdown raw")
@@ -503,7 +504,7 @@ for _name, _mod, _argv in _DEFAULT_RUNS:
           f"PRODUCER_FIELDS")
 
 # A hostile value cannot break the table it is rendered into — the same defect the
-# five _flat homes above exist for, in a block two of the seven scripts render
+# six _flat homes above exist for, in a block all seven scripts render
 # without an _flat to call.
 _hostile_md = pre.provenance_md(pre.provenance("preflight.py", [HOSTILE], HOSTILE))
 check(all(l.startswith("|") and l.rstrip().endswith("|")
@@ -570,6 +571,8 @@ for _rel in ("templates/audit-report.template.md",
 from collector_coverage_contract import run as check_collector_coverage
 check_collector_coverage(pa, ui, check, ROOT, _TMP)
 
+from sitemap_coverage_contract import run as check_sitemap_coverage
+check_sitemap_coverage(check, ROOT, _TMP)
 
 if not failures:
     residue.close_case("output contracts")
@@ -580,7 +583,7 @@ if failures:
     for f in failures:
         print("  -", f)
     raise SystemExit(1)
-print("PASS: output contracts (flattening in 5 renderers, preflight table + stable "
+print("PASS: output contracts (flattening in 6 renderers, preflight table + stable "
       "denominator, exit status from the same predicate the report uses in all six "
       "collectors that can measure nothing, every "
       "emitted severity orderable, coverage vocabulary closed and seeded, "

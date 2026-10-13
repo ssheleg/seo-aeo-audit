@@ -244,4 +244,24 @@ object and adds `coverage`; requested URLs are deduplicated before the cap, and 
 usable return requires index-status data. Redirect/retry hops do not add logical
 inputs. Markdown prints the same bounded counts and state. Early argument, input-file
 or credential bootstrap errors can still exit before a record is produced; absence
-is not complete coverage. Other collectors are still migrating.
+is not complete coverage. Sitemap traversal is described below; the other collectors are still migrating.
+
+
+## Sitemap traversal coverage
+
+`sitemap_audit.py` emits `collector-coverage/1` in JSON and Markdown. Its unit is
+one exact unique discovered sitemap document (or one offline file), not a page
+URL. Complete, parseable empty URL sets count as returned documents but keep
+exit 1 when there are no page URLs to analyze. A failed/capped document or an
+unfollowed offline index may hide descendants: requested stays unknown, while
+attempted, returned and known unattempted counts remain measured. JSON also
+contains `traversal.known_discovered`, `traversal.offline_nested_references`,
+`traversal.unknown_frontier` and `errors`. These do not establish whole-site coverage.
+
+Raw and decompressed bodies are bounded separately. Cut/corrupt gzip, incomplete
+HTTP bodies and byte caps are errors, never complete returned XML. Existing page
+URL caps remain separate from document counts. Partial earlier successes survive
+later read failures; those invocations now emit a report and retain exit 1.
+`--max-maps` must be positive. `--file` reads one local XML/gzip file and follows no
+nested references. The CLI does not read stdin. `sources` and `sitemaps_read` retain
+the legacy attempted-input count; use `coverage.returned` for usable documents.

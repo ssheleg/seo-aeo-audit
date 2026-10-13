@@ -1,6 +1,8 @@
 # FW06 next B-9 slice: sitemap traversal coverage
 
-Status: planned, not implemented. Source observed at
+Status: implemented in candidate; checks/review/integration state belongs to
+[the execution receipt](../runs/2026-10-13-fw06-sitemap.md). Original packet follows.
+Planning snapshot: planned, not implemented. Source observed at
 `4364c4867d34b05e9e2d0f5e00da53a9b5889106`; this branch is stacked on the B-33
 candidate and must incorporate its accepted source before implementation. The
 [common contract](../../contracts/collector-coverage.md) remains the single schema

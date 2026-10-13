@@ -161,9 +161,9 @@ def provenance_md(prov: dict) -> str:
         v = prov.get(f, "")
         if isinstance(v, list):
             v = " ".join(v)
-        # Flattened here rather than through `_flat`: only five of the seven scripts
-        # define one, and a shared block resting on a name two of its homes lack
-        # would crash in exactly the two least-exercised renderers.
+        # Flattened here rather than through `_flat`: not all seven scripts define one,
+        # and this shared block must render independently of that helper.
+        # test/validate.py counts the actual helper homes.
         cell = " ".join(str(v).split()).replace("|", "\\|")
         if len(cell) > 300:
             cell = cell[:299].rstrip() + "…"
