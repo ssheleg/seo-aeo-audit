@@ -1,3 +1,12 @@
+# Next B-9 provider/readiness packet — 2026-10-13
+
+Read [the provider coverage packet](evidence/plans/2026-10-13-fw06-provider-coverage.md).
+This branch is planning only. First reconcile accepted agent-surface source, then
+freeze GSC full-report versus listing/bootstrap units and response carriers before
+implementation. No provider credentials or traffic are needed for the first slice.
+
+---
+
 # B-9 agent-surface coverage candidate — 2026-10-13
 
 Read [the execution receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md) and
