@@ -94,3 +94,18 @@ and then removed after successful correction; no foreign temporary tree was remo
 final structural result. This adds no skip, parser relaxation or package payload
 change. Prior baseline/focused receipts remain historical; final independent
 review, one serialized owner full gate and genuine PR admission are still required.
+
+## Final bounded independent review
+
+Independent reviewer `fresh_research` returned **PASS** for exact source
+`76d25cd5c283bce7c4fdd25c7c42fee7038fe1b2`. The reviewer read the full original
+guard, its four exact exceptions, actual public entry point and the discovery
+correction, independently reproduced the unreadable-directory false success at
+5a98dda, and replayed the corrected 11 groups with exit0 and all 11 owned trees
+removed. That includes the actual validator subprocess controls. The documented
+lexical exclusions and unsupported forms remain; this verdict is neither a
+broad owner suite nor a published/runtime acceptance claim.
+
+Next: one serialized `npm run test:all` at this reviewed implementation plus this
+receipt-only successor, followed by frozen genuine candidate checks and normal
+merge. No source implementation changed after the independently reviewed head.
