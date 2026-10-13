@@ -314,6 +314,12 @@ must name, anchor discipline, and the CSV column contract.
 
 ## Security posture
 
+`agent_surface.py` also emits per-unit probe/file coverage. Its request journal
+includes discovery attempts omitted from the display table; redirect hops remain
+separate transport evidence. Unknown branch inputs and incomplete bodies stay
+explicit, and network/file counts are never summed. See
+[the collector contract](docs/contracts/collector-coverage.md).
+
 Text plus **seven** standard-library Python scripts, and nothing else runs. Four of
 them are read-only network clients (`page_audit.py`, `psi_pull.py`,
 `sitemap_audit.py`, `agent_surface.py`); two call Google APIs with a token minted

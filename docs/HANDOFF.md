@@ -1,3 +1,27 @@
+## Agent-surface independent correction acceptance — 2026-10-13
+
+Core source `8e2ee005fa21a3f1dc289c919b26d506a58c22d6` passed independent
+73 + 8 bounded controls after three review findings were fixed. See
+[the receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md).
+The owner `npm run test:all` passed at c7070da with all 31 negative groups and
+eight audit regression files. The next step is to promote the frozen draft PR
+once and watch genuine required checks for normal integration. No provider/native acceptance claimed.
+Provider planning remains on separate `plan/fw06-provider-coverage` at e300831;
+its contract proposal must be reviewed before implementation.
+
+# B-9 agent-surface coverage candidate — 2026-10-13
+
+Read [the execution receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md) and
+[the packet](evidence/plans/2026-10-13-fw06-agent-surface-coverage.md). Accepted
+sitemap source is `dd5319a8935d60d0db7b3649b528d31d0b9ac45f` (PR32, genuine run
+38348112306 passed both jobs). This candidate journals hidden probes and keeps
+network/local units separate. Version remains 0.26.5. Next: focused independent
+review, then one owner aggregate only after the serial/disk slot is released,
+frozen genuine PR checks and normal integration. GSC, PSI and preflight remain
+separate migrations with their own denominators/provider boundaries.
+
+---
+
 # B-9 sitemap candidate — 2026-10-13
 
 Read the [bounded packet](evidence/plans/2026-10-13-fw06-sitemap-coverage.md).

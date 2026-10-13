@@ -1,0 +1,119 @@
+# FW06 B-9 agent-surface probe coverage
+
+Status: candidate implemented and independently accepted within the bounds below;
+owner aggregate passed; final PR admission remains separate. Accepted sitemap base is
+`dd5319a8935d60d0db7b3649b528d31d0b9ac45f`. Version remains 0.26.5. No provider
+credentials/external requests, installed-host, task-quality or whole-site claims.
+
+## Packet and measured problem
+
+[The packet](../plans/2026-10-13-fw06-agent-surface-coverage.md) preserves source
+inventory and a tracked reproducer. A finite mocked root/404 fixture made 47
+fetch calls but displayed 23 checks; its selected-row `_answered` was also 23.
+The new journal records each logical invocation including alternatives, header
+variants and CLI-only OpenAPI/API probes. A separate near-miss fixture proved
+that an unlisted landing response could still produce the false exit message
+that every request failed. The final exit predicate now reads observed landing
+statuses from the journal; a usable offline spec remains an answer too.
+
+Consumer inventory found three singular collector carriers and preflight's
+unrelated track-coverage object. The candidate therefore adds `coverage_by_unit`
+without repurposing any existing `coverage`: network probes and optional local
+files remain distinct common-schema records. The
+[contract](../../contracts/collector-coverage.md) owns units, usable-return scope,
+unknown discovery branches and the compatibility reader behavior.
+
+## Implementation boundaries
+
+`agent_surface.py` owns the invocation journal and response completeness flags.
+Raw/gzip sentinel limits preserve status/header observations when body data is
+incomplete. Malformed URLs become failed probes; local JSON/analyzer errors remain
+explicit payload failures while earlier observations survive. A complete network
+body is not proof every OpenAPI field answered, and a JSON object accepted by the
+bounded analyzer is not full OpenAPI specification validation.
+
+`test/collector_coverage_contract.py` supplies the independent carrier reader;
+`test/agent_coverage_contract.py`, invoked from the existing output gate, supplies
+mock/loopback/copied-CLI/mutation evidence and four-copy shared-block parity.
+No workflow trigger, package version, skill entry or description changes here.
+
+## Observed checks
+
+The first dedicated fixture run exited 1 on absent accounting/journal and an
+unhandled non-object local OpenAPI payload. After implementation,
+`python3 -B test/agent_coverage_contract.py` passed **62 controls**, including
+47/23 accounting, fixed versus blocked-discovery failures, separate/mixed local
+inputs, legacy/new carrier acceptance and ambiguity rejection, physical-hop
+separation, hidden-response exit behavior, loopback full/empty/404/redirect/gzip/
+short/capped responses, actual standalone CLI calls and three executable mutants.
+The mutant predicates name hidden request bypass, false complete-body return and
+missing CLI-only attempt; they do not treat arbitrary checker errors as proof.
+
+`python3 -B test/test_agent_surface.py` passed existing behavior.
+`python3 -B test/audit_regressions/fw06_probe_provenance.py` passed **14/14**.
+The combined `python3 -B test/test_output_contracts.py` exited 0 with 115 shared,
+127 sitemap and 62 agent-coverage controls. `python3 -B test/validate.py` exited 0
+with 25 references and unchanged SKILL body 4685 tokens / 325 lines; routed
+trigger integration remains explicitly unlooked in this isolated checkout. Broad suite has not been run:
+parent requested a disk/serial hold, so its absence is pending evidence, not a pass.
+
+
+## Independent findings and correction replay
+
+The peer review of `54fe9d523e816e5868cdf68eb771cdf42c7c53a9` reproduced
+three bounded gaps. Latin-1 superscript `²` in Content-Length passed `isdigit`
+but failed `int`: HTTP 200 lost its observed status, and the HTTP 404 handler
+raised before emitting a report. The reader now accepts only ASCII decimal
+syntax and compares normalized decimal strings without unbounded integer
+conversion; malformed lengths preserve status with an explicit incomplete-body
+reason. Actual loopback 200/404 and copied CLI controls preserve the report.
+This is not a complete HTTP framing validator.
+
+The initial missing-path response decides whether to request its markdown
+variant. Failure now marks that conditional frontier unknown: the isolated
+fixture records 46 attempts and requested null, versus 47 calls in its complete
+counterpart. Repeated page-array rows also refuse a competing per-unit carrier,
+including a conflict introduced only in a later row; the legacy repeated-record
+positive remains accepted.
+
+The new focused controls first exited 1 on all three defects (seven failed
+predicates). After correction, `python3 -B test/agent_coverage_contract.py`
+exited 0 with **73 controls**. The first copied CLI test draft used unsupported
+standalone `--api-probe` input and failed before collection; correcting the
+fixture to the supported `--openapi` entry produced the intended transport
+assertion. Both owned failed fixture trees were inspected and removed; no foreign
+residue was removed. Combined `python3 -B test/test_output_contracts.py` then passed 115 shared,
+127 sitemap and 73 agent controls. Structural validation also exited 0.
+Independent acceptance follows below; owner aggregate remains pending.
+
+
+## Independent bounded review
+
+Peer reviewer `/root/fresh_research` reviewed source
+`8e2ee005fa21a3f1dc289c919b26d506a58c22d6`, including the correction diff
+from 54fe9d5, and returned bounded PASS. Independent replay of
+`python3 -B test/agent_coverage_contract.py` exited 0: 73 controls, one owned
+fixture tree created and removed. The original three counterexamples are covered:
+malformed Content-Length preserves observed 200/404 and a partial report,
+failed initial missing-path discovery leaves requested unknown, and competing
+per-unit carriers are refused in every repeated page row.
+
+Eight additional independent in-memory controls passed: superscript and empty
+lengths, a 5000-digit length, leading-zero and surrounding-whitespace positive
+lengths, competing carriers in first and later rows, and the unchanged repeated
+legacy carrier positive. No provider calls, credentials, external network, broad
+suite or foreign fixtures were used by this reviewer. This certifies the bounded
+coverage/report-preservation contract; it does not certify exhaustive HTTP
+framing, whole-site completeness, installed/native use or task quality.
+
+
+## Exact-source owner aggregate
+
+After independent acceptance and serial-slot clearance, `npm run test:all` exited
+0 at `c7070da951bf80fb65a1ec4a7f6578cc4ae2e33e`. The run used an owned TMPDIR
+with 3.8 GiB free at launch and 2.6 GiB after completion. All 31 negative groups
+and eight audit regression files passed, including shared/sitemap/agent coverage
+115/127/73, attribution 93, provenance 14, snapshot 3 and residue 11 controls.
+The residue runner reported its own trees removed. No candidate implementation
+changed during this exact-source run. This documentation successor retains the
+same tested source; genuine PR checks must bind its final head before integration.

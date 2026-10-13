@@ -49,12 +49,21 @@ unavailable is indistinguishable from one nobody checked. `observed_at` is the f
 that decides whether a finding has expired; the report's own `## Provenance` block adds
 the four invalidators (see references/preflight.md).
 
+Coverage is carried in `coverage_by_unit`: network_probe invocations and an
+optional independent local_file record. `network_probes` includes hidden requests;
+rendered checks are not the denominator. Complete response bodies, observed
+statuses and analyzable payloads are distinct evidence.
+
 Exit codes: 0 = at least one probe answered, 1 = usage error, or nothing answered
 (a run where every request failed is not a measurement of an absent surface).
 """
 from __future__ import annotations
 
 import argparse
+import gzip
+import http.client
+import io
+import zlib
 import json
 import os
 import re
@@ -361,6 +370,49 @@ def _flat(text: str, limit: int = 200) -> str:
     return one[:limit] + ("…" if len(one) > limit else "")
 
 
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
+
 # --- transport ---------------------------------------------------------------
 
 
@@ -368,13 +420,16 @@ class Probe:
     """One request and what came back. A probe that never ran is not evidence."""
 
     def __init__(self, url: str, status, ctype: str = "", body: str = "",
-                 headers=None, error: str = "", final_url: str = "", redirects=None):
+                 headers=None, error: str = "", final_url: str = "", redirects=None,
+                 body_complete: bool = True, body_error: str = ""):
         self.url = url
         self.status = status
         self.ctype = ctype
         self.body = body
         self.headers = {k.lower(): v for k, v in (headers or {}).items()}
         self.error = error
+        self.body_complete = status is not None and body_complete
+        self.body_error = body_error
         # Where the request ACTUALLY landed. urlopen follows redirects, so a probe
         # that reports 200 may be describing a completely different page — and it
         # will describe it convincingly, with a title and a word count. Found by
@@ -403,32 +458,98 @@ class _RedirectTrace(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
-    if urlparse(url).scheme not in ("http", "https"):
-        return Probe(url, None, error="refused: not an http(s) URL")
-    headers = {"User-Agent": user_agent, "Accept-Encoding": "identity"}
-    if accept:
-        headers["Accept"] = accept
-    req = Request(url, headers=headers)
-    trace = _RedirectTrace()
-    opener = build_opener(trace)
+def _read_response(url, response, trace):
+    """Retain observed status/headers even when the body is incomplete."""
+    headers = dict(response.headers or {})
+    complete, error, raw = True, "", b""
     try:
-        with opener.open(req, timeout=TIMEOUT) as r:
-            raw = r.read(MAX_BYTES)
-            return Probe(url, r.status, r.headers.get("Content-Type", ""),
-                         raw.decode("utf-8", "replace"), dict(r.headers),
-                         final_url=getattr(r, "url", "") or url, redirects=trace.hops)
-    except HTTPError as e:
-        raw = b""
+        raw = response.read(MAX_BYTES + 1)
+    except http.client.IncompleteRead as exc:
+        raw, complete, error = exc.partial[:MAX_BYTES], False, "HTTP body ended before its declared length"
+    except (OSError, ValueError, http.client.HTTPException) as exc:
+        complete, error = False, str(exc)
+    declared = response.headers.get("Content-Length") if response.headers else None
+    short = False
+    if declared is not None:
+        declared = declared.strip(" \t")
+        if not re.fullmatch(r"[0-9]+", declared):
+            complete, error = False, "malformed Content-Length; body completeness is unverified"
+        else:
+            # Decimal comparison avoids Unicode isdigit/int disagreement and an
+            # unbounded conversion of an arbitrarily long header value.
+            normalized, observed = declared.lstrip("0") or "0", str(len(raw))
+            short = (len(normalized), normalized) > (len(observed), observed)
+    if len(raw) > MAX_BYTES or short:
+        complete, error = False, "HTTP body is incomplete or exceeds the byte budget"
+        raw = raw[:MAX_BYTES]
+    encoding = response.headers.get("Content-Encoding", "").strip().lower() if response.headers else ""
+    if encoding == "gzip":
         try:
-            raw = e.read(MAX_BYTES)
-        except Exception:  # noqa: BLE001 - a body we cannot read is still a status
-            pass
-        return Probe(url, e.code, e.headers.get("Content-Type", "") if e.headers else "",
-                     raw.decode("utf-8", "replace"), dict(e.headers or {}),
-                     final_url=e.url, redirects=trace.hops)
-    except (URLError, OSError, ValueError) as exc:
+            with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+                raw = stream.read(MAX_BYTES + 1)
+            if len(raw) > MAX_BYTES:
+                raw, complete, error = raw[:MAX_BYTES], False, "uncompressed body exceeds the byte budget"
+        except (OSError, EOFError, zlib.error):
+            raw, complete, error = b"", False, "gzip stream is corrupt or incomplete"
+    elif encoding not in ("", "identity"):
+        raw, complete, error = b"", False, "unsupported content encoding: " + encoding
+    return Probe(url, response.code, response.headers.get("Content-Type", "") if response.headers else "",
+                 raw.decode("utf-8", "replace"), headers,
+                 final_url=getattr(response, "url", "") or url, redirects=trace.hops,
+                 body_complete=complete, body_error=error)
+
+
+def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
+    trace = _RedirectTrace()
+    try:
+        if urlparse(url).scheme not in ("http", "https"):
+            return Probe(url, None, error="refused: not an http(s) URL")
+        headers = {"User-Agent": user_agent, "Accept-Encoding": "identity"}
+        if accept:
+            headers["Accept"] = accept
+        req = Request(url, headers=headers)
+        opener = build_opener(trace)
+        with opener.open(req, timeout=TIMEOUT) as response:
+            return _read_response(url, response, trace)
+    except HTTPError as exc:
+        with exc:
+            return _read_response(url, exc, trace)
+    except (URLError, OSError, ValueError, http.client.HTTPException) as exc:
         return Probe(url, None, error=str(exc)[:160], redirects=trace.hops)
+
+
+class ProbeJournal:
+    """One entry per logical invocation; never derive attempts from display rows."""
+
+    def __init__(self):
+        self.entries = []
+        self.unresolved = []
+        self.reasons = []
+
+    def request(self, url, accept="", user_agent=UA, discovery=False):
+        probe = fetch(url, accept=accept, user_agent=user_agent)
+        self.entries.append({"url": url, "accept": accept, "user_agent": user_agent,
+                             "status": probe.status, "final_url": probe.final_url,
+                             "redirects": probe.redirects, "error": probe.error,
+                             "body_complete": probe.body_complete, "body_error": probe.body_error})
+        if discovery and not probe.body_complete:
+            self.unresolved.append(url)
+        return probe
+
+    def record(self):
+        attempted = len(self.entries)
+        returned = sum(e["status"] is not None and e["body_complete"] for e in self.entries)
+        failed = sum(e["status"] is None for e in self.entries)
+        incomplete = sum(e["status"] is not None and not e["body_complete"] for e in self.entries)
+        reasons = list(self.reasons)
+        if failed:
+            reasons.append({"code": "input_failed", "detail": f"{failed} logical probes had no landing response; observed redirect hops remain separate."})
+        if incomplete:
+            reasons.append({"code": "incomplete_body", "detail": f"{incomplete} landing responses had incomplete or unreadable bodies; observed statuses/headers remain evidence."})
+        if self.unresolved:
+            reasons.append({"code": "unknown_discovery", "detail": f"{len(self.unresolved)} discovery prerequisites could hide conditional inputs. Requested is unknown; attempts count observed invocations only."})
+        return collector_coverage("network_probe", "Scheduled logical request invocations in this bounded conditional workflow, including hidden alternatives and repeated/header variants. Returned means landing status plus complete body, including empty/404 bodies; not all analysis fields, all site URLs or physical redirect/retry hops.",
+                                  None if self.unresolved else attempted, attempted, returned, 0, reasons)
 
 
 # --- pure analysis (tested offline) ------------------------------------------
@@ -820,8 +941,9 @@ def looks_like_markdown(body: str, ctype: str) -> bool:
 
 def collect(origin: str, api_origin: str = "", page: str = "",
             spec_url: str = "", spec_obj: dict | None = None,
-            expect: tuple = ()) -> dict:
+            expect: tuple = (), journal=None) -> dict:
     """`expect` adds project-specific entry points as (role, (paths,), is_anchor)."""
+    journal = journal if journal is not None else ProbeJournal()
     origin = origin.rstrip("/") if origin else ""
     checks: list = []
     findings: list = []
@@ -848,7 +970,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
     if origin:
         # --- 1. does a missing path say so ----------------------------------
         missing = f"{origin}/agent-surface-probe-404-check"
-        p = note("404 shape", fetch(missing))
+        p = note("404 shape", journal.request(missing, discovery=True))
         if p.answered:
             if p.status == 200:
                 add("blocker", "agent-404-soft",
@@ -863,7 +985,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                 # is what this check did to a site that had just shipped it
                 # (2026-08-15).
                 md404 = note("404 shape (Accept: text/markdown)",
-                             fetch(missing, accept="text/markdown"))
+                             journal.request(missing, accept="text/markdown"))
                 if not (md404.answered and looks_like_markdown(md404.body, md404.ctype)):
                     add("low", "agent-404-no-recovery",
                         f"HTTP {p.status} for unknown paths (correct) but no short markdown "
@@ -878,9 +1000,9 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                         "agent-readiness.md#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins")
 
         # --- 2. the homepage, three ways ------------------------------------
-        home = note("homepage (default UA)", fetch(origin + "/"))
+        home = note("homepage (default UA)", journal.request(origin + "/", discovery=True))
         md_probe = note("homepage (Accept: text/markdown)",
-                        fetch(origin + "/", accept="text/markdown"))
+                        journal.request(origin + "/", accept="text/markdown"))
         neg = negotiation_verdict(md_probe)
         out["markdown_negotiation"] = neg
         if md_probe.answered and not neg["served_markdown"]:
@@ -894,7 +1016,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                 "— a CDN will hand the cached HTML to an agent asking for markdown",
                 "agent-readiness.md#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins")
 
-        bot = note("homepage (ClaudeBot UA)", fetch(origin + "/", user_agent="ClaudeBot/1.0"))
+        bot = note("homepage (ClaudeBot UA)", journal.request(origin + "/", user_agent="ClaudeBot/1.0"))
         if home.answered and bot.answered and home.body and bot.body:
             # Reported as a fact in BOTH directions: serving bots something else is
             # the mechanical definition of cloaking (threats-and-defense.md), and
@@ -920,7 +1042,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                 found_path, found_probe, last = "", None, None
                 bounced = []          # alternates that 200'd by redirecting to the root
                 for alt in alternates:
-                    last = fetch(origin + alt)
+                    last = journal.request(origin + alt)
                     if not (last.answered and last.status == 200):
                         continue
                     where = landed_where(last, origin)
@@ -1007,7 +1129,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
 
         # --- 4. markup on the named page ------------------------------------
         page_url = page or (origin + "/")
-        page_probe = home if page_url == origin + "/" else note("page markup", fetch(page_url))
+        page_probe = home if page_url == origin + "/" else note("page markup", journal.request(page_url, discovery=True))
         if page_probe.answered and page_probe.body:
             ld = scan_jsonld(page_probe.body)
             ld["_caveat"] = ("server-rendered HTML only, and ONE url — markup injected by "
@@ -1048,7 +1170,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                 if href:
                     tgt = href.group(1)
                     tgt = tgt if tgt.startswith("http") else origin + tgt
-                    twin = note("advertised markdown twin", fetch(tgt))
+                    twin = note("advertised markdown twin", journal.request(tgt))
                     if twin.answered and not looks_like_markdown(twin.body, twin.ctype):
                         add("high", "markdown-alternate-lies",
                             f"the advertised markdown alternate {tgt} serves "
@@ -1057,7 +1179,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                             "agent-readiness.md#k3-markdown-representations--where-the-myth-ends-and-the-contract-begins")
 
         # --- 5. robots.txt as three decisions -------------------------------
-        rp = note("robots.txt", fetch(f"{origin}/robots.txt"))
+        rp = note("robots.txt", journal.request(f"{origin}/robots.txt", discovery=True))
         if rp.answered and rp.status == 200:
             rob = parse_robots(rp.body)
             out["robots"] = rob
@@ -1130,14 +1252,14 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                     "no schemamap: directive (NLWeb schema feeds)",
                     "agent-readiness.md#k2-discovery--the-well-known-set-and-what-each-spec-actually-says")
             for sm in rob["sitemaps"][:1]:
-                sp = note("sitemap (lastmod coverage)", fetch(sm))
+                sp = note("sitemap (lastmod coverage)", journal.request(sm, discovery=True))
                 if sp.answered and sp.status == 200:
                     stats = lastmod_stats(sp.body)
                     if stats["urls"] == 0 and "<sitemapindex" in sp.body:
                         first = re.search(r"<loc>\s*([^<]+)</loc>", sp.body)
                         if first:
                             sp = note("sitemap child (lastmod coverage)",
-                                      fetch(first.group(1).strip()))
+                                      journal.request(first.group(1).strip()))
                             stats = lastmod_stats(sp.body) if sp.answered else stats
                     out["sitemap"] = stats
                     if stats["pct"] is not None and stats["pct"] < 50:
@@ -1165,7 +1287,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                             "technical-checks.md")
 
         # --- 6. llms.txt and the well-known set -----------------------------
-        lp = note("llms.txt", fetch(f"{origin}/llms.txt"))
+        lp = note("llms.txt", journal.request(f"{origin}/llms.txt"))
         if not (lp.answered and lp.status == 200):
             # Before reporting absence, look one character away. A manual served
             # at /llm.txt is written, linked and maintained — and invisible to
@@ -1173,7 +1295,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
             # them. "Absent" sends the team to write a file they already have.
             near = []
             for path in AGENT_FILE_NEAR_MISSES:
-                np_ = fetch(origin + path)
+                np_ = journal.request(origin + path)
                 if np_.answered and np_.status == 200 and np_.body.strip() \
                         and "html" not in (np_.ctype or "").lower():
                     note(f"near-miss agent file {path}", np_)
@@ -1199,7 +1321,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
 
         missing = []
         for path, label in WELL_KNOWN:
-            wp = note(label, fetch(origin + path))
+            wp = note(label, journal.request(origin + path))
             if not (wp.answered and wp.status == 200):
                 missing.append(path)
         out["well_known_missing"] = missing
@@ -1214,19 +1336,21 @@ def collect(origin: str, api_origin: str = "", page: str = "",
     if api_origin:
         api_origin = api_origin.rstrip("/")
         prm = note("api /.well-known/oauth-protected-resource",
-                   fetch(f"{api_origin}/.well-known/oauth-protected-resource"))
+                   journal.request(f"{api_origin}/.well-known/oauth-protected-resource"))
         if not (prm.answered and prm.status == 200):
             add("medium", "auth-discovery-broken",
                 "no RFC 9728 protected-resource metadata on the API host — an agent "
                 "cannot learn which authorization server guards this API",
                 "agent-readiness.md#k5-agent-authentication--the-discovery-chain-not-the-login-page")
 
-    return {**out, "checks": checks, "findings": findings, "_answered": answered}
+    return {**out, "checks": checks, "findings": findings, "_answered": answered,
+            "network_probes": journal.entries, "coverage_by_unit": {"network_probe": journal.record()}}
 
 
-def collect_api_behaviour(url: str) -> dict:
+def collect_api_behaviour(url: str, journal=None) -> dict:
     """Rate-limit headers and the 401 hint, from one authenticated-shaped call."""
-    p = fetch(url)
+    journal = journal if journal is not None else ProbeJournal()
+    p = journal.request(url)
     hdrs = p.headers
     rate = {k: v for k, v in hdrs.items()
             if k.startswith(("ratelimit", "x-ratelimit")) or k == "retry-after"}
@@ -1354,17 +1478,23 @@ def main(argv: list[str]) -> int:
 
     expect = tuple((p.strip(), (p.strip(),), False)
                    for p in args.expect.split(",") if p.strip().startswith("/"))
-    data = collect(args.origin or "", args.api_origin, args.page, expect=expect)
+    journal = ProbeJournal()
+    data = collect(args.origin or "", args.api_origin, args.page, expect=expect, journal=journal)
+    payload_errors = []
 
     spec_obj = None
     if args.openapi_file:
         try:
             with open(args.openapi_file, encoding="utf-8") as fh:
                 spec_obj = json.load(fh)
+            if not isinstance(spec_obj, dict):
+                spec_obj = None
+                raise ValueError("OpenAPI input must be a JSON object")
         except (OSError, ValueError) as exc:
+            payload_errors.append({"source": args.openapi_file, "error": str(exc)})
             print(f"could not read {args.openapi_file}: {_flat(exc)}", file=sys.stderr)
     elif args.openapi:
-        p = fetch(args.openapi)
+        p = journal.request(args.openapi)
         data["checks"].append({"check": "openapi document", "url": p.url,
                                "status": p.status if p.answered else "no answer",
                                "content_type": p.ctype, "detail": p.error})
@@ -1372,18 +1502,28 @@ def main(argv: list[str]) -> int:
             data["_answered"] += 1
             try:
                 spec_obj = json.loads(p.body)
+                if not isinstance(spec_obj, dict):
+                    spec_obj = None
+                    raise ValueError("OpenAPI input must be a JSON object")
             except ValueError as exc:
+                payload_errors.append({"source": args.openapi, "error": str(exc)})
                 print(f"openapi document is not JSON: {_flat(exc)}", file=sys.stderr)
 
     if spec_obj is not None:
-        spec = analyze_openapi(spec_obj)
+        try:
+            spec = analyze_openapi(spec_obj)
+            spec_provenance = openapi_provenance(spec_obj, args.origin, args.api_origin)
+        except (ValueError, TypeError, AttributeError, KeyError) as exc:
+            payload_errors.append({"source": args.openapi_file or args.openapi, "error": str(exc)})
+            spec_obj = None
+    if spec_obj is not None:
         data["openapi"] = spec
         # Before grading the spec, ask whether it describes THIS product. Every
         # structural check below passes a documentation platform's starter file,
         # and a scanner that reports "schema found (3 operations)" for a demo
         # petstore has awarded points for an API that does not exist. Cheap to
         # check, and nothing else in this script would ever notice.
-        prov = openapi_provenance(spec_obj, args.origin, args.api_origin)
+        prov = spec_provenance
         data["openapi"]["provenance"] = prov
         if prov["template_fingerprints"]:
             data["findings"].append({
@@ -1468,7 +1608,7 @@ def main(argv: list[str]) -> int:
                     "tier": FINDING_TIERS["openapi-deprecation"]})
 
     if args.api_probe:
-        api = collect_api_behaviour(args.api_probe)
+        api = collect_api_behaviour(args.api_probe, journal=journal)
         data["api_behaviour"] = api
         if api["status"] != "no answer":
             data["_answered"] += 1
@@ -1487,7 +1627,15 @@ def main(argv: list[str]) -> int:
                     "reference": "agent-readiness.md#k5-agent-authentication--the-discovery-chain-not-the-login-page",
                     "tier": FINDING_TIERS["api-401-no-hint"]})
 
-    answered = data.pop("_answered", 0)
+    if payload_errors and args.openapi and not args.openapi_file:
+        journal.reasons.append({"code": "unusable_payload", "detail": "The OpenAPI response could not be analyzed as a JSON object; see payload_errors."})
+    data["coverage_by_unit"] = {"network_probe": journal.record()}
+    if args.openapi_file:
+        reasons = [] if spec_obj is not None else [{"code": "input_failed", "detail": "The supplied local file did not yield an analyzable OpenAPI JSON object; see payload_errors."}]
+        data["coverage_by_unit"]["local_file"] = collector_coverage("local_file", "One supplied offline OpenAPI JSON file, independently from network probes; returned means a JSON object accepted by this bounded analyzer, not full OpenAPI specification validation.", 1, 1, int(spec_obj is not None), 0, reasons)
+    data["payload_errors"] = payload_errors
+    data.pop("_answered", None)
+    answered = sum(entry["status"] is not None for entry in journal.entries)
     prov = provenance("agent_surface.py", argv,
                       " · ".join(p for p in (
                           f"origin {args.origin}" if args.origin else "",
@@ -1503,6 +1651,12 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"producer": prov, **data}, indent=2, ensure_ascii=False))
     else:
         print(render(data))
+        for record in data["coverage_by_unit"].values():
+            print("\n" + collector_coverage_md(record))
+        if payload_errors:
+            print("\n## Payload errors\n")
+            for error in payload_errors:
+                print(f"- {_flat(error['source'])}: {_flat(error['error'])}")
         print("\n" + provenance_md(prov))
 
     # Contract #1: a run where nothing answered is not a measurement of an absent

@@ -273,3 +273,28 @@ counts exclusions, and `invalid_page_url` makes coverage partial. Other page
 observations survive; the fully parsed XML document remains returned. JSON and
 Markdown still emit, with exit 1. This handles parser errors, not every possible
 semantic URL or Sitemap protocol violation.
+
+
+## Agent-surface probe coverage
+
+`agent_surface.py` adds `coverage_by_unit`: `network_probe` and an optional
+`local_file` record for offline OpenAPI. Each uses `collector-coverage/1`; do not
+sum unlike units. `network_probes` records every scheduled logical invocation,
+including unselected discovery alternatives, request header variants and the
+OpenAPI/API probes outside the displayed check list. Redirect/retry hops are
+transport evidence, not additional logical attempts.
+
+A returned network probe has an observed landing status and complete readable
+body; a complete empty or 404 response can answer absence. Status/headers remain
+observed if body caps, truncation or corrupt gzip prevent complete return.
+Failed/incomplete discovery prerequisites can hide later inputs, so requested
+stays unknown with a reason. Fixed failed inputs stay known attempts. Scope is
+the bounded conditional collector workflow, never the whole site or every field.
+
+Offline file failure and unusable OpenAPI payloads are explicit `payload_errors`;
+other observations remain. Markdown and JSON include all present coverage records.
+Exit 0 means at least one actual landing response (including hidden probes) or a
+usable offline spec, not that every field succeeded. The previous selected-row
+counter could falsely report that nothing answered; invocation accounting now
+owns that predicate. Existing singular coverage carriers in other scripts and
+preflight's separate track vocabulary are unchanged.
