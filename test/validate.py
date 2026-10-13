@@ -1722,7 +1722,12 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
             continue
         fp = os.path.join(dirpath, fn)
         rel = os.path.relpath(fp, ROOT)
-        for target in LINK_RE.findall(open(fp, encoding="utf-8").read()):
+        try:
+            _link_text = open(fp, encoding="utf-8").read()
+        except (OSError, UnicodeError) as _exc:
+            fail(f"{rel}: documentation unreadable: {_exc.__class__.__name__}")
+            continue
+        for target in LINK_RE.findall(_link_text):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
             if "{{" in target:  # template placeholder
@@ -1866,12 +1871,26 @@ if os.path.isfile(skill_path):
 # closed-row credit is the citation a reader follows to learn what was actually fixed.
 _BOARD = os.path.join(ROOT, "docs", "evidence", "backlog.md")
 _board_status = {}
+from owner_board import check as check_owner_board, cells as board_cells, label as board_label
+check_owner_board(ROOT, fail)
+from owner_release import check as check_owner_release
+check_owner_release(ROOT, fail)
 if os.path.isfile(_BOARD):
-    for _line in open(_BOARD, encoding="utf-8"):
-        _bm = re.match(r"\|\s*(B-\d+)\s*\|", _line)
-        if _bm:
-            _cells = [_c.strip() for _c in _line.strip().strip("|").split("|")]
-            _board_status[_bm.group(1)] = _cells[-1].lower()
+    try:
+        _board_text = open(_BOARD, encoding="utf-8").read()
+    except (OSError, UnicodeError):
+        _board_text = ""  # check_owner_board already emitted the named failure.
+    _board_fenced = False
+    for _line in _board_text.splitlines():
+        if _line.strip().startswith(("```", "~~~")):
+            _board_fenced = not _board_fenced
+            continue
+        if _board_fenced:
+            continue
+        _cells = board_cells(_line) if _line.strip().startswith("|") else []
+        _bid = board_label(_cells[0]) if _cells else ""
+        if re.fullmatch(r"B-\d+", _bid):
+            _board_status[_bid] = _cells[-1].lower()
     if not _board_status:
         fail("docs/evidence/backlog.md: no `| B-nn |` rows found — the board is the "
              "single home of every row's status and nothing else can be checked against it")
@@ -1888,7 +1907,10 @@ if os.path.isfile(_BOARD):
         _p = os.path.join(ROOT, _rel)
         if not os.path.isfile(_p):
             continue
-        _txt = open(_p, encoding="utf-8").read()
+        try:
+            _txt = open(_p, encoding="utf-8").read()
+        except (OSError, UnicodeError):
+            continue  # the document/board read guard already emitted its failure.
         for _bid in sorted(set(re.findall(r"\b(B-\d+)\b", _txt))):
             if _bid not in _board_status:
                 fail(f"{_rel} cites {_bid} and the board has no such row — a board id is "

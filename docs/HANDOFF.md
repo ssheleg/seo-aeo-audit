@@ -1,41 +1,66 @@
-## Preflight follow-up contract — 2026-10-13
+## Preflight integrated candidate — 2026-10-13
 
-Read [the bounded preflight and bootstrap packet](evidence/plans/2026-10-13-fw06-preflight-coverage.md).
-It records five offline baseline observations and additive carrier semantics.
-Preflight implementation now emits separate local/network units and preserves
-legacy track coverage. Focused 78 controls pass; source review and owner
-gate remain pending. See the [run receipt](evidence/runs/2026-10-13-fw06-preflight-coverage.md).
-Bootstrap envelopes remain a separate per-CLI decision. Reconcile accepted GSC/R30 and PSI before integration.
+The [accepted contract](evidence/plans/2026-10-13-fw06-preflight-coverage.md) now
+has bounded source and 78 focused controls. See the
+[run receipt](evidence/runs/2026-10-13-fw06-preflight-coverage.md).
+PSI and GSC/R30 were normally integrated; accepted main
+`2de0d4042e1a312f4366ada325118b2a4413d760` is composed here. PSI genuine run
+[38356315862](https://github.com/ssheleg/seo-aeo-audit/actions/runs/38356315862)
+passed exact b57f9a4 before normal PR35 merge and lease release.
 
-## PSI coverage implementation — 2026-10-13
+Next: independent preflight source review, then one serial owner gate after
+TP/UX release the slot, frozen genuine PR checks and normal exact-head merge.
+Bootstrap envelopes remain separate source-aware work; preserve page arrays and
+unknown input populations. Package remains 0.26.5; no provider/native acceptance.
 
-Read the [accepted PSI contract](evidence/plans/2026-10-13-fw06-psi-coverage.md).
-Next: obtain bounded contract review, then freeze negative controls and implement
-component-preserving parsing plus URL-entry coverage. The branch is stacked on
-reviewed GSC de16b2b and must reconcile its accepted combined GSC/R30 successor.
-PSI source and offline/loopback regressions now implement that contract. Focused
-67 controls pass; independent review and owner gate remain pending. See the
-[run receipt](evidence/runs/2026-10-13-fw06-psi-coverage.md).
-Preflight and early bootstrap envelopes remain open.
+## Historical PSI handoff
 
-## GSC coverage candidate — 2026-10-13
+## PSI coverage integrated candidate — 2026-10-13
 
-Implementation of the reviewed provider packet is focused-green; see
-[evidence](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and the
-[contract](contracts/collector-coverage.md). Accepted agent coverage is now integrated at e8aa59e. Final combined checks
-115/127/73/54 and structural validation passed. Next: obtain independent review, then request one
-serialized owner gate and genuine PR admission. PSI and preflight remain open;
-R30 SEO duplicate/width board-parser repair is separately queued from the family
-audit. No live provider or release claim; package remains 0.26.5.
+PSI source 50e7c3e passed parent independent review and 67 focused controls,
+including actual standalone loopback JSON/Markdown. Accepted GSC/R30 main
+`3fac9d67e12c367b19d8f2cfcecaaed6badc2dd7` is now composed: PR34 genuine run
+[38355003556](https://github.com/ssheleg/seo-aeo-audit/actions/runs/38355003556)
+passed frozen 6172f3d; normal merge released both leases. Source version stays 0.26.5.
 
-# Next B-9 provider/readiness packet — 2026-10-13
+Integrated owner gate at d690b296164372c407fa7b65b2faa5d21146cd0b passed:
+31 negative groups and 9 audit regression files. Next: freeze this receipt head,
+promote one eligible candidate PR and watch normal exact-head integration. See the
+[PSI receipt](evidence/runs/2026-10-13-fw06-psi-coverage.md) and
+[contract](contracts/collector-coverage.md). Preflight/bootstrap contract is on
+separate plan/fw06-preflight-coverage at 8879a66; no preflight code changed yet.
+No live provider, native-host or complete B-9 claim.
 
-Read [the provider coverage packet](evidence/plans/2026-10-13-fw06-provider-coverage.md).
-This branch is planning only. First reconcile accepted agent-surface source, then
-freeze GSC full-report versus listing/bootstrap units and response carriers before
-implementation. No provider credentials or traffic are needed for the first slice.
+## Historical GSC/R30 handoff
 
----
+## GSC/R30 owner gate passed — 2026-10-13
+
+Combined implementation and cache correction at `12ca7004fcebcf8b4197369002989e26fd72c4fc`
+passed `npm run test:all`: 31 negative groups, 9 audit regression files. Source
+and correction received independent parent review; receipts below retain failures.
+Next: freeze this documentation head, open/promote one candidate PR, require genuine
+checks, then normal exact-head merge. Release/version remain unchanged at 0.26.5.
+PSI reviewed successor `50e7c3e898602ab221b53cccb66620354fce5aec` waits for accepted
+composition before its own owner gate. Preflight/bootstrap packet remains open.
+
+# Combined GSC and R30 candidate — 2026-10-13
+
+GSC source de16b2baeb07b22a13af7662fa2ae56a1aa5db06 passed independent
+76-control review after both aggregate overflow findings were repaired. R30 source
+99653a0b211e737ad43a0884f2e801742666d0e5 passed independent 28 board/validator
+and 27 local-Git release controls. See the separate
+[GSC receipt](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and
+[R30 receipt](evidence/runs/2026-10-13-r30-owner-gates.md).
+
+Next: run one exact combined owner `npm run test:all` after the serial slot clears,
+then freeze/push the evidence, promote one genuine PR candidate and watch normal
+integration. Package remains 0.26.5; provider/native acceptance remains NOT_RUN.
+Agent-surface PR33 already landed normally at e8aa59e with genuine checks.
+PSI implementation is on separate plan/fw06-psi-coverage, whose approved packet
+is `docs/evidence/plans/2026-10-13-fw06-psi-coverage.md` at 29041dc.
+Preflight and early bootstrap envelopes remain open. No complete FW06 claim.
+
+## Historical task context
 
 # B-9 agent-surface coverage candidate — 2026-10-13
 

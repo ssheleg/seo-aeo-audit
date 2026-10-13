@@ -115,6 +115,15 @@ refuses to let one stand for the other. The field percentiles are the verdict;
 the lab run explains a failure you have already observed. Where CrUX has no data
 for a URL, that is reported as absent — not as a pass.
 
+The common `coverage` object counts supplied URL entries in order, including
+duplicates. A usable return has a valid URL-field percentile or a lab score; an
+origin-only or empty response retains context/diagnostics but is not a direct URL
+measurement. All-unusable runs exit 1. `component_status` separates URL field,
+origin context and lab: incomplete field percentiles or a missing lab score keep
+coverage partial, even when the other component is useful. Invalid numeric values
+stay unknown and do not become a CWV verdict. The response does not establish why
+field data is absent. JSON and default Markdown carry the same counts.
+
 ```bash
 python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml
 python3 "$SKILL_DIR/scripts/psi_pull.py" --url https://example.com/pricing --strategy mobile
