@@ -1,0 +1,17 @@
+{
+  "source": "087fa1a6fc4b63224f8adea2e06090aa253a41a5",
+  "tree": "a413aee3f30ba89f777bd6e92731e6d9769cb414",
+  "kind": "owner full gate (npm run test:all) on the FW07 child-lifetime port",
+  "command": [
+    "npm",
+    "run",
+    "test:all"
+  ],
+  "started": "2026-10-13T22:02:29Z",
+  "duration_seconds": 281,
+  "exit": 0,
+  "min_free_bytes": 771817472,
+  "log_sha256": "b2983db4dc91c7112bc6ca1ac9bcd6a568a1d1b28732ecb1847838ceed50a441",
+  "log_bytes": 8997,
+  "status_after": ""
+}

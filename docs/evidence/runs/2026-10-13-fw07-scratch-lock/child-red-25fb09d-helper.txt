@@ -1,0 +1,23 @@
+# scratch clone: ported negatives.py + TP 25fb09d (pre-review) negative_lock.py; exit 1 at the EPERM control
+Traceback (most recent call last):
+  File "$SCRATCH/seo-red/test/audit_regressions/fw07_child_lifetime.py", line 244, in <module>
+    plants.cancel()
+    ~~~~~~~~~~~~~^^
+  File "$SCRATCH/seo-red/test/negative_lock.py", line 131, in cancel
+    self._signal_group(proc, signal.SIGTERM)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "$SCRATCH/seo-red/test/negative_lock.py", line 111, in _signal_group
+    os.killpg(proc.pid, sig)
+    ~~~~~~~~~^^^^^^^^^^^^^^^
+  File "$PYTHON/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "$PYTHON/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "$PYTHON/lib/python3.14/unittest/mock.py", line 1247, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "$SCRATCH/seo-red/test/audit_regressions/fw07_child_lifetime.py", line 241, in killpg
+    raise err(1,'owned fixture')
+PermissionError: [Errno 1] owned fixture
+residue: this run left nothing — 11 temp tree(s) created, 11 removed

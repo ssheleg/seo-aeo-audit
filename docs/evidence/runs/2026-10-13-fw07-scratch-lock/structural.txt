@@ -1,0 +1,3 @@
+  unlooked: routed triggers — no sshlg-skills umbrella above this checkout
+residue: this run left nothing — 0 temp tree(s) created, 0 removed
+PASS: seo-aeo-audit structure valid (1 cursor rule(s), 25 reference(s), SKILL.md body 4685/5000 tokens (tiktoken:cl100k_base) / 325/500 lines)

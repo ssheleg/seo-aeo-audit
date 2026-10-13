@@ -43,6 +43,7 @@ import re
 import shutil
 import subprocess
 import sys
+from negative_lock import acquire_scratch_lock, ScratchProcesses
 
 import residue
 
@@ -112,7 +113,7 @@ def sweep(paths):
             shutil.rmtree(p, ignore_errors=True)
 
 
-def main(argv):
+def _main(argv, plants):
     args = argv[1:]
     only = None
     if "-k" in args:
@@ -140,20 +141,13 @@ def main(argv):
     # So the paths stay exactly as CI has them, and the runs are serialised instead. An
     # exclusive lock for the duration of the suite: the second run waits rather than
     # corrupting the first, and says so instead of producing a number nobody can trust.
-    _LOCK_PATH = os.path.join(tempfile.gettempdir(), "seo-negatives.lock")
-    _lock = open(_LOCK_PATH, "w")
+    # The shared helper binds physical /tmp across owners and TMPDIR settings.
+    # Old runner versions and direct plant invocation do not participate.
     try:
-        import fcntl
-        try:
-            fcntl.flock(_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            print("another run of this suite holds the scratch paths — waiting for it.\n"
-                  "  (every step copies the repo to a fixed /tmp name, so two runs at once\n"
-                  "   overwrite each other and both report about a tree neither one saw)")
-            fcntl.flock(_lock, fcntl.LOCK_EX)
-    except ImportError:
-        # No flock (Windows): say what is not guaranteed rather than implying it is.
-        print("note: no file locking available here — do not run two suites at once")
+        _lock = plants.hold(acquire_scratch_lock())
+    except (OSError, RuntimeError) as exc:
+        print(f"FAIL: cannot acquire family scratch lock ({type(exc).__name__}): {exc}")
+        return 1
 
     tests = [(n, s) for n, s in _STEPS if MARKER in n]
     if len(tests) < MIN_EXPECTED:
@@ -287,13 +281,25 @@ def main(argv):
     failed, broken, prop_failed = [], [], []
     print(f"running {len(tests)} negative self-tests"
           + (f" + {len(props)} property checks\n" if props else "\n"))
+    # Every plant Bash runs through the shared lifecycle: its own process group, the
+    # held scratch-lock descriptor inherited by its synchronous writing commands, and
+    # cancellation that stops admission and drains every owned group before the lock
+    # copy here is closed. A plant that outlives a killed runner still excludes the
+    # next family runner until it exits (FW07 child lifetime, task-pipeline 9c29ec3).
+    def _bash(script):
+        return plants.run(["bash", "-c", script], cwd=_base)
+
     def _run_one(name_script):
         name, script = name_script
-        cdir = copy_dir_of(script)
-        sweep([cdir])
-        r = subprocess.run(["bash", "-c", script], cwd=_base,
-                           capture_output=True, text=True)
-        return name, script, cdir, r
+        plants.check_running()
+        try:
+            cdir = copy_dir_of(script)
+            sweep([cdir])
+            r = _bash(script)
+            return name, script, cdir, r
+        except BaseException:
+            plants.cancel()
+            raise
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=_WORKERS) as _ex:
         _results = list(_ex.map(_run_one, tests))
@@ -337,7 +343,8 @@ def main(argv):
     for name, script in props:
         cdir = copy_dir_of(script)
         sweep([cdir])
-        r = subprocess.run(["bash", "-c", script], cwd=_base, capture_output=True, text=True)
+        plants.check_running()
+        r = _bash(script)
         ok = r.returncode == 0 and any(_k in r.stdout.upper() for _k in ("OK:", "SKIP:"))
         print(f"  {'PASS' if ok else 'FAIL':<7}[property] " + _plabel(name))
         if not ok:
@@ -373,6 +380,21 @@ def main(argv):
     print("PASS: " + " · ".join(_parts) if _parts else
           "PASS: nothing ran — no test matched, which is not a result")
     return 0
+
+
+def main(argv):
+    # Interruption, a spawn/communicate fault or a plant group left alive is a refused
+    # run, never a traceback and never a verdict. The snapshot stays with `residue`:
+    # an unfinished run keeps and names it at exit (FW01), it is not silently removed.
+    try:
+        with ScratchProcesses() as plants:
+            result = _main(argv, plants)
+            plants.check_running()
+        plants.check_running()
+        return result
+    except (InterruptedError, OSError, RuntimeError) as exc:
+        print(f"FAIL: plant lifecycle refused ({type(exc).__name__}): {exc}")
+        return 1
 
 
 if __name__ == "__main__":

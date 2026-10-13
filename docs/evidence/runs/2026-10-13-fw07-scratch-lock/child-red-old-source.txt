@@ -1,0 +1,12 @@
+# scratch clone at 78f2dd4 (old negative_lock.py + old negatives.py) + new fw07_child_lifetime.py; exit 1
+Traceback (most recent call last):
+  File "$SCRATCH/seo-red/test/audit_regressions/fw07_child_lifetime.py", line 113, in <module>
+    check(bool(info['fds']), killed+': actual writing Python inherits lock')
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "$SCRATCH/seo-red/test/audit_regressions/fw07_child_lifetime.py", line 43, in check
+    assert value, name
+           ^^^^^
+AssertionError: parent: actual writing Python inherits lock
+residue: 1 of 1 temp tree(s) KEPT — the case did not pass and the copy is the evidence:
+    $TMPDIR/seo-aeo-audit-test-58679-dfcqisrh-fw07-child-lock  <- FW07 child lifetime fw07-child-lock-1
+  0 removed. When you are done reading them: rm -rf $TMPDIR/seo-aeo-audit-test-58679-dfcqisrh-fw07-child-lock
