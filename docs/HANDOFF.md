@@ -9,8 +9,9 @@ Baseline two missing-emission controls were red; restored focused controls pass
 103/103, with three intended real-source mutation refusals. No live/provider or
 native-host acceptance is claimed.
 
-Next: independent frozen-source review, rebase onto accepted 0.26.5 source when the
-parent's release branch lands, then serial owner full gate and normal PR delivery.
+Accepted 0.26.5 main `bccb630e79730e2a7058b74a2130ddfe4f4662aa` was merged
+without rewriting this published branch; its standard retro stamp is preserved.
+Next: independent frozen-source review, serial owner full gate and normal PR delivery.
 Keep the parent release branch and manifests untouched.
 
 ---
