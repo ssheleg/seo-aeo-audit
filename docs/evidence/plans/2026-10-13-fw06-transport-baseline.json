@@ -1,0 +1,90 @@
+{
+  "source": "9d9b16690c7df4e058c9d237d1a18ad8a0784633",
+  "accepted_member_main": "2de0d4042e1a312f4366ada325118b2a4413d760",
+  "mode": "loopback and pure mocked subprocess; no provider access",
+  "observations": [
+    {
+      "case": "page conflicting lengths",
+      "observed": {
+        "truncated": false
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "page decoded gzip exceeds requested budget",
+      "observed": {
+        "decoded_characters": 5048,
+        "budget": 128,
+        "truncated": false
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "agent conflicting lengths",
+      "observed": {
+        "status": 200,
+        "body_complete": true
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "sitemap conflicting lengths",
+      "observed": {
+        "parseable_page_count": 1
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "PSI conflicting lengths",
+      "observed": {
+        "useful_measurement": true
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "GSC conflicting lengths",
+      "observed": {
+        "usable_rows": []
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "inspection conflicting lengths",
+      "observed": {
+        "answered": 1
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "inspection payload []",
+      "exception": "AttributeError",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "inspection payload {'inspectionResult': {'indexStatusResult': {'verdict': 1}}}",
+      "exception": "AttributeError",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "inspection payload {'inspectionResult': {'indexStatusResult': {'unknown': 1}}}",
+      "observed": {
+        "exit": 0,
+        "returned": 1,
+        "findings": [
+          "never-crawled"
+        ]
+      },
+      "stdout_bytes": 0
+    },
+    {
+      "case": "GSC error-body incomplete main",
+      "exception": "IncompleteRead",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "inspection error-body incomplete main",
+      "exception": "IncompleteRead",
+      "stdout_bytes": 0
+    }
+  ]
+}

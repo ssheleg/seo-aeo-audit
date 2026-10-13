@@ -1,3 +1,13 @@
+## Transport/bootstrap next packet — 2026-10-13
+
+Read [the source-aware completion packet](evidence/plans/2026-10-13-fw06-bootstrap-transport.md).
+Twelve reproduced loopback/pure baseline cases cover framing, decoded budgets,
+provider-body errors and URL Inspection answer admission. Preflight correction
+9d9b166 received independent82 PASS. Next: independent packet review, then T1
+transport, T2 typed inspection and B1 bootstrap slices with separate focused peer
+receipts, followed by one composed owner gate and ordinary integration/release.
+Do not claim complete B-9 or provider/native acceptance from this planning branch.
+
 ## Preflight integrated candidate — 2026-10-13
 
 The [accepted contract](evidence/plans/2026-10-13-fw06-preflight-coverage.md) now
