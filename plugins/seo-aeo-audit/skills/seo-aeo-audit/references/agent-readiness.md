@@ -199,6 +199,14 @@ The same rule covers `elsewhere` redirects: `/docs → /api` is fine and worth
 recording, but the finding must name where it landed rather than silently
 crediting the address that was asked for.
 
+The collector preserves each observed redirect response's status and its target in
+`redirects`, separately from the final response's `status` and `final_url`. These
+fields also appear on the probe rows and API response report. A later transport
+failure retains the observed hops but has no landing response: final status and URL
+are null. A redirect target is an instruction from that response, not proof the next
+request succeeded. The trace comes from the same request chain, without a second
+no-follow probe. Do not infer `301` from a root bounce when the code was not observed.
+
 **A third failure this check invites, and it is the auditor's not the site's.**
 Three of the things this track measures are *artifacts* — a `lastmod` percentage,
 a robots group, an unlinked path — and an artifact cannot tell you whether its

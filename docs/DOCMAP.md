@@ -13,6 +13,7 @@ duplicated into commit messages or the changelog — those reference it.
 
 | Fact | Its one home | Everywhere else |
 |---|---|---|
+| Planned collector requested/returned/dropped semantics | `docs/contracts/collector-coverage.md` | B-9 remains open until all collector outputs migrate; this is distinct from audit-track coverage and is not a claim of current uniform emission |
 | The audit doctrine (non-negotiables) | `plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` | `cursor/rules/*.mdc` **and** `plugins/*/commands/*.md` each carry a full copy for a different consumer — both count-checked by `validate.py`, neither summarized. The command was the unguarded third channel: it restated two and read as the list |
 | The myth count | the rows of `references/myths.md` | four prose homes — README twice, SKILL.md, the Cursor rule — plus the size of the two short lists. `validate.py` reads every one; it used to read one, and was green while three were wrong |
 | The play count | the rows of `references/growth-plays.md` | README's knowledge table — checked |

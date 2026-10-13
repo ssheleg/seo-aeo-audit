@@ -381,11 +381,17 @@ _body = ("<html><head><title>t</title></head><body><h1>h</h1>"
 
 class _Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802 - stdlib naming
+        content = b'' if self.path.startswith('/gzip-empty') else _body
+        body = _gzip.compress(content) if self.path.startswith('/gzip') else content
+        if self.path.endswith('-incomplete'):
+            body = body[:-8]  # Server sent a gzip member without its checksum/trailer.
         self.send_response(200)
         self.send_header("Content-Type", "text/html")
-        self.send_header("Content-Length", str(len(_body)))
+        self.send_header("Content-Length", str(len(body)))
+        if self.path.startswith('/gzip'):
+            self.send_header("Content-Encoding", "gzip")
         self.end_headers()
-        self.wfile.write(_body)
+        self.wfile.write(body)
 
     def log_message(self, *a):  # noqa: D102 - silence the test log
         pass
@@ -403,6 +409,33 @@ with socketserver.TCPServer(("127.0.0.1", 0), _Handler) as _srv:
         _, _, _part = page_audit.fetch(f"http://127.0.0.1:{_port}/", 10.0,
                                        page_audit.DEFAULT_UA, 2000)
         check(_part is True, "a body cut off by --max-bytes must report itself truncated")
+        _compressed = _gzip.compress(_body)
+        _text, _, _gzip_whole = page_audit.fetch(f"http://127.0.0.1:{_port}/gzip", 10.0,
+                                                page_audit.DEFAULT_UA, len(_compressed))
+        check(_gzip_whole is False and _text.encode() == _body,
+              "a complete gzip response at the exact byte cap must round-trip")
+        _empty, _, _empty_cut = page_audit.fetch(f"http://127.0.0.1:{_port}/gzip-empty", 10.0,
+                                                page_audit.DEFAULT_UA, 5_000_000)
+        check(_empty == '' and _empty_cut is False, 'complete empty gzip is known empty, not partial')
+        try:
+            page_audit.fetch(f"http://127.0.0.1:{_port}/gzip-empty-incomplete", 10.0,
+                             page_audit.DEFAULT_UA, 5_000_000)
+            check(False, 'an incomplete gzip with no recovered bytes must not become an empty success')
+        except ValueError:
+            pass
+        for _route, _cap in [('/gzip', len(_compressed) - 8), ('/gzip-incomplete', 5_000_000)]:
+            _text, _headers, _gzip_cut = page_audit.fetch(f"http://127.0.0.1:{_port}{_route}", 10.0,
+                                                        page_audit.DEFAULT_UA, _cap)
+            check(_gzip_cut is True and bool(_text),
+                  f"{_route}: cap or incomplete gzip must preserve text AND its partial state")
+            _result = page_audit.analyze(_text, f"http://127.0.0.1:{_port}{_route}", _headers,
+                                         truncated=_gzip_cut)
+            _codes = {finding['code'] for finding in _result['findings']}
+            check(_result['truncated'] is True and 'truncated-read' in _codes
+                  and not {'read-budget', 'thin', 'low-extractable-text'} & _codes,
+                  f"{_route}: partial gzip must not turn into a completeness-dependent finding")
+            check('truncated' in page_audit.to_markdown([_result]).lower(),
+                  f"{_route}: human output must preserve the partial-read warning")
     finally:
         _srv.shutdown()
 

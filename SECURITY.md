@@ -115,15 +115,15 @@ grep -rnE "urlopen|build_opener|opener\.open|subprocess\.|socket|os\.environ|os\
   plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/
 ```
 
-The second command prints **33 lines and that is all of it**, and it breaks down
+The second command prints **34 lines and that is all of it**, and it breaks down
 exactly:
 
 | lines | what they are |
 |---|---|
-| 13 | `urllib` — **9 that issue a request**: 7 `urlopen` calls, plus the `build_opener` and `opener.open` that carry `page_audit.py`'s scheme guard. The other 4 are 2 import lines and 2 comments that only mention these names |
+| 14 | `urllib` — 6 `urlopen` call lines, 2 `build_opener` construction lines and 2 `opener.open` request lines for the page scheme guard and agent-surface redirect trace. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
 | 7 | the three `subprocess.run` blocks that call `gcloud`, with their error branches — 2 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`, which also catches a timeout |
 | 7 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:161-163`), so seven scripts give seven lines. Three fields per script would be 21 |
-| 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). A seventh line matches `\bopen\(` — `opener.open` — and is counted in the `urllib` row above, which is why the four rows sum to 33 and a per-pattern grep gives 34 |
+| 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). Two additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 34 and a per-pattern sum gives 36 |
 
 No `os.system`, no `eval`, no `exec`, no raw sockets, no shell string. Everything
 else under `plugins/` is markdown.
