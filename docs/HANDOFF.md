@@ -1,3 +1,17 @@
+# FW06 B-33 preparation, 2026-10-13
+
+Plan-only branch `plan/fw06-guard-attribution` preserves the complete measured
+helper-call population and the next implementation packet in
+[the attribution plan](evidence/plans/2026-10-13-fw06-guard-attribution.md).
+Current measurement: 33 anonymous structural, 20 named structural and 10 anonymous
+behavioral calls. A table-row selector also matches unrelated input; not repaired
+here. No workflow or guard implementation changes in this preparation.
+
+Next: integrate accepted B-9 correction, claim the separate B-33 task, then execute
+the packet's selector/attribution controls before broad suites or release work.
+
+---
+
 # FW06 common coverage first slice, 2026-10-13
 
 Branch `fix/fw06-collector-coverage`, based on release candidate `6a443b4`,

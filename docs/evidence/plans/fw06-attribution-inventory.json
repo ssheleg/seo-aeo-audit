@@ -1,0 +1,397 @@
+{
+  "schema": "plant-attribution-inventory/1",
+  "source_commit": "5f6efee3cae11558030c0f1a05911413a787d186",
+  "source_path": ".github/workflows/validate.yml",
+  "source_sha256": "5903b12c41e44403515ce5406041c914f6b739b0a7fd946f346a6f6c1852f2da",
+  "parser": "test/negatives.py:parse_steps",
+  "scope": "Shell plant/plantq calls only; individual standalone negative steps are not included.",
+  "calls": [
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 54,
+      "kind": "plant",
+      "description": "myth count drifting in SKILL.md (not the README home)"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 56,
+      "kind": "plant",
+      "description": "myth count drifting in the Cursor channel"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 58,
+      "kind": "plant",
+      "description": "the two myth short lists disagreeing in size"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 60,
+      "kind": "plant",
+      "description": "play count drifting from the table"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 62,
+      "kind": "plant",
+      "description": "the Prowl tool count disagreeing across homes"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 64,
+      "kind": "plant",
+      "description": "a table row with more cells than its header"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 66,
+      "kind": "plant",
+      "description": "CONTRIBUTING naming a subset of the gate"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 68,
+      "kind": "plant",
+      "description": "a section id defined in two references"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 70,
+      "kind": "plant",
+      "description": "a row appended without moving the newest-row line"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 72,
+      "kind": "plant",
+      "description": "a finding emitted with no evidence tier"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 74,
+      "kind": "plant",
+      "description": "the CWV thresholds drifting from their documented home"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 76,
+      "kind": "plant",
+      "description": "a backticked references/ pointer resolving to nothing"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 78,
+      "kind": "plant",
+      "description": "a prose reference count going stale"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 80,
+      "kind": "plant",
+      "description": "the slash command losing a non-negotiable"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 92,
+      "kind": "plant",
+      "description": "a coverage status outside the closed vocabulary"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 94,
+      "kind": "plant",
+      "description": "the coverage table one row short of the tracks SKILL.md declares"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 96,
+      "kind": "plant",
+      "description": "a blank Status cell \u2014 the defect this vocabulary replaced"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 98,
+      "kind": "plant",
+      "description": "a probe emitting a gate COVERAGE_GATES does not declare"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 104,
+      "kind": "plant",
+      "description": "a gate emitted through a variable, undeclared"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 106,
+      "kind": "plant",
+      "description": "a track declared in SKILL.md and absent from preflight's TRACKS"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 108,
+      "kind": "plant",
+      "description": "a track with no TRACK_SOURCES entry, which can never read blocked-by"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 115,
+      "kind": "plant",
+      "description": "a script emitting a payload with no producer block"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 117,
+      "kind": "plant",
+      "description": "the provenance shared block missing from one script"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 119,
+      "kind": "plant",
+      "description": "a script carrying the block and never calling it under its own name"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 123,
+      "kind": "plant",
+      "description": "the shared block edited in one copy only"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 125,
+      "kind": "plant",
+      "description": "observed_at dropped from the closed field set"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 138,
+      "kind": "plant",
+      "description": "a SKILL_VERSION literal drifting from the manifests"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 142,
+      "kind": "plant",
+      "description": "a skeleton losing the command that seeds the block"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 144,
+      "kind": "plant",
+      "description": "a skeleton losing an invalidator"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 146,
+      "kind": "plant",
+      "description": "a skeleton no longer naming every producer field"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 152,
+      "kind": "plant",
+      "description": "SECURITY.md's script count going stale"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 154,
+      "kind": "plantq",
+      "description": "SECURITY.md's I/O line count going stale"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 156,
+      "kind": "plant",
+      "description": "a script with no row in SECURITY.md's I/O table"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 161,
+      "kind": "plant",
+      "description": "the published I/O regex narrowed away from its own count"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 171,
+      "kind": "plantq",
+      "description": "the script count going stale in the README's security posture"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 173,
+      "kind": "plantq",
+      "description": "a shipped script the README's security posture does not name"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 175,
+      "kind": "plantq",
+      "description": "the script count going stale in CLAUDE.md"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 177,
+      "kind": "plantq",
+      "description": "CLAUDE.md naming a subset of the gate"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 179,
+      "kind": "plantq",
+      "description": "DOCMAP's gate block naming a subset of the gate"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 181,
+      "kind": "plantq",
+      "description": "DOCMAP counting the gate's homes wrong"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 183,
+      "kind": "plantq",
+      "description": "DOCMAP's _flat copy count drifting from the scripts"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 185,
+      "kind": "plantq",
+      "description": "the README's freshness stamp drifting from the reference that owns it"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 187,
+      "kind": "plantq",
+      "description": "the README's corpus size restated instead of counted"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 189,
+      "kind": "plantq",
+      "description": "a SKILL.md body over the 5000-token budget"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 191,
+      "kind": "plantq",
+      "description": "prose calling an OPEN board row closed"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 193,
+      "kind": "plantq",
+      "description": "a board id that resolves to no row"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 195,
+      "kind": "plantq",
+      "description": "the newest release with no verification-ledger section"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 197,
+      "kind": "plantq",
+      "description": "a release missing from the declared unrecorded list"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 199,
+      "kind": "plantq",
+      "description": "the unrecorded-release count restated instead of counted"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 201,
+      "kind": "plantq",
+      "description": "a ledger tally disagreeing with its own Confirmed column"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 203,
+      "kind": "plantq",
+      "description": "a ledger section with rows and no tally at all"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 205,
+      "kind": "plantq",
+      "description": "run stamps falling behind the shipped version"
+    },
+    {
+      "step": "Negative self-tests for the reconciliation guards",
+      "line_in_step": 207,
+      "kind": "plantq",
+      "description": "the prune log's instruction count drifting from the headings"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 25,
+      "kind": "plant",
+      "description": "a producer block with no observed_at"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 27,
+      "kind": "plant",
+      "description": "observed_at written as free text"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 32,
+      "kind": "plant",
+      "description": "a harness-owned field guessed instead of reported unavailable"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 34,
+      "kind": "plant",
+      "description": "a --key value echoed into the producer block"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 40,
+      "kind": "plant",
+      "description": "the producer block dropped from one renderer's default format"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 46,
+      "kind": "plant",
+      "description": "a gsc_pull run that measured nothing exiting 0"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 48,
+      "kind": "plant",
+      "description": "the nothing-measured banner dropped from the gsc_pull report"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 57,
+      "kind": "plant",
+      "description": "a suite that leaks its temp trees again"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 59,
+      "kind": "plant",
+      "description": "a passing case whose tree is kept anyway"
+    },
+    {
+      "step": "Negative self-tests for the provenance behaviour contracts",
+      "line_in_step": 61,
+      "kind": "plant",
+      "description": "the residue line dropped from a clean run"
+    }
+  ],
+  "counts": {
+    "Negative self-tests for the provenance behaviour contracts": {
+      "plant": 10
+    },
+    "Negative self-tests for the reconciliation guards": {
+      "plant": 33,
+      "plantq": 20
+    }
+  }
+}
