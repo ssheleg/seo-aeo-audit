@@ -1,5 +1,8 @@
 ## Unreleased — collector coverage candidate
 
+- Preserve GSC dimensions after individual API failures; separate request accounting
+  from unknown row populations, invalid/noise exclusions and display slices.
+
 - Journal every agent-surface logical probe, including hidden discovery and CLI-only
   requests; keep network and offline-file coverage separate, and preserve status
   evidence when response bodies are incomplete.

@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
 Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py` and `agent_surface.py` when collection
-reaches report emission. The remaining three scripts are not migrated; B-9 remains open. This schema is
+`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py` and `gsc_pull.py` when collection
+reaches report emission. The remaining two scripts are not migrated; B-9 remains open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -69,7 +69,7 @@ and loopback fixtures; the baseline inventory is historical.
 | `url_inspection.py` | `unique_input_url`; exact-string duplicates removed before the cap | A nonempty index-status answer under the existing `answered_rows` predicate. The existing JSON object gains `coverage`; result fields and exit behavior remain. A response with no index-status data is an attempted input without a usable return. | Completeness is only for requested unique URLs, not every field or the property's universe. Credential bootstrap and input-file failures before collection keep existing stderr/exit behavior. Nonpositive caps are rejected before credential access. |
 | `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
 | `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
-| `gsc_pull.py` | Migration pending | Distinguish API rows, windows and unobserved tails. | No inference of missing rows as zero. |
+| `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Credential bootstrap and list-only paths keep their early boundaries. No provider-wide completeness, pagination or live acceptance claim. |
 | `psi_pull.py` | Migration pending | Define field-data absence separately from lab-response success. | No provider completeness claim. |
 | `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
 
@@ -82,7 +82,7 @@ an explicit reason and emits state `unknown`; zero is never its default. Early
 bootstrap failures with no record are not complete coverage and remain a migration
 boundary. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the four migrated standalone
+The small builder/Markdown block is duplicated intentionally in the five migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
 `test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
 `test/sitemap_coverage_contract.py`, called by the same gate, compares the first three
@@ -188,3 +188,52 @@ spec, not that every probe or field succeeded. Markdown and JSON emit all presen
 unit records. `test/agent_coverage_contract.py` verifies this through mocked
 requests, actual loopback transport, copied CLI runs and executable mutations;
 its receipt is `docs/evidence/runs/2026-10-13-fw06-agent-coverage.md`.
+
+
+## GSC request and row accounting
+
+The full-report branch runs six independent logical API operations after credential
+bootstrap: properties, date/query/page/query-page Search Analytics and sitemaps.
+`api_operations` records them; `collection_errors` preserves bounded diagnostics
+with the credential value redacted before JSON/text rendering. A returned API
+operation has a typed collection envelope; an empty list counts as observed.
+Malformed envelopes and failures do not erase earlier dimensions. Auxiliary row
+shape failures are separate diagnostics; their valid siblings remain available.
+
+Four row records keep `requested=null`: a single page cannot enumerate the
+provider population, including when fewer than the configured cap arrive.
+`attempted` counts received rows after valid noise rows are deliberately excluded;
+invalid rows remain attempted without usable returns. `returned` counts individually usable rows admitted to analysis, and `dropped` counts known noise only. An unavailable row envelope
+leaves all row counts null. An actually empty list permits measured zero counts.
+`row_observations` reports received, invalid, noise and analyzed counts separately.
+The aggregate noise count is null when either noise-bearing dimension is unknown.
+
+All four row limits are named, including date's 25,000. Reaching a limit adds an
+uncertainty reason, never a numeric unseen tail or proof that more rows exist.
+JSON top-query/page lists show 100 rows and pair lists 5,000 after analysis;
+`display_omitted_json` records that presentation cut without reducing analyzed
+returns. Text top-query/page lists show 30; their separate omission count is
+measured. Date and query-page text sections are transformed summaries, so their
+raw-row display omission is null, not a claim that all raw rows were displayed.
+Failed/empty dimensions carry observation state beside legacy derived keys and
+cannot render an unqualified clean collapse/cannibalization/sitemap conclusion.
+The existing useful-row exit predicate remains: valid empty responses are observed
+but a report with no usable rows exits 1.
+
+`test/gsc_coverage_contract.py` verifies mocked failures in every request position,
+invalid versus zero rows, noise/display arithmetic, cap/unknown distinctions,
+redaction, early branches and real loopback transport through copied standalone
+CLI invocations. Provider behavior and pagination performance remain NOT_RUN.
+Primary-source interpretation is recorded in
+`docs/evidence/plans/2026-10-13-fw06-provider-coverage.md`.
+
+
+Finite individual values can still overflow an aggregate. Each GSC derivation is
+isolated, and sums refuse nonfinite results without imposing a traffic ceiling.
+A failed calculation has a null derived value and a named `derivation_errors`
+entry; its row observation and coverage reasons qualify that failure. Other
+calculations and raw usable rows survive. `analyzed` counts individually usable
+input rows admitted to the analysis, not successfully computed aggregates.
+JSON never uses Infinity/NaN to represent an unavailable aggregate, and text names
+the failed calculation instead of reporting a clean negative. Monthly, cliff,
+position, brand and cannibalization aggregate paths have explicit controls.

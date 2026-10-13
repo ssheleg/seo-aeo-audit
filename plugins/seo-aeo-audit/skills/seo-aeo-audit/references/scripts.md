@@ -44,7 +44,8 @@ ran the documented command saw no cannibalization section and had nothing to
 distinguish "none found" from "never shown". Two limits travel in the output rather
 than in this file: the cliff detector only fires on a collapse of ~90% or more that
 held for two weeks, and the query set is capped at the API row limit with no
-pagination, which drops the long tail the beyond-30 band is made of.
+pagination. A reached cap leaves the unseen tail unknown; even an uncapped page
+does not prove the provider population is complete.
 
 **Zero rows exits `1`, and the report says `NOTHING MEASURED` first.** Everything from
 the position split down is derived from rows, so a property that answered nothing
@@ -298,3 +299,16 @@ usable offline spec, not that every field succeeded. The previous selected-row
 counter could falsely report that nothing answered; invocation accounting now
 owns that predicate. Existing singular coverage carriers in other scripts and
 preflight's separate track vocabulary are unchanged.
+
+
+### GSC collection coverage
+
+`gsc_pull.py` emits five common records under `coverage_by_unit`: six logical
+API requests, plus separate date/query/page/query-page row populations. Those row
+universes remain unknown; received/invalid/noise/analyzed/display counts are
+reported as observations, not provider totals. A failed request preserves other
+dimensions and cannot become a clean negative. Actual empty responses differ from
+unavailable envelopes. Noise is excluded before attempted analysis; display cuts
+happen after it. The report retains existing keys and qualifies derived output
+with `row_observations`. Credential bootstrap and list-only branches remain early
+boundaries; provider acceptance is not established by local fixtures.

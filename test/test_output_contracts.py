@@ -78,6 +78,7 @@ psi = load("psi_pull")
 pa = load("page_audit")
 ags = load("agent_surface")
 sm = load("sitemap_audit")
+gsc_flat = load("gsc_pull")
 
 # A Google error page: the thing that actually arrives, not a synthetic string.
 HOSTILE = (
@@ -89,7 +90,7 @@ HOSTILE = (
 # ── 1. every renderer flattens before it interpolates ────────────────────────
 for name, mod in (("preflight", pre), ("url_inspection", ui),
                   ("psi_pull", psi), ("page_audit", pa),
-                  ("agent_surface", ags), ("sitemap_audit", sm)):
+                  ("agent_surface", ags), ("sitemap_audit", sm), ("gsc_pull", gsc_flat)):
     fn = getattr(mod, "_flat", None)
     if fn is None:
         failures.append(f"{name}.py must define _flat() — error text reaches its markdown raw")
@@ -314,6 +315,7 @@ residue.open_case("output contracts")
 _TMP = residue.workspace("contracts")
 
 sm = load("sitemap_audit")
+gsc_flat = load("gsc_pull")
 gsc = load("gsc_pull")
 COLLECTORS = (("preflight", pre), ("page_audit", pa), ("psi_pull", psi),
               ("sitemap_audit", sm), ("url_inspection", ui),
@@ -504,8 +506,8 @@ for _name, _mod, _argv in _DEFAULT_RUNS:
           f"PRODUCER_FIELDS")
 
 # A hostile value cannot break the table it is rendered into — the same defect the
-# six _flat homes above exist for, in a block all seven scripts render
-# without an _flat to call.
+# seven _flat homes above exist for, in a block all seven scripts render
+# independently of _flat.
 _hostile_md = pre.provenance_md(pre.provenance("preflight.py", [HOSTILE], HOSTILE))
 check(all(l.startswith("|") and l.rstrip().endswith("|")
           for l in _hostile_md.split("\n")[2:] if l.strip()),
@@ -575,6 +577,10 @@ from sitemap_coverage_contract import run as check_sitemap_coverage
 check_sitemap_coverage(check, ROOT, _TMP)
 from agent_coverage_contract import run as check_agent_coverage
 check_agent_coverage(check, ROOT, _TMP)
+from gsc_coverage_contract import run as check_gsc_coverage
+check_gsc_coverage(check, ROOT, _TMP)
+from owner_board_contract import run as check_owner_board_contract
+check_owner_board_contract(check, ROOT, _TMP)
 
 if not failures:
     residue.close_case("output contracts")
@@ -585,7 +591,7 @@ if failures:
     for f in failures:
         print("  -", f)
     raise SystemExit(1)
-print("PASS: output contracts (flattening in 6 renderers, preflight table + stable "
+print("PASS: output contracts (flattening in 7 renderers, preflight table + stable "
       "denominator, exit status from the same predicate the report uses in all six "
       "collectors that can measure nothing, every "
       "emitted severity orderable, coverage vocabulary closed and seeded, "

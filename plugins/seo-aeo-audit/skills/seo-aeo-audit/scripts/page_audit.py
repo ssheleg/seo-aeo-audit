@@ -161,8 +161,8 @@ def provenance_md(prov: dict) -> str:
         v = prov.get(f, "")
         if isinstance(v, list):
             v = " ".join(v)
-        # Flattened here rather than through `_flat`: not all seven scripts define one,
-        # and this shared block must render independently of that helper.
+        # Flattened here rather than through `_flat`: this shared block must
+        # render independently of the collector-specific helper.
         # test/validate.py counts the actual helper homes.
         cell = " ".join(str(v).split()).replace("|", "\\|")
         if len(cell) > 300:

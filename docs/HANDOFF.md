@@ -1,13 +1,31 @@
-## Agent-surface independent correction acceptance — 2026-10-13
+## GSC/R30 owner gate passed — 2026-10-13
 
-Core source `8e2ee005fa21a3f1dc289c919b26d506a58c22d6` passed independent
-73 + 8 bounded controls after three review findings were fixed. See
-[the receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md).
-The owner `npm run test:all` passed at c7070da with all 31 negative groups and
-eight audit regression files. The next step is to promote the frozen draft PR
-once and watch genuine required checks for normal integration. No provider/native acceptance claimed.
-Provider planning remains on separate `plan/fw06-provider-coverage` at e300831;
-its contract proposal must be reviewed before implementation.
+Combined implementation and cache correction at `12ca7004fcebcf8b4197369002989e26fd72c4fc`
+passed `npm run test:all`: 31 negative groups, 9 audit regression files. Source
+and correction received independent parent review; receipts below retain failures.
+Next: freeze this documentation head, open/promote one candidate PR, require genuine
+checks, then normal exact-head merge. Release/version remain unchanged at 0.26.5.
+PSI reviewed successor `50e7c3e898602ab221b53cccb66620354fce5aec` waits for accepted
+composition before its own owner gate. Preflight/bootstrap packet remains open.
+
+# Combined GSC and R30 candidate — 2026-10-13
+
+GSC source de16b2baeb07b22a13af7662fa2ae56a1aa5db06 passed independent
+76-control review after both aggregate overflow findings were repaired. R30 source
+99653a0b211e737ad43a0884f2e801742666d0e5 passed independent 28 board/validator
+and 27 local-Git release controls. See the separate
+[GSC receipt](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and
+[R30 receipt](evidence/runs/2026-10-13-r30-owner-gates.md).
+
+Next: run one exact combined owner `npm run test:all` after the serial slot clears,
+then freeze/push the evidence, promote one genuine PR candidate and watch normal
+integration. Package remains 0.26.5; provider/native acceptance remains NOT_RUN.
+Agent-surface PR33 already landed normally at e8aa59e with genuine checks.
+PSI implementation is on separate plan/fw06-psi-coverage, whose approved packet
+is `docs/evidence/plans/2026-10-13-fw06-psi-coverage.md` at 29041dc.
+Preflight and early bootstrap envelopes remain open. No complete FW06 claim.
+
+## Historical task context
 
 # B-9 agent-surface coverage candidate — 2026-10-13
 
