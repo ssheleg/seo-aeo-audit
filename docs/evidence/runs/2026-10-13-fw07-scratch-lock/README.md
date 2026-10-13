@@ -156,3 +156,12 @@ for a hung orphan plant, exit 130/143 on interruption (same limits as TP).
 **Owner full gate pending** on this source, then independent owner-adapter review,
 PR and normal merge. Package payload unchanged (`test/` is not shipped): version
 stays 0.26.6, no CHANGELOG entry (no unreleased section; CHANGELOG is shipped).
+
+### Owner full gate on the child-lifetime port
+
+`npm run test:all` on exact 087fa1a from a clean clone with an owned TMPDIR: exit0
+in 281s, minimum free space 772MB — [result](owner-full-087fa1a.json),
+[log](owner-full-087fa1a.log.gz). All 31 guards rejected their plant; the ported
+`fw07_child_lifetime.py` (62 controls), `fw07_scratch_lock.py` (30), FW06 attribution
+(93) and the owner-release controls (27) passed; residue: nothing left. This is the
+owner gate, not hosted CI or a package release.
