@@ -1,3 +1,15 @@
+## v0.26.5 — collector provenance and accountable test snapshots
+
+- Record observed redirect hops, final response URLs and collection provenance
+  without inventing a redirect status; retain uncertainty after transport failure.
+- Exercise complete, capped, incomplete and corrupt gzip responses through loopback
+  fixtures, preserving partial-input flags and suppressing completeness claims.
+- Account for negative-runner snapshots on success and failure. Attribute the
+  affected SECURITY I/O plant to its intended guard.
+- Define the common collector-coverage migration contract. Uniform emission (B-9)
+  and the remaining legacy plant attribution work (B-33) remain open.
+- No live-provider or native-model acceptance is claimed by these fixture checks.
+
 ## v0.26.4 — a lightweight tag cannot publish a release
 
 - **The release refuses a lightweight tag.** `release.yml` gains one step, right after

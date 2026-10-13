@@ -18,6 +18,15 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.26.5 candidate — FW01/FW06 (2026-10-13)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Snapshot accounting | [FW01 receipt](runs/2026-10-13-fw01-snapshot.md), accepted PR27 | source verified |
+| Redirect and gzip provenance | [FW06 receipt](runs/2026-10-13-fw06-collectors.md), accepted PR28 at 4f4b530 | fixture and independent review verified |
+| Version packaging | `npm test` at f7d1dd50ff3e86654711b0efd7e4b9d109603166 exit 0; independent 15-file diff and seven-script byte comparison | observed |
+| Publication and installation | No tag or registry operation in preparation | pending |
+
 ## v0.26.4 — a lightweight tag cannot publish a release (2026-10-10)
 
 | What ships | How it was confirmed | Watched |
@@ -477,7 +486,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the thirty-eight releases at or above `v0.13.0` have no section
+**Sixteen** of the thirty-nine releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
@@ -504,3 +513,17 @@ must leave it by gaining a section.
 - `v0.15.1`
 - `v0.15.0`
 <!-- unrecorded-releases:end -->
+
+### Packaging correction before release
+
+Candidate run38341566007 failed because the new retro stamp inserted `candidate`
+inside the established parseable date/version shape. Source checks passed, but
+the exact negative plant could not target it. Restored the standard stamp shape;
+candidate/publication-pending status remains explicit in this ledger and HANDOFF.
+No guard was weakened. The affected reconciliation plant is replayed before
+re-promotion, and the full genuine candidate gate must pass again.
+
+The repaired stamp passed `python3 test/validate.py` and
+`python3 -B test/negatives.py -k 'reconciliation guards'`, both exit0.
+The latter ran all plants inside the selected reconciliation workflow step,
+including the exact run-stamp guard. Its owned snapshot was created and removed.
