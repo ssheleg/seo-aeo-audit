@@ -48,6 +48,8 @@ def schema_errors(record):
         return errors + ['reasons']
     if None not in (requested, attempted, dropped) and attempted + dropped != requested:
         errors.append('input accounting')
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        errors.append('known count exceeds input population')
     if None not in (returned, attempted) and returned > attempted:
         errors.append('returned exceeds attempts')
     unknown = None in counts
@@ -93,6 +95,16 @@ def run(pa, ui, check, root, workspace):
                 check(True, f'B-9 builder refuses invalid/unsupported counts {counts!r}')
             else:
                 check(False, f'B-9 builder refuses invalid/unsupported counts {counts!r}')
+        for counts in [(1, 2, 1, None), (1, None, 2, None), (1, None, None, 2)]:
+            reasons = [{'code': 'unknown_quantity', 'detail': 'One other quantity is not known.'}]
+            try:
+                builder('input_url', 'test', *counts, reasons)
+            except ValueError:
+                check(True, 'B-9 known quantity cannot exceed requested despite other unknown counts')
+            else:
+                check(False, 'B-9 known quantity cannot exceed requested despite other unknown counts')
+            malformed = dict(unknown, requested=counts[0], attempted=counts[1], returned=counts[2], dropped=counts[3])
+            check(bool(schema_errors(malformed)), 'B-9 independent reader refuses known count exceeding requested with null peers')
         for bad in [dict(empty, state='partial'), dict(empty, unit=''), dict(empty, requested=True), dict(unknown, state='complete'), dict(unknown, reasons=[])]:
             check(bool(schema_errors(bad)), 'B-9 independent reader refuses a malformed/overclaimed record')
 

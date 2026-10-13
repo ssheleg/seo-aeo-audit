@@ -6,7 +6,8 @@ implements common invocation coverage in page audit and URL Inspection. Read the
 [schema/migration matrix](contracts/collector-coverage.md). No version or workflow
 change; B-9 remains open for five collectors and pre-report bootstrap failures.
 Baseline two missing-emission controls were red; restored focused controls pass
-103/103, with three intended real-source mutation refusals. No live/provider or
+115/115 after the independent partial-unknown bound correction, with three
+intended real-source mutation refusals. No live/provider or
 native-host acceptance is claimed.
 
 Accepted 0.26.5 main `bccb630e79730e2a7058b74a2130ddfe4f4662aa` was merged
