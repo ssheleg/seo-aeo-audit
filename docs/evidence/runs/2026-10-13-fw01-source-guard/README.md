@@ -3,8 +3,8 @@
 Base: [00601e620f7d273893b6a97566a26abd9e9b520e](https://github.com/ssheleg/seo-aeo-audit/commit/00601e620f7d273893b6a97566a26abd9e9b520e).
 This is the missing source-guard half of agent-stack B-159. The earlier
 [snapshot receipt](../2026-10-13-fw01-snapshot.md) remains valid and separate.
-Status: focused source checks passed; independent review, coordinated owner full
-gate and normal PR integration pending. No source/publication closure is claimed yet.
+Current status: bounded independent review and exact-source local full gate passed;
+normal PR integration remains pending. No package/publication update is claimed.
 
 ## Recovered gap and contract
 
@@ -109,3 +109,20 @@ broad owner suite nor a published/runtime acceptance claim.
 Next: one serialized `npm run test:all` at this reviewed implementation plus this
 receipt-only successor, followed by frozen genuine candidate checks and normal
 merge. No source implementation changed after the independently reviewed head.
+
+## Exact-source local full acceptance
+
+At `e31abf501285f3e54302fc0830c16f86b1e345fb`, the serialized
+`npm run test:all` completed with exit0 in 241.09 seconds. The
+[source-bound receipt](full-e31abf5.json) and [compressed full output](full-e31abf5.log.gz)
+retain the documentation/behavior gate, 31 negative groups and complete audit
+suffix, including all 11 source-guard groups. The 400 MiB disk guard never fired;
+minimum observed free space was 475,738,112 bytes, and the owned scratch was removed.
+The validator and regression bytes remain identical to independently reviewed
+76d25cd. Earlier pending statements above describe their earlier source cuts.
+
+This documentation-only successor records that completed source run; it does not
+claim a second full run on its own commit. Next: final structural check, frozen
+PR40 promotion once, genuine required checks and normal exact-head merge, followed
+by source-tree and all 46 published payload file readbacks. No tag, package bump
+or installed update is part of this source-only change.

@@ -1,0 +1,36 @@
+{
+  "source": "e31abf501285f3e54302fc0830c16f86b1e345fb",
+  "command": [
+    "npm",
+    "run",
+    "test:all"
+  ],
+  "status": "PASS",
+  "admission_free": 1073741824,
+  "minimum_free": 419430400,
+  "observed_free": 783941632,
+  "checked_at": 1791889241.2688892,
+  "started_at": 1791889002.191343,
+  "initial_free": 1219055616,
+  "observed_minimum_free": 475738112,
+  "exit": 0,
+  "elapsed_seconds": 241.0884120464325,
+  "log_sha256": "37bc46d2282ec60e0bba4de582c26bce8055b8c14614e32b2bc0587a7d7f3abf",
+  "scratch_removed": true,
+  "log": "full-e31abf5.log.gz",
+  "original_log_sha256": "37bc46d2282ec60e0bba4de582c26bce8055b8c14614e32b2bc0587a7d7f3abf",
+  "stored_log_sha256": "1fe8cef9f7a978d23ecb8b91caae3159640269c1769624d847bacb2a09d3c435",
+  "sanitization": "Owned temporary/source absolute path prefixes replaced; diagnostics and outcomes unchanged.",
+  "scope": "Exact-source local full gate; no hosted CI, merge, package release, or installation claim.",
+  "peer_source": "76d25cd5c283bce7c4fdd25c7c42fee7038fe1b2",
+  "peer_core_unchanged": true,
+  "receipt_successor_structural": {
+    "command": "python3 -B test/validate.py",
+    "exit": 0
+  },
+  "published_payload_readback": {
+    "version": "0.26.6",
+    "files": 46,
+    "every_byte_hash_equal": true
+  }
+}
