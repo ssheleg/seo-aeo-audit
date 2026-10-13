@@ -3,8 +3,9 @@
 Read the [bounded packet](evidence/plans/2026-10-13-fw06-sitemap-coverage.md).
 Implementation and measured checks are in the [execution receipt](evidence/runs/2026-10-13-fw06-sitemap.md).
 Accepted B-33 source is `b28269fe72752ac9dc6ff0c6df8eaae4b4ac0e0a`; the earlier
-B-33 handoff below is historical. Version stays 0.26.5. Next: independent bounded
-review, serial owner gates, frozen genuine PR checks and normal integration. Then
+B-33 handoff below is historical. Version stays 0.26.5. Owner aggregate and independent bounded review passed at
+`40c95d3c4d3267148e16e4767f28d28664ef3885`. Next: frozen genuine PR32 checks
+and normal integration. Then
 take agent-surface discovery coverage from the common migration contract; its
 unlisted discovery requests need instrumenting before displayed rows can be counted.
 
