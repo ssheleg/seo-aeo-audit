@@ -106,3 +106,49 @@ use the serialized owner gate only after a slot is released. B-9 closes only whe
 all declared homes and boundaries are reconciled; no source/schema pass implies
 provider, installed-host or end-to-end task-quality acceptance. Keep version
 0.26.5 until a separately reviewed coherent patch package is ready.
+
+
+## Reproducible baseline and proposed GSC accounting
+
+Run `python3 -B docs/evidence/plans/fw06-provider-probe.py` from this checkout.
+It patches credential minting and provider calls in-process. At baseline
+`54fe9d523e816e5868cdf68eb771cdf42c7c53a9` it reports GSC six calls / exit 0 /
+no common coverage; failing call three reports three attempts / zero stdout;
+PSI empty object reports exit 0 with no field, origin or lab measurement.
+No raw provider response or real token is captured.
+
+Before implementation, review this bounded accounting proposal:
+
+- Keep the existing report object and add `coverage_by_unit`. `api_request`
+  requested/attempted are six logical full-report operations, each independently
+  caught after credential bootstrap. A usable return means a correctly typed
+  collection envelope, including a genuinely empty collection; invalid individual
+  rows remain separately visible. Failure never invents an empty provider result.
+- Add separate `date_row`, `query_row`, `page_row`, `query_page_row` records.
+  Requested is null because the provider population is not enumerable through
+  this single page, even below the configured cap. Attempted counts received rows
+  admitted to local validation/analysis after deliberate noise exclusion; returned
+  counts usable analyzed rows. Dropped counts known noise exclusions only. Invalid
+  rows are failed attempts, not double-counted drops. An unavailable/malformed row
+  envelope leaves row counts unknown, rather than zero. An actual empty typed row
+  list permits attempted/returned/dropped zero while requested stays unknown.
+- Preserve raw received row counts and local invalid/noise counts in separate
+  `row_observations` entries. The report's top-query/page/pair display slices happen
+  after analysis; they are `display_omitted` observations, never unattempted input
+  drops or provider-tail estimates. Text's smaller display slice is also named.
+- All four dimensions expose their requested row limit, including dates. A reached
+  limit adds `row_cap_reached`; every provider-population record includes a bounded
+  `provider_population_unknown` explanation. No automatic pagination or numerical
+  missing-tail estimate. Sitemap/property listing remain API observations, not
+  Search Analytics row populations.
+- Per-dimension observation state qualifies derived values. Failed or unusable
+  dimensions cannot produce an unqualified “no collapse”, “none submitted”, or
+  “none found” statement. Preserve existing JSON keys, with explicit observation
+  status beside them; absent-data derivations must be distinguishable from an
+  actual measured negative. Existing `measured_rows` remains the exit predicate
+  for a full report, so a valid empty provider result is observed but not a useful
+  site measurement. Bootstrap/list-only branches remain explicit early boundaries.
+
+The proposal is not implemented or accepted by fixtures yet. The next step is a
+contract review, then frozen negatives for response envelopes, invalid row shapes,
+cap boundaries and output qualification before editing the collector.
