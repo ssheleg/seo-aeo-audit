@@ -987,7 +987,7 @@ if "${CLAUDE_PLUGIN_ROOT}" not in _skill_md:
 # a Google error page carries newlines, the first one ends the table row, and every
 # row after it stops rendering. Five of preflight's seven rows were being lost.
 _RENDERERS = ("preflight.py", "url_inspection.py", "psi_pull.py", "page_audit.py",
-              "agent_surface.py")
+              "agent_surface.py", "sitemap_audit.py", "gsc_pull.py")
 for _r in _RENDERERS:
     _src = open(os.path.join(ROOT, SKILL_DIR, "scripts", _r), encoding="utf-8").read()
     if "def _flat(" not in _src:

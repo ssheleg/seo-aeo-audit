@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import subprocess
 import sys
@@ -159,8 +160,8 @@ def provenance_md(prov: dict) -> str:
         v = prov.get(f, "")
         if isinstance(v, list):
             v = " ".join(v)
-        # Flattened here rather than through `_flat`: not all seven scripts define one,
-        # and this shared block must render independently of that helper.
+        # Flattened here rather than through `_flat`: this shared block must
+        # render independently of the collector-specific helper.
         # test/validate.py counts the actual helper homes.
         cell = " ".join(str(v).split()).replace("|", "\\|")
         if len(cell) > 300:
@@ -168,6 +169,63 @@ def provenance_md(prov: dict) -> str:
         lines.append(f"| {f} | `{cell}` |")
     return "\n".join(lines)
 # ── end provenance shared block ──────────────────────────────────────────────
+
+
+def _flat(text: str, limit: int = 200) -> str:
+    """One line, safe inside a table cell, capped.
+
+    Network errors arrive as HTML error pages and pretty-printed JSON. Interpolated
+    raw into a markdown row, the first newline ends the row and every row after it
+    stops rendering — so the report becomes unreadable exactly where it is carrying
+    the failure. Duplicated in each collector rather than imported: these ship as
+    standalone files with no shared module, so `test/validate.py` counts the homes.
+    """
+    one = " ".join(str(text).split()).replace("|", "\\|")
+    return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
+
+
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
 
 
 API = "https://searchconsole.googleapis.com/webmasters/v3"
@@ -238,14 +296,105 @@ def query(site: str, token: str, quota_project: str | None, dimensions: list[str
     enc = urllib.parse.quote(site, safe="")
     body = {"startDate": start, "endDate": end,
             "dimensions": dimensions, "rowLimit": row_limit}
-    return call(f"/sites/{enc}/searchAnalytics/query", token, quota_project, body).get("rows", [])
+    return collection_rows(call(f"/sites/{enc}/searchAnalytics/query", token, quota_project, body), "rows")
 
 
 ROW_LIMIT_NOTE = (
-    "the API returned exactly the row limit for this dimension, so the long tail is "
-    "missing — and the tail is where the beyond-30 band lives. Treat the split as a "
-    "lower bound on that band, or narrow the window and re-run"
+    "the API reached this request's row limit; whether further rows exist is "
+    "unknown. This is one bounded page, not the provider's complete population. "
+    "Narrow the window or assess a separate pagination request before extrapolating"
 )
+
+
+def collection_rows(payload, key):
+    """A missing collection in a valid API envelope is genuinely empty."""
+    if not isinstance(payload, dict) or "error" in payload:
+        raise ValueError("unusable API collection envelope")
+    rows = payload.get(key, [])
+    if not isinstance(rows, list):
+        raise ValueError("API collection is not a list: " + key)
+    return rows
+
+
+class CollectionJournal:
+    def __init__(self, token):
+        self.token, self.entries, self.errors = token, [], []
+
+    def request(self, name, operation):
+        entry = {"operation": name, "usable_envelope": False}
+        self.entries.append(entry)
+        try:
+            rows = operation()
+            if not isinstance(rows, list):
+                raise ValueError("API collection is not a list")
+            entry["usable_envelope"] = True
+            return rows
+        except (SystemExit, OSError, ValueError, TypeError, KeyError) as exc:
+            detail = str(exc)
+            for secret in (self.token, urllib.parse.quote(self.token, safe="")):
+                if secret:
+                    detail = detail.replace(secret, "<redacted>")
+            self.errors.append({"operation": name, "code": "input_failed", "detail": detail[:200]})
+            return None
+
+    def record(self):
+        reasons = [{"code": "input_failed", "detail": f"{len(self.errors)} collection diagnostics; failed operations and invalid auxiliary rows are listed separately in collection_errors."}] if self.errors else []
+        return collector_coverage("api_request", "Six full-report operations after credential bootstrap; a usable typed collection envelope, including empty, is returned. Retries are not extra inputs; row usability is separate.",
+                                  6, len(self.entries), sum(e["usable_envelope"] for e in self.entries), 0, reasons)
+
+
+def valid_analytics_row(row, dimensions):
+    if not isinstance(row, dict):
+        return False
+    keys = row.get("keys")
+    if not isinstance(keys, list) or len(keys) != len(dimensions) or any(not isinstance(k, str) or not k.strip() for k in keys):
+        return False
+    if dimensions == ["date"]:
+        try:
+            if date.fromisoformat(keys[0]).isoformat() != keys[0]:
+                return False
+        except ValueError:
+            return False
+    for name in ("clicks", "impressions", "ctr", "position"):
+        value = row.get(name)
+        if type(value) not in (int, float) or value < 0:
+            return False
+        try:
+            if not math.isfinite(value):
+                return False
+        except OverflowError:
+            return False
+    return row["ctr"] <= 1
+
+
+def observe_rows(name, rows, dimensions, cap, display_limit):
+    reasons = [{"code": "provider_population_unknown", "detail": "One bounded Search Analytics page cannot enumerate the provider population, including below the configured cap."}]
+    observation = {"received": None, "invalid": None, "noise": None,
+                   "analyzed": None, "display_omitted_json": None,
+                   "display_omitted_text": None, "row_limit": cap,
+                   "envelope": "unavailable" if rows is None else "observed"}
+    if rows is None:
+        reasons.append({"code": "input_failed", "detail": "No usable row envelope; row counts are unknown."})
+        return [], observation, collector_coverage(name + "_row", "Provider row population for this dimension/window; no cross-dimension sum.", None, None, None, None, reasons)
+    accepted, invalid, noise = [], 0, 0
+    for row in rows:
+        if not valid_analytics_row(row, dimensions):
+            invalid += 1
+        elif "query" in dimensions and is_noise(row["keys"][0]):
+            noise += 1
+        else:
+            accepted.append(row)
+    observation.update(received=len(rows), invalid=invalid, noise=noise, analyzed=len(accepted),
+                       display_omitted_json=max(0, len(accepted)-display_limit) if display_limit else 0,
+                       display_omitted_text=max(0,len(accepted)-30) if name in ("query","page") else None)
+    if len(rows) >= cap:
+        reasons.append({"code":"row_cap_reached", "detail": ROW_LIMIT_NOTE})
+    if invalid:
+        reasons.append({"code":"invalid_rows", "detail":f"{invalid} received rows failed shape/finite-value validation and were not analyzed."})
+    if noise:
+        reasons.append({"code":"noise_filter", "detail":f"{noise} valid noise rows deliberately excluded before analysis attempts."})
+    record = collector_coverage(name + "_row", "Single dimension/window provider population is unknown. Attempts are received rows after known noise exclusion; returned are usable analyzed rows; display slices do not drop analysis inputs.", None, len(rows)-noise, len(accepted), noise, reasons)
+    return accepted, observation, record
 
 
 # ── pure analysis (no network — unit-testable) ───────────────────────────────
@@ -493,7 +642,7 @@ def render_text(report: dict) -> str:
 
     if not measured_rows(report):
         out += ["",
-                "NOTHING MEASURED — the API answered zero rows for every dimension "
+                "NOTHING MEASURED — no usable rows were observed for any dimension "
                 "(dates, queries, pages, query x page).",
                 "  Every section below is empty because there was nothing to derive from, "
                 "not because",
@@ -503,9 +652,18 @@ def render_text(report: dict) -> str:
                 "resources) and the",
                 "  window: one that predates verification returns nothing. Exit status is 1."]
 
+    observations = report.get("row_observations", {})
+    unavailable = lambda name: name in observations and not observations[name].get("analyzed")
+    for name, obs in observations.items():
+        out.append(f"{name}: envelope={obs['envelope']}; received={obs['received']}; invalid={obs['invalid']}; noise={obs['noise']}; analyzed={obs['analyzed']}; display omitted JSON/text={obs['display_omitted_json']}/{obs['display_omitted_text']}")
+    for error in report.get("collection_errors", []):
+        out.append(f"UNAVAILABLE {error['operation']}: {_flat(error['detail'])}")
     ps = report["position_split"]
     out += ["", "position split (recent window) — rank the brief by THIS, not by impressions:"]
     for band, label in (("top20", "<= 20"), ("striking_21_30", "21-30"), ("beyond_30", "> 30")):
+        if unavailable("query"):
+            out.append("  UNAVAILABLE — no usable query rows; zero buckets are not measured negatives")
+            break
         b = ps[band]
         out.append(f"  pos {label:<6} queries={b['queries']:<5} impressions={n(b['impressions']):>9} "
                    f"clicks={b['clicks']:<5} ctr={b['ctr']*100:5.2f}%")
@@ -530,6 +688,8 @@ def render_text(report: dict) -> str:
         out += ["  A cliff that holds is site-level, not an algorithmic update. Check which",
                 "  URLs ranked before it and whether they still resolve. Manual Actions and",
                 "  Index Coverage are web-UI only — the API cannot clear them."]
+    elif unavailable("date"):
+        out.append("UNAVAILABLE — no usable date rows; collapse was not assessed")
     else:
         out.append(f"no collapse detected — sensitivity: {CLIFF_SENSITIVITY}")
 
@@ -579,7 +739,7 @@ def render_text(report: dict) -> str:
     cann = report.get("cannibalization") or []
     out += ["", f"--- cannibalization ({len(cann)} query/queries with several URLs) ---"]
     if not cann:
-        out.append("  none found in the query x page rows pulled for this window")
+        out.append("  UNAVAILABLE — no usable query x page rows" if unavailable("query_page") else "  none found in the query x page rows pulled for this window")
     for c in cann[:20]:
         inc = c["incumbent"]
         out.append(f"  \"{str(c['query'])[:48]}\"  {c['urls']} URLs, "
@@ -600,7 +760,7 @@ def render_text(report: dict) -> str:
     out += ["", "--- sitemaps ---"]
     sitemaps = report.get("sitemaps") or []
     if not sitemaps:
-        out.append("  none submitted")
+        out.append("  UNAVAILABLE — sitemap listing incomplete or failed" if report.get("sitemaps_observed") is False else "  none submitted")
     for sm in sitemaps:
         c = (sm.get("contents") or [{}])[0]
         out.append(f"  {sm['path']}  submitted={c.get('submitted','-')} "
@@ -610,6 +770,8 @@ def render_text(report: dict) -> str:
             "",
             "What this API cannot give you at any scope: Manual Actions, Security Issues and",
             "the Index Coverage report are web-UI only. An unexplained cliff needs a human."]
+    for record in report.get("coverage_by_unit", {}).values():
+        out += ["", collector_coverage_md(record)]
     return "\n".join(out)
 
 
@@ -634,11 +796,20 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--format", choices=["text", "json"], default="text")
     args = ap.parse_args(argv)
 
+    try:
+        if args.days <= 0 or args.history_days <= 0:
+            raise ValueError("day windows must be positive")
+        today = date.today()
+        end = iso_days_before(REPORTING_LAG_DAYS, today)
+        start_recent = iso_days_before(REPORTING_LAG_DAYS + args.days, today)
+        start_hist = iso_days_before(REPORTING_LAG_DAYS + args.history_days, today)
+    except (ValueError, OverflowError):
+        ap.error("day windows must be positive and fit supported calendar dates")
     token = access_token()
     qp = args.quota_project
 
-    sites = call("/sites", token, qp).get("siteEntry", [])
     if args.list or not args.site:
+        sites = collection_rows(call("/sites", token, qp), "siteEntry")
         for s in sites:
             print(f"  {s.get('permissionLevel','?'):<22} {s['siteUrl']}")
         if not args.site:
@@ -650,34 +821,35 @@ def main(argv: list[str]) -> int:
         return 0
 
     site = args.site
-    if not any(s["siteUrl"] == site for s in sites):
-        print(f"warning: {site} is not in this account's property list. "
-              f"A property can be DNS-verified and still invisible to an account "
-              f"that was never added under Users and permissions.", file=sys.stderr)
+    journal = CollectionJournal(token)
+    sites = journal.request("properties", lambda: collection_rows(call("/sites", token, qp), "siteEntry"))
+    properties_observed = sites is not None and all(isinstance(s, dict) and isinstance(s.get("siteUrl"), str) for s in sites)
+    if sites is not None and not properties_observed:
+        journal.errors.append({"operation":"properties", "code":"invalid_rows", "detail":"Property list contains invalid entries; membership was not determined."})
+    if properties_observed and not any(s["siteUrl"] == site for s in sites):
+        print(f"warning: {site} is not in this account's returned property list.", file=sys.stderr)
 
-    today = date.today()
-    end = iso_days_before(REPORTING_LAG_DAYS, today)
-    start_recent = iso_days_before(REPORTING_LAG_DAYS + args.days, today)
-    start_hist = iso_days_before(REPORTING_LAG_DAYS + args.history_days, today)
-
-    QUERY_LIMIT = PAGE_LIMIT = 5000
-    PAIR_LIMIT = 25000
-    daily = query(site, token, qp, ["date"], start_hist, end)
-    raw_queries = query(site, token, qp, ["query"], start_recent, end, QUERY_LIMIT)
-    pages = query(site, token, qp, ["page"], start_recent, end, PAGE_LIMIT)
-    raw_pairs = query(site, token, qp, ["query", "page"], start_recent, end, PAIR_LIMIT)
-    # Both filters below remove rows before every derived number, so both are
-    # counted: a silent filter and a silent cap read the same way in a report.
-    queries = [r for r in raw_queries if not is_noise(r["keys"][0])]
-    pairs = [r for r in raw_pairs if not is_noise(r["keys"][0])]
-    dropped_noise = (len(raw_queries) - len(queries)) + (len(raw_pairs) - len(pairs))
-    row_limits = {"query": QUERY_LIMIT, "page": PAGE_LIMIT, "query_page": PAIR_LIMIT}
-    limit_reached = [name for name, rows, cap in
-                     (("query", raw_queries, QUERY_LIMIT), ("page", pages, PAGE_LIMIT),
-                      ("query_page", raw_pairs, PAIR_LIMIT))
-                     if len(rows) >= cap]
-    sitemaps = call(f"/sites/{urllib.parse.quote(site, safe='')}/sitemaps",
-                    token, qp).get("sitemap", [])
+    row_limits = {"date":25000, "query":5000, "page":5000, "query_page":25000}
+    dimensions = {"date":["date"], "query":["query"], "page":["page"], "query_page":["query","page"]}
+    coverage, observations, analyzed = {}, {}, {}
+    for name, dims in dimensions.items():
+        rows = journal.request(name, lambda dims=dims, name=name: query(site, token, qp, dims, start_hist if name=="date" else start_recent, end, row_limits[name]))
+        accepted, observed, record = observe_rows(name, rows, dims, row_limits[name], {"query":100,"page":100,"query_page":5000}.get(name))
+        record["scope"] += f" Property {site}; {start_hist if name=='date' else start_recent}..{end}; dimensions {','.join(dims)}."
+        analyzed[name], observations[name], coverage[record["unit"]] = accepted, observed, record
+    daily, queries, pages, pairs = (analyzed[name] for name in dimensions)
+    noise_counts = [observations[name]["noise"] for name in ("query","query_page")]
+    dropped_noise = sum(noise_counts) if all(n is not None for n in noise_counts) else None
+    limit_reached = [name for name in dimensions if observations[name]["received"] is not None and observations[name]["received"] >= row_limits[name]]
+    sitemaps = journal.request("sitemaps", lambda: collection_rows(call(f"/sites/{urllib.parse.quote(site, safe='')}/sitemaps", token, qp), "sitemap"))
+    valid_sitemaps = []
+    for item in sitemaps or []:
+        contents = item.get("contents") if isinstance(item,dict) else None
+        if not isinstance(item,dict) or not isinstance(item.get("path"),str) or (contents is not None and (not isinstance(contents,list) or any(not isinstance(c,dict) for c in contents))) or (item.get("lastDownloaded") is not None and not isinstance(item["lastDownloaded"],str)):
+            journal.errors.append({"operation":"sitemaps", "code":"invalid_rows", "detail":"Sitemap entry failed shape validation; valid siblings retained."})
+        else:
+            valid_sitemaps.append(item)
+    coverage["api_request"] = journal.record()
 
     report = {
         "producer": provenance(
@@ -700,7 +872,13 @@ def main(argv: list[str]) -> int:
         "top_queries": sorted(queries, key=lambda r: -r["impressions"])[:100],
         "top_pages": sorted(pages, key=lambda r: -r["clicks"])[:100],
         "query_page_pairs": pairs[:5000],
-        "sitemaps": sitemaps,
+        "sitemaps": valid_sitemaps,
+        "sitemaps_observed": sitemaps is not None and len(valid_sitemaps) == len(sitemaps),
+        "properties_observed": properties_observed,
+        "coverage_by_unit": coverage,
+        "row_observations": observations,
+        "collection_errors": journal.errors,
+        "api_operations": journal.entries,
     }
 
     # One predicate for both formats and for the report itself. Computed before the

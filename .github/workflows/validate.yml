@@ -666,7 +666,7 @@ jobs:
           plantq "DOCMAP counting the gate's homes wrong" 'the single-home row says the gate commands have' \
             python3 test/plant_edit.py sub docs/DOCMAP.md 'appear in all six of them' 'appear in all five of them'
           plantq "DOCMAP's _flat copy count drifting from the scripts" 'scripts define one; measured' \
-            python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` — six of the seven scripts define one' '`_flat()` — seven of the seven scripts define one'
+            python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` — seven of the seven scripts define one' '`_flat()` — six of the seven scripts define one'
           plantq "the README's freshness stamp drifting from the reference that owns it" 'says the sources were last re-fetched' \
             python3 test/plant_edit.py resub README.md '\*\*Sources last re-fetched [0-9]{4}-[0-9]{2}-[0-9]{2}\*\*' '**Sources last re-fetched 2026-08-10**'
           plantq "the README's corpus size restated instead of counted" 'non-blank lines of reference material' \
@@ -747,7 +747,7 @@ jobs:
           plantq "a gsc_pull run that measured nothing exiting 0" 'gsc_pull must exit 1 when every dimension came back empty' "$C" \
             bash -c 'python3 test/plant_edit.py sub '"$S"'/scripts/gsc_pull.py "    rc = 0 if measured_rows(report) else 1" "    rc = 0"'
           plantq "the nothing-measured banner dropped from the gsc_pull report" "gsc_pull's default report must say the API answered nothing" "$C" \
-            python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" '"NOTHING MEASURED — the API answered zero rows for every dimension "' '"the API answered zero rows for every dimension "' 
+            python3 test/plant_edit.py sub "$S/scripts/gsc_pull.py" '"NOTHING MEASURED — no usable rows were observed for any dimension "' '"the API answered zero rows for every dimension "'
 
           # ── the residue ledger: a leak, and a silence about it ───────────────
           # `test/plant_guard_test.py:34` built one tree per case and removed none;

@@ -1,3 +1,13 @@
+## GSC coverage candidate — 2026-10-13
+
+Implementation of the reviewed provider packet is focused-green; see
+[evidence](evidence/runs/2026-10-13-fw06-gsc-coverage.md) and the
+[contract](contracts/collector-coverage.md). Next: merge accepted agent coverage,
+run final focused/combined checks, obtain independent review, then request one
+serialized owner gate and genuine PR admission. PSI and preflight remain open;
+R30 SEO duplicate/width board-parser repair is separately queued from the family
+audit. No live provider or release claim; package remains 0.26.5.
+
 # Next B-9 provider/readiness packet — 2026-10-13
 
 Read [the provider coverage packet](evidence/plans/2026-10-13-fw06-provider-coverage.md).

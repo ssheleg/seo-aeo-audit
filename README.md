@@ -314,6 +314,10 @@ must name, anchor discipline, and the CSV column contract.
 
 ## Security posture
 
+`gsc_pull.py` preserves earlier dimensions after individual API failures and reports
+API requests separately from unknown row populations, observed exclusions and
+display slices. Credential/list bootstrap boundaries remain explicit.
+
 `agent_surface.py` also emits per-unit probe/file coverage. Its request journal
 includes discovery attempts omitted from the display table; redirect hops remain
 separate transport evidence. Unknown branch inputs and incomplete bodies stay
