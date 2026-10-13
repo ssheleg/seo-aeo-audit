@@ -1,6 +1,6 @@
 # FW06 B-9 PSI response and coverage packet
 
-Status: proposed contract, no PSI implementation yet. Stacked on reviewed GSC
+Status: contract accepted by independent parent review at 29041dc; bounded implementation in progress. Stacked on reviewed GSC
 source de16b2baeb07b22a13af7662fa2ae56a1aa5db06; reconcile the combined accepted
 GSC/R30 candidate before integration. No provider request, key or release action.
 

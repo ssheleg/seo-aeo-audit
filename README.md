@@ -286,7 +286,10 @@ for exact units, error exits and the remaining migration boundaries.
 `scripts/psi_pull.py` — Core Web Vitals with field (CrUX) and lab (Lighthouse)
 reported separately, judged at the 75th percentile. Where CrUX has no data for a
 URL that is reported as absent, never as a pass, and the lab score never stands
-in for it.
+in for it. The report counts supplied URL entries, including duplicates, and
+separates URL-field, origin context and lab availability. Empty or origin-only
+responses keep their diagnostics but do not count as a direct URL measurement;
+all such responses exit 1. See the [coverage contract](docs/contracts/collector-coverage.md).
 
 ```bash
 python3 "$SKILL_DIR/scripts/sitemap_audit.py" --url https://example.com/sitemap.xml

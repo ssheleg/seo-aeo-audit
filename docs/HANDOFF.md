@@ -1,10 +1,13 @@
-## PSI next packet — 2026-10-13
+## PSI coverage implementation — 2026-10-13
 
-Read the [proposed PSI contract](evidence/plans/2026-10-13-fw06-psi-coverage.md).
+Read the [accepted PSI contract](evidence/plans/2026-10-13-fw06-psi-coverage.md).
 Next: obtain bounded contract review, then freeze negative controls and implement
 component-preserving parsing plus URL-entry coverage. The branch is stacked on
 reviewed GSC de16b2b and must reconcile its accepted combined GSC/R30 successor.
-No PSI source changed yet; preflight and early bootstrap envelopes remain open.
+PSI source and offline/loopback regressions now implement that contract. Focused
+67 controls pass; independent review and owner gate remain pending. See the
+[run receipt](evidence/runs/2026-10-13-fw06-psi-coverage.md).
+Preflight and early bootstrap envelopes remain open.
 
 ## GSC coverage candidate — 2026-10-13
 
