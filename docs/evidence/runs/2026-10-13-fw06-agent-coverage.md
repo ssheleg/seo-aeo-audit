@@ -1,7 +1,7 @@
 # FW06 B-9 agent-surface probe coverage
 
 Status: candidate implemented and independently accepted within the bounds below;
-owner aggregate pending disk/serial clearance. Accepted sitemap base is
+owner aggregate passed; final PR admission remains separate. Accepted sitemap base is
 `dd5319a8935d60d0db7b3649b528d31d0b9ac45f`. Version remains 0.26.5. No provider
 credentials/external requests, installed-host, task-quality or whole-site claims.
 
@@ -105,3 +105,15 @@ legacy carrier positive. No provider calls, credentials, external network, broad
 suite or foreign fixtures were used by this reviewer. This certifies the bounded
 coverage/report-preservation contract; it does not certify exhaustive HTTP
 framing, whole-site completeness, installed/native use or task quality.
+
+
+## Exact-source owner aggregate
+
+After independent acceptance and serial-slot clearance, `npm run test:all` exited
+0 at `c7070da951bf80fb65a1ec4a7f6578cc4ae2e33e`. The run used an owned TMPDIR
+with 3.8 GiB free at launch and 2.6 GiB after completion. All 31 negative groups
+and eight audit regression files passed, including shared/sitemap/agent coverage
+115/127/73, attribution 93, provenance 14, snapshot 3 and residue 11 controls.
+The residue runner reported its own trees removed. No candidate implementation
+changed during this exact-source run. This documentation successor retains the
+same tested source; genuine PR checks must bind its final head before integration.

@@ -3,10 +3,9 @@
 Core source `8e2ee005fa21a3f1dc289c919b26d506a58c22d6` passed independent
 73 + 8 bounded controls after three review findings were fixed. See
 [the receipt](evidence/runs/2026-10-13-fw06-agent-coverage.md).
-The next step is one serialized `npm run test:all` on the frozen candidate after
-free disk reaches at least 2 GiB; parent currently holds it for disk pressure.
-Then preserve the result, promote a frozen draft PR once and watch genuine
-required checks for normal integration. No provider/native acceptance claimed.
+The owner `npm run test:all` passed at c7070da with all 31 negative groups and
+eight audit regression files. The next step is to promote the frozen draft PR
+once and watch genuine required checks for normal integration. No provider/native acceptance claimed.
 Provider planning remains on separate `plan/fw06-provider-coverage` at e300831;
 its contract proposal must be reviewed before implementation.
 
