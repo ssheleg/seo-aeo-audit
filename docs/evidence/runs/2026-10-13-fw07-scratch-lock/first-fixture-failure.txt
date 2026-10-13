@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/sshlg/DATA/_wt/seo-fw07-scratch-lock/test/audit_regressions/fw07_scratch_lock.py", line 111, in <module>
+    check(r.returncode == 0 and 'property checks' in r.stdout, 'actual runner listing remains usable with owned lock')
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sshlg/DATA/_wt/seo-fw07-scratch-lock/test/audit_regressions/fw07_scratch_lock.py", line 24, in check
+    assert ok, label
+           ^^
+AssertionError: actual runner listing remains usable with owned lock
+residue: 1 of 1 temp tree(s) KEPT — the case did not pass and the copy is the evidence:
+    /var/folders/3r/yrdx_c051cv22q3r3k0ylvdm0000gn/T/seo-aeo-audit-test-35524-u_x1xz5l-fw07-scratch-lock  <- FW07 shared scratch lock
+  0 removed. When you are done reading them: rm -rf /var/folders/3r/yrdx_c051cv22q3r3k0ylvdm0000gn/T/seo-aeo-audit-test-35524-u_x1xz5l-fw07-scratch-lock

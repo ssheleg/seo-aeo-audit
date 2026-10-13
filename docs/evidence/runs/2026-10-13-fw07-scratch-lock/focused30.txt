@@ -1,0 +1,2 @@
+PASS: shared scratch lock — 30 controls; owned namespace only
+residue: this run left nothing — 1 temp tree(s) created, 1 removed

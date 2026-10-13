@@ -1,0 +1,35 @@
+exit=0
+  sed -i must not come back
+  a run that measured nothing must not exit 0
+  unflattened error text must fail
+  a script path relative to the caller must fail, in each home
+  a stale defect count must fail
+  lab score must never stand in for field data
+  the wrong canonical field name must fail
+  robots Allow precedence must fail if dropped
+  a redirect credited as the page asked for must fail
+  HTML comments counted as visible prose must fail
+  presence dressed up as effect must fail
+  a finding with no declared tier must fail
+  dropping the blindness caveat must fail
+  Cursor doctrine drift must fail
+  version drift must fail
+  missing reference must fail
+  the Discover reference is a contract, not a file
+  stray SKILL.md must fail
+  a compatibility that outgrows the spec cap must fail
+  auditor tests must be able to fail
+  renamed heading must break the auditor's anchors
+  bytecode in the shipped tree must fail
+  template drift must fail
+  s for the reconciliation guards
+  s for the provenance behaviour contracts
+  an installer that stops refusing must fail its suite
+  a manifest that declares no $schema must fail
+  a dead $schema address must fail
+  a $schema naming the wrong document type must fail
+  a $schema in the inert nested position must fail
+  a stale SKILL-CARD version must fail
+
+31 negative self-tests
+residue: this run left nothing — 0 temp tree(s) created, 0 removed
