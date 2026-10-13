@@ -332,3 +332,19 @@ ADC excludes one known property-list operation; its derived property row does no
 count twice. Both records appear in default output and JSON, and beside the seeded
 table in `--format coverage`. `--format provenance` remains no-network. Exit 0
 means the report was produced, including blockers; it does not certify readiness.
+
+### Response completeness and byte budgets
+
+Every collector uses bounded raw and decoded reads. Equal repeated HTTP lengths
+are allowed; contradictory/malformed lengths, Transfer-Encoding plus length and
+unsupported encodings make body completeness unavailable. Plain identity and gzip
+content are supported. A landing HTTP status can remain observed while its body is
+unusable. This does not establish that the source supplied a complete dataset.
+
+For page audit, `--max-bytes` limits compressed **and** decoded bytes separately.
+Recovered HTML fragments retain partial status and suppress whole-page negatives.
+Sitemap collection requires a complete XML document. PSI, GSC and URL Inspection
+cap each provider response at 8,000,000 raw and decoded bytes; hitting that transport
+cap produces an explicit payload gap and preserves independent input results.
+Known token/key echoes in error bodies are redacted before diagnostic truncation.
+No larger provider-row universe is inferred from a body that fits these limits.

@@ -81,7 +81,8 @@ The auditor is the one that fetches arbitrary URLs, so its guard is the strictes
   no requests at all, which is how the test suite runs.
 - No cookies, no credentials, no auth headers; a plain User-Agent that identifies
   the tool.
-- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB). A declared
+- Bounded: `--timeout` (default 20s) and `--max-bytes` (default 5 MB),
+  independently for raw and decoded gzip bytes. A declared
   content type that is not HTML/XHTML/XML is refused rather than parsed.
 - Read-only: results go to stdout. The script never writes a file. The only files
   it ever **reads** are the two you name yourself (`--file`, `--url-list`).

@@ -411,9 +411,13 @@ with socketserver.TCPServer(("127.0.0.1", 0), _Handler) as _srv:
         check(_part is True, "a body cut off by --max-bytes must report itself truncated")
         _compressed = _gzip.compress(_body)
         _text, _, _gzip_whole = page_audit.fetch(f"http://127.0.0.1:{_port}/gzip", 10.0,
-                                                page_audit.DEFAULT_UA, len(_compressed))
+                                                page_audit.DEFAULT_UA, max(len(_compressed), len(_body)))
         check(_gzip_whole is False and _text.encode() == _body,
-              "a complete gzip response at the exact byte cap must round-trip")
+              "a complete gzip response fitting both raw and decoded caps must round-trip")
+        _text, _, _decoded_cut = page_audit.fetch(f"http://127.0.0.1:{_port}/gzip", 10.0,
+                                                 page_audit.DEFAULT_UA, len(_compressed))
+        check(_decoded_cut is True and len(_text.encode()) <= len(_compressed),
+              "fitting compressed bytes cannot bypass the independent decoded byte cap")
         _empty, _, _empty_cut = page_audit.fetch(f"http://127.0.0.1:{_port}/gzip-empty", 10.0,
                                                 page_audit.DEFAULT_UA, 5_000_000)
         check(_empty == '' and _empty_cut is False, 'complete empty gzip is known empty, not partial')

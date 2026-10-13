@@ -310,3 +310,30 @@ No-input usage and other collector bootstrap failures remain open.
 the flags, measured versus inferred states, seven byte-identical builder copies,
 an actual accounting mutation and a standalone copy with loopback/fake ADC. No
 provider keys, live service acceptance or native-host evidence are involved.
+
+### Shared bounded transport admission
+
+All seven standalone collectors carry the same byte reader; they retain their
+own return units. `test/transport_contract.py` compares the copies and exercises
+actual loopback responses, copied scripts and false-completeness/uncapped-read
+mutations. Equal normalized repeated/comma-separated Content-Length values are
+admitted. Malformed or conflicting values, Transfer-Encoding combined with
+Content-Length, unsupported transfer codings and repeated/unsupported content
+encodings cannot certify a complete body. Supported chunked framing is decoded
+by urllib. Identity and gzip are the supported content encodings.
+
+The reader limits raw bytes and gzip output independently, requesting one sentinel
+byte beyond each budget. Page audit uses `--max-bytes` for **both** budgets; a small
+compressed representation does not authorize a larger decoded report. A recoverable
+HTML prefix remains partial and supports only existing fragment findings; an
+incomplete body with no recovered bytes is a failed fetch. Sitemap XML requires a
+complete body. Agent-surface/preflight retain observed status while naming body
+limitations. Their different returned-unit definitions above still apply.
+
+PSI, GSC and URL Inspection use `MAX_RESPONSE_BYTES = 8_000_000` for both raw and
+decoded provider JSON. This bounds one response, not provider population or traffic.
+An incomplete body supplies no usable JSON envelope and no typed empty row set.
+HTTPError bodies use the same bounds; read failures do not escape to erase other
+operations, and known credential echoes are redacted before diagnostic truncation.
+The preflight JSON budget remains caller-selected. No provider access or universal
+HTTP protocol validation is established by these local transport controls.

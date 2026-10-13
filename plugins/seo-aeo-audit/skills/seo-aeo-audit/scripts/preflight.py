@@ -210,6 +210,101 @@ GSC = "https://searchconsole.googleapis.com/v1"
 PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 
 
+# BEGIN BOUNDED TRANSPORT
+# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Interpretation (fragment, XML document, provider payload, status) stays local.
+def _transport_values(headers, name):
+    if hasattr(headers, "get_all"):
+        return headers.get_all(name, [])
+    return [value for key, value in headers.items() if key.lower() == name.lower()]
+
+
+def _bounded_gzip(raw, max_bytes, salvage=False):
+    import gzip
+    import io
+    import zlib
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+            decoded = stream.read(max_bytes + 1)
+        return decoded[:max_bytes], len(decoded) <= max_bytes, "" if len(decoded) <= max_bytes else "decoded body exceeds byte budget"
+    except (OSError, EOFError, zlib.error):
+        decoded = b""
+        if salvage:
+            try:
+                decoded = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(raw, max_bytes + 1)[:max_bytes]
+            except zlib.error:
+                pass
+        return decoded, False, "incomplete or corrupt gzip body"
+
+
+def _bounded_response(response, max_bytes, *, force_gzip=False, salvage=False):
+    """Return bounded decoded bytes, completeness, and non-secret limitations.
+
+    urllib removes supported chunk framing before this read. Length comparison
+    is against raw content bytes, before content decompression, not decoded text.
+    """
+    import http.client
+    import re
+    raw, errors = b"", []
+    try:
+        raw = response.read(max_bytes + 1)
+    except http.client.IncompleteRead as exc:
+        raw = exc.partial[:max_bytes]
+        errors.append("incomplete HTTP body")
+    except (OSError, ValueError, http.client.HTTPException):
+        errors.append("HTTP body read failed")
+    headers = getattr(response, "headers", None) or {}
+    lengths = [v.strip(" \t") for field in _transport_values(headers, "Content-Length") for v in field.split(",")]
+    normalized = [v.lstrip("0") or "0" for v in lengths]
+    transfers = [v.strip().lower() for field in _transport_values(headers, "Transfer-Encoding") for v in field.split(",")]
+    if lengths and (any(not re.fullmatch(r"[0-9]+", v) for v in lengths) or len(set(normalized)) != 1 or transfers):
+        errors.append("ambiguous or malformed HTTP length framing")
+    elif normalized:
+        observed = str(len(raw))
+        if normalized[0] != observed:
+            errors.append("incomplete or capped HTTP body")
+    if transfers and transfers != ["chunked"]:
+        errors.append("unsupported transfer encoding")
+    if len(raw) > max_bytes:
+        errors.append("raw body exceeds byte budget")
+        raw = raw[:max_bytes]
+    encodings = [v.strip().lower() for field in _transport_values(headers, "Content-Encoding") for v in field.split(",")]
+    if encodings not in ([], ["identity"], ["gzip"]):
+        raw = b""
+        errors.append("unsupported content encoding")
+    elif encodings == ["gzip"] or force_gzip:
+        raw, complete, error = _bounded_gzip(raw, max_bytes, salvage)
+        if not complete:
+            errors.append(error)
+    return raw, not errors, "; ".join(dict.fromkeys(errors))
+
+
+def _transport_detail(value, secret=None, limit=300):
+    from urllib.parse import quote, quote_plus
+    text = str(value)
+    if secret:
+        for needle in (secret, quote(secret, safe=""), quote_plus(secret)):
+            text = text.replace(needle, "<redacted>")
+    return text[:limit]
+
+
+def _transport_json(response, max_bytes):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    if not complete:
+        raise ValueError(error)
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except RecursionError as exc:
+        raise ValueError("JSON nesting exceeds decoder capacity") from exc
+
+
+def _transport_error(response, max_bytes, secret=None):
+    raw, complete, error = _bounded_response(response, max_bytes)
+    detail = _transport_detail(raw.decode("utf-8", "replace"), secret)
+    return (error + (": " + detail if detail else "")) if not complete else detail
+# END BOUNDED TRANSPORT
+
+
 def _flat(text: str, limit: int = 200) -> str:
     """One line, safe inside a table cell, capped.
 
@@ -292,45 +387,12 @@ def safe_detail(value, secret=None, limit=200):
 
 def _read_probe(response, max_bytes, secret=None):
     status = getattr(response, "status", None) or getattr(response, "code", 0)
-    raw, complete, error = b"", True, ""
-    try:
-        raw = response.read(max_bytes + 1)
-    except http.client.IncompleteRead as exc:
-        raw, complete, error = exc.partial[:max_bytes], False, "incomplete HTTP body"
-    except (OSError, ValueError, http.client.HTTPException) as exc:
-        complete, error = False, safe_detail(exc, secret)
-    headers = getattr(response, "headers", None) or {}
-    # A first-value lookup hides contradictory repeated framing. Uniform
-    # decimal lengths are admissible; TE plus CL is conservatively ambiguous.
-    declared = headers.get_all("Content-Length", []) if hasattr(headers, "get_all") else ([headers["Content-Length"]] if "Content-Length" in headers else [])
-    lengths = [value.strip(" \t") for field in declared for value in field.split(",")]
-    normalized = [value.lstrip("0") or "0" for value in lengths]
-    framing_bad = bool(lengths) and (any(not re.fullmatch(r"[0-9]+", value) for value in lengths) or len(set(normalized)) != 1 or headers.get("Transfer-Encoding") is not None)
-    if framing_bad:
-        complete, error = False, "ambiguous or malformed HTTP length framing"
-    elif normalized:
-        observed = str(len(raw))
-        if (len(normalized[0]), normalized[0]) > (len(observed), observed):
-            complete, error = False, "incomplete or capped HTTP body"
-    if len(raw) > max_bytes:
-        raw, complete, error = raw[:max_bytes], False, "body exceeds probe byte budget"
-    encoding = headers.get("Content-Encoding", "").strip().lower()
-    if encoding == "gzip":
-        try:
-            with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
-                raw = stream.read(max_bytes + 1)
-            if len(raw) > max_bytes:
-                raw, complete, error = raw[:max_bytes], False, "decoded body exceeds probe byte budget"
-        except (OSError, EOFError, zlib.error):
-            raw, complete, error = b"", False, "incomplete or corrupt gzip body"
-    elif encoding not in ("", "identity"):
-        raw, complete, error = b"", False, "unsupported content encoding"
+    raw, complete, error = _bounded_response(response, max_bytes)
     try:
         body = raw.decode("utf-8")
     except UnicodeError:
         body, complete, error = raw.decode("utf-8", "replace"), False, "invalid UTF-8 body"
     return ProbeResponse(status, body, complete, safe_detail(error, secret))
-
 
 def _get(url: str, timeout: int = 20, max_bytes: int = 4096,
          headers=None, secret=None) -> tuple[int, str]:
