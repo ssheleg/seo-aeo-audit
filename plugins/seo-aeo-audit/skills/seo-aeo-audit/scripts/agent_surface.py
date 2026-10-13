@@ -62,7 +62,7 @@ import sys
 import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 
 # ── provenance: the execution that produced this payload ── shared block ──────
@@ -368,7 +368,7 @@ class Probe:
     """One request and what came back. A probe that never ran is not evidence."""
 
     def __init__(self, url: str, status, ctype: str = "", body: str = "",
-                 headers=None, error: str = "", final_url: str = ""):
+                 headers=None, error: str = "", final_url: str = "", redirects=None):
         self.url = url
         self.status = status
         self.ctype = ctype
@@ -382,12 +382,25 @@ class Probe:
         # characters" and was a 301 to the homepage. An instrument that credits a
         # redirect as the page you asked for manufactures the finding it exists to
         # measure (non-negotiable #8).
-        self.final_url = final_url or url
+        self.final_url = (final_url or url) if status is not None else None
+        self.redirects = list(redirects or [])
 
     @property
     def answered(self) -> bool:
-        """Did the server speak at all? A 404 answered; a DNS failure did not."""
+        """Did the chain yield a landing response? Redirect hops are separate evidence."""
         return self.status is not None
+
+
+class _RedirectTrace(HTTPRedirectHandler):
+    """Record observed hops during the same GET, without a second probe."""
+
+    def __init__(self):
+        self.hops = []
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        self.hops.append({"url": req.full_url, "status": code,
+                          "to_url": newurl})
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
@@ -397,12 +410,14 @@ def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
     if accept:
         headers["Accept"] = accept
     req = Request(url, headers=headers)
+    trace = _RedirectTrace()
+    opener = build_opener(trace)
     try:
-        with urlopen(req, timeout=TIMEOUT) as r:
+        with opener.open(req, timeout=TIMEOUT) as r:
             raw = r.read(MAX_BYTES)
             return Probe(url, r.status, r.headers.get("Content-Type", ""),
                          raw.decode("utf-8", "replace"), dict(r.headers),
-                         final_url=getattr(r, "url", "") or url)
+                         final_url=getattr(r, "url", "") or url, redirects=trace.hops)
     except HTTPError as e:
         raw = b""
         try:
@@ -410,9 +425,10 @@ def fetch(url: str, accept: str = "", user_agent: str = UA) -> Probe:
         except Exception:  # noqa: BLE001 - a body we cannot read is still a status
             pass
         return Probe(url, e.code, e.headers.get("Content-Type", "") if e.headers else "",
-                     raw.decode("utf-8", "replace"), dict(e.headers or {}))
+                     raw.decode("utf-8", "replace"), dict(e.headers or {}),
+                     final_url=e.url, redirects=trace.hops)
     except (URLError, OSError, ValueError) as exc:
-        return Probe(url, None, error=str(exc)[:160])
+        return Probe(url, None, error=str(exc)[:160], redirects=trace.hops)
 
 
 # --- pure analysis (tested offline) ------------------------------------------
@@ -816,6 +832,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
         if probe.answered:
             answered += 1
         checks.append({"check": name, "url": probe.url,
+                       "final_url": probe.final_url, "redirects": probe.redirects,
                        "status": probe.status if probe.answered else "no answer",
                        "content_type": probe.ctype,
                        "detail": detail or probe.error})
@@ -930,7 +947,7 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                          "" if landed_where(found_probe, origin) == "same"
                          else f"redirected to {_flat(found_probe.final_url, 80)}")
                 if not found_path:
-                    detail = (f"{', '.join(bounced)} → 301 to the site root, which is not a page"
+                    detail = (f"{', '.join(bounced)} → redirect to the site root, which is not a page"
                               if bounced else
                               f"none of {', '.join(alternates) or '(no paths given)'} answered 200")
                     note(f"entry point: {role}",
@@ -1215,6 +1232,8 @@ def collect_api_behaviour(url: str) -> dict:
             if k.startswith(("ratelimit", "x-ratelimit")) or k == "retry-after"}
     return {
         "url": url,
+        "final_url": p.final_url,
+        "redirects": p.redirects,
         "status": p.status if p.answered else "no answer",
         "error": p.error,
         "rate_limit_headers": rate,
@@ -1240,10 +1259,12 @@ def render(data: dict) -> str:
 
     checks = data.get("checks") or []
     if checks:
-        lines += ["## Probes", "", "| check | url | status | content-type |",
-                  "|---|---|---|---|"]
+        lines += ["## Probes", "", "| check | requested url | redirect codes | landing url | landing status | content-type |",
+                  "|---|---|---|---|---|---|"]
         for c in checks:
             lines.append(f"| {_flat(c['check'], 60)} | `{_flat(c['url'], 90)}` | "
+                         f"{_flat(' → '.join(str(h['status']) for h in c.get('redirects', [])) or '—', 80)} | "
+                         f"{_flat(c.get('final_url') or '(no landing response)', 90)} | "
                          f"{_flat(c['status'], 20)} | {_flat(c.get('content_type') or '-', 40)} |")
         lines.append("")
 
@@ -1255,7 +1276,7 @@ def render(data: dict) -> str:
         for e in eps:
             linked = ("—" if e["linked_from_root"] is None
                       else ("yes" if e["linked_from_root"] else "**NO**"))
-            path = e["path"] or (f"{', '.join(e['redirects_to_root'])} → 301 to /"
+            path = e["path"] or (f"{', '.join(e['redirects_to_root'])} → redirect to /"
                                  if e.get("redirects_to_root") else "(none found)")
             lines.append(f"| {_flat(e['role'], 24)} | {_flat(path, 46)} | "
                          f"{'yes' if e['path'] else 'no'} | {linked} | "
@@ -1268,6 +1289,8 @@ def render(data: dict) -> str:
     if api:
         lines += ["## API response contract", "",
                   f"- Probed: `{_flat(api['url'], 90)}` → {_flat(api['status'], 20)}",
+                  f"- Redirect codes: {_flat(' → '.join(str(h['status']) for h in api.get('redirects', [])) or '—', 80)}",
+                  f"- Landing URL: {_flat(api.get('final_url') or '(no landing response)', 90)}",
                   f"- Rate-limit headers: "
                   f"{_flat(', '.join(api['rate_limit_headers']) or 'none')}",
                   f"- `WWW-Authenticate`: {_flat(api['www_authenticate'] or 'absent')}", ""]

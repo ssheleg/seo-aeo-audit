@@ -658,8 +658,8 @@ jobs:
           # seven/26 for four releases.
           plant "SECURITY.md's script count going stale" \
             python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'
-          plant "SECURITY.md's I/O line count going stale" \
-            python3 test/plant_edit.py sub SECURITY.md 'prints **33 lines and that is all of it**' 'prints **22 lines and that is all of it**'
+          plantq "SECURITY.md's I/O line count going stale" 'I/O grep prints' \
+            python3 test/plant_edit.py resub SECURITY.md 'prints \*\*[0-9]+ lines and that is all of it\*\*' 'prints **22 lines and that is all of it**'
           plant "a script with no row in SECURITY.md's I/O table" \
             python3 test/plant_edit.py delline SECURITY.md '| `agent_surface.py` | the origin, API host, page and OpenAPI URL **you** pass | no | no |'
           # The regex is read out of SECURITY.md and RUN, so narrowing the published
