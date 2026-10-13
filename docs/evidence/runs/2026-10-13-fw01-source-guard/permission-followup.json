@@ -1,0 +1,28 @@
+{
+  "baseline_source": "5a98dda6d32fd6337877ebea49b8e576fd04cb7a",
+  "red": {
+    "exit_code": 1,
+    "groups_passed": 10,
+    "groups_total": 11
+  },
+  "green": {
+    "exit_code": 0,
+    "groups_passed": 11,
+    "groups_total": 11
+  },
+  "source_sha256": {
+    "test/validate.py": "43cc45134d0ce652936bb0652e25b2834dd2edda7b7fd0aab64a1ca8200fad25",
+    "test/audit_regressions/fw01_temp_guard.py": "db37509808cb9999cda9938908b119453edc51e9bd713fa447dbe0462cb3c9b6"
+  },
+  "logs_sha256": {
+    "permission-red.log": "73a0e9310f062a8ff49e1ec5fb4748073f22c9041a2dda444a7ddf0ac16a334e",
+    "permission-green.log": "430c2d35aae42836123ae6a7b165af7ac2048dd3e9c6bf0e89dbb918684bc51a"
+  },
+  "owned_failed_fixture_removed": true,
+  "final_structural": {
+    "command": "python3 -B test/validate.py",
+    "exit_code": 0,
+    "log_sha256": "a3f32a6d39791f233efa8e943840c5beb0228a2d157cd33963ada91c7646af65"
+  },
+  "full_owner_gate": "NOT_RUN_PENDING_SERIAL_SLOT"
+}

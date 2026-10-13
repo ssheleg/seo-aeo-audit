@@ -1,0 +1,13 @@
+OK: shipped alias
+OK: unregistered snapshot
+OK: second ledger maker
+OK: changed ledger shape
+OK: context-manager shape drift
+OK: second context-manager
+OK: legitimate ledger and context managers
+OK: comments and strings
+OK: unreadable source directory
+OK: dependency excluded
+OK: public validator healthy + alias/from-import/exemption-drift controls
+residue: this run left nothing — 11 temp tree(s) created, 11 removed
+FW01 source guard: 11/11 passed

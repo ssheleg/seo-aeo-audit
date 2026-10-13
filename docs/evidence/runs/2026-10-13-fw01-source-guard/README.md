@@ -72,3 +72,25 @@ independently accepted and integrated. Next: bounded peer review, one serialized
 owner full gate, exact frozen draft promotion, genuine required checks and normal
 merge, then full-tree/payload readback. No installed-machine update is authorized
 or performed by this task.
+
+## Independent discovery finding and bounded correction
+
+At candidate `5a98dda6d32fd6337877ebea49b8e576fd04cb7a`, the independent
+reviewer reproduced an unreadable `scripts/hidden/` directory being silently
+omitted by `os.walk`. The lexical guard then returned no errors despite an
+allocation inside that directory. This was a source-discovery admission defect,
+not one of the explicitly unsupported Python forms.
+
+A new owned-directory control first confirmed the OS denied directory reads and
+then failed against the unchanged implementation: [red output](permission-red.log),
+10/11 groups passed, exit1. The scanner now supplies `onerror` and reports the
+relative path and error class as a structural failure. Directory permissions are
+restored in the test's `finally` block. The ordinary readable positive and the
+four complete-validator controls remain intact. [Corrected output](permission-green.log)
+records 11/11 groups passed, exit0. The failed fixture was retained for inspection
+and then removed after successful correction; no foreign temporary tree was removed.
+
+[Correction receipt](permission-followup.json) binds source/log hashes and the
+final structural result. This adds no skip, parser relaxation or package payload
+change. Prior baseline/focused receipts remain historical; final independent
+review, one serialized owner full gate and genuine PR admission are still required.

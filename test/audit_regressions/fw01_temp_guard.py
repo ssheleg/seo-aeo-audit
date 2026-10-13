@@ -41,7 +41,22 @@ def check(name, files, expect):
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(text)
     errors.clear()
-    guard["check_temp_trees_go_through_the_residue_ledger"](str(root))
+    hidden = root / "scripts" / "hidden"
+    unreadable = name == "unreadable source directory"
+    if unreadable:
+        hidden.chmod(0)
+    try:
+        if unreadable:
+            try:
+                list(hidden.iterdir())
+            except PermissionError:
+                pass
+            else:
+                raise AssertionError("permission plant did not make directory unreadable")
+        guard["check_temp_trees_go_through_the_residue_ledger"](str(root))
+    finally:
+        if unreadable:
+            hidden.chmod(0o700)
     if expect:
         assert any(expect in error for error in errors), (name, errors)
     else:
@@ -58,6 +73,7 @@ cases = [
     ("second context-manager", {"test/test_agent_surface.py": (TEST / "test_agent_surface.py").read_text() + "\nwith tempfile.Temporary" + "Directory() as extra:\n    pass\n"}, "test/test_agent_surface.py"),
     ("legitimate ledger and context managers", {}, None),
     ("comments and strings", {"scripts/explain.py": '# tempfile.' + maker + '()\n"""tempfile.' + maker + '()"""\n'}, None),
+    ("unreadable source directory", {"scripts/hidden/leak.py": "p = tempfile." + maker + "()\n"}, "temp tree scan cannot read directory"),
     ("dependency excluded", {"node_modules/tool/source.py": "p = tempfile." + maker + "()\n"}, None),
 ]
 failed = []
