@@ -1,3 +1,12 @@
+# Next B-9 agent-surface planning packet — 2026-10-13
+
+Read [the probe-accounting packet](evidence/plans/2026-10-13-fw06-agent-surface-coverage.md).
+This branch contains planning only, stacked on the sitemap candidate. First task:
+reconcile accepted sitemap source, inventory every network/offline input home,
+and settle the unit/denominator choices before implementation.
+
+---
+
 # B-9 sitemap candidate — 2026-10-13
 
 Read the [bounded packet](evidence/plans/2026-10-13-fw06-sitemap-coverage.md).
