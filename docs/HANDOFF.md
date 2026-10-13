@@ -1,3 +1,18 @@
+## FW06 release accepted — 0.26.6
+
+[Final owner receipt](evidence/runs/2026-10-13-fw06-release-readback/README.md):
+normal merged source c5a32d23da41d7717942f33995228b36971d2657 passed exact-main
+npm run test:all before annotated tag v0.26.6. All four release jobs passed;
+immutable npm whole payload equals source (46 files, 1,119,910 bytes, hashes/modes).
+This docs-only receipt branch does not change package version or shipped behavior.
+
+Exact next task: parent updates the family pin and installed copies, then records
+its own byte readback. Live provider, native-host and model-quality acceptance stay
+separate. B-9 and B-33 closure scope remains the bounded source/helper contract
+recorded in the backlog, not universal audit quality.
+
+## Historical preparation handoff
+
 ## 0.26.6 release candidate — 2026-10-13
 
 Read [the release receipt](evidence/runs/2026-10-13-fw06-release-0266.md).
