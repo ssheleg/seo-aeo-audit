@@ -1,6 +1,6 @@
 # FW06 B-9 preflight and bootstrap follow-up packet
 
-Status: proposed bounded contract; no preflight implementation yet. Base is
+Status: bounded contract accepted by parent at 8879a66; implementation in progress. Base is
 reviewed PSI `50e7c3e898602ab221b53cccb66620354fce5aec`. Reconcile accepted GSC/R30
 and PSI before integration; local isolated branch owns only this packet/probe.
 

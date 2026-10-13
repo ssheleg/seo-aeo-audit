@@ -312,3 +312,14 @@ unavailable envelopes. Noise is excluded before attempted analysis; display cuts
 happen after it. The report retains existing keys and qualifies derived output
 with `row_observations`. Credential bootstrap and list-only branches remain early
 boundaries; provider acceptance is not established by local fixtures.
+
+### Preflight collection coverage
+
+`preflight.py` keeps its `coverage` audit-track list. Separate `coverage_by_unit`
+records count local prerequisite outcomes and logical network operations. An HTTP
+status is a returned readiness probe, not usable provider data: failed access,
+incomplete bodies and malformed required JSON still make coverage partial. Missing
+ADC excludes one known property-list operation; its derived property row does not
+count twice. Both records appear in default output and JSON, and beside the seeded
+table in `--format coverage`. `--format provenance` remains no-network. Exit 0
+means the report was produced, including blockers; it does not certify readiness.

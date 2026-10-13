@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
 Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py`, `gsc_pull.py` and `psi_pull.py` when collection
-reaches report emission. The remaining preflight script is not migrated; B-9 remains open. This schema is
+`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py`, `gsc_pull.py`, `psi_pull.py` and `preflight.py` when collection
+reaches report emission. All seven collection paths now emit records; early bootstrap boundaries keep B-9 open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -71,7 +71,7 @@ and loopback fixtures; the baseline inventory is historical.
 | `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
 | `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Credential bootstrap and list-only paths keep their early boundaries. No provider-wide completeness, pagination or live acceptance claim. |
 | `psi_pull.py` | `input_url_entry`, singular `coverage` | Supplied entries retain duplicates; return requires valid URL-field percentile or lab score. | Origin-only context is preserved but not a direct URL measurement; missing field/lab is partial. |
-| `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
+| `preflight.py` | `local_probe` and `network_probe` under additive `coverage_by_unit` | Local returns are determined prerequisite outcomes; network returns are observed landing HTTP statuses. Visible rows are not the denominator. | Existing track-list `coverage` stays intact. Non-success access, incomplete bodies and unavailable required payloads are limitations, even with observed status. |
 
 For the first two collectors the finite inputs are accounted as requested =
 attempted + dropped; network/API failures remain attempted. `returned` excludes
@@ -82,7 +82,7 @@ an explicit reason and emits state `unknown`; zero is never its default. Early
 bootstrap failures with no record are not complete coverage and remain a migration
 boundary. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the six migrated standalone
+The small builder/Markdown block is duplicated intentionally in the seven migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
 `test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
 `test/sitemap_coverage_contract.py`, called by the same gate, compares the first three
@@ -262,12 +262,49 @@ Transport/API errors preserve their entry; raw and URL-encoded supplied-key echo
 are redacted before diagnostic truncation. HTTP error-body read failure preserves
 the status and reports an unavailable body. Default Markdown and JSON include the
 same counts and component limitations. No-URL/unreadable-list bootstrap branches
-still precede report creation and remain open boundaries. Preflight has not yet
-migrated its broader presence heuristic; historical R-4 evidence is not a current
-claim of semantic equivalence to this stricter PSI measurement predicate.
+still precede report creation and remain open boundaries. The following preflight slice aligns recognized finite measurement presence;
+historical R-4 evidence alone does not prove the current predicate.
 
 `test/psi_coverage_contract.py`, called by `test/test_output_contracts.py`, checks
 these predicates, six standalone block copies, a false-success mutation and an
 actual copied CLI against loopback. Live provider/installed-host evidence is
 NOT_RUN. The frozen task packet is
 `docs/evidence/plans/2026-10-13-fw06-psi-coverage.md`.
+
+## Preflight readiness accounting
+
+`preflight.py` preserves its JSON `coverage` track list and adds `coverage_by_unit`
+with two common records. `probe_operations` records local prerequisite outcomes
+and logical network attempts without credentials or provider bodies. Local scope
+is Python plus optional ADC when `--site` is supplied. A local return means a
+determined outcome, including unavailable credentials; the latter remains partial.
+Network scope is one property-list request for `--site`, three public requests for
+`--origin`, and PSI unless skipped. A missing ADC excludes exactly one known
+network operation before attempt. The property-match display row is derived from
+the same property-list response and never counts twice.
+
+Here a network return means an observed landing HTTP status. It does not mean a
+useful provider payload. Transport failure returns none; non-200, incomplete/capped
+or undecodable body and unusable required JSON add explicit limitations. These
+return semantics differ from full-body collectors and are stated in each record's
+scope. Known scheduling by flags is not an unknown site population. Only the first
+declared sitemap or fallback is requested; incomplete robots qualifies selection
+without implying a full crawl. Gzip/raw caps and malformed length remain explicit.
+
+Typed empty GSC property lists can establish absence. Malformed rows cannot: valid
+matches survive, but unmatched property access stays unattempted/unknown while
+other probes continue. PSI scalar/wrong JSON and nested components never erase
+previous results. Finite recognized URL-field percentiles, origin context and lab
+score remain distinct; no field absence cause or synthetic score is invented.
+Known token echoes are redacted before truncation and failed ADC stderr is withheld.
+
+JSON/default Markdown show common records; `--format coverage` still performs
+probes and prints the track seed, then the common records. `--format provenance`
+remains a no-probe seed, without invented collection records. Exit 0 means a
+preflight report was produced, not that every prerequisite/source succeeded.
+No-input usage and other collector bootstrap failures remain open.
+
+`test/preflight_coverage_contract.py`, integrated into output contracts, exercises
+the flags, measured versus inferred states, seven byte-identical builder copies,
+an actual accounting mutation and a standalone copy with loopback/fake ADC. No
+provider keys, live service acceptance or native-host evidence are involved.
