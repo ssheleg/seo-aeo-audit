@@ -16,6 +16,45 @@ STEPS = (
 )
 
 
+def static_tokens(text):
+    """Whether each shell word is literal in this bounded declaration grammar.
+
+    Preserve quote state: backticks in single quotes name Markdown files, while
+    backticks outside single quotes execute. Escaped dollar/backtick characters
+    remain literal. shlex separately handles malformed quote/escape syntax.
+    """
+    tokens, quote, escaped, active, dynamic = [], None, False, False, False
+    for char in text:
+        if escaped:
+            escaped = False
+            active = True
+            continue
+        if char == '\\' and quote != "'":
+            escaped = True
+            active = True
+            continue
+        if quote:
+            if char == quote:
+                quote = None
+            elif quote != "'" and char in '$`':
+                dynamic = True
+            continue
+        if char in "\"'":
+            quote = char
+            active = True
+        elif char.isspace():
+            if active:
+                tokens.append(not dynamic)
+            active, dynamic = False, False
+        else:
+            active = True
+            if char in '$`':
+                dynamic = True
+    if active:
+        tokens.append(not dynamic)
+    return tokens
+
+
 def calls(steps):
     rows, errors = [], []
     found = set()
@@ -34,7 +73,9 @@ def calls(steps):
             if not words or words[0] != 'plantq':
                 errors.append(f'{step}:{line}: anonymous plant has no intended diagnostic')
                 continue
-            if len(words) < 3 or any(not w.strip() or '$' in w or '\n' in w for w in words[1:3]):
+            static = static_tokens(text.rstrip().removesuffix('\\'))
+            if (len(words) < 3 or len(static) < 3 or not all(static[1:3])
+                    or any(not w.strip() or '\n' in w for w in words[1:3])):
                 errors.append(f'{step}:{line}: literal nonempty description and diagnostic required')
                 continue
             if step == STEPS[1] and (len(words) < 4 or words[3] not in ('$C', '$R')):
@@ -66,14 +107,18 @@ def matches(output, needle):
         return False
     in_failures = False
     for line in output.splitlines():
-        if line.startswith('FAIL: '):
-            in_failures = True
-        elif line.startswith(('PASS:', 'OK:')):
-            in_failures = False
         if re.match(r'^\s+FAIL\s{2}', line) and needle in line:
             return True
-        if in_failures and re.match(r'^\s+- ', line) and needle in line:
-            return True
+        if line.startswith('FAIL: '):
+            in_failures = True
+        elif in_failures and re.match(r'^\s+- ', line):
+            if needle in line:
+                return True
+        else:
+            # Owner checker summaries print contiguous bullet rows. A traceback,
+            # progress note, blank or success ends that section; later text is
+            # not a diagnostic simply because some earlier line said FAIL.
+            in_failures = False
     return False
 
 

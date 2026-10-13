@@ -3,8 +3,11 @@
 The [execution receipt](evidence/runs/2026-10-13-fw06-attribution.md) owns current
 status and checks; the [original packet](evidence/plans/2026-10-13-fw06-guard-attribution.md)
 owns scope and baseline inventory. All 63 helper identities now name their intended
-diagnostic; 52 focused controls and both migrated workflow groups pass.
-Independent acceptance and full owner gates remain pending. Keep version 0.26.5; next patch packaging
+diagnostic; initial 52 focused controls and both migrated groups passed.
+Independent matcher/parser findings are repaired with 66 passing focused controls;
+final affected-group replays are recorded in the receipt.
+Full `npm run test:all` passed at `4364c48`, including all 31 negative groups.
+Independent acceptance and frozen PR integration remain pending. Keep version 0.26.5; next patch packaging
 belongs after combined accepted B-9/B-33 source. No provider/native claim.
 
 ---

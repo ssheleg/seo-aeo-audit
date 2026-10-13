@@ -67,3 +67,33 @@ checker, expected diagnostic and mutation command per identity. Accepted B-9
 source `3c3055a9a923f1281943ef54c5e27e9dc9089bb8` was merged normally into the
 already published branch; the HANDOFF conflict preserved the newer task history
 and accepted coverage receipt. No force/rebase or release version change.
+
+## Owner full gate
+
+`npm run test:all` completed with exit 0 at
+`4364c4867d34b05e9e2d0f5e00da53a9b5889106`: the normal documentation/behavior
+gate, all 31 workflow negative groups, then eight audit regression files. This
+includes coverage 115/115, installer 11, residue 11, FW01 snapshot 3/3, attribution
+52 controls and FW06 provenance 14/14. The real 53+10 attributed helper calls also
+passed through the full negative run. No failed/broken/skipped negative group was
+reported. Routed umbrella trigger comparison remains explicitly unlooked in this
+isolated owner checkout. No provider or native observation was added.
+
+## Independent findings corrected
+
+Independent review of `4364c48` reproduced two bounded gaps. First, shlex-unquoted
+fields concealed shell-active backticks; declaration validation now preserves quote
+state, rejects command/variable expansion in active contexts and permits literal
+Markdown backticks inside single quotes. Second, a prior `FAIL:` header left the
+matcher armed across a traceback or progress note; only contiguous diagnostic
+bullets now belong to that failure section. Both actual workflow shell helpers
+refuse the reviewed prior-FAIL/traceback and prior-FAIL/progress counterexamples.
+
+The baseline identity assertion now requires the original set as a subset of the
+current unique identities, allowing an additional correctly attributed call while
+still refusing omission and duplication. Focused regression replay passes 66
+controls. The full gate at `4364c48` remains its historical result; the corrected
+helper is undergoing affected group replays before final independent acceptance.
+The workflow and all 63 current needle/mutation mappings remain byte-identical to
+the source-bound inventory. No general shell interpretation or log authenticity
+guarantee is claimed beyond the documented owner grammar.
