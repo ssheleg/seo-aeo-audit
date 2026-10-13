@@ -75,3 +75,36 @@ Run focused selector/schema/transport fixtures first. Request the serial broad
 slot for owner gates, obtain independent review, and integrate a frozen candidate
 through genuine checks. Publication/parent pins/installed/native acceptance remain
 separate. No pre-authorization for payments or live providers is implied.
+
+## Bounded implementation decisions (2026-10-13)
+
+The [primary Sitemap protocol](https://www.sitemaps.org/protocol.html#sitemapIndex),
+re-read on this date, limits each uncompressed sitemap/index to 52,428,800 bytes
+and its entries to 50,000. These are document limits, not an assurance that the
+site's whole URL universe is enumerated. The existing raw-input budget remains a
+separate transport limit; gzip output gets its own bounded read.
+
+For the next implementation, choose `unique_sitemap_document` for remote traversal
+and `local_file` for a single offline input. Count exact URL identities once when
+enqueued. `returned` means a fully read, complete and parseable XML document,
+including a genuinely empty URL set; it does not mean page URLs or indexed pages.
+An XML URL-entry cap remains a separate analysis limitation/reason.
+
+When traversal completes without an unresolved document frontier, `requested` is
+the discovered unique document count. When a capped, failed or unread offline index
+can hide descendants, `requested` is null with `unknown_frontier`; attempted and
+returned remain measured. `dropped` counts only known discovered unattempted
+documents, never hypothetical descendants. Retain an explicit known-discovered
+count in traversal evidence so null does not discard observed information.
+
+Preserve the existing top-level keys and no-page/error nonzero exit. Emit an additive
+report once collection is attempted, including partial earlier successes and an
+errors list; absence of usable page URLs is not fabricated success. A valid empty
+XML document may have complete document coverage and still return the existing
+no-page exit 1, because collection completeness and having URLs to analyze answer
+different questions. Usage failures remain parser errors before collection.
+
+Do not add live-provider, browser, whole-site or sitemap-spec conformance claims.
+This packet does not broaden supported XML formats or implement stdin merely
+because the inherited module docstring mentions it. Correct that inaccurate
+input-surface sentence while documenting the actual CLI in the same change.
