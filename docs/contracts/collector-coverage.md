@@ -1,8 +1,8 @@
 # Collector coverage migration contract
 
 Status: B-9 migration emits `collector-coverage/1` from `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py` and `gsc_pull.py` when collection
-reaches report emission. The remaining two scripts are not migrated; B-9 remains open. This schema is
+`url_inspection.py`, `sitemap_audit.py`, `agent_surface.py`, `gsc_pull.py` and `psi_pull.py` when collection
+reaches report emission. The remaining preflight script is not migrated; B-9 remains open. This schema is
 separate from the existing audit-track coverage vocabulary. The earlier FW06
 provenance slice preserves its redirect and gzip evidence.
 
@@ -70,7 +70,7 @@ and loopback fixtures; the baseline inventory is historical.
 | `sitemap_audit.py` | `unique_sitemap_document`, exact discovered URL identity including root; or `local_file` offline | Complete parseable XML documents, including empty URL sets; page URL entries remain separate analysis counts. JSON keeps its existing object and adds `coverage`, `traversal`, `errors`; Markdown prints one coverage block. | Failed/capped documents and offline nested references can hide descendants: requested is null with `unknown_frontier`. `traversal.known_discovered` preserves measured discovery; dropped counts known unattempted documents only. No whole-site claim. |
 | `agent_surface.py` | `network_probe` counts scheduled logical request invocations, including repeated/header variants; supplied offline JSON uses separate `local_file` | New `coverage_by_unit` map contains common records under their unit names; `network_probes` journals every fetch, including unselected alternatives and CLI-only OpenAPI/API probes. | No cross-unit sum. Discovery prerequisites with incomplete/no bodies keep requested unknown. Complete landing status/body is not a complete field analysis or site universe. |
 | `gsc_pull.py` | Six logical `api_request` operations and four separate row populations (`date_row`, `query_row`, `page_row`, `query_page_row`) | Additive `coverage_by_unit`; usable typed API envelopes may be empty. Row populations remain unknown, while observed attempts/invalid/noise/display counts remain explicit. | Credential bootstrap and list-only paths keep their early boundaries. No provider-wide completeness, pagination or live acceptance claim. |
-| `psi_pull.py` | Migration pending | Define field-data absence separately from lab-response success. | No provider completeness claim. |
+| `psi_pull.py` | `input_url_entry`, singular `coverage` | Supplied entries retain duplicates; return requires valid URL-field percentile or lab score. | Origin-only context is preserved but not a direct URL measurement; missing field/lab is partial. |
 | `preflight.py` | Migration pending | Keep readiness probes separate from track coverage and collection. | Existing track status vocabulary is unchanged. |
 
 For the first two collectors the finite inputs are accounted as requested =
@@ -82,7 +82,7 @@ an explicit reason and emits state `unknown`; zero is never its default. Early
 bootstrap failures with no record are not complete coverage and remain a migration
 boundary. A consumer must require an actual record, not infer success from its absence.
 
-The small builder/Markdown block is duplicated intentionally in the five migrated standalone
+The small builder/Markdown block is duplicated intentionally in the six migrated standalone
 scripts. `test/collector_coverage_contract.py`, invoked by the existing
 `test/test_output_contracts.py` gate, checks the first two copies and independently checks the schema.
 `test/sitemap_coverage_contract.py`, called by the same gate, compares the first three
@@ -237,3 +237,37 @@ input rows admitted to the analysis, not successfully computed aggregates.
 JSON never uses Infinity/NaN to represent an unavailable aggregate, and text names
 the failed calculation instead of reporting a clean negative. Monthly, cliff,
 position, brand and cannibalization aggregate paths have explicit controls.
+
+## PSI entry and component accounting
+
+`psi_pull.py` retains its JSON object and adds singular `coverage`. The unit
+`input_url_entry` counts supplied entries, including duplicates, once each. A
+return requires a finite nonnegative recognized URL-field percentile or a valid
+Lighthouse performance score in [0,1]. Zero is data; strings, booleans, negative
+and nonfinite numbers are not. Origin aggregates remain context, do not make a
+URL returned, and never replace URL-field observations. The same useful predicate
+owns exit status: all-empty/origin-only invocations emit reports and exit 1.
+
+`component_status` separates URL field, origin context and lab. URL field is
+observed only when all three recognized percentiles exist, partial with a subset,
+unavailable with none. Any missing URL-field percentile or lab score makes the
+invocation partial even when every entry returned something useful. Origin is
+optional context; its absence alone does not make direct measurement partial.
+This is input/component accounting, not provider population or field eligibility
+certification. The report does not infer a cause from absent field data.
+
+Malformed components carry `payload_errors`; usable siblings and later entries
+survive. Unknown recognized metrics stay present with null p75/unknown band.
+Transport/API errors preserve their entry; raw and URL-encoded supplied-key echoes
+are redacted before diagnostic truncation. HTTP error-body read failure preserves
+the status and reports an unavailable body. Default Markdown and JSON include the
+same counts and component limitations. No-URL/unreadable-list bootstrap branches
+still precede report creation and remain open boundaries. Preflight has not yet
+migrated its broader presence heuristic; historical R-4 evidence is not a current
+claim of semantic equivalence to this stricter PSI measurement predicate.
+
+`test/psi_coverage_contract.py`, called by `test/test_output_contracts.py`, checks
+these predicates, six standalone block copies, a false-success mutation and an
+actual copied CLI against loopback. Live provider/installed-host evidence is
+NOT_RUN. The frozen task packet is
+`docs/evidence/plans/2026-10-13-fw06-psi-coverage.md`.

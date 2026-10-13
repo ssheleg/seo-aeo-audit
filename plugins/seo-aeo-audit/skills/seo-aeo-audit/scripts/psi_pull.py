@@ -12,9 +12,10 @@ a field failure, it cannot establish one. This script keeps them apart on purpos
 The pass mark is a distribution, not an average: a URL group is "good" when the
 **75th percentile** of field data clears the threshold.
 
-CrUX has no data for low-traffic URLs. That is reported as absent, never as zero
-and never silently replaced by the lab score (non-negotiable #8) — and the origin
-aggregate is offered instead, clearly labelled as the origin, not the page.
+Absent CrUX percentiles do not establish their cause: provider availability and
+sample eligibility are possible causes. Absence is never zero or silently replaced
+by the lab score (non-negotiable #8). Origin aggregates remain labelled context,
+not a measurement of this page.
 
 stdlib only. The API works without a key for occasional use; pass --key for
 frequent or automated runs.
@@ -34,15 +35,17 @@ unavailable is indistinguishable from one nobody checked. `observed_at` is the f
 that decides whether a finding has expired; the report's own `## Provenance` block adds
 the four invalidators (see references/preflight.md).
 
-Exit codes: 0 = at least one URL was measured, 1 = usage error, or every call was
-refused. A URL whose origin has no CrUX data still counts as measured — the call
-worked and the lab half is reportable; absence is this script's honest result, not
-its failure mode.
+Exit codes: 0 = at least one supplied URL entry has a usable URL-field percentile
+or lab performance score; 1 = usage/bootstrap error or no usable direct measurement.
+Lab-only is a reportable synthetic measurement, never a field verdict. Empty and
+origin-only responses retain their report but do not make a direct URL measurement.
+The common coverage record counts input entries; component gaps remain explicit.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import time
@@ -181,6 +184,50 @@ def _flat(text: str, limit: int = 200) -> str:
     return one if len(one) <= limit else one[: limit - 1].rstrip() + "…"
 
 
+# ── collector coverage shared block ───────────────────────────────────────────
+# Kept byte-identical in migrated standalone collectors; test_output_contracts
+# compares the copies. docs/contracts/collector-coverage.md owns the semantics.
+def collector_coverage(unit, scope, requested, attempted, returned, dropped, reasons):
+    """Account one invocation's logical inputs, never redirect/retry attempts.
+
+    A usable return is defined by each collector's scope. None is unknown, not
+    zero. This record does not certify a whole site or provider dataset.
+    """
+    counts = (requested, attempted, returned, dropped)
+    if not all(v is None or (type(v) is int and v >= 0) for v in counts):
+        raise ValueError("coverage counts must be nonnegative integers or null")
+    if not all(isinstance(v, str) and v.strip() for v in (unit, scope)) or not isinstance(reasons, list):
+        raise ValueError("coverage needs a unit, scope and reason list")
+    if any(not isinstance(r, dict) or not all(isinstance(r.get(k), str) and r[k].strip()
+                                            for k in ("code", "detail")) for r in reasons):
+        raise ValueError("coverage reasons need code and detail")
+    if all(v is not None for v in (requested, attempted, dropped)) and attempted + dropped != requested:
+        raise ValueError("coverage attempted + dropped must equal requested")
+    if requested is not None and any(v is not None and v > requested for v in (attempted, returned, dropped)):
+        raise ValueError("known coverage counts cannot exceed requested")
+    if returned is not None and attempted is not None and returned > attempted:
+        raise ValueError("coverage returned cannot exceed attempted")
+    unknown = any(v is None for v in counts)
+    gap = unknown or dropped or (returned != attempted)
+    if gap and not reasons:
+        raise ValueError("coverage gaps and unknown counts need reasons")
+    state = "unknown" if unknown else "partial" if gap or reasons else "complete"
+    return {"schema": "collector-coverage/1", "unit": unit, "scope": scope,
+            "requested": requested, "attempted": attempted, "returned": returned,
+            "dropped": dropped, "state": state, "reasons": reasons}
+
+
+def collector_coverage_md(record):
+    counts = " · ".join(f"{k}={record[k] if record[k] is not None else 'unknown'}"
+                         for k in ("requested", "attempted", "returned", "dropped"))
+    lines = ["## Collector coverage", "",
+             f"State: **{record['state']}** · unit: `{_flat(record['unit'])}` · {counts}",
+             "Scope: " + _flat(record["scope"], 500)]
+    lines += [f"- `{_flat(r['code'])}`: {_flat(r['detail'])}" for r in record["reasons"]]
+    return "\n".join(lines)
+# ── end collector coverage shared block ───────────────────────────────────────
+
+
 def band(metric_key: str, p75) -> str:
     spec = THRESHOLDS.get(metric_key)
     if not spec or p75 is None:
@@ -190,6 +237,23 @@ def band(metric_key: str, p75) -> str:
     if value <= good:
         return "good"
     return "needs-improvement" if value <= poor else "poor"
+
+
+def safe_diagnostic(value, key=None):
+    text = str(value)
+    if key:
+        for secret in (key, urllib.parse.quote(key, safe=""), urllib.parse.quote_plus(key)):
+            text = text.replace(secret, "<redacted>")
+    return text[:300]
+
+
+def valid_number(value, maximum=None):
+    if type(value) not in (int, float) or value < 0:
+        return False
+    try:
+        return math.isfinite(value) and (maximum is None or value <= maximum)
+    except OverflowError:
+        return False
 
 
 def fetch(url: str, strategy: str, key: str | None) -> dict:
@@ -202,62 +266,109 @@ def fetch(url: str, strategy: str, key: str | None) -> dict:
         with urllib.request.urlopen(f"{API}?{qs}", timeout=90) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")[:300]
+        try:
+            detail = safe_diagnostic(e.read().decode("utf-8", "replace"), key)
+        except Exception as exc:  # preserve status if even the error body cannot be read
+            detail = "error body unavailable: " + safe_diagnostic(exc, key)
         hint = ("429 — PSI rate limit. Pass --key for automated runs"
                 if e.code == 429 else f"HTTP {e.code}")
         return {"_error": f"{hint}: {detail}"}
     except Exception as exc:  # noqa: BLE001 - one bad URL must not end the run
-        return {"_error": str(exc)[:300]}
+        return {"_error": safe_diagnostic(exc, key)}
 
 
-def _experience(block: dict) -> dict:
-    """CrUX metrics from loadingExperience / originLoadingExperience."""
+def _experience(block, errors=None, component="field"):
+    """Keep recognized unknown metrics while refusing invalid measurements."""
+    errors = errors if errors is not None else []
+    if block is None:
+        return {}
+    if not isinstance(block, dict):
+        errors.append(component + ": expected an object")
+        return {}
+    metrics = block.get("metrics")
+    if metrics is None:
+        return {}
+    if not isinstance(metrics, dict):
+        errors.append(component + ".metrics: expected an object")
+        return {}
     out = {}
-    for key, m in (block.get("metrics") or {}).items():
+    for key, metric in metrics.items():
         if key not in THRESHOLDS:
             continue
         short, good, poor, unit = THRESHOLDS[key]
-        p75 = m.get("percentile")
-        display = p75 / 100 if key == "CUMULATIVE_LAYOUT_SHIFT_SCORE" else p75
-        out[short] = {
-            "p75": display,
-            "unit": unit,
-            "band": band(key, p75),
-            "good_at_or_below": good,
-            "poor_above": poor,
-        }
+        value = metric.get("percentile") if isinstance(metric, dict) else None
+        if value is not None and not valid_number(value):
+            errors.append(component + "." + short + ": invalid percentile")
+            value = None
+        elif not isinstance(metric, dict):
+            errors.append(component + "." + short + ": expected an object")
+        out[short] = {"p75": value / 100 if value is not None and key == "CUMULATIVE_LAYOUT_SHIFT_SCORE" else value,
+                      "unit": unit, "band": band(key, value),
+                      "good_at_or_below": good, "poor_above": poor}
     return out
 
 
-def parse(raw: dict, url: str) -> dict:
-    if "_error" in raw:
-        return {"url": url, "error": raw["_error"]}
-    page = raw.get("loadingExperience") or {}
-    origin = raw.get("originLoadingExperience") or {}
-    lh = raw.get("lighthouseResult") or {}
-    perf = ((lh.get("categories") or {}).get("performance") or {}).get("score")
-    field = _experience(page)
+def component_status(metrics):
+    observed = sum(metric.get("p75") is not None for metric in (metrics or {}).values())
+    return "observed" if observed == len(THRESHOLDS) else "partial" if observed else "unavailable"
+
+
+def useful_measurement(row):
+    if "error" in row:
+        return False
+    return any(valid_number(metric.get("p75")) for metric in (row.get("field_data") or {}).values()) or valid_number(row.get("lab_performance_score"),100)
+
+
+def parse(raw, url: str, key=None) -> dict:
+    if not isinstance(raw, dict):
+        return {"url": url, "error": "unusable PSI response: expected an object"}
+    if "_error" in raw or "error" in raw:
+        return {"url": url, "error": safe_diagnostic(raw.get("_error", raw.get("error")), key) or "unspecified PSI error"}
+    errors = []
+    field = _experience(raw.get("loadingExperience"), errors, "url_field")
+    origin = _experience(raw.get("originLoadingExperience"), errors, "origin_field")
+    lh = raw.get("lighthouseResult")
+    if lh is not None and not isinstance(lh, dict):
+        errors.append("lab: expected an object")
+        lh = None
+    lh = lh or {}
+    categories = lh.get("categories")
+    if categories is not None and not isinstance(categories, dict):
+        errors.append("lab.categories: expected an object")
+        categories = None
+    performance = (categories or {}).get("performance")
+    if performance is not None and not isinstance(performance, dict):
+        errors.append("lab.performance: expected an object")
+        performance = None
+    score = (performance or {}).get("score")
+    if score is not None and not valid_number(score, 1):
+        errors.append("lab.score: expected a finite number in [0,1]")
+        score = None
+    stamp = lh.get("fetchTime") or raw.get("analysisUTCTimestamp")
+    if stamp is not None and not isinstance(stamp, str):
+        errors.append("measurement timestamp: expected a string")
+        stamp = None
+    field_status = component_status(field)
     return {
-        "url": url,
-        "fetched_at": (lh.get("fetchTime") or raw.get("analysisUTCTimestamp")),
-        # CrUX needs enough traffic; absence is a fact about the data, not a zero.
+        "url": url, "fetched_at": stamp,
         "field_data": field or None,
-        "field_note": (
-            None if field else
-            "no CrUX field data for this URL — too little traffic in the window. "
-            "This is NOT a pass and NOT a failure; use the origin aggregate below "
-            "as context only, and never substitute the lab score for a field value"
-        ),
-        "origin_field_data": _experience(origin) or None,
-        "lab_performance_score": round(perf * 100) if isinstance(perf, (int, float)) else None,
-        "lab_note": ("one synthetic load; it explains a field failure and cannot "
-                     "establish one — the field percentiles are the verdict"),
+        "field_note": (None if field_status == "observed" else
+            "no CrUX field data for this URL, or some recognized percentiles are unavailable. "
+            "The response does not establish why: provider availability and sample eligibility "
+            "are possible causes. This is NOT a pass and NOT a failure; origin data is context "
+            "only and lab scores never substitute for field measurements"),
+        "origin_field_data": origin or None,
+        "lab_performance_score": round(score * 100) if score is not None else None,
+        "lab_note": "one synthetic load; it explains a field failure and cannot establish one — the field percentiles are the verdict",
+        "component_status": {"url_field": field_status, "origin_field": component_status(origin),
+                             "lab": "observed" if score is not None else "unavailable"},
+        "payload_errors": errors,
     }
 
 
 def findings(r: dict) -> list[dict]:
     out: list[dict] = []
-    if r.get("error") or not r.get("field_data"):
+    if "error" in r or not r.get("field_data"):
         return out
     for short, m in r["field_data"].items():
         if m["band"] == "poor":
@@ -275,7 +386,7 @@ def render_markdown(rows: list[dict]) -> str:
     lines = ["# Core Web Vitals — field first, lab beside it", ""]
     for r in rows:
         lines.append(f"## {r['url']}")
-        if r.get("error"):
+        if "error" in r:
             lines.append(f"- **could not measure**: {_flat(r['error'])}\n")
             continue
         if r.get("field_data"):
@@ -287,13 +398,17 @@ def render_markdown(rows: list[dict]) -> str:
                 shown = f"{m['p75']}{m['unit']}" if m["p75"] is not None else "—"
                 lines.append(f"| {short} | {shown} | **{m['band']}** | "
                              f"{m['good_at_or_below']}{m['unit']} |")
-        else:
+        if r.get("field_note"):
             lines.append(f"- ⚠ {r['field_note']}")
+        if not r.get("field_data") or r.get("component_status", {}).get("url_field") != "observed":
             if r.get("origin_field_data"):
-                og = ", ".join(f"{k} {v['p75']}{v['unit']} ({v['band']})"
+                og = ", ".join(f"{k} {v['p75'] if v['p75'] is not None else '—'}{v['unit']} ({v['band']})"
                                for k, v in r["origin_field_data"].items())
                 lines.append(f"- origin aggregate (the whole site, **not this page**): {og}")
-        lines.append(f"- lab performance score: {r.get('lab_performance_score')} — "
+        for error in r.get("payload_errors", []):
+            lines.append("- incomplete response component: " + _flat(error))
+        shown_lab = r.get("lab_performance_score")
+        lines.append(f"- lab performance score: {shown_lab if shown_lab is not None else '—'} — "
                      f"{r['lab_note']}")
         for f in findings(r):
             lines.append(f"  - **{f['severity']}** [{f['code']}] {f['message']}")
@@ -328,24 +443,40 @@ def main(argv: list[str]) -> int:
 
     rows = []
     for u in urls:
-        r = parse(fetch(u, args.strategy, args.key), u)
+        r = parse(fetch(u, args.strategy, args.key), u, args.key)
         r["findings"] = findings(r)
         rows.append(r)
 
+    reasons = []
+    failed = sum("error" in row for row in rows)
+    missing_field = sum("error" not in row and row["component_status"]["url_field"] != "observed" for row in rows)
+    missing_lab = sum("error" not in row and row["component_status"]["lab"] != "observed" for row in rows)
+    malformed = sum(bool(row.get("payload_errors")) for row in rows)
+    returned = sum(useful_measurement(row) for row in rows)
+    if failed:
+        reasons.append({"code":"input_failed", "detail":f"{failed} URL entries returned failed or unusable API envelopes."})
+    if missing_field:
+        reasons.append({"code":"url_field_unavailable", "detail":f"{missing_field} URL entries lack some or all recognized field percentiles; cause unestablished."})
+    if missing_lab:
+        reasons.append({"code":"lab_unavailable", "detail":f"{missing_lab} URL entries have no usable lab performance score."})
+    if malformed:
+        reasons.append({"code":"malformed_component", "detail":f"{malformed} responses contain invalid components; valid siblings remain observed."})
+    coverage = collector_coverage("input_url_entry", "Supplied URL entries in order, duplicates retained, " + args.strategy + " strategy. Return requires a valid URL-field percentile or lab score; origin-only context is not a direct URL measurement. Complete does not certify provider/site population.", len(urls), len(rows), returned, 0, reasons)
     prov = provenance("psi_pull.py", argv,
                       f"{len(urls)} URL(s), {args.strategy} strategy: "
                       + ", ".join(urls[:5])
                       + (f" (+{len(urls) - 5} more)" if len(urls) > 5 else ""))
     if args.format == "json":
         print(json.dumps({"producer": prov, "strategy": args.strategy,
-                          "results": rows}, indent=2))
+                          "results": rows, "coverage": coverage}, indent=2))
     else:
         print(render_markdown(rows))
+        print("\n" + collector_coverage_md(coverage))
         print("\n" + provenance_md(prov))
-    # A refused call is a failure; CrUX having no data for a URL is not — that call
-    # worked and the lab half of it is reportable. Only the first kind sets the
-    # status, or the honest-absence path this script exists for would read as broken.
-    return 0 if any(not r.get("error") for r in rows) else 1
+    # Useful direct measurement and coverage share one predicate. Lab-only is
+    # usable synthetic context; an empty envelope or origin-only answer is not
+    # a URL measurement. Component absence remains explicit in either case.
+    return 0 if returned else 1
 
 
 if __name__ == "__main__":

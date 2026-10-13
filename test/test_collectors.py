@@ -220,12 +220,13 @@ check(pf.has_crux_field_data({"loadingExperience": {"id": "https://e.com/",
 check(pf.has_crux_field_data({"loadingExperience": {"metrics": {}}}) is False,
       "an empty metrics map is absence, not presence")
 check(pf.has_crux_field_data({}) is False, "no block at all is absence")
-# and the same rule as psi_pull, on the same shape, so the two cannot drift
+# This absent-block fixture agrees with psi_pull; it does not prove equivalence
+# for malformed percentiles. Preflight migration remains open.
 _psi_says = psi.parse({"loadingExperience": {"id": "u"},
                        "lighthouseResult": {"categories": {"performance": {"score": 0.9}}}},
                       "u")["field_data"] is not None
 check(pf.has_crux_field_data({"loadingExperience": {"id": "u"}}) == _psi_says,
-      "preflight and psi_pull must agree about what counts as CrUX field data")
+      "preflight and psi_pull agree for the absent metrics fixture")
 
 # ── sitemap_audit: the cap has to appear where the number is read ────────────
 # The notice went to stderr under a comment saying a silent cap reads as "this is
@@ -317,4 +318,4 @@ if failures:
     sys.exit(1)
 print("PASS: collector behavior (psi field/lab separation, CLS rescale, absent-CrUX "
       "honesty, sitemap template families, orphan refusal, sitemap cap in the report, "
-      "preflight/psi CrUX agreement, gsc text parity with json)")
+      "preflight/psi absent-metrics agreement, gsc text parity with json)")

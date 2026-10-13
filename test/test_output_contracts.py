@@ -33,7 +33,7 @@ the instruments follow.
 
 `_flat` is duplicated in each script rather than imported, because the scripts are
 distributed as standalone files with no shared module. That makes it a fact with
-five homes, so `validate.py` counts them (CLAUDE.md rule 1).
+seven homes, so `validate.py` counts them (CLAUDE.md rule 1).
 """
 from __future__ import annotations
 
@@ -579,6 +579,8 @@ from agent_coverage_contract import run as check_agent_coverage
 check_agent_coverage(check, ROOT, _TMP)
 from gsc_coverage_contract import run as check_gsc_coverage
 check_gsc_coverage(check, ROOT, _TMP)
+from psi_coverage_contract import run as check_psi_coverage
+check_psi_coverage(check, ROOT, _TMP)
 from owner_board_contract import run as check_owner_board_contract
 check_owner_board_contract(check, ROOT, _TMP)
 

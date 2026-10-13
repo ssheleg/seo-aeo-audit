@@ -1,3 +1,21 @@
+## PSI coverage integrated candidate — 2026-10-13
+
+PSI source 50e7c3e passed parent independent review and 67 focused controls,
+including actual standalone loopback JSON/Markdown. Accepted GSC/R30 main
+`3fac9d67e12c367b19d8f2cfcecaaed6badc2dd7` is now composed: PR34 genuine run
+[38355003556](https://github.com/ssheleg/seo-aeo-audit/actions/runs/38355003556)
+passed frozen 6172f3d; normal merge released both leases. Source version stays 0.26.5.
+
+Integrated owner gate at d690b296164372c407fa7b65b2faa5d21146cd0b passed:
+31 negative groups and 9 audit regression files. Next: freeze this receipt head,
+promote one eligible candidate PR and watch normal exact-head integration. See the
+[PSI receipt](evidence/runs/2026-10-13-fw06-psi-coverage.md) and
+[contract](contracts/collector-coverage.md). Preflight/bootstrap contract is on
+separate plan/fw06-preflight-coverage at 8879a66; no preflight code changed yet.
+No live provider, native-host or complete B-9 claim.
+
+## Historical GSC/R30 handoff
+
 ## GSC/R30 owner gate passed — 2026-10-13
 
 Combined implementation and cache correction at `12ca7004fcebcf8b4197369002989e26fd72c4fc`
