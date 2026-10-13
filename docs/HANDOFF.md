@@ -1,3 +1,13 @@
+# Next B-9 sitemap packet — 2026-10-13
+
+Read the [bounded packet](evidence/plans/2026-10-13-fw06-sitemap-coverage.md).
+It preserves a mocked duplicate-queue count defect and the migration/transport
+boundaries. No implementation or version change here. First task: reconcile
+accepted B-33 source, claim a new owner lease, then reproduce the listed cases
+before instrumenting traversal. Existing B-33 handoff below remains its own state.
+
+---
+
 # FW06 B-33 attribution implementation — 2026-10-13
 
 The [execution receipt](evidence/runs/2026-10-13-fw06-attribution.md) owns current
