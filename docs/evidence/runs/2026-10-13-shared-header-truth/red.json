@@ -1,0 +1,9 @@
+{
+  "errors": [
+    "skills/seo-aeo-audit/test/owner_board.py: owner_board.py declares `diverges: board-only extraction; identifiers allow a lowercase hyphen suffix for AW-0906-desc/refusal.` and the copies actually differ on ['nothing']. An undeclared divergence is the ALL-44 defect; a declared one that is not real is a reader looking for a seam that moved",
+    "skills/seo-aeo-audit/test/owner_release.py: owner_release.py declares `diverges: release-only extraction; readable file failures include invalid UTF-8.` and the copies actually differ on ['nothing']. An undeclared divergence is the ALL-44 defect; a declared one that is not real is a reader looking for a seam that moved"
+  ],
+  "observations": [
+    "copied mechanisms \u2014 2 file name(s) held above the 0.9 floor by exact similarity; the bound is a prefilter only, and everything it over-estimated is reported above rather than gated"
+  ]
+}

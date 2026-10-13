@@ -1,0 +1,19 @@
+{
+  "base": "5e9f6af67f9f01f70250465d63b0bb5f04983229",
+  "published_source": "c5a32d23da41d7717942f33995228b36971d2657",
+  "version": "0.26.6",
+  "files": 46,
+  "bytes": 1119910,
+  "whole_payload_equal": true,
+  "command": "npm pack --json --ignore-scripts --pack-destination <owned-temp>",
+  "ast_equal": {
+    "owner_board.py": {
+      "equal": true,
+      "ast_sha256": "c534616b1a6d9c335c53cad061189ccdd325f210ed3f3687e4abc0d4858c7f87"
+    },
+    "owner_release.py": {
+      "equal": true,
+      "ast_sha256": "24f2a957f18364412624418dc9a89e946feda580b6475bbda5ee25813354c34b"
+    }
+  }
+}
