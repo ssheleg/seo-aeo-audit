@@ -513,3 +513,17 @@ must leave it by gaining a section.
 - `v0.15.1`
 - `v0.15.0`
 <!-- unrecorded-releases:end -->
+
+### Packaging correction before release
+
+Candidate run38341566007 failed because the new retro stamp inserted `candidate`
+inside the established parseable date/version shape. Source checks passed, but
+the exact negative plant could not target it. Restored the standard stamp shape;
+candidate/publication-pending status remains explicit in this ledger and HANDOFF.
+No guard was weakened. The affected reconciliation plant is replayed before
+re-promotion, and the full genuine candidate gate must pass again.
+
+The repaired stamp passed `python3 test/validate.py` and
+`python3 -B test/negatives.py -k 'reconciliation guards'`, both exit0.
+The latter ran all plants inside the selected reconciliation workflow step,
+including the exact run-stamp guard. Its owned snapshot was created and removed.
