@@ -1,0 +1,196 @@
+{
+  "source": "50e7c3e898602ab221b53cccb66620354fce5aec",
+  "mode": "offline mocked baseline; no provider access",
+  "observations": [
+    {
+      "case": "PSI scalar envelope",
+      "exception": "AttributeError",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "PSI empty object",
+      "return": {
+        "source": "PageSpeed Insights",
+        "reachable": true,
+        "detail": "reachable; no CrUX field data for this URL \u2014 the response carries no field metrics, so this page is lab-only. That is absence, not a pass: psi_pull.py will report it as absent and offer the origin aggregate",
+        "gate": null,
+        "blocks": ""
+      },
+      "stdout_bytes": 0,
+      "result_json": null
+    },
+    {
+      "case": "GSC malformed property row",
+      "exception": "AttributeError",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "PSI non-UTF8 input list",
+      "exception": "UnicodeDecodeError",
+      "stdout_bytes": 0
+    },
+    {
+      "case": "preflight legacy carrier",
+      "return": 0,
+      "stdout_bytes": 3515,
+      "result_json": {
+        "producer": {
+          "skill": "seo-aeo-audit@0.26.5",
+          "script": "preflight.py",
+          "observed_at": "2026-10-13T06:05:51Z",
+          "runtime": "cpython 3.14.7 on darwin",
+          "args": [
+            "--origin",
+            "https://example.invalid",
+            "--skip-psi",
+            "--format",
+            "json"
+          ],
+          "scope": "origin https://example.invalid",
+          "actor": "unavailable: SEO_AEO_AUDIT_ACTOR is not set by this harness (who or what invoked the run)",
+          "model": "unavailable: SEO_AEO_AUDIT_MODEL is not set by this harness (the model behind the agent \u2014 never inferred)",
+          "trace": "unavailable: SEO_AEO_AUDIT_TRACE is not set by this harness (the id linking these actions to a run)"
+        },
+        "probes": [
+          {
+            "source": "python",
+            "reachable": true,
+            "detail": "3.14.7",
+            "gate": null,
+            "blocks": ""
+          },
+          {
+            "source": "homepage",
+            "reachable": false,
+            "detail": "fixture failure",
+            "gate": "http",
+            "blocks": ""
+          }
+        ],
+        "reachable": 1,
+        "total": 2,
+        "tracks": [
+          {
+            "track": "A",
+            "label": "access & indexation"
+          },
+          {
+            "track": "B",
+            "label": "canonicalization"
+          },
+          {
+            "track": "C",
+            "label": "architecture & equity"
+          },
+          {
+            "track": "D",
+            "label": "intent & SERP fit"
+          },
+          {
+            "track": "E",
+            "label": "content value"
+          },
+          {
+            "track": "F",
+            "label": "extractability / AEO"
+          },
+          {
+            "track": "G",
+            "label": "entity & brand"
+          },
+          {
+            "track": "H",
+            "label": "experience signals"
+          },
+          {
+            "track": "I",
+            "label": "risk & threats"
+          },
+          {
+            "track": "J",
+            "label": "measurement"
+          },
+          {
+            "track": "K",
+            "label": "agent surface"
+          }
+        ],
+        "coverage_status": [
+          "observed",
+          "partial",
+          "unlooked",
+          "blocked-by <gate>",
+          "out-of-scope"
+        ],
+        "coverage": [
+          {
+            "track": "A",
+            "label": "access & indexation",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "B",
+            "label": "canonicalization",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "C",
+            "label": "architecture & equity",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "D",
+            "label": "intent & SERP fit",
+            "status": "unlooked",
+            "notes": ""
+          },
+          {
+            "track": "E",
+            "label": "content value",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "F",
+            "label": "extractability / AEO",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "G",
+            "label": "entity & brand",
+            "status": "unlooked",
+            "notes": ""
+          },
+          {
+            "track": "H",
+            "label": "experience signals",
+            "status": "unlooked",
+            "notes": ""
+          },
+          {
+            "track": "I",
+            "label": "risk & threats",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          },
+          {
+            "track": "J",
+            "label": "measurement",
+            "status": "unlooked",
+            "notes": ""
+          },
+          {
+            "track": "K",
+            "label": "agent surface",
+            "status": "blocked-by http",
+            "notes": "homepage unreachable \u2014 fixture failure"
+          }
+        ]
+      }
+    }
+  ]
+}

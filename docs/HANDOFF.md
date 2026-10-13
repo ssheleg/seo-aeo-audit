@@ -1,3 +1,11 @@
+## Preflight follow-up contract — 2026-10-13
+
+Read [the bounded preflight and bootstrap packet](evidence/plans/2026-10-13-fw06-preflight-coverage.md).
+It records five offline baseline observations and additive carrier semantics.
+No preflight source changed. Next: independent contract review, then preflight-only
+implementation with separate local/network units; bootstrap envelopes remain a
+separate per-CLI decision. Reconcile accepted GSC/R30 and PSI before integration.
+
 ## PSI coverage implementation — 2026-10-13
 
 Read the [accepted PSI contract](evidence/plans/2026-10-13-fw06-psi-coverage.md).
