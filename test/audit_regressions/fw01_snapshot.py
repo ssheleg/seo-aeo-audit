@@ -24,7 +24,10 @@ def probe(mode):
     driver = f"""
 import sys
 sys.path.insert(0, {str(TEST)!r})
-import negatives
+import negatives, negative_lock
+# Owned lock: the helper ignores TMPDIR, so without this the fixture queues on the
+# public family lock behind any running suite (FW07).
+negative_lock.scratch_lock_path = lambda: {str(box / "owned-family.lock")!r}
 negatives.ROOT = {str(source)!r}
 negatives.WORKFLOW = {str(workflow)!r}
 negatives.MIN_EXPECTED = 1

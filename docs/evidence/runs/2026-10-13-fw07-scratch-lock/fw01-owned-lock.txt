@@ -1,0 +1,6 @@
+$ python3 -B test/audit_regressions/fw01_snapshot.py   # exit 0, owned lock path
+OK: pass
+OK: fail
+OK: exception
+residue: this run left nothing — 3 temp tree(s) created, 3 removed
+FW01 snapshot: 3/3 passed

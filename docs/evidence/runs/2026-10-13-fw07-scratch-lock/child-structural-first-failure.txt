@@ -1,0 +1,2 @@
+$ python3 -B test/validate.py   # first run on the port, exit 1: TemporaryDirectory fixtures outside the residue ledger (fixed: residue cases)
+ - test/audit_regressions/fw07_child_lifetime.py: temp tree allocation count 7, expected 0 at line 92. Creates a temp tree outside the residue ledger; use residue.workspace(tag) in tests.

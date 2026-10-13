@@ -86,3 +86,73 @@ descendant-lifetime exclusion. Canonical helper/runner correction and independen
 review are required before these ports' full gates and promotion. No public lock
 or scratch path was used by the reproduction. The original review remains a
 historical bounded result, not acceptance of this newly tested case.
+
+## Child-lifetime correction port (TP 6b6d625)
+
+Ported from task-pipeline [`6b6d625`](https://github.com/ssheleg/task-pipeline/commit/6b6d625)
+(`compose/fw07-after-1941`; correction [`9c29ec3`](https://github.com/ssheleg/task-pipeline/commit/9c29ec3),
+independently reviewed ACCEPT-WITH-FIXES and corrected; see TP packet
+`docs/evidence/runs/2026-10-13-fw07-child-lock/README.md`, sections IO09 and
+"Independent review of 25fb09d and correction"). Source diff `875c6e6..6b6d625`.
+
+- `test/negative_lock.py`: copied byte for byte. `cmp` against TP 6b6d625 exits 0,
+  sha256 `814951b89144c49e8bff9e575569518bc1cd3df06979929f2981945ebaa555d6`. The
+  sheleg-dev copy is not yet ported, so the three-member identity is pending.
+- `test/negatives.py`: `main` becomes `_main(argv, plants)`, wrapped in
+  `ScratchProcesses`. Signal handlers are registered before any child. The lock is
+  `plants.hold(...)`. Every plant Bash, including property checks, runs through
+  `plants.run` (own process group, the lock fd passed through `pass_fds`).
+  Workers check admission and cancel on any exception. `InterruptedError`/`OSError`/
+  `RuntimeError` are reported as `FAIL: plant lifecycle refused (...)`, exit 1.
+  No module-level constant was added, so `# diverges:` is unchanged.
+- **Local divergence, snapshot:** TP removes its snapshot through `atexit`. Here the
+  FW01 `residue` ledger already keeps and names an unfinished run's snapshot at
+  exit, which `fw01_snapshot.py` asserts. So the port keeps that contract, and the
+  snapshot control asserts the snapshot is kept *and named*, never an unreported orphan.
+- `test/audit_regressions/fw07_child_lifetime.py`: TP's controls adapted to this
+  runner (plants in a workflow file, `negatives.WORKFLOW` in BOOT). Fixture trees
+  are `residue` cases, as `test/validate.py` requires
+  ([first structural failure](child-structural-first-failure.txt)). Runner
+  subprocesses get an owned TMPDIR. Every control is kept: parent/Bash SIGKILL
+  (trailing `:`, writer's parent is not the runner), TERM/INT, normal, spawn,
+  cancel-queue, startup signal, communicate fault, wait interruption, EPERM/ESRCH,
+  cancel-fault drain, RuntimeError refusal and the snapshot.
+- `test/audit_regressions/fw01_snapshot.py`: its driver called `negatives.main`
+  with only TMPDIR redirected, which the helper ignores, so it took the **public**
+  lock. It now patches `negative_lock.scratch_lock_path` to an owned file.
+  This repository has no `runner_test.py`; no other test reaches the public lock.
+
+Focused results on the ported tree, run while another owner's complete gate held
+the public lock (public inode unchanged before and after; each run finished in
+seconds, so none queued on it):
+
+| Command | Exit | Count |
+|---|---|---|
+| `python3 -B test/audit_regressions/fw07_child_lifetime.py` | 0 | [62 controls](child-lifetime62.txt), 13 trees created/13 removed |
+| `python3 -B test/audit_regressions/fw07_scratch_lock.py` | 0 | [30 controls](focused30-child-port.txt) |
+| `python3 -B test/audit_regressions/fw01_snapshot.py` | 0 | [3/3](fw01-owned-lock.txt) |
+| `python3 -B test/validate.py` | 0 | [structure valid](child-structural.txt) |
+
+Red before, on a scratch clone with the new control file:
+[old 78f2dd4 helper and runner](child-red-old-source.txt) and
+[ported helper with old runner](child-red-old-runner.txt) both exit 1 at
+`parent: actual writing Python inherits lock`. The
+[ported runner with TP's pre-review 25fb09d helper](child-red-25fb09d-helper.txt)
+passes the runner cases and exits 1 at the EPERM control (`PermissionError`).
+
+**Operator-visible incident during this port.** One mistaken
+`python3 -B test/negatives.py --help` started the full runner. This copy has no
+argparse, so `--help` is not a refusal. It acquired the public lock and ran plants
+for about two minutes. Then an independent complete gate (TP 6b6d625) began and
+correctly waited on the flock. The run was stopped with SIGTERM. The ported
+lifecycle drained its plant groups, and the gate took the lock next. Its kept
+snapshot (this run's own process-group tag) was removed. Fixed `/tmp` plant paths
+were left to the gate that then held the namespace. The unknown-flag defect is
+open as backlog B-37, not fixed in this slice.
+
+Not ported, not claimed: Linux, lock replacement while children hold it, a timeout
+for a hung orphan plant, exit 130/143 on interruption (same limits as TP).
+`test/negatives.py` in full, `npm test` and `npm run test:all` were **not** run.
+**Owner full gate pending** on this source, then independent owner-adapter review,
+PR and normal merge. Package payload unchanged (`test/` is not shipped): version
+stays 0.26.6, no CHANGELOG entry (no unreleased section; CHANGELOG is shipped).
