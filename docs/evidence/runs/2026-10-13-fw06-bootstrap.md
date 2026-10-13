@@ -94,3 +94,22 @@ The gate used an owned TMPDIR and disk monitor; minimum free space was 985280512
 bytes, with no watchdog interruption. Failed fixture copies were inspected before
 removing only their named task-owned paths; logs remain tracked. Corrected composed
 full result is pending, so this record is not aggregate acceptance.
+
+
+## Second composed gate and canonical negative plant
+
+At `aa99195ac6797d4564fc04065bb5730524c95e1d`, the complete documentation/behavior
+phase passed. The negative phase passed 30 groups and correctly reported one BROKEN
+plant: its selector `idx.get("userCanonical")` no longer existed after typed field
+admission. This was a no-op corruption, not a guard silently accepting the defect.
+[Raw second log](2026-10-13-fw06-composed-second.log) and
+[result](2026-10-13-fw06-composed-second.json) record exit 1 after 165.33 seconds,
+minimum free space 639488000 bytes and no disk interruption.
+
+The workflow plant now changes the unique typed mapping from `userCanonical` to
+`userDeclaredCanonical`; it requires exactly one match before writing. Its test
+command and fail/pass logic are unchanged, as are workflow triggers and runtime
+implementation. `python3 -B test/negatives.py -k canonical` passed: the actual wrong
+field mapping is rejected by the existing behavior suite. The failed full snapshot
+was read, then only its exact task-owned path removed; logs remain tracked.
+Corrected aggregate acceptance is still pending.
