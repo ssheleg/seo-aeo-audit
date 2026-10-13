@@ -1,3 +1,18 @@
+# FW01/FW06 patch release candidate, 2026-10-13
+
+Branch `release/fw06-0.26.5` prepares 0.26.5 from accepted main
+`4f4b53026d556f405ec9dd6600ea5898f1e91786` (PR28), including FW01 PR27.
+The [FW06 receipt](evidence/runs/2026-10-13-fw06-collectors.md) records
+implementation, independent review and local source checks. Packaging changes
+versions, changelog and evidence only; script SKILL_VERSION identifies output provenance.
+
+Exact next task: validate the frozen release candidate, independent packaging review,
+normal PR merge, then annotated v0.26.5 tag and genuine release/registry readback.
+Publication, parent pin and installed update are pending. B-9 and remaining B-33
+work retain their explicit scope; a patch release does not close the full board.
+
+---
+
 # FW06 collector provenance, 2026-10-13
 
 Objective: distinguish observed redirects, landing responses and incomplete gzip
