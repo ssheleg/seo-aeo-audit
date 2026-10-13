@@ -1,7 +1,7 @@
 # FW06 B-9 agent-surface probe coverage
 
-Status: candidate implemented; focused checks below, independent review and owner
-aggregate pending. Accepted sitemap base is
+Status: candidate implemented and independently accepted within the bounds below;
+owner aggregate pending disk/serial clearance. Accepted sitemap base is
 `dd5319a8935d60d0db7b3649b528d31d0b9ac45f`. Version remains 0.26.5. No provider
 credentials/external requests, installed-host, task-quality or whole-site claims.
 
@@ -84,4 +84,24 @@ fixture to the supported `--openapi` entry produced the intended transport
 assertion. Both owned failed fixture trees were inspected and removed; no foreign
 residue was removed. Combined `python3 -B test/test_output_contracts.py` then passed 115 shared,
 127 sitemap and 73 agent controls. Structural validation also exited 0.
-Independent acceptance and owner aggregate remain pending.
+Independent acceptance follows below; owner aggregate remains pending.
+
+
+## Independent bounded review
+
+Peer reviewer `/root/fresh_research` reviewed source
+`8e2ee005fa21a3f1dc289c919b26d506a58c22d6`, including the correction diff
+from 54fe9d5, and returned bounded PASS. Independent replay of
+`python3 -B test/agent_coverage_contract.py` exited 0: 73 controls, one owned
+fixture tree created and removed. The original three counterexamples are covered:
+malformed Content-Length preserves observed 200/404 and a partial report,
+failed initial missing-path discovery leaves requested unknown, and competing
+per-unit carriers are refused in every repeated page row.
+
+Eight additional independent in-memory controls passed: superscript and empty
+lengths, a 5000-digit length, leading-zero and surrounding-whitespace positive
+lengths, competing carriers in first and later rows, and the unchanged repeated
+legacy carrier positive. No provider calls, credentials, external network, broad
+suite or foreign fixtures were used by this reviewer. This certifies the bounded
+coverage/report-preservation contract; it does not certify exhaustive HTTP
+framing, whole-site completeness, installed/native use or task quality.
