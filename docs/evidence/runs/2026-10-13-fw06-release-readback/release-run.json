@@ -1,0 +1,33 @@
+{
+  "tag": "v0.26.6",
+  "source": "c5a32d23da41d7717942f33995228b36971d2657",
+  "run": {
+    "conclusion": "success",
+    "databaseId": 38372719449,
+    "headSha": "c5a32d23da41d7717942f33995228b36971d2657",
+    "status": "completed",
+    "url": "https://github.com/ssheleg/seo-aeo-audit/actions/runs/38372719449"
+  },
+  "jobs": [
+    {
+      "name": "validate / validate",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "validate / House skill audit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "release",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "publish",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

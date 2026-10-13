@@ -1,0 +1,12 @@
+{
+  "source": "c5a32d23da41d7717942f33995228b36971d2657",
+  "command": "npm run test:all",
+  "exit": 0,
+  "disk_watchdog_interrupted": false,
+  "elapsed_seconds": 201.22,
+  "minimum_free_bytes": 1788387328,
+  "log": "exact-main-full.log.gz",
+  "original_log_sha256": "779eee661e14aed6ae0fca4a5c2d633208f83aace039971cb51a83d61563b0df",
+  "stored_log_sha256": "779eee661e14aed6ae0fca4a5c2d633208f83aace039971cb51a83d61563b0df",
+  "sanitization": "Only literal source checkout and home path prefixes replaced"
+}
