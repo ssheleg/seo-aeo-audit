@@ -107,3 +107,8 @@ semantic diagnostic. Focused controls now pass 69/69; the earlier full-suite pas
 did not establish this corrected mutant. Affected workflow groups are replayed
 again before acceptance. This changes one mutation command and requires the next
 source-bound inventory snapshot; the prior inventory remains historical evidence.
+
+Corrected core checkpoint: `b7eaf474f0e59937059a84d911c7d81f135683e7`. The
+[reviewed mapping](../plans/fw06-attribution-reviewed-inventory.json) binds all
+63 identities, needles, checkers and commands to this source. Corrected structural
+group replay passed all 53 calls; the behavioral group replay is pending.
