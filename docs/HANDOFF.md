@@ -5,7 +5,8 @@ Next: obtain bounded contract review, then freeze negative controls and implemen
 component-preserving parsing plus URL-entry coverage. The branch is stacked on
 reviewed GSC de16b2b and must reconcile its accepted combined GSC/R30 successor.
 PSI source and offline/loopback regressions now implement that contract. Focused
-67 controls pass; independent review and owner gate remain pending. See the
+67 controls pass; parent independently replayed and accepted source50e7c3e.
+Owner gate follows accepted GSC/R30 composition. See the
 [run receipt](evidence/runs/2026-10-13-fw06-psi-coverage.md).
 Preflight and early bootstrap envelopes remain open.
 

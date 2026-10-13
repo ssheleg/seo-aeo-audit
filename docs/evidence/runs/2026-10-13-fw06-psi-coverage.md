@@ -47,3 +47,13 @@ completeness, inferred absence cause or origin-to-URL substitution is claimed.
 
 Next: finish focused/source review, merge accepted GSC/R30 into this branch,
 then serialize the exact-source owner gate and normal eligible PR integration.
+
+## Independent bounded review
+
+Parent independently read the full source/test diff and reran all 67 focused
+controls including the actual loopback CLI at
+`50e7c3e898602ab221b53cccb66620354fce5aec`: scoped PASS, no blocker found.
+The no-URL/unreadable-list and preflight boundaries remain explicit follow-up;
+the subsequent offline packet also reproduces the invalid-UTF8 list exception.
+The shipped scripts reference now states the same entry/component semantics.
+This documentation successor does not replace exact-source owner/PR gates.
