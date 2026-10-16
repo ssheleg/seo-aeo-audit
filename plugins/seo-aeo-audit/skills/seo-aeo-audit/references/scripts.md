@@ -111,7 +111,10 @@ no link graph, so that needs a crawl.
 ## psi_pull.py
 
 `scripts/psi_pull.py` returns field (CrUX) and lab (Lighthouse) separately and
-refuses to let one stand for the other. The field percentiles are the verdict;
+refuses to let one stand for the other. Both halves are Chromium by definition — CrUX
+samples Chrome users and the lab run is Lighthouse — so its numbers are the
+stated Chromium exception and say nothing about Safari
+([tooling.md](tooling.md#browser-engine--webkit-safari-first)). The field percentiles are the verdict;
 the lab run explains a failure you have already observed. Where CrUX has no data
 for a URL, that is reported as absent — not as a pass.
 

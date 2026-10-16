@@ -18,6 +18,13 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.27.0 candidate — WebKit (Safari) first for rendering checks (2026-10-16)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Engine order in `references/tooling.md`; Chromium-only tools (Lighthouse, PSI, CrUX, `chrome-devtools` MCP, CDP traces) labelled the stated Chromium exception in tooling, measurement, experience-signals and scripts | `test/audit_regressions/safari-first.py` — 8 checks, watched failing first (8 of 8) before the text existed, and drop mutations refused | **planted** — text integrity only |
+| Whether an agent actually opens Safari first | No agent run observed | never |
+
 ## v0.26.6 candidate — coherent collector correction (2026-10-13)
 
 | What changes | Evidence | State |
@@ -495,7 +502,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-one releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

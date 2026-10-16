@@ -161,7 +161,9 @@ worth testing per site, not copying.
 
 Use **field data**: `cruxvis.withgoogle.com` gives real Chrome data per origin,
 including the mobile/desktop/tablet form-factor split, for any competitor with
-enough Chrome traffic (Chrome-only, so no iOS Safari). Compare parity between
+enough Chrome traffic (Chrome-only, so no iOS Safari: CrUX is Chromium by
+definition, and the Safari side is checked in WebKit first —
+[tooling.md](tooling.md#browser-engine--webkit-safari-first)). Compare parity between
 your desktop and mobile experience and against the sites you actually compete
 with, before presenting anything.
 
