@@ -70,6 +70,12 @@ NUMWORDS = {
     34: "thirty-four", 35: "thirty-five", 36: "thirty-six", 37: "thirty-seven",
     38: "thirty-eight", 39: "thirty-nine", 40: "forty",
 }
+# The map stopped at forty and the release count reached forty-one (0.27.0): extend it
+# to ninety-nine from its own tens rather than by hand, so the next ceiling is not a typo.
+for _tens, _word in ((40, "forty"), (50, "fifty"), (60, "sixty"), (70, "seventy"), (80, "eighty"), (90, "ninety")):
+    NUMWORDS[_tens] = _word
+    for _unit in range(1, 10):
+        NUMWORDS[_tens + _unit] = f"{_word}-{NUMWORDS[_unit]}"
 _WORD_TO_N = {w: n for n, w in NUMWORDS.items()}
 
 
