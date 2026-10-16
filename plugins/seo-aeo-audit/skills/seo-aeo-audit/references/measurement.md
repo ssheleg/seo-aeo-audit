@@ -43,8 +43,10 @@ not only the property currently open.
 Field-data sources worth wiring in: CrUX (`cruxvis.withgoogle.com`) for real
 Chrome performance including form-factor split, and a rank tracker you control
 for independent verification. CrUX is Chrome-only (~67.7% of the browser market,
-no iOS Safari) — script it into the same dashboard as your analytics if you want
-continuous competitor monitoring, and state the coverage gap in the report.
+no iOS Safari) and Chromium by definition — script it into the same dashboard as
+your analytics if you want continuous competitor monitoring, and state the
+coverage gap in the report. The Safari half is read from RUM split by browser and
+checked in WebKit first ([tooling.md](tooling.md#browser-engine--webkit-safari-first)).
 Google is testing a `google.com/goto` redirect that masks the destination URL in
 the SERP (Jul 2026), so confirm how your rank tracker collects before you trust a
 step change in its numbers.

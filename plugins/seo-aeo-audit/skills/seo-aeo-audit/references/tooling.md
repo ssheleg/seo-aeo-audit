@@ -7,6 +7,7 @@ auditor decides what is real. Two rules before anything else:
 
 - [Ladder — use the highest rung available](#ladder--use-the-highest-rung-available)
 - [Check → tool routing](#check--tool-routing)
+- [Browser engine — WebKit (Safari) first](#browser-engine--webkit-safari-first)
 - [Chrome DevTools recipes worth memorising](#chrome-devtools-recipes-worth-memorising)
 - [Where the automation stops](#where-the-automation-stops)
 
@@ -25,7 +26,7 @@ auditor decides what is real. Two rules before anything else:
 | 3 | Full crawl (Screaming Frog, Sitebulb, Oncrawl, Botify) | Site-wide structure, directives, duplication, depth, internal links |
 | 4 | Field performance (CrUX, `cruxvis.withgoogle.com`, RUM) | Real-user CWV by form factor, competitor comparison |
 | 5 | Third-party indices (Ahrefs, Semrush, [Prowl MCP](prowl-mcp.md)) | Links, keyword estimates, competitor context — estimates, never ground truth |
-| 6 | Manual fetch + browser DevTools | The specific page, the specific header, the specific render |
+| 6 | Manual fetch + browser devtools (Safari Web Inspector first — [engine order](#browser-engine--webkit-safari-first)) | The specific page, the specific header, the specific render |
 
 State in the report which rung each finding rests on. **The rung caps the evidence
 tier, and the cap is stated for all six** — an earlier version of this paragraph
@@ -76,9 +77,9 @@ to run that cross-check when you have no second seat.
 | Crawl waste | Server logs by path bucket and status | Percentages of crawl per template beat any crawler estimate |
 | Crawl waste with no server logs (hosted platform) | GSC Crawl Stats (Settings → Crawl stats: by response, file type, purpose, Googlebot type) + Pages report grouped by reason + a full crawl | The rung-2 substitute: host-level shares, totals and status mix, never per-URL truth. Enough to rank the causes, not to claim a percentage per template (technical-checks.md A2) |
 | Site speed — field | CrUX / GSC CWV report / RUM | Lab numbers rank nothing |
-| Site speed — diagnosis | DevTools Performance + Lighthouse | See the recipes below |
+| Site speed — diagnosis | DevTools Performance + Lighthouse | The stated Chromium exception: both are Chrome tools. Check the same template in WebKit too (Safari Web Inspector's Timelines) before calling a speed problem universal. See the recipes below |
 | Field + lab in one call, scriptable | PageSpeed Insights API (`pagespeedonline/v5/runPagespeed`, key optional) via `scripts/psi_pull.py` | Returns CrUX field data (`loadingExperience`, `originLoadingExperience`) **and** the Lighthouse lab run (`lighthouseResult`). Report the field percentiles; the lab score explains them, it does not replace them |
-| Lighthouse categories other than performance | `chrome-devtools` MCP `lighthouse_audit` | Covers SEO, accessibility, best practices **and agentic browsing** — the last is the surface where `llms.txt` is actually checked (myths.md). It **excludes performance**: for that, start a trace instead, or use the PSI row above |
+| Lighthouse categories other than performance | `chrome-devtools` MCP `lighthouse_audit` | The stated Chromium exception — Lighthouse runs only in Chrome. Covers SEO, accessibility, best practices **and agentic browsing** — the last is the surface where `llms.txt` is actually checked (myths.md). It **excludes performance**: for that, start a trace instead, or use the PSI row above |
 | Independent rank verification, and what the SERP actually contains | `searchapi:google_rank_tracking` — up to 100 results per query with position, title, URL and snippet, localized via `gl` / `location` | J2 makes an independent tracker a precondition of any decline diagnosis, and the client's own dashboard is not independent. Also the honest input for track D: SERP **composition** is an observation; an index's position estimate is not |
 | Structured data | Rich Results Test + `scripts/page_audit.py` | Validation ≠ eligibility (technical-checks.md B) |
 | Internal link equity | Crawl (internal PageRank) + backlink data | Overlay revenue to find the mismatch |
@@ -96,9 +97,43 @@ to run that cross-check when you have no second seat.
 | Recon with search operators (`inurl:`, `intitle:`, `site:`) | The operator, verified on a known-positive query first | Precision is degrading and reports conflict: practitioners report `inurl:` returning nothing, operator references say it still works with partial matching and regional inconsistency, and both agree Google now rate-limits and fingerprints automated querying (`HYPOTHESIS`, 2026-08 — both readings recorded, neither settled; `cache:` and `related:` are already gone). Prove the operator returns a URL you know matches before you build a recipe on it, and expect a browser session to be required where a raw request is not |
 | Query class for a keyword set | `queryclassifier.com` | Predicts the class that maps to which SERP features appear and where the answer has to sit (intent-and-content.md) |
 | CTR expectation for this site | GSC export + a custom CTR-curve notebook (Brittney Muller's Colab) | Generic CTR tables hide SERP-feature and brand effects; there is no universal benchmark (experience-signals.md) |
-| Evidence capture for the report | DevTools full-page screenshot + the response headers, both dated | A finding needs an artefact someone else can re-open, not a description (evidence-tiers.md) |
+| Evidence capture for the report | A WebKit full-page screenshot (Playwright `webkit` with `fullPage: true`, or Safari) + the response headers, both dated, the engine named; Chrome DevTools' full-size capture when the finding is about Chrome | A finding needs an artefact someone else can re-open, not a description (evidence-tiers.md) |
+
+## Browser engine — WebKit (Safari) first
+
+When the audit opens a page in a browser — a manual look at a render, a parity
+diff, a dated screenshot for the report — it opens it in **WebKit first**:
+Safari through `safaridriver` (WebDriver; `sudo safaridriver --enable` once) for
+a real browser, Playwright's `webkit` (the `webkit` project, `--browser webkit`,
+installed with `npx playwright install webkit`) for automation, Safari Web
+Inspector for debugging. On macOS open a page with `open -a Safari <url>`, not
+the system default browser, which may be another engine. An automation library
+(browser-use and the like) runs on its WebKit/Safari backend where it has one.
+WebKit has the narrowest support envelope of the big three, so a page that
+works there is the stricter claim — and iOS Safari is the audience CrUX cannot see.
+
+**Chromium is a stated fallback, never the default.** Use it when the task needs
+Chrome itself and say which and why: a Chrome-only API, a CDP trace, the
+`chrome-devtools` MCP, and the measurement tools that are **Chromium by
+definition** — Lighthouse, PageSpeed Insights (its lab run is Lighthouse) and
+CrUX (field data from Chrome users only). Those stay in this skill as the
+**stated Chromium exception**; they are not replaced and not re-labelled as
+cross-browser. Prefer the Chrome Dev build for a Chrome run you start yourself;
+give it a temporary profile (never the user's), record what you started, and
+close every process you started before you finish.
+
+A render checked only in Chromium is reported as exactly that — "checked only in
+Chromium" — never as "tested in a browser". Neither engine is Google's renderer:
+whether Googlebot saw the content is settled by URL Inspection and the Rich
+Results Test, never by your own browser, Safari or Chrome.
 
 ## Chrome DevTools recipes worth memorising
+
+These are Chromium DevTools panels — the stated Chromium exception above. Where a
+recipe has a Safari Web Inspector equivalent (the Network tab's headers, the
+Elements tree for a parity diff, the Console, user-agent override), run it there
+first; Coverage, the Core Web Vitals overlay, Layout Shift Regions and
+Performance Insights are Chrome tools and are reported as Chromium readings.
 
 - **Console drawer**: enable Coverage, Rendering and Network Conditions — the
   three panels that matter for SEO work.

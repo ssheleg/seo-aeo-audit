@@ -1,3 +1,21 @@
+## v0.27.0 — rendering checks run in WebKit (Safari) first
+
+- `references/tooling.md` gains *Browser engine — WebKit (Safari) first*: a manual
+  render check, parity diff or dated screenshot opens in WebKit first — Safari
+  through `safaridriver`, Playwright `webkit` (`--browser webkit`,
+  `npx playwright install webkit`), Safari Web Inspector, and `open -a Safari <url>`
+  on macOS rather than the system default browser.
+- Lighthouse, PageSpeed Insights, CrUX, the `chrome-devtools` MCP and CDP traces
+  stay, labelled the stated Chromium exception (Chromium by definition), with the
+  Chrome Dev build, a temporary profile and every started process closed for a
+  Chrome run you start. A Chromium-only check is reported as exactly that. Google's
+  render is still settled by URL Inspection, not by either browser.
+- Ladder rung 6, the speed/Lighthouse/evidence-capture routing rows and the DevTools
+  recipes name the WebKit route; `measurement.md`, `experience-signals.md` and
+  `scripts.md` (psi_pull) label CrUX/Lighthouse as Chromium and route the Safari gap.
+- New regression `test/audit_regressions/safari-first.py` with drop mutations. Text
+  integrity only; no script behaviour changed beyond the version constants.
+
 ## v0.26.6 — collector coverage and preserved partial evidence
 
 - Report requested, attempted, returned, dropped and unknown units across all seven

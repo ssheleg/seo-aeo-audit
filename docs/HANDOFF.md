@@ -1,3 +1,16 @@
+## WebKit (Safari) first for rendering checks — 0.27.0 candidate (2026-10-16)
+
+Branch `docs/safari-first` (family iteration ITER-1016, REQ R13): `references/tooling.md`
+gains *Browser engine — WebKit (Safari) first*; Lighthouse, PSI, CrUX, the
+`chrome-devtools` MCP and CDP traces stay as the stated Chromium exception (Chromium by
+definition), labelled in tooling, measurement, experience-signals and scripts. Version
+0.26.6 → 0.27.0 across manifests, SKILL-CARD and the seven script constants; ledger
+section and retro stamp added. Regression `test/audit_regressions/safari-first.py`
+(watched failing 8 of 8 first). Gate: `npm test` exit 0.
+
+Open: none here. The coordinator owns review, the annotated tag, publication and the
+umbrella pin. Next task: review the draft PR, then the family release sequence.
+
 ## FW07 shared scratch lock — active bounded port
 
 [Owner entry](evidence/runs/2026-10-13-fw07-scratch-lock/README.md) binds the
