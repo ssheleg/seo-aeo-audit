@@ -62,8 +62,7 @@ Inspect first, then act. In order:
 
 0. **Audit or brief.** Nothing live yet (a new site, section or landing page)
    gets a **brief**: follow [build-time.md](references/build-time.md), write
-   `docs/seo/brief-<YYYY-MM-DD>.md`, stop. No findings, no myth item. A live site
-   with a planned section takes both.
+   `docs/seo/brief-<YYYY-MM-DD>.md`, stop. No findings, no myth item.
 1. Read `docs/seo/` (or the path the user names). If a previous audit exists,
    this run is a **re-audit**: diff against it and lead with what changed.
 2. Establish what you can reach — live site, staging, `robots.txt`, `sitemap.xml`,
@@ -166,9 +165,9 @@ Run every track in scope. Each has its own file with the concrete checks, the
 buy, call or automate. **Presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**,
 so most of it lands in Experiments ([agent-readiness.md](references/agent-readiness.md)).
 
-**Discover is not one of the ten tracks, and not part of track A.** Where the GSC
-Discover report shows it is a material source, run [discover.md](references/discover.md)
-as an eleventh pass; a missing tag never makes a page "confirmed ineligible".
+**Discover is not one of the ten tracks, and not part of track A**: of its three
+checks, none of them is a render gate. Where the GSC Discover report shows it is a material
+source, run [discover.md](references/discover.md) as an eleventh pass.
 
 **Before any decline diagnosis**, run the date-alignment and update-response
 protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —
