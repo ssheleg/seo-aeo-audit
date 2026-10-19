@@ -82,5 +82,6 @@ is invisible to `npx sshlg-skills list`. CONTRIBUTING has the sequence.
 
 ## Not in scope here
 
-Writing content, building pages, buying links. The skill ends at a verified
-diagnosis and an executable plan, and so does the repository.
+Writing content, building pages, buying links. The skill audits a live site or
+briefs one before it is built (`references/build-time.md`, since 0.28.0), and ends at
+a verified diagnosis, an executable plan or a brief. So does the repository.

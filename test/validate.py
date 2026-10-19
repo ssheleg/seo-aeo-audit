@@ -25,7 +25,7 @@ residue.open_case("structural validator")
 NAME = "seo-aeo-audit"
 SKILL_DIR = f"plugins/{NAME}/skills/{NAME}"
 REQUIRED_TEMPLATES = ("audit-report.template.md", "action-plan.template.md",
-                      "experiments.template.md")
+                      "experiments.template.md", "brief.template.md")
 REQUIRED_REFERENCES = (
     "technical-checks.md",
     "discover.md",
@@ -52,6 +52,7 @@ REQUIRED_REFERENCES = (
     "prowl-mcp.md",
     "preflight.md",
     "scripts.md",
+    "build-time.md",
 )
 errors = []
 
@@ -1184,6 +1185,65 @@ for _sec, _homes in sorted(_sec_home.items()):
     if len(_homes) > 1:
         fail(f"section id {_sec} is defined in {sorted(_homes)} — a cross-reference that "
              f"names only the id resolves to two different sections")
+
+# Brief mode (0.28.0): every build-time row is the inverse of an audit check, and
+# the brief is only as good as the pointer to that check. So each `## N<k>.` section
+# of build-time.md must carry a `**Verified by:**` line with at least one link into
+# ANOTHER reference whose anchor resolves, the brief skeleton must carry exactly one
+# row per section, and the prose count in REFERENCE_INDEX must match the sections.
+# Homes of the row set: build-time.md (the sections), templates/brief.template.md
+# and its embedded copy (rows, compared by the template-drift guard), and the
+# number-word in REFERENCE_INDEX.md.
+def check_brief_rows_link_to_audit_sections():
+    bt = os.path.join(ROOT, SKILL_DIR, "references", "build-time.md")
+    if not os.path.isfile(bt):
+        return  # the missing-reference guard already failed by name
+    sections, cur = {}, None
+    for line in open(bt, encoding="utf-8"):
+        m = re.match(r"^##\s+(N\d+)\.", line)
+        if m:
+            cur = m.group(1)
+            sections[cur] = []
+            continue
+        if re.match(r"^##\s", line):
+            cur = None
+        if cur:
+            sections[cur].append(line)
+    if not sections:
+        fail("build-time.md: no `## N<k>.` sections -- brief mode has no rows to verify")
+        return
+    for sec, body in sections.items():
+        text = "".join(body)
+        ver = re.search(r"\*\*Verified by:\*\*(.*?)(?:\n\s*\n|\Z)", text, re.S)
+        if not ver:
+            fail(f"build-time.md {sec}: no **Verified by:** line -- a brief row must name the audit check that verifies it")
+            continue
+        good = 0
+        for ref, anchor in re.findall(r"\]\(([\w.-]+\.md)#([^)\s]+)\)", ver.group(1)):
+            path = os.path.join(ROOT, SKILL_DIR, "references", ref)
+            if ref == "build-time.md" or ref not in REQUIRED_REFERENCES or not os.path.isfile(path):
+                continue
+            if anchor in heading_slugs(path):
+                good += 1
+        if not good:
+            fail(f"build-time.md {sec}: brief row has no resolving link to an audit section "
+                 "(**Verified by:** needs [file](reference.md#anchor) into another reference)")
+    tpl = os.path.join(ROOT, "templates", "brief.template.md")
+    if os.path.isfile(tpl):
+        rows = re.findall(r"^\|\s*(N\d+)\s", open(tpl, encoding="utf-8").read(), re.M)
+        if sorted(rows) != sorted(sections) or len(rows) != len(set(rows)):
+            fail(f"templates/brief.template.md rows {sorted(set(rows))} do not match build-time.md "
+                 f"sections {sorted(sections)} one for one")
+    idx = os.path.join(ROOT, SKILL_DIR, "REFERENCE_INDEX.md")
+    if os.path.isfile(idx):
+        m = re.search(r"brief mode:\s*\n?\s*([a-z-]+|\d+) build-time decisions", open(idx, encoding="utf-8").read())
+        claimed = None if not m else (int(m.group(1)) if m.group(1).isdigit() else _WORD_TO_N.get(m.group(1)))
+        if claimed != len(sections):
+            fail(f"REFERENCE_INDEX.md says {m.group(1) if m else 'nothing'} build-time decisions; "
+                 f"build-time.md has {len(sections)}")
+
+
+check_brief_rows_link_to_audit_sections()
 
 # A backticked `references/<file>.md` in prose is a pointer the markdown link
 # checker never sees, and one of them pointed at a file that exists and does not

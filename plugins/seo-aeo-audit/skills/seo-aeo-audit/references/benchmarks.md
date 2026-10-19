@@ -24,6 +24,7 @@ anything older than ~18 months before it enters a plan.
 - [Academic benchmarks — the only controlled numbers here](#academic-benchmarks--the-only-controlled-numbers-here)
 - [Machine-readable files — adoption and consumption](#machine-readable-files--adoption-and-consumption)
 - [Title and description rewriting](#title-and-description-rewriting)
+- [Rank-tracker data quality](#rank-tracker-data-quality)
 - [Caveats](#caveats)
 
 
@@ -375,6 +376,16 @@ work can be promised to deliver.
 Use this to set expectations, not to skip the work: the tag is still the input
 Google rewrites *from*, and onpage-checks.md keeps the observable failure modes
 (truncated mid-word, duplicated across templates) rather than a character count.
+
+## Rank-tracker data quality
+
+Why measurement.md J2 carries a poisoned-SERP guard. Both rows are vendor or
+practitioner reports (`FIELD`); neither is Google's statement.
+
+| What was reported | Value | Source, as of |
+|---|---|---|
+| Google returning results to rank trackers that differ from what people see, from September 2026, with DataForSEO and Ahrefs datasets named as affected | qualitative | Brodie Clark, [poisoned Google SERPs](https://brodieclark.com/poisoned-google-serps/), updated 2026-10-18 (`FIELD`) |
+| Share of judgeable Google SERPs classified as poisoned | **8.0%** of 17.8 million SERPs collected 2026-09-13..2026-10-09 (baseline 0.17%, peak 27.0% on 2026-09-29); **77.9%** of poisoned SERPs had their usual sites back within three days | Nozzle, [poisoned Google SERPs research](https://nozzle.io/research/poisoned-google-serps/) (`FIELD`, one vendor's classifier) |
 
 ## Caveats
 

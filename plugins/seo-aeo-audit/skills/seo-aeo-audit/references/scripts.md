@@ -47,6 +47,13 @@ held for two weeks, and the query set is capped at the API row limit with no
 pagination. A reached cap leaves the unseen tail unknown; even an uncapped page
 does not prove the provider population is complete.
 
+**A stale tail prints `report-stale`.** The script finds the last date that carries
+data; more missing days than the reporting lag explains, or a frozen tail repeating
+one value pair, marks the window stale, and a collapse falling inside it is withheld
+(`cliff_withheld` in JSON) rather than reported. The API cannot tell a stale report
+from a real fall to zero, so this is a reason to cross-check, not a verdict
+([measurement.md](measurement.md#j2-cross-checking-before-you-diagnose)).
+
 **Zero rows exits `1`, and the report says `NOTHING MEASURED` first.** Everything from
 the position split down is derived from rows, so a property that answered nothing
 renders a full report finding no cliff, no cannibalization and no CTR gap — a document
@@ -76,6 +83,13 @@ JSON-LD with JavaScript, an empty inventory is not evidence of absent markup —
 non-negotiable #8, and the script says so in every report. A response cut off by
 `--max-bytes` says so too, and drops every count-based finding rather than
 publishing a fragment as a measurement.
+
+A short body that is a bot challenge or interstitial (a CDN "Just a moment", a
+CAPTCHA wall, a search engine's "unusual traffic" page) yields exactly one
+`challenge-page` finding and nothing else, and is excluded from coverage `returned`:
+it is missing data, not a page with no title and no words. The same holds for a
+saved SERP capture of one, which carries no positions
+([measurement.md](measurement.md#the-poisoned-serp-guard)).
 
 **Every finding a bundled script emits carries an evidence tier as well as a
 severity**, and only the tier enters the triage formula below. Severity is how loud
@@ -107,6 +121,20 @@ declared URLs clustered into the template families the site actually ships,
 derived from its own URLs. Pair it with the GSC Pages report for
 declared-vs-indexed per template. It does **not** detect orphans: a sitemap holds
 no link graph, so that needs a crawl.
+
+Three checks compare what the sitemap promises with what is served. `--sample N`
+(bounded at 500, spread across template families) fetches each sampled listed URL
+once with redirects not followed and reports redirect, error status, `noindex`
+(meta robots or `X-Robots-Tag`) and a canonical naming another URL, each as a count
+of the sample with examples; a URL that could not be fetched is unfetched, counted
+in `sample_coverage`, and supports no finding. Every run flags an index listed by
+another index and a batch-stamped `lastmod`. `--robots` probes each `Sitemap:` line
+of the robots.txt you pass and flags one that does not answer 200; with no `--url`,
+the declared sitemaps that serve become the roots.
+
+```bash
+python3 "$SKILL_DIR/scripts/sitemap_audit.py" --robots https://example.com/robots.txt --sample 40
+```
 
 ## psi_pull.py
 

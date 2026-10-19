@@ -10,6 +10,16 @@ What it does: follows sitemap indexes, clusters URLs into path patterns (the
 template families a site actually ships, derived from its URLs rather than
 guessed from a list), and reports depth distribution and duplicate paths.
 
+Per listed URL, on request (`--sample N`, bounded at 500): one GET each, redirects
+not followed, reporting status, redirect target, `noindex` (meta robots or
+`X-Robots-Tag`) and a canonical that names another URL. Google will attempt to crawl
+sitemap URLs exactly as listed, so each of those contradicts the sitemap. A sampled
+URL that could not be fetched is reported as unfetched and supports no finding. It
+also flags an index listed by another index (Search Console: "Nested sitemap
+indexes"), a batch-stamped `lastmod` (at least 10 entries with one, and one value on
+at least 90% of them), and, with `--robots`, every `Sitemap:` line in robots.txt
+that does not answer 200.
+
 What it deliberately does NOT do: **orphan detection**. A sitemap contains no
 link graph, so nothing in it can establish that a page has no inbound internal
 links. Tools that report "orphan candidates" from a sitemap are inferring from
@@ -22,6 +32,7 @@ Usage:
   sitemap_audit.py --url https://example.com/sitemap.xml
   sitemap_audit.py --file sitemap.xml --format json
   sitemap_audit.py --url https://example.com/sitemap_index.xml --max-maps 20
+  sitemap_audit.py --robots https://example.com/robots.txt --sample 40
 
 Every output carries a **producer block** — `skill` (this tool's version), `script`,
 `observed_at` (UTC), `runtime`, `args` (credential values redacted), `scope` (the
@@ -33,8 +44,10 @@ unavailable is indistinguishable from one nobody checked. `observed_at` is the f
 that decides whether a finding has expired; the report's own `## Provenance` block adds
 the four invalidators (see references/preflight.md).
 
-Exit codes: 0 = analyzed page URLs, 1 = fetch/parse error or no page URLs,
-2 = invalid arguments. Attempted collection emits a report even on exit 1.
+Exit codes: 0 = analyzed page URLs, 1 = fetch/parse error (a sitemap document, or
+the robots.txt passed with --robots) or no page URLs, 2 = invalid arguments. A
+sampled page URL that fails to fetch does not change the exit status; it is counted
+in `sample_coverage`. Attempted collection emits a report even on exit 1.
 """
 from __future__ import annotations
 
@@ -48,10 +61,12 @@ import re
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import zlib
 from collections import Counter, deque
+from html.parser import HTMLParser
 from urllib.parse import urlparse
 
 
@@ -62,7 +77,7 @@ from urllib.parse import urlparse
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all seven.
-SKILL_VERSION = "0.27.0"
+SKILL_VERSION = "0.28.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -350,8 +365,159 @@ def fetch(url: str) -> str:
     except UnicodeError as exc:
         raise IncompleteBody("invalid UTF-8 document") from exc
 
-def parse_sitemap(text: str) -> tuple[list[str], list[str], int]:
+
+# ── per-URL checks: what the sitemap promises against what each URL serves ─────
+# Google will attempt to crawl sitemap URLs exactly as listed, so a listed URL that
+# redirects, errors, carries noindex or canonicalises elsewhere contradicts the
+# sitemap (references/technical-checks.md, Sitemap protocol). A bounded sample is
+# fetched, one GET each, redirects NOT followed: the redirect is the observation.
+SAMPLE_MAX = 500
+SAMPLE_BODY_BYTES = 1_048_576
+# A batch stamp: at least this many entries carry lastmod, and one value covers at
+# least this share of them. Below the floor nothing is claimed either way.
+LASTMOD_BATCH_MIN = 10
+LASTMOD_BATCH_SHARE = 0.9
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+class _HeadSignals(HTMLParser):
+    """Robots meta and canonical link, read from the served HTML only."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.robots: list[str] = []
+        self.canonicals: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        a = {k.lower(): (v or "") for k, v in attrs}
+        if tag == "meta" and a.get("name", "").strip().lower() in ("robots", "googlebot"):
+            self.robots.append(a.get("content", ""))
+        elif tag == "link" and "canonical" in a.get("rel", "").lower().split() and a.get("href"):
+            self.canonicals.append(a["href"].strip())
+
+
+def _has_noindex(value: str) -> bool:
+    # "googlebot: noindex" and "noindex, nofollow" both count; "none" means noindex too.
+    tokens = re.split(r"[\s,:]+", value.lower())
+    return "noindex" in tokens or "none" in tokens
+
+
+def _canonical_from_link_header(values: list[str]) -> str | None:
+    for value in values:
+        for part in value.split(","):
+            m = re.match(r"\s*<([^>]+)>\s*;(.*)$", part)
+            if m and re.search(r"rel\s*=\s*\"?[^\";]*\bcanonical\b", m.group(2), re.I):
+                return m.group(1).strip()
+    return None
+
+
+def _same_url(a: str, b: str) -> bool:
+    """Equal after scheme/host case and default ports; path, query and slash count."""
+    def norm(u):
+        p = urlparse(u)
+        host = (p.hostname or "").lower()
+        port = p.port
+        if port and not ((p.scheme == "http" and port == 80) or (p.scheme == "https" and port == 443)):
+            host += f":{port}"
+        return (p.scheme.lower(), host, p.path or "/", p.query)
+    try:
+        return norm(a) == norm(b)
+    except ValueError:
+        return False
+
+
+def check_url(url: str, timeout: float = 20) -> dict:
+    """One GET of a listed URL. A transport failure is an `error`, never a status."""
+    obs = {"url": url, "status": None, "location": None, "noindex": None,
+           "canonical": None, "foreign_canonical": None, "body_complete": None, "error": None}
+    if urlparse(url).scheme not in ("http", "https"):
+        obs["error"] = "not an http(s) URL"
+        return obs
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Encoding": "gzip"})
+    opener = urllib.request.build_opener(_NoRedirect)
+    try:
+        resp = opener.open(req, timeout=timeout)
+    except urllib.error.HTTPError as exc:
+        resp = exc
+    except (urllib.error.URLError, OSError, http.client.HTTPException, ValueError) as exc:
+        obs["error"] = _flat(str(exc))
+        return obs
+    with resp:
+        status = getattr(resp, "code", None)
+        obs["status"] = status
+        headers = resp.headers
+        if status is not None and 300 <= status < 400:
+            obs["location"] = urllib.parse.urljoin(url, headers.get("Location") or "") or None
+            return obs
+        if status != 200:
+            return obs
+        robots = list(_transport_values(headers, "X-Robots-Tag"))
+        canonical = _canonical_from_link_header(list(_transport_values(headers, "Link")))
+        if "html" in (headers.get("Content-Type") or "").lower():
+            raw, complete, _ = _bounded_response(resp, SAMPLE_BODY_BYTES, salvage=True)
+            obs["body_complete"] = complete
+            parser = _HeadSignals()
+            try:
+                parser.feed(raw.decode("utf-8", "replace"))
+            except (AssertionError, ValueError):
+                pass
+            robots += parser.robots
+            canonical = canonical or (parser.canonicals[0] if parser.canonicals else None)
+        obs["noindex"] = any(_has_noindex(v) for v in robots)
+        if canonical:
+            obs["canonical"] = urllib.parse.urljoin(url, canonical)
+            obs["foreign_canonical"] = not _same_url(obs["canonical"], url)
+        else:
+            obs["foreign_canonical"] = False
+    return obs
+
+
+def pick_sample(urls: list[str], n: int) -> list[str]:
+    """Up to n URLs, spread round-robin across template families, deterministic."""
+    groups: dict[str, list[str]] = {}
+    for u in dict.fromkeys(urls):
+        groups.setdefault(path_pattern(u), []).append(u)
+    queues = [deque(v) for v in groups.values()]
+    out: list[str] = []
+    while queues and len(out) < n:
+        for q in list(queues):
+            if len(out) >= n:
+                break
+            out.append(q.popleft())
+            if not q:
+                queues.remove(q)
+    return out
+
+
+def lastmod_profile(stamps: list[str]) -> dict:
+    present = [s for s in stamps if s]
+    top, top_n = (Counter(present).most_common(1)[0] if present else ("", 0))
+    share = (top_n / len(present)) if present else None
+    return {"entries": len(stamps), "with_lastmod": len(present),
+            "distinct": len(set(present)), "most_common": top or None,
+            "most_common_share": round(share, 4) if share is not None else None,
+            "batch_stamped": bool(len(present) >= LASTMOD_BATCH_MIN
+                                  and share is not None and share >= LASTMOD_BATCH_SHARE)}
+
+
+def robots_sitemaps(text: str) -> list[str]:
+    """The `Sitemap:` lines of a robots.txt, in order, deduplicated."""
+    out = []
+    for line in text.splitlines():
+        m = re.match(r"\s*sitemap\s*:\s*(\S+)", line.split("#", 1)[0], re.I)
+        if m:
+            out.append(m.group(1))
+    return list(dict.fromkeys(out))
+
+def parse_sitemap(text: str, lastmods: list | None = None) -> tuple[list[str], list[str], int]:
     """Returns (page urls, nested sitemap urls, urls dropped by the cap).
+
+    Pass a list as `lastmods` to collect each page entry's `<lastmod>` text in the
+    same pass ("" where the entry carries none), capped like the pages.
 
     Namespace-agnostic. Walks the CONTAINERS (`<url>`, `<sitemap>`) and reads
     each one's own `<loc>` child, which is O(n). Locating each `<loc>`'s parent
@@ -375,6 +541,13 @@ def parse_sitemap(text: str) -> tuple[list[str], list[str], int]:
             loc = (child.text or "").strip()
             if loc:
                 (maps if kind == "sitemap" else pages).append(loc)
+                if kind == "url" and lastmods is not None and len(pages) <= MAX_URLS_PER_MAP:
+                    stamp = ""
+                    for sibling in container:
+                        if sibling.tag.rsplit("}", 1)[-1] == "lastmod":
+                            stamp = (sibling.text or "").strip()
+                            break
+                    lastmods.append(stamp)
             break
     dropped = max(0, len(pages) - MAX_URLS_PER_MAP)
     return pages[:MAX_URLS_PER_MAP], maps, dropped
@@ -448,6 +621,44 @@ def findings(a: dict) -> list[dict]:
                 f"{share:.0%} of declared URLs sit at path depth 5+ — check that the "
                 "money templates are not among them (path depth is not click depth; "
                 "confirm with a crawl)")
+    for index_url in a.get("nested_indexes") or []:
+        add("high", "sitemap-nested-index",
+            f"{index_url} is a sitemap index listed by another index. A sitemap index file "
+            "can't list other sitemap index files, only sitemap files (Search Console: "
+            "\"Nested sitemap indexes\"); list its children in the top index instead")
+    lm = a.get("lastmod") or {}
+    if lm.get("batch_stamped"):
+        add("medium", "sitemap-lastmod-batch",
+            f"{lm['most_common_share']:.0%} of {lm['with_lastmod']} entries carrying lastmod share "
+            f"one value ({lm['most_common']}), a deploy or build stamp, not a content date. "
+            "Google uses lastmod only if it is consistently and verifiably accurate; open "
+            "the generator before calling it a defect (it may be a decision)")
+    for probe in a.get("robots_sitemaps") or []:
+        if probe.get("status") is not None and probe["status"] != 200:
+            where = f" -> {probe['location']}" if probe.get("location") else ""
+            add("high", "sitemap-robots-unserved",
+                f"robots.txt declares {probe['url']}, which answers HTTP {probe['status']}{where} "
+                "instead of serving the sitemap")
+    checks = [c for c in (a.get("url_checks") or []) if c.get("status") is not None]
+    if checks:
+        n = len(checks)
+        def report(sev, code, rows, what):
+            if rows:
+                ex = "; ".join(rows[:3])
+                add(sev, code, f"{len(rows)} of {n} sampled listed URL(s) {what}, e.g. {ex}. "
+                    "A listed URL is a promise that it is canonical, indexable and serves 200")
+        report("medium", "sitemap-url-redirects",
+               [f"{c['url']} -> {c['location'] or '?'} ({c['status']})" for c in checks
+                if 300 <= c["status"] < 400], "redirect")
+        report("high", "sitemap-url-error-status",
+               [f"{c['url']} ({c['status']})" for c in checks
+                if c["status"] >= 400 or (c["status"] < 300 and c["status"] != 200)],
+               "answer with an error or non-200 status")
+        report("high", "sitemap-url-noindex",
+               [c["url"] for c in checks if c.get("noindex")], "carry noindex")
+        report("medium", "sitemap-url-foreign-canonical",
+               [f"{c['url']} -> {c['canonical']}" for c in checks if c.get("foreign_canonical")],
+               "declare a canonical other than themselves")
     return out
 
 
@@ -483,6 +694,32 @@ def render_markdown(a: dict, f: list[dict], sources: list[str]) -> str:
         lines += ["", "## Findings", ""]
         for x in f:
             lines.append(f"- **{x['severity']}** [{x['code']}] {x['message']}")
+    sample = a.get("url_checks")
+    if sample is not None:
+        answered = [c for c in sample if c.get("status") is not None]
+        lines += ["", "## Listed URLs, sampled", "",
+                  f"{len(answered)} of {len(sample)} sampled URL(s) answered; "
+                  f"{len(sample) - len(answered)} could not be fetched and support no finding.", "",
+                  "| URL | status | redirect | noindex | canonical |", "|---|---|---|---|---|"]
+        for c in sample[:50]:
+            status = c["status"] if c["status"] is not None else f"unfetched: {_flat(c.get('error') or '?', 60)}"
+            noindex = "-" if c.get("noindex") is None else ("yes" if c["noindex"] else "no")
+            canonical = "-" if not c.get("canonical") else ("foreign: " if c.get("foreign_canonical") else "self: ") + _flat(c["canonical"], 80)
+            lines.append(f"| {_flat(c['url'], 80)} | {status} | {_flat(c.get('location') or '-', 80)} | {noindex} | {canonical} |")
+        if len(sample) > 50:
+            lines.append(f"| … {len(sample) - 50} more in --format json | | | | |")
+    robots = a.get("robots_sitemaps")
+    if robots is not None:
+        lines += ["", "## Sitemaps declared in robots.txt", ""]
+        if not robots:
+            lines.append("- robots.txt declares no `Sitemap:` line")
+        for r in robots:
+            state = r["status"] if r.get("status") is not None else f"unfetched: {_flat(r.get('error') or '?', 80)}"
+            lines.append(f"- {_flat(r['url'])}: {state}")
+    lm = a.get("lastmod")
+    if lm and lm.get("entries"):
+        lines += ["", f"lastmod: {lm['with_lastmod']} of {lm['entries']} entries carry one, "
+                  f"{lm['distinct']} distinct value(s)."]
     lines += ["", f"> {a['not_derivable_here']}", "",
               "Pair this with the GSC Pages report to get declared-vs-indexed per "
               "template, which is what SKILL.md step 1 asks for."]
@@ -495,10 +732,38 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--file", help="local sitemap file")
     ap.add_argument("--max-maps", type=int, default=50,
                     help="cap on nested sitemaps followed (default 50); the excess is reported")
+    ap.add_argument("--robots", help="robots.txt URL: probe every Sitemap: line it declares; "
+                    "with no --url/--file, the declared sitemaps that serve become the roots")
+    ap.add_argument("--sample", type=int, default=0,
+                    help=f"fetch up to N listed page URLs (max {SAMPLE_MAX}, default 0 = off) and "
+                         "report status, redirect, noindex and foreign canonical per URL")
+    ap.add_argument("--sample-delay", type=float, default=0.2,
+                    help="seconds between sampled fetches (default 0.2)")
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
     args = ap.parse_args(argv)
+    if not 0 <= args.sample <= SAMPLE_MAX:
+        ap.error(f"--sample must be between 0 and {SAMPLE_MAX}")
+    if args.sample_delay < 0:
+        ap.error("--sample-delay must not be negative")
 
-    no_input = not args.url and not args.file
+    robots_probes = None
+    robots_errors: list[dict] = []
+    robots_roots: list[str] = []
+    if args.robots:
+        robots_probes = []
+        try:
+            declared = robots_sitemaps(fetch(args.robots))
+        except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as exc:
+            declared = []
+            robots_errors.append({"source": args.robots, "code": "robots_unavailable", "detail": _flat(str(exc))})
+        for sm_url in declared:
+            probe = check_url(sm_url)
+            robots_probes.append({"url": sm_url, "status": probe["status"],
+                                  "location": probe["location"], "error": probe["error"]})
+            if probe["status"] == 200:
+                robots_roots.append(sm_url)
+
+    no_input = not args.url and not args.file and not robots_roots
     input_errors = [{"code": "no_input", "detail": "No sitemap input resolved; pass --url or --file."}] if no_input else []
 
     if args.max_maps <= 0:
@@ -514,8 +779,12 @@ def main(argv: list[str]) -> int:
     truncated = 0
     unknown_frontier = False
     unfollowed = 0
-    discovered = set() if no_input else {args.file if args.file else args.url}
-    queue = deque(discovered)
+    roots = [args.file] if args.file else ([args.url] if args.url else robots_roots)
+    discovered = set() if no_input else set(roots)
+    queue = deque(dict.fromkeys(roots) if not no_input else [])
+    children: set[str] = set()
+    nested_indexes: list[str] = []
+    stamps: list[str] = []
     while queue:
         if not args.file and len(sources) >= args.max_maps:
             skipped = len(queue)
@@ -530,7 +799,8 @@ def main(argv: list[str]) -> int:
                     text = decode_body(fh.read(MAX_BYTES_PER_MAP + 1), source.endswith(".gz"))
             else:
                 text = fetch(source)
-            pages, maps, capped = parse_sitemap(text)
+            doc_stamps: list[str] = []
+            pages, maps, capped = parse_sitemap(text, doc_stamps)
         except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as exc:
             code = "incomplete_body" if isinstance(exc, IncompleteBody) else "input_failed"
             errors.append({"source": source, "code": code, "detail": str(exc)})
@@ -538,6 +808,9 @@ def main(argv: list[str]) -> int:
             print(f"could not read sitemap: {exc}", file=sys.stderr)
             continue
         returned += 1
+        stamps.extend(doc_stamps)
+        if maps and source in children:
+            nested_indexes.append(source)
         # XML completeness does not guarantee every loc can be analyzed as a URL.
         # Preserve valid observations instead of losing the entire report later.
         for page in pages:
@@ -558,6 +831,7 @@ def main(argv: list[str]) -> int:
             for nested in maps:
                 if nested not in discovered:
                     discovered.add(nested)
+                    children.add(nested)
                     queue.append(nested)
     for code in sorted({e["code"] for e in errors}):
         reasons.append({"code": code, "detail": f"{sum(e['code'] == code for e in errors)} attempted document(s) did not yield complete parseable XML; see errors."})
@@ -583,7 +857,33 @@ def main(argv: list[str]) -> int:
     a["sitemaps_skipped"] = skipped
     a["urls_truncated"] = truncated
     a["urls_invalid"] = len(page_errors)
+    a["nested_indexes"] = nested_indexes
+    a["lastmod"] = lastmod_profile(stamps)
+    if robots_probes is not None:
+        a["robots_sitemaps"] = robots_probes
+    sample_coverage = None
+    if args.sample:
+        picked = pick_sample(urls, args.sample)
+        checks = []
+        for i, page in enumerate(picked):
+            if i and args.sample_delay:
+                time.sleep(args.sample_delay)
+            checks.append(check_url(page))
+        a["url_checks"] = checks
+        failed = [c for c in checks if c["status"] is None]
+        sample_reasons = []
+        if failed:
+            sample_reasons.append({"code": "input_failed", "detail": f"{len(failed)} sampled URL(s) could not be fetched; they support no finding."})
+        if len(picked) < len(set(urls)):
+            sample_reasons.append({"code": "sample_bound", "detail": f"{len(picked)} of {len(set(urls))} unique listed URLs sampled, spread across template families; the rest were not checked."})
+        sample_coverage = collector_coverage(
+            "listed_url_probe",
+            "One GET per sampled listed page URL, redirects not followed; returned means an HTTP status was observed. Not the whole sitemap.",
+            len(picked), len(picked), len(picked) - len(failed), 0, sample_reasons)
     f = [] if no_input else findings(a)
+    if no_input and robots_probes is not None:
+        f = findings({"duplicate_paths": {}, "hosts": {}, "depth_distribution": {}, "urls_total": 0,
+                      "robots_sitemaps": robots_probes})
     prov = provenance("sitemap_audit.py", argv,
                       f"{len(urls)} URL(s) from {len(sources)} sitemap(s): "
                       + ", ".join(sources[:3])
@@ -591,20 +891,25 @@ def main(argv: list[str]) -> int:
     if args.format == "json":
         print(json.dumps({"producer": prov, "sources": sources,
                           "analysis": a, "findings": f, "coverage": coverage,
-                          "traversal": traversal, "errors": errors, "page_errors": page_errors, "input_errors": input_errors}, indent=2))
+                          "traversal": traversal, "errors": errors, "page_errors": page_errors, "input_errors": input_errors,
+                          "robots_errors": robots_errors, "sample_coverage": sample_coverage}, indent=2))
     else:
         print(render_markdown(a, f, sources))
         print("\n" + collector_coverage_md(coverage))
+        if sample_coverage:
+            print("\n" + collector_coverage_md(sample_coverage))
         if errors:
             print("\n## Collection errors\n")
             for error in errors:
                 print(f"- {_flat(error['source'])}: {_flat(error['detail'])}")
+        for error in robots_errors:
+            print(f"\nrobots.txt unavailable: {_flat(error['source'])}: {_flat(error['detail'])}")
         if page_errors:
             print("\n## Excluded page URLs\n")
             for error in page_errors:
                 print(f"- {_flat(error['url'])}: {_flat(error['detail'])}")
         print("\n" + provenance_md(prov))
-    return 1 if errors or page_errors or not urls else 0
+    return 1 if errors or page_errors or robots_errors or not urls else 0
 
 
 if __name__ == "__main__":

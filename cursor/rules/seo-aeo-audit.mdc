@@ -6,7 +6,10 @@ alwaysApply: false
 # SEO / AEO audit discipline
 
 When asked to audit search visibility, diagnose a traffic drop, or plan SEO
-changes, work in this order and keep the evidence rules.
+changes, work in this order and keep the evidence rules. For a site, section or
+landing page that is not live yet, write a build-time brief instead (one dated
+file of decisions, each naming the audit check that will verify it after launch;
+no findings, no myth item, never the copy or the markup).
 
 ## Non-negotiables
 

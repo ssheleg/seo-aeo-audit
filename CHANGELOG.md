@@ -1,3 +1,46 @@
+## v0.28.0: brief mode, the poisoned-SERP guard and per-URL sitemap truth
+
+- **Brief mode.** The scope is now "audit a live site, or brief a site before it is
+  built; never write the content or build the pages". SKILL.md Step 0 picks the
+  mode. New `references/build-time.md` carries nineteen build-time decisions (N1 to
+  N19), each linked with a resolving anchor to the audit section that verifies it
+  after launch, plus a landing readiness section that links super-ux's readiness
+  check by URL and adds `page_audit.py`, `agent_surface.py` and `psi_pull.py`. New
+  skeleton `templates/brief.template.md` (embedded in `deliverable-templates.md`)
+  writes `docs/seo/brief-<date>.md`. A brief carries no findings, no tiers and no
+  myth item. New validator guard: every N row has a resolving **Verified by** link
+  into another reference, the skeleton has one row per section, and
+  REFERENCE_INDEX's count matches.
+- **Poisoned-SERP guard** (measurement.md J2, tooling.md): from September 2026 on,
+  an automated position series needs its collection method recorded, a 3 to 5
+  query spot check against a logged-out WebKit capture, and agreement with GSC
+  average position within a stated band, else it is `UNUSABLE`. The rank-tracking
+  collector is one collector subject to the guard, not "the honest way". A
+  challenge page is missing data, never rank 0. The supporting practitioner and
+  vendor reports are dated `FIELD` rows in benchmarks.md and algorithm-updates.md.
+- `page_audit.py` reports a short bot challenge or interstitial as one
+  `challenge-page` finding and nothing else, and excludes it from coverage
+  `returned`. Fixture `test/fixtures/serp-challenge.html`.
+- `gsc_pull.py` finds the last date that carries data: a missing or frozen tail
+  prints `report-stale` (`freshness` in JSON) and withholds a collapse inside the
+  stale window (`cliff_withheld`).
+- `sitemap_audit.py`: `--sample N` checks listed URLs for redirect, error status,
+  `noindex` and a foreign canonical; every run flags a nested sitemap index and a
+  batch-stamped `lastmod`; `--robots` flags a `Sitemap:` line that does not answer
+  200. Sitemap doctrine in technical-checks.md cites Google's Sitemaps report help
+  and sitemap build guide.
+- Pagination rules made explicit in technical-checks.md A3 (self-canonical page 2+,
+  sequential links, no fragment pagination, measured by a crawl diff), from Google's
+  pagination guide; "never noindex or robots-block pagination" is labelled `FIELD`
+  practitioner advice. Index tiering no longer lists pagination as a tier to block.
+- Baseline additions: search referrals per engine host and locale, Bing verification
+  and IndexNow as data-access gaps, the direct / no-referrer baseline, the
+  index-mass ratio, and analytics coverage of backend orders (audit template,
+  measurement.md J3b, demand-and-conversion.md H+3). A keyword tool's 0 is written
+  blank with `source=tool-zero`.
+- Evals: scenarios s04 (tracker-reported decline) and s05 (landing page not built
+  yet), trigger cases q13 and q14. Authored, not executed.
+
 ## v0.27.0 — rendering checks run in WebKit (Safari) first
 
 - `references/tooling.md` gains *Browser engine — WebKit (Safari) first*: a manual

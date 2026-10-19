@@ -1,13 +1,17 @@
 ---
-description: Audit a site for search + answer-engine visibility and produce a prioritized change plan
-argument-hint: '[site URL or scope, e.g. "example.com" | "traffic dropped in May" | "/blog only"]'
+description: Audit a live site for search + answer-engine visibility and produce a prioritized change plan, or brief a site before it is built
+argument-hint: '[site URL or scope, e.g. "example.com" | "traffic dropped in May" | "/blog only" | "brief: landing page for X"]'
 ---
 
 Invoke the `seo-aeo-audit` skill for: $ARGUMENTS
 
 Follow the skill exactly.
 
-1. Detect mode first (new audit vs re-audit vs single-question diagnosis), report
+1. Detect mode first: **brief** for a site, section or landing page that is not
+   live yet (follow `references/build-time.md`, write
+   `docs/seo/brief-<date>.md`, and stop: a brief never writes the copy or builds
+   the pages, carries no findings and no myth item), otherwise new audit vs
+   re-audit vs single-question diagnosis. For an audit, report
    available inputs, missing inputs and scope in three lines, then start. Run
    `"$SKILL_DIR/scripts/preflight.py"` — resolve `SKILL_DIR` first, as SKILL.md
    shows, because a path relative to the project you are standing in will not find

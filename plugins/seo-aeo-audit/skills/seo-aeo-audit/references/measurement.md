@@ -56,9 +56,18 @@ precondition of any decline diagnosis, and "the client's dashboard" is not an
 independent source. Where no seat exists, a SERP endpoint collects the same
 evidence directly: `searchapi:google_rank_tracking` returns up to 100 results per
 query with position, title, URL and snippet, localized by `gl` and `location`.
-That is also the honest way to answer track D, because the **composition** of the
-SERP is an observation, whereas a third-party index's position estimate is not
-(tooling.md rung 5). Record the engine, locale and date beside the numbers.
+It is **one collector, subject to the poisoned-SERP guard** in J2, like every
+other automated collector: the **composition** of a SERP it returned is an
+observation only once the guard has passed for that series, whereas a third-party
+index's position estimate is never one (tooling.md rung 5). Record the engine,
+locale, collection method and date beside the numbers.
+
+**Engine coverage is a data-access question first.** Split search referrals per
+engine host and locale (each regional Bing host, Yandex, Baidu or Naver on its own
+row) before calling any engine negligible. A property with no Bing Webmaster
+verification (meta tag or `BingSiteAuth.xml`) and no IndexNow key has no
+first-party Bing data at all: report both as **data-access gaps** in the coverage
+table, never as ranking factors and never as findings about visibility.
 
 ### GA4 with consent-mode modelling — one number, two kinds of data
 
@@ -122,6 +131,50 @@ of 26 documented outages found 13 coinciding with active rollouts. Distinguish:
 
 Never write "algorithmic penalty" in a report without that three-way
 cross-check.
+
+**Search Console's own freshness comes first.** `gsc_pull.py` finds the last date
+that actually carries data and compares it with the end of the requested window.
+A missing tail (more days absent than the reporting lag explains) or a frozen tail
+(the same non-trivial clicks and impressions repeated day after day) prints
+`report-stale`, and a decline finding inside that window is withheld until the
+report moves again. The API cannot tell a stale report from a real fall to zero;
+the cross-check above can.
+
+### The poisoned-SERP guard
+
+From September 2026 on, an automated position series is **unverified until it
+passes this guard**, whoever collected it. A practitioner report says that from
+September 2026 Google returns results to rank trackers that differ from what people
+see, and one vendor's classifier put the poisoned share far above its baseline
+(both `FIELD`; figures, dates and sources in
+[benchmarks.md](benchmarks.md#rank-tracker-data-quality)). Collection methods were
+already in motion (the `google.com/goto` experiment and the scraping litigation
+above), and a collector that receives a challenge page instead of results has
+nothing to measure. Before a
+position series spanning that period supports any finding:
+
+1. **Record the collection method and the provider** beside the series: API,
+   scraper, panel or manual, and through whom. A series with no recorded method
+   is not usable.
+2. **Spot-check 3 to 5 head queries** against a logged-out manual capture in
+   Safari / WebKit ([tooling.md](tooling.md#browser-engine--webkit-safari-first)),
+   same engine, locale and device class, dated. The captured positions must agree
+   with the series for those queries.
+3. **Agree with GSC average position** per query within a band stated in the
+   report before the comparison is made (GSC averages over impressions, so the band
+   is never zero; pick it, write it down, then compare).
+
+A series that fails any of the three is `UNUSABLE` for that window: not a ranking
+change, not a decline, and not evidence for or against one. Say so in the
+coverage table and fall back to the first-party series.
+
+**A challenge page is missing data, never rank 0.** A collector response with
+HTTP 200 and no organic results block (a consent wall, a CAPTCHA or an
+"unusual traffic" interstitial) carries no positions. It is recorded as a missing
+observation for that query and date. Converting it to "not found", position 0 or
+position 101 manufactures a drop out of a failed request. A saved capture can be checked
+mechanically: `page_audit.py --file capture.html` reports a challenge page as one
+`challenge-page` finding and nothing else (scripts.md).
 
 Four more artifacts that read as findings and are not:
 
@@ -254,10 +307,13 @@ describe how a brand is discovered. Add, and report alongside them:
 | **Volume** of third-party UGC about the brand | social listening, Reddit/Quora/Trustpilot | Whether the category conversation includes you at all — a reach metric, nothing more |
 | **Sentiment and semantic cluster** of that UGC, reported separately and cut by funnel stage | the same sources, plus the commercial-prompt cut of the prompt set | Volume and verdict move independently and can move in opposite directions: one brand took a mention spike from a viral scandal while being dropped from transactional and recommendation prompts in the same window (figures in benchmarks.md). Never report the two as one number |
 | Direct and returning traffic | analytics | The owned-audience moat, immune to SERP composition |
+| **Direct / no-referrer baseline**, beside branded search | analytics, GSC branded queries, a self-reported "how did you hear about us" field where a form exists | Recorded **before** any AEO change ships: AI answers that name the brand without a clickable referrer arrive as direct or branded traffic, so without a dated baseline there is nothing to measure the change against. State it missing if it was not recorded |
 | Newsletter/community signups | your own systems | The channel nobody can re-rank |
 | Assisted and later-touch conversions | analytics, CRM | AI search has no attribution model; conversion often arrives weeks later via brand or direct |
 | Index health per template | GSC Pages report | Coverage %, time to index and drop-out rate; separate "Crawled – currently not indexed" from "Discovered – currently not indexed" as observed stages, then investigate site-specific causes using technical-checks.md A2 |
 | Indexed URLs **with** traffic or conversions vs indexed with zero | GSC + analytics | The only index number tied to value; the raw indexed count moves the wrong way on purpose during consolidation |
+| **Index-mass ratio** per template: indexed pages : pages in sitemaps : pages with impressions | GSC Pages report, `sitemap_audit.py`, GSC performance by page | A ratio of two orders of magnitude between indexed pages and pages with impressions is a scaled-content warning to investigate (intent-and-content.md E4). Trimming the sitemap does not remove pages from the index; removal needs `noindex` or a 404/410 and a recrawl |
+| **Analytics coverage of orders**: orders analytics records / orders in the backend | analytics, the order or CRM system | Reconcile before any funnel conclusion. A funnel step analytics never sees is a measurement finding, not a conversion problem (demand-and-conversion.md H+3) |
 | Local outcome signals (calls, direction requests, bookings) | GBP, call tracking | For a local business these replace citations entirely — a citation cannot be booked |
 
 Two consequences for the report: stop treating last-click as the definition of

@@ -14,6 +14,10 @@ mechanical sweep, instrument or deliverable.
 [measurement.md](references/measurement.md) J ·
 [agent-readiness.md](references/agent-readiness.md) K.
 
+**Before the site exists**: [build-time.md](references/build-time.md) (brief mode:
+nineteen build-time decisions, each the inverse of an audit check it links to, plus
+the landing readiness commands).
+
 **Sweeps and surfaces** — [onpage-checks.md](references/onpage-checks.md) (per-template
 completeness) · [discover.md](references/discover.md) (its own surface, its own gate) ·
 [linkbuilding.md](references/linkbuilding.md).

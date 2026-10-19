@@ -749,6 +749,29 @@ check(_allfail.returncode == 1,
 check(json.loads(_allfail.stdout)[0].get("error"),
       "the failing run must still print the error row it collected")
 
+# ── a challenge page is missing data, not a page (A1, non-negotiable #8) ─────
+# A search engine "unusual traffic" interstitial or a CDN challenge arrives as HTTP
+# 200. Read as the page it fabricates title, H1, thin-content and schema findings;
+# read as a SERP it becomes "position 0". Exactly one finding may survive.
+chal = run("serp-challenge.html", "https://www.google.com/search?q=example+query")
+chal_codes = [f["code"] for f in chal["findings"]]
+check(chal["challenge"] is True, "serp-challenge: the interstitial must be recognised as a challenge page")
+check(chal_codes == ["challenge-page"],
+      f"serp-challenge: a challenge page must yield only challenge-page, got {chal_codes}")
+check(chal["findings"][0]["tier"] == "CONFIRMED" if chal["findings"] else False,
+      "serp-challenge: what the response contains is an observation, CONFIRMED")
+# The negative half: the same markers inside a long real page do not fire, because a
+# contact form with a CAPTCHA does not turn a page into a challenge.
+_long = ("<html><head><title>Contact us</title></head><body><h1>Contact</h1><p>"
+         + " ".join(["real words about the product"] * 80)
+         + "</p><form action='/sorry/index'><div class='g-recaptcha'></div></form></body></html>")
+_lr = page_audit.analyze(_long, "https://example.com/contact")
+check(_lr["challenge"] is False and "challenge-page" not in {f["code"] for f in _lr["findings"]},
+      "a long page embedding a CAPTCHA form must not be read as a challenge page")
+_md = page_audit.to_markdown([chal])
+check("challenge page" in _md.lower() and "missing data" in _md.lower(),
+      "the markdown report must say the body was a challenge page and is missing data")
+
 if not failures:
     residue.close_case("page_audit behaviour")
 residue.report()
@@ -758,6 +781,6 @@ if failures:
     for f in failures:
         print(" - " + f)
     sys.exit(1)
-print("PASS: page_audit behavior (3 fixtures, markdown + json + scheme guard + headers, "
+print("PASS: page_audit behavior (4 fixtures, markdown + json + scheme guard + headers, "
       "gzip, url-list and error paths, blindness caveat, schema completeness, "
       "directive parsing, price provenance, truncation honesty, per-finding tiers)")

@@ -25,6 +25,18 @@
 | Top revenue pages / positions | | | |
 | AI mention rate (per engine) | | | |
 | AI crawler fetches (per agent) | | | |
+| Search referrals per engine host and locale | | | |
+| Direct / no-referrer sessions (before any AEO change) | | | |
+| Index-mass ratio per template (indexed : in sitemaps : with impressions) | | | |
+| Analytics coverage of orders (orders analytics sees / backend orders) | | | |
+
+**Data-access gaps** (not ranking factors): Bing Webmaster verification {{present | missing}} ·
+IndexNow key {{present | missing}} · the locale's own engines {{...}}. A missing
+verification is a gap in what this audit could measure, reported here and in Track
+coverage, never a finding about rankings.
+
+A volume tool that reports **0 searches** has not measured demand: write the cell
+blank with its source, exactly as an unmeasured cell.
 
 ## Findings
 

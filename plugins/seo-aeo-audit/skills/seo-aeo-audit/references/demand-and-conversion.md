@@ -105,6 +105,7 @@ Failure modes to test for, in order of how much revenue they hide:
 
 | Gap | Symptom | Fix |
 |---|---|---|
+| Analytics sees only part of the orders | Funnel rates and channel shares computed from analytics alone; a step that never fires reads as a drop-off | **Reconcile first**: orders (or leads) analytics records against the same period in the backend, stated as a share in the audit's baseline. A missing funnel event is a measurement finding, never a conversion finding, and no funnel conclusion is drawn until the share is known |
 | Last-click only | Organic looks flat while brand/direct grows | Multi-touch view; report assisted and later-touch conversions |
 | Untracked calls | Service and local businesses with phone-heavy intent; one mover found 80–90% of a channel's conversions arrived by phone | Call tracking with dynamic number insertion, per-source |
 | Missed calls | Leads lost at the door; one firm cut missed calls 30% → 21% and measurably lifted consultations; brands report ~10% more closed leads just by tracking them | Route/answer coverage, after-hours handling |
