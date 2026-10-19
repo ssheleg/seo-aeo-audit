@@ -1,0 +1,214 @@
+[
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p1",
+  "prompt": "best invoicing tool for freelancers",
+  "date": "2026-10-17",
+  "run": 1,
+  "answer": "Acme is a solid pick for freelancers.",
+  "cited_urls": [
+   "https://acme.com/pricing",
+   "https://www.g2.com/products/acme"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p1",
+  "prompt": "best invoicing tool for freelancers",
+  "date": "2026-10-18",
+  "run": 2,
+  "answer": "Many freelancers use Acme.",
+  "cited_urls": [
+   "https://ACME.com/pricing/",
+   "https://www.g2.com/products/acme#reviews"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p1",
+  "prompt": "best invoicing tool for freelancers",
+  "date": "2026-10-19",
+  "run": 3,
+  "answer": "Try Acme first.",
+  "cited_urls": [
+   "https://acme.com/pricing"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p2",
+  "prompt": "invoicing software for agencies",
+  "date": "2026-10-17",
+  "run": 1,
+  "answer": "Globex, Initech and Umbrella lead; Acme is also an option.",
+  "cited_urls": [
+   "https://x.example/a"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p2",
+  "prompt": "invoicing software for agencies",
+  "date": "2026-10-18",
+  "run": 2,
+  "answer": "Globex is popular; Acme is a cheaper choice.",
+  "cited_urls": [
+   "https://y.example/b"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p2",
+  "prompt": "invoicing software for agencies",
+  "date": "2026-10-19",
+  "run": 3,
+  "answer": "Globex and Initech are the usual choices.",
+  "cited_urls": []
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p3",
+  "prompt": "how to send an invoice",
+  "date": "2026-10-17",
+  "run": 1,
+  "answer": "Open a spreadsheet and list the items.",
+  "cited_urls": [
+   "https://z.example/how"
+  ],
+  "recommended": false
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p3",
+  "prompt": "how to send an invoice",
+  "date": "2026-10-18",
+  "run": 2,
+  "answer": "Use a template.",
+  "cited_urls": [
+   "https://z.example/how"
+  ],
+  "recommended": false
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p3",
+  "prompt": "how to send an invoice",
+  "date": "2026-10-19",
+  "run": 3,
+  "answer": "Any accounting app can do it.",
+  "cited_urls": [
+   "https://z.example/how"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p4",
+  "prompt": "acme alternatives",
+  "date": "2026-10-17",
+  "run": 1,
+  "answer": "Acme remains the strongest; Globex is an alternative.",
+  "cited_urls": [
+   "https://docs.acme.com/compare"
+  ],
+  "recommended": true
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p4",
+  "prompt": "acme alternatives",
+  "date": "2026-10-18",
+  "run": 2,
+  "answer": "Acme is recommended.",
+  "cited_urls": [
+   "https://w.example/list"
+  ],
+  "recommended": true
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "ui-capture",
+  "prompt_id": "p4",
+  "prompt": "acme alternatives",
+  "date": "2026-10-19",
+  "run": 3,
+  "answer": "Stick with Acme.",
+  "cited_urls": [
+   "https://w.example/list"
+  ],
+  "recommended": true
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "source": "api-proxy",
+  "prompt_id": "p1",
+  "prompt": "best invoicing tool for freelancers",
+  "date": "2026-10-19",
+  "run": 1,
+  "answer": "Acme.",
+  "cited_urls": [
+   "https://acme.com/"
+  ]
+ },
+ {
+  "engine": "chatgpt",
+  "mode": "search",
+  "account_state": "logged-out",
+  "locale": "en-US",
+  "prompt_id": "p1",
+  "prompt": "best invoicing tool for freelancers",
+  "date": "2026-10-19",
+  "run": 9,
+  "answer": "Acme",
+  "cited_urls": []
+ }
+]

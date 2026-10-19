@@ -58,7 +58,8 @@ are first-party:
 1. **Server logs** — count requests by user agent for `GPTBot`, `OAI-SearchBot`,
    `ChatGPT-User`, `ClaudeBot`, `Claude-User`, `PerplexityBot`, `Google-Extended`,
    `Applebot-Extended`, `CCBot`, `Bytespider`, and any agent framework's default
-   UA. Forward-confirm reverse DNS before believing a UA string
+   UA. Attribute each hit by its network (ASN) and forward-confirm reverse DNS
+   before believing a UA string
    (`references/threats-and-defense.md` covers the spoofing case).
 2. **Requests to the agent surface itself** — once anything in K2 exists, the
    access log for those paths *is* the metric. Zero requests over a quarter is
@@ -106,11 +107,20 @@ shape of the names and got three of them wrong:
 
 | Use | Agents (verified 2026-08-14; ad-page row 2026-08-16) | What blocking costs |
 |---|---|---|
-| Answer-engine retrieval | `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User` | The site stops appearing in that engine's answers. Perplexity states it plainly: allow `PerplexityBot` "to ensure your site appears in search results" |
+| Answer-engine retrieval | `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User`, `meta-webindexer` | The site stops appearing in that engine's answers. Perplexity states it plainly: allow `PerplexityBot` "to ensure your site appears in search results". Meta documents `meta-webindexer` for Meta AI search, citing and linking content (verified 2026-10-19) |
 | Training-corpus collection | `GPTBot`, `ClaudeBot`, `CCBot`, `Bytespider` | Nothing in retrieval. OpenAI documents `GPTBot` as crawling "content that may be used in training our generative AI foundation models"; Anthropic documents `ClaudeBot` as "collecting web content that could potentially contribute to their training" |
 | Model grounding | `Google-Extended`, `Applebot-Extended` | Gemini / Vertex AI grounding and Apple's model training. **Not Google Search and not AI Overviews** — those are Googlebot's, and Googlebot cannot be split by purpose at all (technical-checks.md) |
 | Ad-page validation | `OAI-AdsBot` | Not retrieval, and OpenAI states no robots.txt behaviour for it where it states one for `OAI-SearchBot` and `GPTBot` — so a block is reported as a block, never as a retrieval loss. It still costs something concrete: OpenAI documents it as validating "the safety of web pages submitted as ads on ChatGPT", so a site running ChatGPT ads behind a blanket `OAI-*` or managed-bot block has its ad landing pages fail validation while every other report reads clean (verified 2026-08-16) |
+| Dual-purpose and user-requested (Meta) | `meta-externalagent`, `meta-externalfetcher` | Meta documents `meta-externalagent` for training foundation models or indexing for products, so a block is reported as a block, never priced as one purpose; `meta-externalfetcher` may bypass robots.txt for user-requested fetches, so robots.txt does not decide it (`CONFIRMED`, [Meta web crawlers](https://developers.facebook.com/docs/sharing/webmasters/web-crawlers/), verified 2026-10-19) |
+| Ads quality check | `AdsBot-Google`, `AdsBot-Google-Mobile` | They ignore the global `User-agent: *` group, so they obey only robots.txt rules that name them (`CONFIRMED`, [Google special-case crawlers](https://developers.google.com/crawling/docs/crawlers-fetchers/google-special-case-crawlers)). A `*` disallow does not reach them; `agent_surface.py` reports `robots-wildcard-exempt` when it applies |
 | Everything else | unnamed agents | The `*` group already covers them |
+
+**Google-Extended and AI Overviews: contested, Google's documentation governs.**
+One descriptive study ([arXiv 2604.27790](https://arxiv.org/html/2604.27790v1),
+`STUDY`) found sites blocking Google-Extended less likely to be retrieved by AI
+Overviews; Google documents that Google-Extended does not affect inclusion or
+ranking in Search, and its documentation governs. Record the study beside a
+Google-Extended block; do not reverse the block on its strength.
 
 **Three corrections this table carries, and the reason it is worth reading twice.**
 `GPTBot` and `ClaudeBot` are training crawlers, not retrieval ones — their

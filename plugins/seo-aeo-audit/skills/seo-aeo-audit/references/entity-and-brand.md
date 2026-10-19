@@ -169,6 +169,13 @@ spend.
   resurfacing in Search, consistent named authorship per topic section is worth
   real editorial effort. Caveat: the inventor worked on Drive/AppSheet — treat as
   a documented architecture pattern, not a confirmed web-search factor.
+- **Every byline is a real, checkable person.** Google's people-first content
+  guide (2026-10-05) calls fabricated creator profiles, such as AI-generated
+  headshots, made-up names or false credentials, a form of deception and a signal
+  of a low-quality page (`CONFIRMED`,
+  [creating helpful content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)).
+  Audit each byline against a findable person with the stated credentials; an
+  invented author persona is never a recommendation, whatever the brief asks.
 - Wikidata is a lower-threshold entry point than Wikipedia and is trusted as a
   structured source, but entries are deleted without genuine external signals.
   Only pursue it alongside real corroboration (press, verified profiles,

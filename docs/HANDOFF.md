@@ -1,3 +1,21 @@
+## AI answer panel, Bing Webmaster instrument, freshness loop: 0.29.0 (2026-10-19)
+
+Branch `feat/0.29-freshness-instruments`. Objective: wave 3 part 2 of the 2026-10-19
+SEO plan (board row B-38, now done). Done: `scripts/ai_panel.py` and
+`scripts/bwt_pull.py` (nine scripts ship), preflight's Bing probe, `page_audit.py
+--cache-parity` and `jsonld-double-escaped`, `agent_surface.py` Meta and AdsBot rows,
+ten dated timeline rows with the weekly cadence, the timeline tier-word guard and the
+21-day staleness warning, doctrine rows that have a primary-source sentence, evals s06
+and s07. Decision recorded in `DECISIONS.md` (credentials on stdin; the panel only
+scores). Version 0.28.0 to 0.29.0 in the manifests, SKILL-CARD and the nine script
+constants; ledger section, retro stamp, CHANGELOG.
+
+Checks run: `bash scripts/check-docs.sh` and `npm run test:all`; every new test and
+guard watched failing on a mutant (verification ledger, v0.29.0 section).
+
+Open: board row B-40 (rows with no allowed sentence yet). Next task: the umbrella pin
+of 0.29.0 in the hub, then B-40 when the research feed supplies primary sentences.
+
 ## Brief mode, poisoned-SERP guard, per-URL sitemap truth: 0.28.0 candidate (2026-10-19)
 
 Branch `feat/brief-mode-0.28`. Objective: wave 3 part 1 of the 2026-10-19 SEO plan.

@@ -25,10 +25,11 @@ with its date.
 | GSC — Search Generative AI performance | Pages and impressions from AI surfaces (global rollout documented 2026-08-31) | Check the current report and property; missing report is not zero impressions |
 | GSC — AI display control | Opt-out of AIO/AI Mode display; inherits from the nearest parent property, default from the TLD-level property | Check inheritance before assuming a setting applies |
 | GSC — platform properties | YouTube, Instagram, TikTok and X performance in Search/Discover | Ties social distribution to search visibility |
-| Bing Webmaster Tools — AI Performance | Intents, topics, citation counts and **citation share**, grounding query intents/topics | The most actionable AI reporting available; Bing also feeds ChatGPT |
+| Bing Webmaster Tools — AI Performance | Intents, topics, citation counts and **citation share**, grounding query intents/topics | The most actionable AI reporting available; Bing also feeds ChatGPT. Microsoft's documented API method list has no method for this report: export it from the interface, keep the file, record the export date and the column headers exactly as exported, and cite it as rung-2 evidence |
+| Bing Webmaster Tools: query and page stats | Impressions, clicks and average position per query and per page, updated weekly | Read with `scripts/bwt_pull.py` (credential on stdin); `preflight.py --bing-site` names the failing gate (`login`, `scope`) first |
 | Microsoft Clarity | AI-visibility reporting from Copilot and Bing | AI referral traffic is only countable when the platform passes a referrer |
 | Yandex Webmaster | Query monitoring (hours-level delay), vertical inclusion/exclusion, verification via YTM or GTM | Yandex now presents Direct as a useful signal for search — ads and organic are no longer described as independent |
-| Server logs | Which bots fetch what, when, with which status | The only place AI-crawler behavior is ground truth; use forward-confirmed reverse DNS to filter spoofed agents |
+| Server logs | Which bots fetch what, when, with which status | The only place AI-crawler behavior is ground truth; attribute crawler traffic by the network it came from (ASN) plus forward-confirmed reverse DNS, never by the user-agent string alone |
 | Analytics (GA4 etc.) | Sessions, engagement, conversions by landing page and source | AI referrals appear only when the platform passes a referrer; assisted conversions arrive later via brand/direct |
 
 The official [generative-AI report](https://support.google.com/webmasters/answer/16984139)
@@ -247,6 +248,11 @@ Four more artifacts that read as findings and are not:
   observed dragging AI visibility with it (figures in benchmarks.md), though a
   Bing-only counter-case makes the dependency itself HYPOTHESIS — record both
   and monitor each engine separately (aeo-geo.md F4).
+- **Score repeated runs, never one.** Capture each prompt at least three times on
+  at least two days and score the records with `scripts/ai_panel.py`: per cell it
+  prints k/n with a Wilson interval, the run-to-run Jaccard overlap of cited URLs,
+  and `insufficient-sample` instead of a rate below that floor. Captures from an
+  API are scored apart from UI captures, because a preprint ([arXiv 2610.15382](https://arxiv.org/html/2610.15382), `STUDY`) found that Google Search plus the OpenAI Responses API recovered only 28.3% and 26.2% of the URLs ChatGPT cited (two model versions), so API proxies under-cover UI citations (aeo-geo.md F5).
 - **Expect volatility.** In one longitudinal study ~1 in 4 cited pages was cited
   once and never again; between first and last citation a page appeared roughly
   every third day; the longest unbroken streak was 52 days. Report ranges and

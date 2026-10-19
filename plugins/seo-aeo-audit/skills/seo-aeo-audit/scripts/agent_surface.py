@@ -75,13 +75,13 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 
 # ── provenance: the execution that produced this payload ── shared block ──────
-# Copied verbatim into all seven scripts and compared byte for byte by
+# Copied verbatim into all nine scripts and compared byte for byte by
 # `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
 # with no shared module, and an import of one does not exist in the installed layout
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
-# one copy — the guard fails all seven.
-SKILL_VERSION = "0.28.0"
+# one copy — the guard fails all nine.
+SKILL_VERSION = "0.29.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -219,6 +219,9 @@ FINDING_TIERS = {
     "robots-retrieval-blocked": "CONFIRMED",
     "robots-training-decided": "CONFIRMED",
     "robots-contradictory": "CONFIRMED",
+    # Google's own documentation for both tokens: "The global user agent ( * ) is
+    # ignored." An observation about what the file reaches, not a bet.
+    "robots-wildcard-exempt": "CONFIRMED",
     "robots-blocks-linked-page": "CONFIRMED",
     "robots-no-schemamap": "HYPOTHESIS",
     "sitemap-lastmod-frozen": "STUDY",
@@ -265,6 +268,9 @@ RETRIEVAL_UAS = {
                      "results on Perplexity. It is not used to crawl content for AI "
                      "foundation models'",
     "perplexity-user": "Perplexity: visits a page 'when users ask Perplexity a question'",
+    # Meta's crawler page, read 2026-10-19 (developers.facebook.com, web-crawlers).
+    "meta-webindexer": "Meta: 'The Meta-WebIndexer crawler navigates the web to improve "
+                       "Meta AI search result quality for users'",
 }
 # Training-corpus collection. GPTBot and ClaudeBot sit here on their vendors' own
 # words: OpenAI documents GPTBot as crawling 'content that may be used in training
@@ -289,9 +295,19 @@ GROUNDING_UAS = ("google-extended", "applebot-extended")
 # up — so a block is reported as a block. It matters anyway: a site running ChatGPT
 # ads behind a blanket `OAI-*` or managed-bot block gets a clean report here while
 # its ad landing pages fail validation.
+# `meta-externalagent` stays here rather than in TRAINING_UAS: Meta documents it for
+# "use cases such as training foundation AI models or improving products by indexing
+# content directly" (read 2026-10-19), which is two purposes, and a block of a
+# dual-purpose agent is reported as a block, never priced as one of them.
 OTHER_AI_UAS = ("meta-externalagent", "facebookbot", "amazonbot", "ai2bot",
                 "diffbot", "omgilibot", "omgili", "imagesiftbot", "anthropic-ai",
                 "cohere-ai", "oai-adsbot")
+
+# Agents that ignore the global `User-agent: *` group, so a rule there does not reach
+# them: Google documents for both AdsBot tokens that "the global user agent ( * ) is
+# ignored" (special-case crawlers, read 2026-10-19). A site that thinks its `*`
+# disallows also cover the ads quality check is wrong in silence.
+WILDCARD_EXEMPT_UAS = ("adsbot-google", "adsbot-google-mobile")
 
 # Root paths a client probes for an agent manual, and the near-misses a presence
 # check reads as absence. A file served one character off the convention is
@@ -357,7 +373,7 @@ TRUST_ANCHOR_MIN_CHARS = 500
 
 
 # BEGIN BOUNDED TRANSPORT
-# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Byte-identical in eight standalone collectors; transport_contract checks parity.
 # Interpretation (fragment, XML document, provider payload, status) stays local.
 def _transport_values(headers, name):
     if hasattr(headers, "get_all"):
@@ -691,6 +707,8 @@ def parse_robots(text: str) -> dict:
         "wildcard_groups": len(wildcard),
         "wildcard_disallow": [d for g in wildcard for d in g["disallow"] if d],
         "wildcard_allow": [a for g in wildcard for a in g["allow"] if a],
+        "wildcard_exempt_unnamed": (sorted(u for u in WILDCARD_EXEMPT_UAS if u not in named)
+                                    if any(d for g in wildcard for d in g["disallow"]) else []),
         "content_signals": signals,
         "has_content_signal": bool(signals),
         "has_schemamap": bool(re.search(r"^\s*schemamap:", text, re.I | re.M)),
@@ -1283,6 +1301,14 @@ def collect(origin: str, api_origin: str = "", page: str = "",
                     "retrieval crawlers with no explicit group: "
                     f"{_flat(', '.join(rob['retrieval_missing']))} — they fall to the "
                     "* group, which is a default rather than a decision",
+                    "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
+            if rob["wildcard_exempt_unnamed"]:
+                add("info", "robots-wildcard-exempt",
+                    "the `User-agent: *` group disallows paths, and "
+                    f"{_flat(', '.join(rob['wildcard_exempt_unnamed']))} ignore that group by "
+                    "Google's own documentation: they obey only rules in a group that names "
+                    "them. If those paths must be closed to the ads quality check too, name "
+                    "the agents; if not, nothing is wrong",
                     "agent-readiness.md#k2a-crawler-policy-is-two-decisions-not-one")
             if not rob["training_named"] and not rob["has_content_signal"]:
                 add("info", "robots-training-undecided",

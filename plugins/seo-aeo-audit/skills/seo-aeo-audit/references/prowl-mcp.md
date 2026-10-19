@@ -141,6 +141,8 @@ Use these to run the prompt set from [aeo-geo.md](aeo-geo.md) at volume instead
 of by hand. The caveat from [measurement.md](measurement.md) J3 still stands:
 these are sampled observations of a non-deterministic surface. Record the date
 and the engine with every one, and never present a mention share as a rank.
+They are also **API proxies, not the product UI**: label their answers
+`api-proxy` when scoring them with `scripts/ai_panel.py`, because a preprint ([arXiv 2610.15382](https://arxiv.org/html/2610.15382), `STUDY`) found that Google Search plus the OpenAI Responses API recovered only 28.3% and 26.2% of the URLs ChatGPT cited (two model versions), so API proxies under-cover UI citations.
 
 ### Tracks A/C/H — the site itself
 

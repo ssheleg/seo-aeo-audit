@@ -317,9 +317,12 @@ _TMP = residue.workspace("contracts")
 sm = load("sitemap_audit")
 gsc_flat = load("gsc_pull")
 gsc = load("gsc_pull")
+aip = load("ai_panel")
+bwt = load("bwt_pull")
 COLLECTORS = (("preflight", pre), ("page_audit", pa), ("psi_pull", psi),
               ("sitemap_audit", sm), ("url_inspection", ui),
-              ("agent_surface", ags), ("gsc_pull", gsc))
+              ("agent_surface", ags), ("gsc_pull", gsc),
+              ("ai_panel", aip), ("bwt_pull", bwt))
 
 # ── 5b. gsc_pull: zero rows is not a clean property ──────────────────────────
 # The report is row-driven from the position split down, so this is the one script
@@ -475,10 +478,18 @@ _DEFAULT_RUNS = (
     ("url_inspection", ui, ["--site", "sc-domain:e.com", "--urls", "https://e.com/a"]),
     ("agent_surface", ags, ["--openapi-file", _stub_spec]),
     ("gsc_pull", gsc, ["--site", "sc-domain:e.com"]),
+    ("ai_panel", aip, ["--captures", os.path.join(ROOT, "test", "fixtures", "ai_panel",
+                                                  "panel-3x4.json"),
+                       "--brand", "Acme", "--domain", "acme.com"]),
+    # No credential on stdin: the run reports the login gate and calls nothing, which
+    # is the offline path. The block must still print.
+    ("bwt_pull", bwt, ["--site", "https://e.com/", "--key-stdin"]),
 )
 check(len(_DEFAULT_RUNS) == len(COLLECTORS),
       f"every collector must be driven through its default format; {len(_DEFAULT_RUNS)} "
       f"runs against {len(COLLECTORS)} collectors")
+# bwt_pull reads its credential from stdin; an empty stream is the offline path.
+sys.stdin = io.StringIO("")
 for _name, _mod, _argv in _DEFAULT_RUNS:
     _buf = io.StringIO()
     with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(io.StringIO()):

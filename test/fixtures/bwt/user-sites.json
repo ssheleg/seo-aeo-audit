@@ -1,0 +1,18 @@
+{
+ "d": [
+  {
+   "__type": "Site:#Microsoft.Bing.Webmaster.Api",
+   "AuthenticationCode": "X",
+   "DnsVerificationCode": "x.example.com",
+   "IsVerified": true,
+   "Url": "https://example.com/"
+  },
+  {
+   "__type": "Site:#Microsoft.Bing.Webmaster.Api",
+   "AuthenticationCode": "Y",
+   "DnsVerificationCode": "y.example.com",
+   "IsVerified": false,
+   "Url": "https://unverified.example/"
+  }
+ ]
+}

@@ -227,3 +227,25 @@ a new family member (a ninth router owner for one reference, duplicating tiers a
 myths). The description budget forbids growth, so the description was rewritten at
 a lower length rather than extended.
 
+
+## 2026-10-19: Instruments that need a third-party credential read it from stdin, and the AI panel only scores
+
+**Decision.** `bwt_pull.py` and `preflight.py --bing-site` take the Bing key or OAuth
+token on stdin (`--key-stdin`, `--token-stdin`, `--bing-key-stdin`,
+`--bing-token-stdin`), never as an argument and never from the environment. The key
+goes only to the host Microsoft documents for it and is redacted from every printed
+error. `ai_panel.py` scores saved captures and makes no request; capturing stays
+manual or tool-driven, and every capture carries a `ui-capture` or `api-proxy` label
+that the script never infers.
+
+**Why.** An argument lands in shell history and in the producer block, and an
+environment variable would break `SECURITY.md`'s measured claim that every script
+reads three variables and no others. A panel that also captured would need browser
+automation and per-engine accounts inside a standard-library skill, and the honest
+part of the instrument is the scoring: repetition, intervals and the refusal of a
+single-run verdict.
+
+**Alternatives rejected.** A `--key` flag redacted in the producer block, as
+`psi_pull.py` has (the PSI key is optional and low-risk; a Bing key reads a whole
+account's sites); scraping the AI Performance report (no documented API method, and
+scraping an authenticated interface is not a measurement this skill can repeat).

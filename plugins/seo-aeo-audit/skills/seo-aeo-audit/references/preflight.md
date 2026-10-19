@@ -47,6 +47,13 @@ and three of these five send you somewhere a permission grant would never help.
 | `scope` | the token was minted without `webmasters.readonly` | re-run the login with the scope |
 | `permission` | the account is genuinely not on the property | Search Console → Users and permissions |
 
+**Bing Webmaster** (`--bing-site`, credential on stdin with `--bing-key-stdin` or
+`--bing-token-stdin`) reuses the same vocabulary for one documented GetUserSites
+call: `login` (no credential, an invalid key, HTTP 401: generate or pipe the key),
+`scope` (HTTP 403, or the site is not a verified site of that account: verify the
+site in Bing Webmaster Tools under the account that owns the key), `network` or
+`http`. `bwt_pull.py` reads the data once this probe passes.
+
 `quota-project` was added on 2026-08-14 with the endpoint fix below, because
 without it that failure was reported as `permission` — an auditor sent to the
 Users-and-permissions screen for a problem no grant there can solve.

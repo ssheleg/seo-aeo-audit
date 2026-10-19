@@ -18,6 +18,18 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.29.0 candidate: AI answer panel, Bing Webmaster instrument, freshness loop (2026-10-19)
+
+| What changes | Evidence | State |
+|---|---|---|
+| `ai_panel.py` scores a 3 runs x 4 prompts panel and refuses a rate below three runs on two days | `test/test_ai_panel.py`, every number worked out by hand in its comments; mutants `MIN_RUNS = 1`, `MIN_DAYS = 1` and an unnormalised URL path each watched failing | **planted** |
+| `bwt_pull.py` aggregation, key and token transport, redaction, gates; preflight's Bing probe | `test/test_bwt.py` on recorded fixtures shaped like Microsoft's documented samples; mutants (403 not mapped to `scope`, unweighted position, unredacted error body, unverified site accepted) each watched failing; added to the bounded-transport contract | **planted** (recorded fixtures, no live Bing call) |
+| `page_audit.py` cache parity and JSON-LD round-trip | `test/test_page_audit.py`: loopback variants differing in canonical, robots and status, an identical variant, and `test/fixtures/jsonld-double-escaped.html`; canonical comparison and entity pattern disabled, both watched failing | **planted** |
+| `meta-webindexer` retrieval bucket and `robots-wildcard-exempt` | `test/test_agent_surface.py`; both mutants watched failing | **planted** |
+| Timeline tier words and the staleness warning | tier guard watched failing on the real tree; CI plant `a dated timeline row with no tier word`; CI step pins `SEO_AEO_AUDIT_TODAY` to watch the warning fire and stay silent | **planted** |
+| Doctrine rows | Wording from the wave 1 primary-source table only; Bing API facts read from Microsoft's IWebmasterApi reference 2026-10-19 | text only |
+| Panel, Bing and parity against real accounts and sites; evals s06, s07 | No live run, no model run | never |
+
 ## v0.28.0 candidate: brief mode, poisoned-SERP guard, per-URL sitemap truth (2026-10-19)
 
 | What changes | Evidence | State |
@@ -514,7 +526,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-two releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-three releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

@@ -772,6 +772,89 @@ _md = page_audit.to_markdown([chal])
 check("challenge page" in _md.lower() and "missing data" in _md.lower(),
       "the markdown report must say the body was a challenge page and is missing data")
 
+# ── A14 (0.29.0): JSON-LD round-trip. A string that still carries an HTML entity,
+# a literal \uXXXX or an escaped quote AFTER json.loads was escaped twice on the
+# way into the page, and every consumer reads the escape as text.
+_dbl = run("jsonld-double-escaped.html", "https://example.com/fasteners")
+_dbl_f = [f for f in _dbl["findings"] if f["code"] == "jsonld-double-escaped"]
+check(len(_dbl_f) == 1, f"double-escaped JSON-LD must yield one jsonld-double-escaped finding, got {[f['code'] for f in _dbl['findings']]}")
+check(sorted(_dbl.get("jsonld_double_escaped", {}).get("kinds", [])) == ["entity", "quote", "unicode"],
+      f"all three escape kinds must be named, got {_dbl.get('jsonld_double_escaped')}")
+check(_dbl_f and _dbl_f[0]["tier"] == "CONFIRMED", "what a string contains is an observation, CONFIRMED")
+check(_dbl_f and "&amp;" in _dbl_f[0]["message"], "the finding must quote an offending sample")
+# The negative half: a URL query string carries a bare & and is not an entity, and a
+# correctly escaped é or quote decodes to the character itself.
+_clean = page_audit.analyze(
+    '<html><head><title>t</title><script type="application/ld+json">'
+    '{"@type":"Organization","name":"AT&T","url":"https://e.com/?a=1&b=2",'
+    '"slogan":"Caf\\u00e9 \\"fine\\""}</script></head><body><h1>h</h1></body></html>',
+    "https://e.com/")
+check("jsonld-double-escaped" not in {f["code"] for f in _clean["findings"]},
+      f"single-escaped JSON-LD must not be flagged: {_clean.get('jsonld_double_escaped')}")
+
+# ── A13 (0.29.0): cache-state parity. The same URL with one harmless query parameter
+# must serve the same status, canonical and robots directives; a cache or CDN that
+# keys on the query string and serves a different canonical splits the page.
+_PAGE = ('<html><head><title>p</title><link rel="canonical" href="{canon}">{robots}</head>'
+         '<body><h1>h</h1><p>' + 'word ' * 60 + '</p></body></html>')
+
+
+class _ParityHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):  # noqa: N802 - stdlib naming
+        path, _, query = self.path.partition("?")
+        base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        canon, robots = base + path, ""
+        if path == "/split" and query:
+            canon = base + self.path          # the variant self-canonicalises
+        if path == "/noindex" and query:
+            robots = '<meta name="robots" content="noindex">'
+        if path == "/gone" and query:
+            self.send_response(404); self.send_header("Content-Type", "text/html"); self.end_headers()
+            self.wfile.write(b"<html><title>404</title></html>"); return
+        body = _PAGE.replace("{canon}", canon).replace("{robots}", robots).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *a):  # noqa: D102
+        pass
+
+
+with socketserver.TCPServer(("127.0.0.1", 0), _ParityHandler) as _psrv:
+    _pport = _psrv.server_address[1]
+    _pt = threading.Thread(target=_psrv.serve_forever, daemon=True)
+    _pt.start()
+    try:
+        def _parity_run(path):
+            out = subprocess.run([sys.executable, SCRIPT, "--url", f"http://127.0.0.1:{_pport}{path}",
+                                  "--cache-parity", "--format", "json"],
+                                 capture_output=True, text=True, timeout=30)
+            return json.loads(out.stdout)[0]
+        for _path, _field in (("/split", "canonical"), ("/noindex", "robots"), ("/gone", "status")):
+            _pr = _parity_run(_path)
+            _pf = [f for f in _pr["findings"] if f["code"] == "cache-parity-mismatch"]
+            check(len(_pf) == 1 and _field in _pr["cache_parity"]["mismatched"],
+                  f"{_path}: a variant differing in {_field} must yield cache-parity-mismatch, got "
+                  f"{_pr.get('cache_parity')} / {[f['code'] for f in _pr['findings']]}")
+        _same = _parity_run("/same")
+        check(_same["cache_parity"]["mismatched"] == [] and
+              "cache-parity-mismatch" not in {f["code"] for f in _same["findings"]},
+              f"an identical variant must not be flagged: {_same.get('cache_parity')}")
+        check(_same["cache_parity"]["variant_url"].endswith("?seo_aeo_parity=1"),
+              "the variant URL must carry exactly one harmless parameter")
+        # Without the flag no second request is made and no parity block is reported.
+        _plain = json.loads(subprocess.run([sys.executable, SCRIPT, "--url", f"http://127.0.0.1:{_pport}/split",
+                                            "--format", "json"], capture_output=True, text=True,
+                                           timeout=30).stdout)[0]
+        check("cache_parity" not in _plain, "the parity probe runs only when --cache-parity is passed")
+    finally:
+        _psrv.shutdown()
+        _pt.join(timeout=2)
+check(page_audit.parity_variant_url("https://e.com/p?x=1#frag") == "https://e.com/p?x=1&seo_aeo_parity=1",
+      "an existing query string is kept and the fragment dropped")
+
 if not failures:
     residue.close_case("page_audit behaviour")
 residue.report()

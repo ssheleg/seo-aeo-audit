@@ -16,6 +16,9 @@ model quality, and nothing here is run by CI.
 guard) and `s05` (a landing page not built yet, brief mode) and trigger cases `q13`
 and `q14` were added in 0.28.0 and have no model run. They are authored, not
 measured.
+Scenarios `s06` (one AI transcript is an insufficient sample) and `s07` (author
+personas refused), and the placebo-control line added to `s02`, arrived in 0.29.0
+and are likewise authored, not measured.
 
 ## Method — how this run was executed, and its limits
 

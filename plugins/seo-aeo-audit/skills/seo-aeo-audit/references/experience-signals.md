@@ -128,6 +128,12 @@ Landing-page specifics with field evidence:
   Move it below the fold or behind a "See how it works" secondary button, use a static screenshot with a play button, no
   autoplay, always show the duration.
 
+**CrUX ad metrics are diagnostics.** Chrome publishes experimental CrUX ad metrics
+(Ad Count, Ad Density, Ad Weight: CPU, Ad Weight: Network) that Google lists as
+page-experience diagnostics, not as Core Web Vitals and without thresholds
+(`CONFIRMED`, [Chrome ads docs](https://developer.chrome.com/docs/ads)). Use them to
+explain an ad-heavy template's field numbers; never as a pass/fail band.
+
 ## H4. Core Web Vitals — triage order that actually works
 
 1. **TTFB** — the page is blank until then; fix with caching (query, page, code).

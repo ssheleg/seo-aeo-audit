@@ -93,6 +93,11 @@ def semver(v):
     return tuple(int(x) for x in str(v).split("."))
 
 
+# A3: how old the newest dated row of algorithm-updates.md may be before the gate
+# warns. Three weeks: one missed weekly refresh is noise, three are a stale timeline.
+STALE_TIMELINE_DAYS = 21
+
+
 def fail(m):
     errors.append(m)
 
@@ -612,6 +617,8 @@ _GUARD_FAMILIES = (
     "declared schemas",
     "plant attribution",
     "temporary-tree source guard",
+    "timeline tier words",
+    "timeline staleness",
 )
 _contrib = open(os.path.join(ROOT, "CONTRIBUTING.md"), encoding="utf-8").read()
 for _g in _GUARD_FAMILIES:
@@ -1110,6 +1117,39 @@ if os.path.isfile(_au):
     elif _dates and _dates[-1] != _newest.group(1):
         fail(f"algorithm-updates.md says its newest row is {_newest.group(1)} but the newest "
              f"date in the file is {_dates[-1]} — a row was appended without moving the line")
+    # A3 (0.29.0): the release-time staleness warning. A quarterly refresh left this
+    # file ten dated events behind in eleven days. It WARNS rather than fails, because
+    # a quiet three weeks is possible; what it refuses to let pass silently is a
+    # release cut from a timeline nobody has looked at. The clock is overridable so
+    # the negative self-test can pin "today" without waiting three weeks.
+    if _newest:
+        import datetime as _dt
+        _today = os.environ.get("SEO_AEO_AUDIT_TODAY") or _dt.date.today().isoformat()
+        try:
+            _age = (_dt.date.fromisoformat(_today)
+                    - _dt.date.fromisoformat(_newest.group(1))).days
+        except ValueError:
+            _age = None
+            fail(f"SEO_AEO_AUDIT_TODAY={_today!r} is not an ISO date")
+        if _age is not None and _age > STALE_TIMELINE_DAYS:
+            print(f"WARN: algorithm-updates.md newest row is {_newest.group(1)}, {_age} days "
+                  f"before {_today} (limit {STALE_TIMELINE_DAYS}): refresh the timeline "
+                  f"before this release, or say in the CHANGELOG why it is quiet")
+    # A2 (0.29.0): every platform row dated September 2026 or later carries a tier
+    # word. A dated row with no tier reads as settled fact, and the rows arriving from
+    # a weekly feed are exactly the ones most likely to be secondary reports.
+    _plat = _ausrc.split("## Platform and policy changes", 1)[-1].split("\n## ", 1)[0]
+    for _row in _plat.splitlines():
+        if not _row.startswith("| ") or _row.startswith(("| Change", "|---")):
+            continue
+        _cells = [c.strip() for c in _row.strip().strip("|").split("|")]
+        _when = _cells[1] if len(_cells) > 1 else ""
+        _wd = re.findall(r"\b(20\d{2}-\d{2})", _when)
+        if _wd and max(_wd) >= "2026-09" and not re.search(
+                r"`(CONFIRMED|STUDY|FIELD|HYPOTHESIS)`", _row):
+            fail(f"algorithm-updates.md: the platform row dated {_when!r} carries no tier "
+                 f"word (`CONFIRMED`, `STUDY`, `FIELD`, `HYPOTHESIS`): a dated row with "
+                 f"no tier reads as settled fact: {_cells[0][:80]!r}")
 
 # Every plant in the workflow must still land — checked HERE, before the tag.
 #

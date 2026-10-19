@@ -174,11 +174,11 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Sources last re-fetched 2026-10-09**. This refresh covers official ranking dates; older policy rows are not newly certified. That date has one home —
+- **Sources last re-fetched 2026-10-19**. This refresh covers official ranking dates; older policy rows are not newly certified. That date has one home —
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~6,600 non-blank lines** of distilled reference
+  decide whether to trust the rest. **~6,800 non-blank lines** of distilled reference
   material across the twenty-six contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
@@ -330,11 +330,13 @@ separate transport evidence. Unknown branch inputs and incomplete bodies stay
 explicit, and network/file counts are never summed. See
 [the collector contract](docs/contracts/collector-coverage.md).
 
-Text plus **seven** standard-library Python scripts, and nothing else runs. Four of
+Text plus **nine** standard-library Python scripts, and nothing else runs. Four of
 them are read-only network clients (`page_audit.py`, `psi_pull.py`,
 `sitemap_audit.py`, `agent_surface.py`); two call Google APIs with a token minted
-locally (`gsc_pull.py`, `url_inspection.py`); one probes access (`preflight.py`). None
-of them writes anything, and none submits, requests indexing or changes a property.
+locally (`gsc_pull.py`, `url_inspection.py`); one reads the Bing Webmaster API with a
+credential piped on stdin (`bwt_pull.py`); one probes access (`preflight.py`); one
+makes no request at all and scores answer-engine captures you saved (`ai_panel.py`).
+None of them writes anything, and none submits, requests indexing or changes a property.
 
 `page_audit.py` makes plain http(s) GETs to the URLs you hand it — any other scheme
 is refused before a request is made, redirects off http(s) are refused, non-HTML
@@ -382,7 +384,9 @@ test/test_page_audit.py              page-auditor tests (offline fixtures)
 test/test_url_inspection.py          index-verdict tests (documented API shape)
 test/test_collectors.py              psi / sitemap / gsc / preflight tests
 test/test_agent_surface.py           track-K collector: parsers, tiers, blind spots
-test/test_output_contracts.py        exit status and markdown safety, all seven
+test/test_ai_panel.py                AI answer panel scoring (3 runs x 4 prompts fixture)
+test/test_bwt.py                     Bing Webmaster collector + preflight probe (recorded API)
+test/test_output_contracts.py        exit status and markdown safety, all nine
 test/residue.py                      what a run leaves on disk — one ledger, printed
                                      on every path, `nothing` included
 test/residue_test.py                 fixtures for it, run last: the final case reads
@@ -405,7 +409,9 @@ python3 test/test_page_audit.py # page auditor against offline fixtures
 python3 test/test_url_inspection.py  # index verdicts against the documented API shape
 python3 test/test_collectors.py      # psi, sitemap, gsc and preflight behaviour
 python3 test/test_agent_surface.py   # the track-K collector, offline
-python3 test/test_output_contracts.py  # exit status and markdown safety across all seven
+python3 test/test_ai_panel.py        # AI answer panel scoring, offline
+python3 test/test_bwt.py             # Bing Webmaster collector against recorded responses
+python3 test/test_output_contracts.py  # exit status and markdown safety across all nine
 python3 test/test_installer.py       # both installers refuse the plugin shadow, fail open on absence
 python3 test/residue_test.py         # what the run left on disk, and that it said so
 node --check bin/seo-aeo-audit.js
@@ -459,7 +465,8 @@ evidence tier, `benchmarks.md` owns the numbers, dated facts stay dated, and
 `bash scripts/check-docs.sh` must pass — it runs `python3 test/validate.py`,
 `python3 test/plant_guard_test.py`, `python3 test/test_page_audit.py`,
 `python3 test/test_url_inspection.py`, `python3 test/test_collectors.py`,
-`python3 test/test_agent_surface.py`, `python3 test/test_output_contracts.py`,
+`python3 test/test_agent_surface.py`, `python3 test/test_ai_panel.py`,
+`python3 test/test_bwt.py`, `python3 test/test_output_contracts.py`,
 `python3 test/test_installer.py` and `python3 test/residue_test.py`.
 Everyone taking part is expected to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md).

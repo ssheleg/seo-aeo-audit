@@ -1,7 +1,8 @@
 # Google update timeline — and how to keep it current
 
-**Sources last re-fetched: 2026-10-09** (official ranking incident feed; older
-policy rows retain their original evidence and are not newly certified).
+**Sources last re-fetched: 2026-10-19** (official ranking incident feed, no ranking
+incident newer than the September 2026 spam update; older policy rows retain their
+original evidence and are not newly certified).
 **Newest row in this file: 2026-10-18.**
 
 ## Contents
@@ -94,6 +95,16 @@ reported 2026-07-09).
 | **EU DMA:** Google is under a standing fine exposure for self-preferencing, and must share anonymized search-query data with competing services **from 2027** | reported 2026-07 (mandate effective 2027) | Two audit consequences, both forward-looking (`HYPOTHESIS` — announced obligation, no measurable surface yet). (a) Remedies that change SERP composition land inside a measurement window, so an EU-market before/after needs the regulatory date noted next to the update dates. (b) Query data reaching third parties from 2027 changes what keyword tools can see in the EU — do not lock a multi-year measurement plan to a single vendor's EU volume estimates (measurement.md). France's ~450 publishers being paid for AI-answer content sits on the same axis (row above). |
 | Google's scraping suit against **SerpApi** dismissed | reported 2026-07 | Rank-tracking supply is a live legal question, not settled infrastructure. Record the collection method and provider with every position series and keep a first-party fallback (measurement.md). |
 | Rank trackers reported receiving Google results that differ from what people see (poisoned SERPs); DataForSEO and Ahrefs datasets named as affected | 2026-09 → reported 2026-10-18 | `FIELD` (practitioner and vendor reports, figures in benchmarks.md). Any automated position series spanning this window passes the poisoned-SERP guard before it supports a finding (measurement.md J2); a series that fails it is `UNUSABLE`, not a ranking change. |
+| Google's people-first content guide: using generative AI to produce large amounts of text without manual oversight or curation represents little to no effort | 2026-10-05 | `CONFIRMED` ([creating helpful content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)). Scaled generation without review is now named in the guide itself; route it through intent-and-content.md E4 rather than treating it as a style question. |
+| The same guide calls fabricated creator profiles (AI-generated headshots, made-up names, false credentials) a form of deception and a signal of a low-quality page | 2026-10-05 | `CONFIRMED` (same page). Every byline is checked against a real, findable person (entity-and-brand.md G3); an invented author persona is never a recommendation. |
+| Google's generative AI content guide: manually fact-check and review all AI-generated content, including titles, meta descriptions, structured data and alt text, before publishing | 2026-10-01 | `CONFIRMED` ([using generative AI content](https://developers.google.com/search/docs/fundamentals/using-gen-ai-content)). Metadata is in scope of the review, so a generated title or schema block is audited like body text. |
+| Search Console splits Web search into text-based and multimodal (Lens, Circle to Search, image uploads, Chrome "Search this image") in the Search results and Generative AI features reports, with no query dimension for multimodal | 2026-09-24 | `CONFIRMED` ([Search Central blog](https://developers.google.com/search/blog/2026/09/web-multimodal-in-sc)). A query-level analysis covers the text-based slice only; state which search type an export holds before comparing it with an older one. |
+| Google supports a recommended `creator` (or `author`) property, Person or Organization, on VideoObject; Clip and BroadcastEvent do not list it | 2026-09-24 | `CONFIRMED` ([video structured data](https://developers.google.com/search/docs/appearance/structured-data/video)). Check it on VideoObject nodes only; it is not a finding on Clip or BroadcastEvent. |
+| Google documented a UGC Fresh Data Program | 2026-10-08 | `CONFIRMED` ([program page](https://developers.google.com/search/docs/appearance/ugc-fresh-data-program)). Only the documentation entry is dated here; read the eligibility text before describing how the program works. |
+| AI Mode and AI Overviews to show inline links higher up in responses more frequently | 2026-10-15 | `CONFIRMED` ([Google blog](https://blog.google/products-and-platforms/products/search/updates-ai-mode-overviews-explore-web/)). AI-surface clicks and citations measured across this date are two regimes; split any before/after at it. |
+| Google removed an outdated form from its Indexing API quota documentation; the API is still documented only for pages with JobPosting or BroadcastEvent embedded in a VideoObject | 2026-10-16 | `CONFIRMED` ([documentation updates](https://developers.google.com/search/updates)). The scope did not widen: the Indexing API is not an indexing lever for other page types (technical-checks.md). |
+| Page-indexing data for part of June 2026 is missing in Search Console, and a Google employee said provisionally that indexing data is not back-filled; Google published no official notice | 2026-06 (reported 2026-09-11) | `FIELD` ([secondary report](https://www.seroundtable.com/google-search-console-indexing-report-missing-data-42073.html)). A page-indexing trend that crosses June 2026 has a hole, not a drop. |
+| Chrome publishes experimental CrUX ad metrics (Ad Count, Ad Density, Ad Weight: CPU, Ad Weight: Network) that Google lists as page-experience diagnostics, not as Core Web Vitals and without thresholds | undated (Chrome documentation) | `CONFIRMED` ([Chrome ads docs](https://developer.chrome.com/docs/ads)). A diagnostic, never a pass/fail band or a ranking claim (experience-signals.md). |
 
 ## How to use the timeline in an audit
 
@@ -117,7 +128,12 @@ reported 2026-07-09).
    underlying quality assessment changes — often at a later core update, not by
    patching technicals. Spam-filter losses do **not** ride along with the next
    core update. Manual actions need fixes plus one reconsideration request.
-7. **"A core update hit us" is not a finding.** The finding is *which* templates,
+7. **Measure the noise floor before attributing.** Before any "this update
+   rewarded X" claim, run placebo attributes (a property nobody believes matters,
+   such as URL length parity or an arbitrary letter in the slug) and same-domain
+   page pairs through the same scoring. If the placebo separates winners from
+   losers as well as X does, X is noise. State the placebo control in the finding.
+8. **"A core update hit us" is not a finding.** The finding is *which* templates,
    intents and markets moved, and what the winners on those SERPs have that the
    losers do not (see intent-and-content.md E1).
 
@@ -141,7 +157,24 @@ reported 2026-07-09).
 
 ## Refresh protocol for this file (part of the skill's Definition of Done)
 
-Do this quarterly, and immediately after any announced rollout:
+Do this weekly, and immediately after any announced rollout. A quarterly cadence
+left this file ten dated events behind in eleven days in October 2026.
+
+- **Input.** A weekly list of *proposed* rows (date, event, primary URL, proposed
+  tier) from whatever research feed the maintainer runs. The feed proposes; the
+  maintainer reads each primary source and keeps editorial control. A proposed row
+  whose primary page was not read lands as `FIELD` naming its secondary source, or
+  does not land.
+- **Every dated row carries a tier word** (`CONFIRMED`, `STUDY`, `FIELD`,
+  `HYPOTHESIS`). `test/validate.py` fails a platform row dated September 2026 or
+  later that has none.
+- **The release check.** `test/validate.py` prints a `WARN` line when the newest row
+  is more than 21 days older than the day it runs, so a release cut from a stale
+  timeline says so in its own gate output. It warns rather than fails: a quiet
+  three weeks is possible, an unread three weeks is the thing to catch.
+
+Each refresh:
+
 
 1. Fetch the SEJ history page and the Search Status Dashboard.
 2. Append every new update to the table with **start date, end date, type** and a

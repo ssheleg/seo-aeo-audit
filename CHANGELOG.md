@@ -1,3 +1,47 @@
+## v0.29.0: AI answer panel, Bing Webmaster instrument, freshness loop
+
+- **`scripts/ai_panel.py`** (new, stdlib, fetches nothing) scores saved answer-engine
+  captures per prompt, engine, mode, account state, locale and source: mention,
+  top-3 mention, recommendation (from a human label; unlabelled runs counted apart),
+  citation, and the run-to-run Jaccard of cited URLs, as raw counts with a Wilson 95%
+  interval and its independence caveat. A cell below three runs on two days is
+  `insufficient-sample` and prints no rate. Captures are labelled `ui-capture` or
+  `api-proxy`; proxies are scored apart and reported as under-covering (arXiv
+  2610.15382, `STUDY`). Test `test/test_ai_panel.py` on a 3 runs x 4 prompts fixture.
+- **`scripts/bwt_pull.py`** (new) reads Bing Webmaster GetQueryStats and GetPageStats
+  for one site, with the key or OAuth token on stdin, never in argv. Sums per key,
+  CTR from the sums, impression-weighted position; failed calls name the gate
+  (`login`, `scope`, `network`, `http`). The AI Performance report has no documented
+  API method and is documented as a manual rung-2 export. `preflight.py --bing-site`
+  probes GetUserSites and names the failing gate. Test `test/test_bwt.py` on recorded
+  fixtures in `test/fixtures/bwt/`.
+- `page_audit.py --cache-parity` fetches each URL again with one harmless query
+  parameter and reports `cache-parity-mismatch` when status, canonical or robots
+  directives differ; `jsonld-double-escaped` flags JSON-LD strings that still carry
+  HTML entities, literal `\uXXXX` or escaped quotes after decoding.
+- `agent_surface.py`: `meta-webindexer` is a retrieval agent (Meta's documentation);
+  `robots-wildcard-exempt` reports that `AdsBot-Google` and `AdsBot-Google-Mobile`
+  ignore the `*` group.
+- **Freshness.** Ten dated platform rows from primary sources (AI Mode inline links,
+  Indexing API documentation, people-first and generative AI guides, Search Console
+  multimodal split, VideoObject `creator`, UGC Fresh Data Program, CrUX ad metrics,
+  the June 2026 page-indexing gap). The incident feed was re-fetched: no ranking
+  update after September 2026. The refresh cadence is weekly, from a proposed-row
+  feed the maintainer reviews. `test/validate.py` fails a platform row dated
+  September 2026 or later with no tier word, and prints a `WARN` when the newest row
+  is over 21 days old (CI watches it fire and stay silent).
+- Doctrine from the primary-source table only: real bylines (entity-and-brand G3),
+  Google's AI-content wording (intent-and-content E4), Indexing API scope
+  (technical-checks, tooling), Meta and AdsBot crawler rows and the contested
+  Google-Extended study (agent-readiness K2a), the Anthropic Usage Policy beside I4,
+  the AWR CTR study and the API-proxy recovery figure (benchmarks), repetition before
+  scoring (aeo-geo F5, measurement J3), API tools labelled as proxies (prowl-mcp),
+  a placebo noise floor before update attribution, ASN plus reverse DNS for crawler
+  attribution.
+- Evals: s06 (one transcript is an insufficient sample), s07 (author personas
+  refused), a placebo line in s02. Authored, not executed.
+- Nine scripts now ship; every count home moved with them.
+
 ## v0.28.0: brief mode, the poisoned-SERP guard and per-URL sitemap truth
 
 - **Brief mode.** The scope is now "audit a live site, or brief a site before it is
