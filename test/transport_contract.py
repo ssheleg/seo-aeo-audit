@@ -11,7 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
-HOMES = ('page_audit', 'agent_surface', 'sitemap_audit', 'psi_pull', 'gsc_pull', 'url_inspection', 'preflight')
+HOMES = ('page_audit', 'agent_surface', 'sitemap_audit', 'psi_pull', 'gsc_pull', 'url_inspection', 'preflight', 'bwt_pull')
 
 
 def load(root, name):
@@ -40,6 +40,7 @@ def run(check, root, workspace):
         'gsc_pull': b'{"rows":[]}',
         'url_inspection': b'{"inspectionResult":{"indexStatusResult":{"verdict":"PASS"}}}',
         'preflight': b'{}',
+        'bwt_pull': b'{"d":[]}',
     }
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args): pass
@@ -87,6 +88,11 @@ def run(check, root, workspace):
             if name == 'preflight':
                 result = mod._get(url, max_bytes=budget, secret=key)
                 return result.complete, result
+            if name == 'bwt_pull':
+                with patch.object(mod, 'MAX_RESPONSE_BYTES', budget), \
+                        patch.object(mod, 'API_KEY_BASE', origin + '/bwt_pull'):
+                    result = mod.call(mode, {'siteUrl': 'https://example.invalid/'}, ('key', key))
+                return 'rows' in result, result
             with patch.object(mod, 'MAX_RESPONSE_BYTES', budget, create=True):
                 if name == 'psi_pull':
                     with patch.object(mod, 'API', url): result = mod.fetch('https://example.invalid', 'mobile', key)
@@ -108,7 +114,7 @@ def run(check, root, workspace):
                 if name in ('agent_surface', 'preflight'):
                     status = result.status if name == 'agent_surface' else result[0]
                     ok(status == 200, name + ' preserves observed status for ' + mode)
-            if name in ('psi_pull', 'gsc_pull', 'url_inspection'):
+            if name in ('psi_pull', 'gsc_pull', 'url_inspection', 'bwt_pull'):
                 valid, result = invoke(name, 'error')
                 text = str(result)
                 ok(not valid and key not in text and 'offline%2Fkey%2Btransport' not in text and '403' in text, name + ' redacts bounded error-body echoes while preserving status')
@@ -133,7 +139,7 @@ def run(check, root, workspace):
         source = load(root, name)[1].read_text()
         marker = '# BEGIN BOUNDED TRANSPORT'
         if marker in source: blocks.append(source.split(marker, 1)[1].split('# END BOUNDED TRANSPORT', 1)[0])
-    ok(len(blocks) == 7 and len(set(blocks)) == 1, 'all seven standalone bounded transport blocks agree')
+    ok(len(blocks) == 8 and len(set(blocks)) == 1, 'all eight standalone bounded transport blocks agree')
     from email.message import Message
     class Response(io.BytesIO):
         def __init__(self, body, fields=()):

@@ -89,6 +89,8 @@ to run that cross-check when you have no second seat.
 | Sizing a whole competitive set at once | `dataforseo_bl_bulk_backlinks` — up to 1000 domains in one call | Establishes which competitors are reachable benchmarks and which are five orders of magnitude away, before you copy anyone's playbook |
 | Anchor profile of a competitor | `dataforseo_bl_anchors` + `majestic_get_anchor_text` for the second index | **Filter on `backlinks_spam_score` first.** Top anchors by referring domains are frequently PBN spam pointed *at* the domain; an unfiltered read copies someone else's negative-SEO problem |
 | Which pages in a niche actually earn links | `dataforseo_bl_domain_pages` (`page_summary.referring_domains`) across the competitive set | Tells you whether links in this category accrue to deep content or to a directory homepage — that decides whether the answer is publishing or placement |
+| Bing first-party queries and pages | `scripts/bwt_pull.py` (GetQueryStats, GetPageStats; key or OAuth token on stdin), after `preflight.py --bing-site` passes | Rung 2 for Bing. The AI Performance report has no documented API method: a dated manual export with its column headers recorded is the rung-2 evidence for it |
+| Scoring repeated AI answers | `scripts/ai_panel.py` over saved capture records | Raw counts with a Wilson interval, run-to-run Jaccard of cited URLs, `insufficient-sample` below three runs on two days. API captures are labelled `api-proxy` and under-cover the UI (aeo-geo.md F5) |
 | AI visibility | The prompt set per engine + inbound logs + Bing AI Performance; at scale, `dataforseo_ai_llm_mentions*` and the per-engine `ai_*_responses` tools ([prowl-mcp.md](prowl-mcp.md)) | Vendor "visibility scores" are directional at best (measurement.md J3). Sampled observations of a non-deterministic surface — record engine and date, never present mention share as a rank |
 | Conversion and call outcomes | Analytics + call tracking + CRM | See demand-and-conversion.md |
 | What robots.txt actually breaks in the render | A robots-aware proxy (`VorticonCmdr/robotstxtProxy`, shipped with Docker images for the proxy and a Chromium instance) or DevTools request blocking | Anything disallowed is never downloaded, so it is never rendered; block the same resources locally and read the degraded page yourself |
@@ -202,7 +204,10 @@ Performance Insights are Chrome tools and are reported as Chromium readings.
   in the warehouse and hand back one compact result, so the model reads a
   finished table and does the interpreting (`FIELD`). The same server-side path
   is where URL Inspection API index-status checks and IndexNow submissions
-  belong. Two caveats: deterministic is not the same as correct — GSC sampling,
+  belong. The Indexing API is not a general one: on 2026-10-16 Google removed an
+  outdated form from its quota documentation, and the API is still documented only
+  for pages with JobPosting or BroadcastEvent embedded in a VideoObject
+  (`CONFIRMED`, [documentation updates](https://developers.google.com/search/updates)). Two caveats: deterministic is not the same as correct — GSC sampling,
   freshness lag and interpretation traps survive the rewrite — and the pattern
   does not port to analytics for free, because GA4 schemas vary per property
   while the GSC query shape is fixed.

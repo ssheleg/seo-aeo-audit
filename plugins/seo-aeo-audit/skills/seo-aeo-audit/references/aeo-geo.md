@@ -269,6 +269,17 @@ BOFU page collects two, so compare a page only against pages at the same stage
 you cannot optimize per prompt variation, so track the head term inside the
 prompt and the topical coverage behind it, not a list of phrasings.
 
+**Repeat before you score.** Answers vary run to run, so one transcript says what
+one answer said. Run each prompt at least three times on at least two different
+days per engine, mode, account state and locale, more where the decision is
+expensive, and save every answer as one capture record (prompt id, engine, mode,
+account state, locale, date, answer text, cited URLs, and whether the capture came
+from the product UI or an API). `scripts/ai_panel.py` scores the records: mention,
+top-3 mention, recommendation, citation and the run-to-run Jaccard overlap of cited
+URLs, as raw counts with a stated interval, and it refuses a rate for any cell
+below that floor ([scripts.md](scripts.md#ai_panelpy)). Label API captures
+`api-proxy`: a preprint ([arXiv 2610.15382](https://arxiv.org/html/2610.15382), `STUDY`) found that Google Search plus the OpenAI Responses API recovered only 28.3% and 26.2% of the URLs ChatGPT cited (two model versions), so API proxies under-cover UI citations.
+
 Diagnosis: low accuracy → training data stale or mis-linked; hedged confidence →
 thin parametric base; inconsistency → fragmented entity signals. A useful
 separation test: ask the same question with **web search disabled** — hedged

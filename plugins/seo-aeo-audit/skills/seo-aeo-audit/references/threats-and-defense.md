@@ -133,6 +133,13 @@ inherently abuse. Keep manipulated links, fake reviews, CTR bots and mass parasi
 publishing out of recommended actions. Record the observed region and policy date
 rather than generalizing a regional rule globally.
 
+**AI vendors prohibit the same tactics.** Anthropic's Usage Policy effective
+2026-11-12 prohibits manipulating the sources search engines or AI systems draw
+answers from, including networks of sites posing as unaffiliated sources, fake
+reviews and bots that claim to be human (`CONFIRMED`,
+[Usage Policy](https://www.anthropic.com/legal/aup)). Cite it beside the fabricated
+consensus networks row below when a vendor pitches the tactic.
+
 
 | Pattern | How it shows up | Defense |
 |---|---|---|

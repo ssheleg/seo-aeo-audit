@@ -1,0 +1,38 @@
+{
+ "d": [
+  {
+   "__type": "QueryStats:#Microsoft.Bing.Webmaster.Api",
+   "AvgClickPosition": 4,
+   "AvgImpressionPosition": 4,
+   "Clicks": 10,
+   "Date": "/Date(1760252400000-0700)/",
+   "Impressions": 100,
+   "Query": "invoice template"
+  },
+  {
+   "__type": "QueryStats:#Microsoft.Bing.Webmaster.Api",
+   "AvgClickPosition": 8,
+   "AvgImpressionPosition": 8,
+   "Clicks": 15,
+   "Date": "/Date(1760857200000-0700)/",
+   "Impressions": 300,
+   "Query": "invoice template"
+  },
+  {
+   "__type": "QueryStats:#Microsoft.Bing.Webmaster.Api",
+   "AvgClickPosition": 1,
+   "AvgImpressionPosition": 1,
+   "Clicks": 20,
+   "Date": "/Date(1760252400000-0700)/",
+   "Impressions": 50,
+   "Query": "acme pricing"
+  },
+  {
+   "__type": "QueryStats:#Microsoft.Bing.Webmaster.Api",
+   "Query": "broken row",
+   "Impressions": "many",
+   "Clicks": 1,
+   "Date": "/Date(1760252400000-0700)/"
+  }
+ ]
+}

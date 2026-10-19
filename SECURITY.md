@@ -2,12 +2,12 @@
 
 ## What this skill actually does on your machine
 
-`seo-aeo-audit` is documentation plus **seven** small Python scripts. Installed, it is:
+`seo-aeo-audit` is documentation plus **nine** small Python scripts. Installed, it is:
 
 | Component | Runtime behavior |
 |---|---|
 | `SKILL.md` + `references/*.md` | Text. Read by the agent, executes nothing. |
-| `scripts/*.py` — seven of them | Run only when you or the agent invokes one. Python **standard library only** — no dependencies, no install step. None writes a file; every result goes to stdout. Three of them execute `gcloud` as a subprocess — see below. All seven read three environment variables and no others — see below. |
+| `scripts/*.py` — nine of them | Run only when you or the agent invokes one. Python **standard library only** — no dependencies, no install step. None writes a file; every result goes to stdout. Three of them execute `gcloud` as a subprocess — see below. All nine read three environment variables and no others — see below. |
 | `commands/`, `cursor/rules/` | Text read by the host agent. |
 | `bin/seo-aeo-audit.js` (npm installer) | Copies the skill directory and the slash command into `~/.claude/`. No network, no post-install script. Reads `~/.claude/plugins/installed_plugins.json` first and refuses (exit 3) when the plugin already owns this agent, because a plain copy would shadow it; `--force` overrides. |
 
@@ -17,7 +17,7 @@ the paths above.
 ## What each script reaches, exactly
 
 Measured, not asserted — the verification command at the bottom reproduces this
-table for all seven, and `test/validate.py` fails when the count in this file drifts
+table for all nine, and `test/validate.py` fails when the count in this file drifts
 from the directory. It said **six** scripts and **22** grep lines against a measured
 seven and 26 for four releases, in the document a reader consults *because* they will
 not read the code (B-25, closed in v0.23.0). This sentence credited **B-17** until
@@ -27,13 +27,15 @@ the prose calls closed while the board row reads open.
 
 | script | outbound | executes a subprocess | writes |
 |---|---|---|---|
-| `page_audit.py` | the URLs **you** pass | no | no |
+| `page_audit.py` | the URLs **you** pass; with `--cache-parity`, each of them again with one added query parameter | no | no |
 | `sitemap_audit.py` | the sitemap URL you pass and sitemaps it nests; with `--robots`, that robots.txt and the sitemaps it declares; with `--sample N`, up to N page URLs those sitemaps list (one GET each, redirects not followed) | no | no |
 | `psi_pull.py` | `www.googleapis.com` (PageSpeed Insights) | no | no |
 | `gsc_pull.py` | `searchconsole.googleapis.com` | **yes** — `gcloud` | no |
 | `url_inspection.py` | `searchconsole.googleapis.com` | **yes** — `gcloud` | no |
-| `preflight.py` | the origin you pass, `searchconsole.googleapis.com`, `www.googleapis.com` | **yes** — `gcloud` | no |
+| `preflight.py` | the origin you pass, `searchconsole.googleapis.com`, `www.googleapis.com`; with `--bing-site`, one Bing Webmaster call (credential on stdin) | **yes** — `gcloud` | no |
 | `agent_surface.py` | the origin, API host, page and OpenAPI URL **you** pass | no | no |
+| `ai_panel.py` | nothing: it reads the captures file **you** name (`--captures`) | no | no |
+| `bwt_pull.py` | `ssl.bing.com` (API key) or `www.bing.com` (OAuth token), Bing Webmaster API only; the credential is read from **stdin**, never from an argument or the environment | no | no |
 
 **The `gcloud` subprocess is the one thing here worth understanding before you
 run it.** Three scripts mint a short-lived OAuth access token by running
@@ -46,7 +48,7 @@ can reach. Revoking is `gcloud auth revoke`; it takes effect immediately because
 nothing here caches.
 
 There is no `eval`, no `exec`, no `os.system`, no raw socket and no shell string
-anywhere in the seven — the `gcloud` calls pass an argument list, so nothing you
+anywhere in the nine — the `gcloud` calls pass an argument list, so nothing you
 type is interpreted by a shell.
 
 ## The three environment variables every script reads
@@ -69,6 +71,11 @@ written, and the values are echoed only into the output you are already reading.
 **The arguments in the producer block are redacted.** `psi_pull.py --key <secret>`
 is the one flag whose value is a credential; both `--key V` and `--key=V` print as
 `<redacted>`, because a producer block is pasted into a deliverable somebody emails.
+`bwt_pull.py` and `preflight.py --bing-site` take no credential argument at all: the
+Bing key or token is read from stdin (`--key-stdin`, `--token-stdin`,
+`--bing-key-stdin`, `--bing-token-stdin`), stays out of shell history and the
+producer block, and is redacted from any provider error that echoes it. A terminal
+is never waited on: with no pipe, the run reports the `login` gate.
 
 ## Network behavior of `page_audit.py`
 
@@ -111,20 +118,20 @@ arranged.
 git clone https://github.com/ssheleg/seo-aeo-audit && cd seo-aeo-audit
 bash scripts/check-docs.sh   # the whole gate: structure, doctrine, behaviour
 
-# The entire I/O surface of all seven scripts, in one command:
+# The entire I/O surface of all nine scripts, in one command:
 grep -rnE "urlopen|build_opener|opener\.open|subprocess\.|socket|os\.environ|os\.system|\beval\(|\bexec\(|\bopen\(" \
   plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/
 ```
 
-The second command prints **39 lines and that is all of it**, and it breaks down
+The second command prints **43 lines and that is all of it**, and it breaks down
 exactly:
 
 | lines | what they are |
 |---|---|
-| 15 | `urllib` — 5 `urlopen` call lines, 3 `build_opener` construction lines and 3 `opener.open` request lines for the page scheme guard, the agent-surface redirect trace and the sitemap per-URL sample. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
+| 16 | `urllib` — 6 `urlopen` call lines, 3 `build_opener` construction lines and 3 `opener.open` request lines for the page scheme guard, the agent-surface redirect trace and the sitemap per-URL sample. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
 | 11 | the three `subprocess.run` blocks that call `gcloud`, with timeout/error branches and bootstrap containment — 4 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`. These are grep matches, not eleven credential requests |
-| 7 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:166-168`), so seven scripts give seven lines. Three fields per script would be 21 |
-| 6 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`). Three additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 39 and a per-pattern sum gives 42 |
+| 9 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:166-168`), so nine scripts give nine lines. Three fields per script would be 27 |
+| 7 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`, `--captures`). Three additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 43 and a per-pattern sum gives 46 |
 
 No `os.system`, no `eval`, no `exec`, no raw sockets, no shell string. Everything
 else under `plugins/` is markdown.

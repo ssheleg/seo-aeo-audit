@@ -13,6 +13,8 @@ python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 python3 test/test_agent_surface.py
+python3 test/test_ai_panel.py
+python3 test/test_bwt.py
 python3 test/test_output_contracts.py
 python3 test/test_installer.py
 python3 test/residue_test.py

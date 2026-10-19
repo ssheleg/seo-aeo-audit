@@ -151,9 +151,9 @@ def run(check,root,workspace):
    else:ok('## Track coverage' in proc.stdout and proc.stdout.count('## Collector coverage')==2,'standalone rendered mode retains both coverage vocabularies')
   ok(marker.read_text()=='111' and any('/first.xml' in url for url in requests) and not any('/second.xml' in url for url in requests),'three collector runs mint once each; provenance skips; only first sitemap is requested')
  finally:server.shutdown();server.server_close();thread.join(timeout=2)
- homes=('page_audit','url_inspection','sitemap_audit','agent_surface','gsc_pull','psi_pull','preflight')
+ homes=('page_audit','url_inspection','sitemap_audit','agent_surface','gsc_pull','psi_pull','preflight','ai_panel','bwt_pull')
  blocks=[(path.parent/(home+'.py')).read_text().split('# ── collector coverage shared block',1)[1].split('# ── end collector coverage shared block',1)[0] for home in homes]
- ok(len(set(blocks))==1,'seven standalone common blocks stay byte-identical')
+ ok(len(set(blocks))==1,'nine standalone common blocks stay byte-identical')
  # Independent admission must refuse the actual dropped-accounting source mutant.
  source=path.read_text();needle='"attempted": False, "status": None'
  ok(source.count(needle)==1,'excluded-operation mutation selector is unique')

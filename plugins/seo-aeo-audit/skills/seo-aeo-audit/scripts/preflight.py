@@ -13,6 +13,8 @@ Read-only. It fetches, lists and reads; it submits nothing.
 
 Usage:
   preflight.py --site sc-domain:example.com --origin https://example.com
+  <print-secret> | preflight.py --origin https://example.com \
+      --bing-site https://example.com/ --bing-key-stdin      # also probe Bing Webmaster
   preflight.py --origin https://example.com          # public-only audit
   preflight.py --site sc-domain:example.com --format json
   preflight.py --origin https://example.com --format coverage   # seed the report's
@@ -22,6 +24,12 @@ Usage:
 `docs/seo/audit-<date>.md` already filled in with what the probes found: every
 track this run cannot reach reads `blocked-by <gate>`, and every other track reads
 `unlooked`. It never writes `observed` — see the coverage block below.
+
+`--bing-site` adds one Bing Webmaster probe (the documented GetUserSites call) with
+the credential piped on stdin (`--bing-key-stdin` or `--bing-token-stdin`, never an
+argument). It names the gate a failure hit: `login` (no credential, invalid key,
+HTTP 401), `scope` (HTTP 403, or the site is not a verified site of that account),
+`network` or `http`. bwt_pull.py reads the data once this probe passes.
 
 `--format provenance` prints the report's `## Provenance` block instead. It probes
 nothing: the block is about the execution, not the site.
@@ -91,13 +99,13 @@ import urllib.request
 #    on 2026-08-17 for its verification ledger, mapped onto this domain.
 #
 # ── provenance: the execution that produced this payload ── shared block ──────
-# Copied verbatim into all seven scripts and compared byte for byte by
+# Copied verbatim into all nine scripts and compared byte for byte by
 # `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
 # with no shared module, and an import of one does not exist in the installed layout
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
-# one copy — the guard fails all seven.
-SKILL_VERSION = "0.28.0"
+# one copy — the guard fails all nine.
+SKILL_VERSION = "0.29.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -211,7 +219,7 @@ PSI = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
 
 
 # BEGIN BOUNDED TRANSPORT
-# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Byte-identical in eight standalone collectors; transport_contract checks parity.
 # Interpretation (fragment, XML document, provider payload, status) stays local.
 def _transport_values(headers, name):
     if hasattr(headers, "get_all"):
@@ -451,7 +459,7 @@ class ReadinessJournal:
         attempted = sum(row["attempted"] for row in self.network)
         returned = sum(row["status"] is not None for row in self.network)
         if skipped:
-            network_reasons.append({"code": "prerequisite_excluded", "detail": f"{skipped} known network operation(s) excluded before attempt because ADC was unavailable."})
+            network_reasons.append({"code": "prerequisite_excluded", "detail": f"{skipped} known network operation(s) excluded before attempt because a prerequisite (ADC, or a Bing credential on stdin) was unavailable."})
         if returned != attempted:
             network_reasons.append({"code": "no_landing_status", "detail": f"{attempted-returned} attempted operation(s) obtained no landing HTTP status."})
         if any(row["attempted"] and row["status"] is not None and row["status"] != 200 for row in self.network):
@@ -461,7 +469,7 @@ class ReadinessJournal:
         network_reasons += [{"code": "payload_unavailable", "detail": row["operation"] + ": " + row["detail"]} for row in self.limitations]
         return {
             "local_probe": collector_coverage("local_probe", "Scheduled Python inspection and optional local ADC acquisition. Returned means a determined local outcome, not a successful prerequisite or usable credentials.", self.local_requested, len(self.local), len(self.local), 0, local_reasons),
-            "network_probe": collector_coverage("network_probe", "Flag-selected logical readiness operations: property list, robots, first declared/fallback sitemap, homepage and optional PSI. Return means observed landing HTTP status, not useful provider payload; limits remain reasons. No full crawl, redirect-hop or retry denominator.", self.network_requested, attempted, returned, skipped, network_reasons),
+            "network_probe": collector_coverage("network_probe", "Flag-selected logical readiness operations: property list, robots, first declared/fallback sitemap, homepage, optional PSI and optional Bing site list. Return means observed landing HTTP status, not useful provider payload; limits remain reasons. No full crawl, redirect-hop or retry denominator.", self.network_requested, attempted, returned, skipped, network_reasons),
         }
 
 
@@ -608,6 +616,68 @@ def check_gsc(token: str | None, site: str | None, quota_project: str | None,
                              "added under Users and permissions", "permission",
                              "everything first-party for this site"))
     return out
+
+
+BING_SITES = "https://ssl.bing.com/webmaster/api.svc/json/GetUserSites"
+BING_SITES_OAUTH = "https://www.bing.com/webmaster/api.svc/json/GetUserSites"
+BING_BLOCKS = "first-party Bing query and page data (bwt_pull.py)"
+
+
+def read_stdin_secret(stream) -> str:
+    """First line of stdin; a terminal is never waited on."""
+    try:
+        if stream is None or stream.isatty():
+            return ""
+    except (AttributeError, ValueError):
+        pass
+    return (stream.readline() or "").strip()
+
+
+def _site_key(url: str) -> str:
+    return str(url or "").strip().lower().rstrip("/")
+
+
+def check_bing(site: str, secret: str, kind: str, journal=None) -> dict:
+    """One documented GetUserSites call, and the gate a failure hit."""
+    if not secret:
+        if journal:
+            journal.skip_network("bing_sites")
+        return probe("Bing Webmaster", False, "no credential on stdin", "login", BING_BLOCKS)
+    if kind == "key":
+        url, headers = f"{BING_SITES}?{urllib.parse.urlencode({'apikey': secret})}", {}
+    else:
+        url, headers = BING_SITES_OAUTH, {"Authorization": f"Bearer {secret}"}
+    response = request_probe(journal, "bing_sites", url, timeout=30, max_bytes=2_000_000,
+                             headers={"Accept": "application/json", **headers}, secret=secret)
+    status, body = response
+    detail = safe_detail(body, secret)
+    if status != 200:
+        low = detail.lower().replace(" ", "")
+        gate = ("network" if not status else
+                "login" if status == 401 or "invalidapikey" in low or '"errorcode":3' in low
+                else "scope" if status == 403 else "http")
+        return probe("Bing Webmaster", False, f"HTTP {status}: {_flat(detail, 120)}", gate,
+                     BING_BLOCKS)
+    try:
+        if getattr(response, "complete", True) is not True:
+            raise ValueError("incomplete body")
+        sites = json.loads(body).get("d")
+        if not isinstance(sites, list):
+            raise ValueError("no `d` list")
+    except (ValueError, AttributeError, RecursionError) as exc:
+        if journal:
+            journal.limit("bing_sites", "site list unusable: " + type(exc).__name__)
+        return probe("Bing Webmaster", True, "HTTP 200; site list unusable, scope unknown")
+    match = next((x for x in sites if isinstance(x, dict)
+                  and _site_key(x.get("Url")) == _site_key(site)), None)
+    if match is None:
+        return probe("Bing Webmaster", False,
+                     f"credential works; {_flat(site, 80)} is not among its "
+                     f"{len(sites)} site(s)", "scope", BING_BLOCKS)
+    if match.get("IsVerified") is not True:
+        return probe("Bing Webmaster", False,
+                     f"{_flat(site, 80)} is listed but not verified", "scope", BING_BLOCKS)
+    return probe("Bing Webmaster", True, f"{_flat(site, 80)} verified; credential reads it")
 
 
 def check_public(origin: str, journal=None) -> list[dict]:
@@ -1121,16 +1191,23 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--origin", help="site origin to probe publicly, e.g. https://example.com")
     ap.add_argument("--quota-project", help="GCP project that meters the API calls")
     ap.add_argument("--skip-psi", action="store_true", help="skip the PageSpeed probe (it is slow)")
+    ap.add_argument("--bing-site", help="site URL as verified in Bing Webmaster Tools")
+    bing_cred = ap.add_mutually_exclusive_group()
+    bing_cred.add_argument("--bing-key-stdin", action="store_true",
+                           help="read the Bing Webmaster API key from stdin")
+    bing_cred.add_argument("--bing-token-stdin", action="store_true",
+                           help="read a Bing Webmaster OAuth access token from stdin")
     ap.add_argument("--format", choices=["markdown", "json", "coverage", "provenance"],
                     default="markdown",
                     help="markdown report, the JSON payload, the report's seeded Track "
                          "coverage section, or its seeded Provenance block")
     args = ap.parse_args(argv)
 
-    no_input = not args.site and not args.origin
+    no_input = not args.site and not args.origin and not args.bing_site
     input_errors = [{"code": "no_input", "detail": "No probe inputs resolved; pass --site and/or --origin."}] if no_input else []
 
-    prov = provenance("preflight.py", argv, scope_of(args.site, args.origin))
+    prov = provenance("preflight.py", argv, scope_of(args.site, args.origin)
+                      + (f" · Bing site {args.bing_site}" if args.bing_site else ""))
     # `--format provenance` probes nothing: the block is about the execution, not
     # about the site, and making a caller wait on a PageSpeed round trip to learn
     # what version produced their report is how a seeding step gets skipped.
@@ -1139,6 +1216,8 @@ def main(argv: list[str]) -> int:
         return 0
 
     journal = ReadinessJournal(args.site, args.origin, args.skip_psi)
+    if args.bing_site:
+        journal.network_requested += 1
     rows = []
     if no_input:
         journal.local_requested = 0
@@ -1154,6 +1233,11 @@ def main(argv: list[str]) -> int:
         rows += check_public(args.origin, journal)
         if not args.skip_psi:
             rows.append(check_psi(args.origin, journal))
+    if args.bing_site:
+        secret = (read_stdin_secret(sys.stdin)
+                  if (args.bing_key_stdin or args.bing_token_stdin) else "")
+        rows.append(check_bing(args.bing_site, secret,
+                               "token" if args.bing_token_stdin else "key", journal))
 
     records = journal.records()
     if no_input:

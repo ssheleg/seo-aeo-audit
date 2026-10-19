@@ -114,8 +114,29 @@ jobs:
       - name: Collector functional tests
         run: python3 test/test_collectors.py
 
+      - name: Timeline staleness warning fires at release time, and only when stale (A3)
+        run: |
+          # It warns rather than fails, so plantq cannot hold it: watch it print on a
+          # pinned "today" far past the newest row, and stay silent on the newest row's
+          # own date. Both runs must still exit 0.
+          out=$(SEO_AEO_AUDIT_TODAY=2099-01-01 python3 test/validate.py 2>&1)
+          printf '%s\n' "$out" | grep -F "WARN: algorithm-updates.md newest row" \
+            || { echo "BROKEN GUARD: the staleness warning did not fire"; exit 1; }
+          newest=$(grep -oE 'Newest row in this file: [0-9-]{10}' plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md | grep -oE '[0-9-]{10}')
+          out=$(SEO_AEO_AUDIT_TODAY="$newest" python3 test/validate.py 2>&1)
+          if printf '%s\n' "$out" | grep -qF "WARN: algorithm-updates.md newest row"; then
+            echo "BROKEN GUARD: the staleness warning fired on a fresh timeline"; exit 1
+          fi
+          echo "ok: staleness warning fires when stale and only then"
+
       - name: Agent-surface functional tests
         run: python3 test/test_agent_surface.py
+
+      - name: AI answer panel functional tests
+        run: python3 test/test_ai_panel.py
+
+      - name: Bing Webmaster collector functional tests
+        run: python3 test/test_bwt.py
 
       - name: Cross-script output contracts
         run: python3 test/test_output_contracts.py
@@ -573,6 +594,10 @@ jobs:
             python3 test/plant_edit.py sub "$S/references/onpage-checks.md" "## O1. Can crawlers" "## D1. Can crawlers"
           plantq "a row appended without moving the newest-row line" 'algorithm-updates.md says its newest row is 2000-01-01' \
             python3 -c "import re;p='plugins/seo-aeo-audit/skills/seo-aeo-audit/references/algorithm-updates.md';s=open(p,encoding='utf-8').read();s2,n=re.subn(r'(\*\*Newest row in this file:\s*)20\d\d-\d\d-\d\d',r'\g<1>2000-01-01',s,count=1);assert n==1,'PLANT DID NOT LAND: '+p;open(p,'w',encoding='utf-8').write(s2)"
+          # A2 (0.29.0): a dated platform row from a weekly feed with no tier word reads
+          # as settled fact.
+          plantq "a dated timeline row with no tier word" 'carries no tier word' \
+            python3 test/plant_edit.py sub "$S/references/algorithm-updates.md" '| 2026-10-15 | `CONFIRMED` (' '| 2026-10-15 | ('
           plantq "a finding emitted with no evidence tier" 'page_audit.py emits finding '"'"'truncated-read'"'"' with no entry in FINDING_TIERS' \
             python3 test/plant_edit.py sub "$S/scripts/page_audit.py" '    "truncated-read": "CONFIRMED",' ""
           plantq "the CWV thresholds drifting from their documented home" 'psi_pull.py: LCP thresholds are no longer' \
@@ -654,7 +679,7 @@ jobs:
           # *because* they will not read the code, and that said six/22 against
           # seven/26 for four releases.
           plantq "SECURITY.md's script count going stale" 'SECURITY.md: the headline says '"'"'six'"'"' scripts' \
-            python3 test/plant_edit.py sub SECURITY.md 'documentation plus **seven** small Python scripts' 'documentation plus **six** small Python scripts'
+            python3 test/plant_edit.py sub SECURITY.md 'documentation plus **nine** small Python scripts' 'documentation plus **six** small Python scripts'
           plantq "SECURITY.md's I/O line count going stale" 'I/O grep prints' \
             python3 test/plant_edit.py resub SECURITY.md 'prints \*\*[0-9]+ lines and that is all of it\*\*' 'prints **22 lines and that is all of it**'
           plantq "a script with no row in SECURITY.md's I/O table" 'SECURITY.md: no row for `agent_surface.py`' \
@@ -673,11 +698,11 @@ jobs:
           # The needle is SINGLE-quoted, because half of these messages carry the
           # backticked name of a file and a double-quoted needle hands it to the shell.
           plantq "the script count going stale in the README's security posture" 'the security-posture sentence says' \
-            python3 test/plant_edit.py sub README.md 'Text plus **seven** standard-library' 'Text plus **six** standard-library'
+            python3 test/plant_edit.py sub README.md 'Text plus **nine** standard-library' 'Text plus **six** standard-library'
           plantq "a shipped script the README's security posture does not name" 'does not name `agent_surface.py`' \
             python3 test/plant_edit.py sub README.md '`sitemap_audit.py`, `agent_surface.py`)' '`sitemap_audit.py`)'
           plantq "the script count going stale in CLAUDE.md" 'the opening description says' \
-            python3 test/plant_edit.py sub CLAUDE.md 'knowledge plus seven standard-library scripts' 'knowledge plus six standard-library scripts'
+            python3 test/plant_edit.py sub CLAUDE.md 'knowledge plus nine standard-library scripts' 'knowledge plus six standard-library scripts'
           plantq "CLAUDE.md naming a subset of the gate" 'CLAUDE.md does not mention `test/plant_guard_test.py`' \
             python3 test/plant_edit.py sub CLAUDE.md '`test/plant_guard_test.py`,' ''
           plantq "DOCMAP's gate block naming a subset of the gate" 'docs/DOCMAP.md does not mention `test/test_agent_surface.py`' \
@@ -685,7 +710,7 @@ jobs:
           plantq "DOCMAP counting the gate's homes wrong" 'the single-home row says the gate commands have' \
             python3 test/plant_edit.py sub docs/DOCMAP.md 'appear in all six of them' 'appear in all five of them'
           plantq "DOCMAP's _flat copy count drifting from the scripts" 'scripts define one; measured' \
-            python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` — seven of the seven scripts define one' '`_flat()` — six of the seven scripts define one'
+            python3 test/plant_edit.py sub docs/DOCMAP.md '`_flat()` — nine of the nine scripts define one' '`_flat()` — six of the nine scripts define one'
           plantq "the README's freshness stamp drifting from the reference that owns it" 'says the sources were last re-fetched' \
             python3 test/plant_edit.py resub README.md '\*\*Sources last re-fetched [0-9]{4}-[0-9]{2}-[0-9]{2}\*\*' '**Sources last re-fetched 2026-08-10**'
           plantq "the README's corpus size restated instead of counted" 'non-blank lines of reference material' \

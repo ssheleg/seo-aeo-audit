@@ -435,6 +435,12 @@ orphans and phantom URLs.
 
 - **Self-referencing canonicals are the documented recommendation** (written into
   Google's documentation Jul 2026). Every indexable page should declare itself.
+- **A query parameter must not make a different page.** `page_audit.py
+  --cache-parity` fetches each URL again with one harmless parameter
+  (`seo_aeo_parity=1`) and compares status, canonical and robots directives;
+  `cache-parity-mismatch` means a cache or CDN keyed on the query string serves the
+  variant as its own page, typically self-canonical. A body difference alone is
+  reported, not a finding: nonces and timestamps differ per request.
 - **Canonical can also arrive as an HTTP `Link` header** — the only option for
   PDFs, images and feeds, and a common CDN or framework default. Check the header
   and the in-page tag together: when they disagree, Google resolves the conflict
@@ -533,6 +539,13 @@ The eight-stage protocol below is owned by this file; growth-plays.md B11 is the
 play that points at it, and the loss figures (average, disciplined, documented
 failure) are in benchmarks.md, "Operational benchmarks". Quote them from there
 with the date.
+
+**The Indexing API is not a migration lever.** On 2026-10-16 Google removed an
+outdated form from its Indexing API quota documentation; the API is still
+documented only for pages with JobPosting or BroadcastEvent embedded in a
+VideoObject (`CONFIRMED`, [documentation updates](https://developers.google.com/search/updates)).
+A moved page of any other type is discovered through redirects, internal links and
+sitemaps.
 
 1. **Baseline**: export every URL, snapshot rankings for the top 500 keywords,
    12-month traffic baseline, full backup.

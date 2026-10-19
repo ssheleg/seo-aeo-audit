@@ -69,6 +69,8 @@ python3 test/test_page_audit.py
 python3 test/test_url_inspection.py
 python3 test/test_collectors.py
 python3 test/test_agent_surface.py
+python3 test/test_ai_panel.py
+python3 test/test_bwt.py
 python3 test/test_output_contracts.py
 python3 test/test_installer.py
 python3 test/residue_test.py
@@ -84,7 +86,9 @@ five prose homes, the Prowl tool count,
 the CWV thresholds against `psi_pull.py`, the gate commands against this file, the
 README, the PR template and CI, per-finding tier coverage in `page_audit.py`,
 section-id uniqueness across references, the two freshness facts in
-`algorithm-updates.md`, the defect count against the rows the
+`algorithm-updates.md` plus its **timeline tier words** (every platform row dated
+September 2026 or later carries one) and its **timeline staleness** warning (a `WARN`
+line when the newest row is over 21 days old, never a failure), the defect count against the rows the
 2026-08-10 ledger actually enumerates, and
 table integrity — both a blank line inside a table and a row with more cells than
 its header, either of which stops rows rendering as part of the table.
@@ -106,7 +110,7 @@ under its own name, declares a `SKILL_VERSION` that matches the manifests, and b
 report skeletons publish every field in `preflight.py:PRODUCER_FIELDS`, all four
 `INVALIDATORS` and the command that seeds the block — through v0.22.0 no script
 emitted a version, a timestamp or an input set at all, so a deliverable could not say
-when it was produced or by what. Bump `SKILL_VERSION` in all seven scripts in the same commit as
+when it was produced or by what. Bump `SKILL_VERSION` in all nine scripts in the same commit as
 the manifests; the guard names each file that disagrees.
 **I/O surface**: `SECURITY.md`'s script count and its "prints **N** lines" claim are
 measured, and the regex is read out of that file and run rather than copied — it said
@@ -170,8 +174,11 @@ being rewritten).
 URL-scheme guard, which exists because `urlopen` will happily read
 `file:///etc/passwd` if you let it. `test_url_inspection.py` and
 `test_collectors.py` do the same for the other four bundled scripts, and
-`test_agent_surface.py` for the track-K collector.
-`test_output_contracts.py` holds what all seven owe their caller: a run that
+`test_agent_surface.py` for the track-K collector. `test_ai_panel.py` scores a
+3 runs x 4 prompts capture fixture whose every number is worked out by hand, and
+`test_bwt.py` drives the Bing collector and preflight's Bing probe through recorded
+API responses.
+`test_output_contracts.py` holds what all nine owe their caller: a run that
 measured nothing exits non-zero, and no network error reaches generated markdown
 with its newlines intact.
 

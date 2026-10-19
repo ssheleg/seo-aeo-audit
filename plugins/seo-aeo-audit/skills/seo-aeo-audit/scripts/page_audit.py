@@ -39,6 +39,12 @@ CAPTCHA wall, a search engine's "unusual traffic" page) is reported as one
 `challenge-page` finding and nothing else: it is missing data, not a page with no
 title, no schema and no words, and a saved SERP capture of one is not a position.
 
+`--cache-parity` (URL mode only) fetches each URL a second time with one harmless
+query parameter added (`seo_aeo_parity=1`) and compares status, canonical and robots
+directives. A difference is `cache-parity-mismatch`: a cache or CDN keyed on the
+query string is serving a parameter variant as a different page. A body difference
+alone is reported, not a finding, because nonces and timestamps differ per request.
+
 Every finding carries an evidence tier as well as a severity, because SKILL.md
 non-negotiable #2 makes the tier the confidence multiplier in
 `priority = (impact x confidence) / effort`. Severity says how loud a finding is;
@@ -60,6 +66,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -67,18 +74,19 @@ import sys
 import time
 import zlib
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlparse
+from urllib.error import HTTPError
+from urllib.parse import urljoin, urlparse, urlsplit, urlunsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 # ── provenance: the execution that produced this payload ── shared block ──────
-# Copied verbatim into all seven scripts and compared byte for byte by
+# Copied verbatim into all nine scripts and compared byte for byte by
 # `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
 # with no shared module, and an import of one does not exist in the installed layout
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
-# one copy — the guard fails all seven.
-SKILL_VERSION = "0.28.0"
+# one copy — the guard fails all nine.
+SKILL_VERSION = "0.29.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -195,7 +203,7 @@ READ_BUDGET_BASIS = (
 # word-boundary match over the whole string cannot tell them apart, and it
 # reported a track-A blocker on pages that say `index, follow`.
 # BEGIN BOUNDED TRANSPORT
-# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Byte-identical in eight standalone collectors; transport_contract checks parity.
 # Interpretation (fragment, XML document, provider payload, status) stays local.
 def _transport_values(headers, name):
     if hasattr(headers, "get_all"):
@@ -358,6 +366,8 @@ FINDING_TIERS = {
     "jsonld-incomplete": "CONFIRMED",
     "jsonld-untyped": "CONFIRMED",
     "jsonld-price-parity": "CONFIRMED",
+    "jsonld-double-escaped": "CONFIRMED",
+    "cache-parity-mismatch": "CONFIRMED",
     "read-budget": "FIELD",
     "nav-before-content": "FIELD",
     "link-count": "FIELD",
@@ -763,6 +773,44 @@ def _jsonld_types(doc: Doc) -> tuple[list[str], list[str]]:
     return sorted(set(types)), errors
 
 
+# A14: what a JSON-LD string still carries after json.loads when it was escaped
+# twice on the way into the page. HTML entities are not decoded inside <script>, so
+# `&amp;` there is five characters of text to every consumer; a literal `\u00e9` or
+# `\"` means a JSON encoder ran over already-encoded JSON.
+_DOUBLE_ESCAPE = (
+    ("entity", re.compile(r"&(?:amp|quot|apos|lt|gt|nbsp|#\d{1,7}|#x[0-9a-fA-F]{1,6});")),
+    ("unicode", re.compile(r"\\u[0-9a-fA-F]{4}")),
+    ("quote", re.compile(r'\\"')),
+)
+
+
+def _jsonld_double_escaped(doc: Doc) -> dict:
+    """Escape kinds found in decoded JSON-LD strings, with up to three samples."""
+    kinds: set[str] = set()
+    samples: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+        elif isinstance(node, str):
+            for kind, rx in _DOUBLE_ESCAPE:
+                if rx.search(node):
+                    kinds.add(kind)
+                    if len(samples) < 3 and node[:80] not in samples:
+                        samples.append(node[:80])
+
+    for raw in doc.jsonld_raw:
+        try:
+            walk(json.loads(raw))
+        except Exception:  # noqa: BLE001 - malformed blocks are reported elsewhere
+            continue
+    return {"kinds": sorted(kinds), "samples": samples}
+
+
 # Structural requirements only: a node of this @type without these properties is
 # incomplete on its own terms, which is an observation about the page. It is NOT
 # a rich-result eligibility verdict — Google's per-feature required-property
@@ -973,6 +1021,7 @@ def analyze(html: str, url: str, headers: dict | None = None,
         "jsonld_types": types,
         "jsonld_errors": jsonld_errors,
         "jsonld_missing_required": _jsonld_required(doc),
+        "jsonld_double_escaped": _jsonld_double_escaped(doc),
         # The Q&A shape, kept separate from the schema question it feeds. A page
         # can publish a readable FAQ with no FAQPage node (the common case) or an
         # FAQPage node over answers no crawler can reach (the worse one), and the
@@ -1133,6 +1182,25 @@ def findings(r: dict) -> list[dict]:
     if r["jsonld_blocks"] and not r["jsonld_types"] and not r["jsonld_errors"]:
         add("medium", "jsonld-untyped", "JSON-LD present with no @type",
             "entity-and-brand.md#g3-knowledge-graph-plumbing")
+    _dbl = r.get("jsonld_double_escaped") or {}
+    if _dbl.get("kinds"):
+        add("medium", "jsonld-double-escaped",
+            "JSON-LD strings still carry escapes after decoding ("
+            + ", ".join(_dbl["kinds"]) + "), e.g. "
+            + "; ".join(repr(x) for x in _dbl["samples"][:2])
+            + ". The markup was escaped twice on the way into the page, so every consumer "
+            "reads the escape as text: serialize the JSON once, and do not HTML-escape it",
+            "entity-and-brand.md#g3-knowledge-graph-plumbing")
+    _par = r.get("cache_parity") or {}
+    if _par.get("mismatched"):
+        add("high", "cache-parity-mismatch",
+            "the same URL with one harmless query parameter ("
+            + _par.get("variant_url", "?") + ") differs in "
+            + ", ".join(_par["mismatched"])
+            + ": a cache or CDN keyed on the query string serves the variant as a different "
+            "page. Compare the two responses' Vary and cache headers, then make the variant "
+            "carry the clean URL's canonical and directives",
+            "technical-checks.md#b-canonicalization-and-duplication")
 
     # --- the Q&A block: is there one, can a machine read it, is it declared ---
     #
@@ -1283,7 +1351,14 @@ def _gunzip(raw: bytes, max_bytes: int = 8_000_000) -> tuple[bytes, bool]:
 
 def fetch(url: str, timeout: float, user_agent: str,
           max_bytes: int) -> tuple[str, dict, bool]:
-    """Fetch one page over http(s). Returns (text, headers, truncated).
+    """Fetch one page over http(s). Returns (text, headers, truncated)."""
+    text, headers, truncated, _status = fetch_full(url, timeout, user_agent, max_bytes)
+    return text, headers, truncated
+
+
+def fetch_full(url: str, timeout: float, user_agent: str,
+               max_bytes: int) -> tuple[str, dict, bool, int]:
+    """`fetch` plus the landing HTTP status. Returns (text, headers, truncated, status).
 
     The auditor only ever issues plain GETs to URLs the operator passed in: no
     credentials, no cookies, no redirects off http(s), and nothing is written
@@ -1311,11 +1386,63 @@ def fetch(url: str, timeout: float, user_agent: str,
             raise ValueError(error)
         headers = collapse_headers(resp.headers.items())
         charset = resp.headers.get_content_charset() or "utf-8"
+        status = getattr(resp, "status", None) or 200
     try:
         text = raw.decode(charset)
     except (UnicodeError, LookupError):
         text, complete = raw.decode("utf-8", errors="replace"), False
-    return text, headers, not complete
+    return text, headers, not complete, status
+
+
+PARITY_PARAM = "seo_aeo_parity=1"
+
+
+def parity_variant_url(url: str) -> str:
+    """The URL with one harmless query parameter appended; the fragment is dropped."""
+    parts = urlsplit(url)
+    query = f"{parts.query}&{PARITY_PARAM}" if parts.query else PARITY_PARAM
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, query, ""))
+
+
+def _parity_view(url: str, timeout: float, user_agent: str, max_bytes: int) -> dict:
+    """Status, absolute canonical and index directives of one response, never raising."""
+    try:
+        text, headers, truncated, status = fetch_full(url, timeout, user_agent, max_bytes)
+    except HTTPError as exc:
+        with exc:
+            return {"status": exc.code, "canonical": None, "directives": [], "body_sha256": None}
+    except Exception as exc:  # noqa: BLE001 - a failed variant is reported, not fatal
+        return {"status": None, "error": f"{type(exc).__name__}: {_flat(exc)}",
+                "canonical": None, "directives": [], "body_sha256": None}
+    parser = Parser()
+    parser.feed(text)
+    parser.close()
+    doc = parser.doc
+    href = doc.canonicals[0]["href"] if doc.canonicals else None
+    directives = parse_directives(doc.robots_contents + [headers.get("x-robots-tag", "")])
+    body = text.replace("?" + PARITY_PARAM, "").replace("&" + PARITY_PARAM, "")
+    return {"status": status, "canonical": urljoin(url, href) if href else None,
+            "directives": sorted(directives & (NOINDEX_TOKENS | {"nosnippet", "nofollow"})),
+            "truncated": truncated,
+            "body_sha256": hashlib.sha256(body.encode("utf-8", "replace")).hexdigest()}
+
+
+def cache_parity(url: str, timeout: float, user_agent: str, max_bytes: int) -> dict:
+    """A13: compare a URL with its harmless-parameter variant. Two requests."""
+    variant = parity_variant_url(url)
+    a = _parity_view(url, timeout, user_agent, max_bytes)
+    b = _parity_view(variant, timeout, user_agent, max_bytes)
+    mismatched = []
+    if a["status"] != b["status"]:
+        mismatched.append("status")
+    if a["canonical"] != b["canonical"]:
+        mismatched.append("canonical")
+    if a["directives"] != b["directives"]:
+        mismatched.append("robots")
+    return {"variant_url": variant, "base": a, "variant": b, "mismatched": mismatched,
+            "body_identical": a["body_sha256"] is not None and a["body_sha256"] == b["body_sha256"],
+            "note": "a body difference alone is not a finding: nonces and timestamps differ "
+                    "per request. Status, canonical and robots directives must match."}
 
 
 # `low` sat between `medium` and `info` in every message this file writes and
@@ -1391,6 +1518,9 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--timeout", type=float, default=20.0)
     ap.add_argument("--user-agent", default=DEFAULT_UA)
     ap.add_argument("--max-bytes", type=int, default=5_000_000)
+    ap.add_argument("--cache-parity", action="store_true",
+                    help="URL mode: also fetch each URL with one harmless query parameter "
+                         "and compare status, canonical and robots directives (A13)")
     args = ap.parse_args(argv)
 
     if args.base_url and not args.file:
@@ -1432,7 +1562,12 @@ def main(argv: list[str]) -> int:
             try:
                 html, headers, truncated = fetch(url, args.timeout, args.user_agent,
                                                  args.max_bytes)
-                results.append(analyze(html, url, headers, truncated=truncated))
+                row = analyze(html, url, headers, truncated=truncated)
+                if args.cache_parity and not row.get("challenge"):
+                    row["cache_parity"] = cache_parity(url, args.timeout, args.user_agent,
+                                                       args.max_bytes)
+                    row["findings"] = findings(row)
+                results.append(row)
             except Exception as exc:  # noqa: BLE001 - one bad URL must not kill the run
                 results.append({"url": url, "error": f"{type(exc).__name__}: {exc}", "findings": []})
 

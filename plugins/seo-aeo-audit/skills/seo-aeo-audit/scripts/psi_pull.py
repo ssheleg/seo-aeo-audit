@@ -55,13 +55,13 @@ import urllib.request
 
 
 # ── provenance: the execution that produced this payload ── shared block ──────
-# Copied verbatim into all seven scripts and compared byte for byte by
+# Copied verbatim into all nine scripts and compared byte for byte by
 # `test/validate.py`, for the same reason `_flat` is: these ship as standalone files
 # with no shared module, and an import of one does not exist in the installed layout
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
-# one copy — the guard fails all seven.
-SKILL_VERSION = "0.28.0"
+# one copy — the guard fails all nine.
+SKILL_VERSION = "0.29.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -175,7 +175,7 @@ MAX_RESPONSE_BYTES = 8_000_000  # raw and decoded JSON response bytes
 
 
 # BEGIN BOUNDED TRANSPORT
-# Byte-identical in seven standalone collectors; transport_contract checks parity.
+# Byte-identical in eight standalone collectors; transport_contract checks parity.
 # Interpretation (fragment, XML document, provider payload, status) stays local.
 def _transport_values(headers, name):
     if hasattr(headers, "get_all"):

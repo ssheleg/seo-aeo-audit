@@ -273,6 +273,15 @@ removed it from Google **and** collapsed that directory's ChatGPT citations to
 near zero, while the rest of the domain kept ranking. Penalties cascade
 downstream into AI surfaces.
 
+Google's own guides now say it in so many words. Since 2026-10-05 the people-first
+content guide says that using generative AI to produce large amounts of text
+without manual oversight or curation represents little to no effort, and the
+generative AI content guide (2026-10-01) says to manually fact-check and review all
+AI-generated content, including titles, meta descriptions, structured data and alt
+text, before publishing (both `CONFIRMED`:
+[creating helpful content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content),
+[using generative AI content](https://developers.google.com/search/docs/fundamentals/using-gen-ai-content)).
+
 What does work: AI-assisted, human-edited content beat pure generation ~5× across
 Google organic, ChatGPT, AIO and Gemini in a controlled experiment (`STUDY`;
 figures in benchmarks.md). Keep the human share of the final text high and verify

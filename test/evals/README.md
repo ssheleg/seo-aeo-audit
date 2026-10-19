@@ -6,7 +6,7 @@ unit tests and CI does not pretend that schema validity is model quality.
 | File | Holds |
 |---|---|
 | `triggers.json` | positive requests and close negative cases, split before tuning |
-| `scenarios.json` | five end-to-end behaviors scored line by line |
+| `scenarios.json` | seven end-to-end behaviors scored line by line |
 | `RESULTS.md` | dated model runs, or an explicit statement that none exist |
 
 Validate the data and the validator's planted defect:

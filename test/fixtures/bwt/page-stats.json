@@ -1,0 +1,13 @@
+{
+ "d": [
+  {
+   "__type": "QueryStats:#Microsoft.Bing.Webmaster.Api",
+   "AvgClickPosition": 3,
+   "AvgImpressionPosition": 3,
+   "Clicks": 12,
+   "Date": "/Date(1760857200000-0700)/",
+   "Impressions": 120,
+   "Query": "https://example.com/pricing"
+  }
+ ]
+}

@@ -498,6 +498,27 @@ with tempfile.TemporaryDirectory() as tmp:
     check(all(f.get("tier") for f in payload["findings"]),
           "a finding reached the payload with no tier")
 
+# ── A19 (0.29.0): crawler tokens added from vendor documentation ────────────────
+_meta = ag.parse_robots("User-agent: meta-webindexer\nDisallow: /\n\n"
+                        "User-agent: meta-externalagent\nDisallow: /\n")
+check(_meta["retrieval_blocked"] == ["meta-webindexer"],
+      f"Meta documents meta-webindexer for Meta AI search, citing and linking content: a root "
+      f"block is a retrieval block. Got {_meta['retrieval_blocked']}")
+check(_meta["other_ai_blocked"] == ["meta-externalagent"],
+      "meta-externalagent is dual-purpose (training or product indexing) and is reported "
+      "as a block, never priced as a retrieval loss")
+_ads = ag.parse_robots("User-agent: *\nDisallow: /checkout/\n")
+check(_ads["wildcard_exempt_unnamed"] == ["adsbot-google", "adsbot-google-mobile"],
+      f"both AdsBot tokens ignore the * group, so a * disallow does not reach them; got "
+      f"{_ads['wildcard_exempt_unnamed']}")
+check(ag.parse_robots("User-agent: *\nDisallow: /checkout/\n\nUser-agent: AdsBot-Google\n"
+                      "Disallow: /checkout/\n")["wildcard_exempt_unnamed"] == ["adsbot-google-mobile"],
+      "an AdsBot token named in its own group is no longer reported")
+check(ag.parse_robots("User-agent: *\nAllow: /\n")["wildcard_exempt_unnamed"] == [],
+      "a * group that disallows nothing leaves nothing for AdsBot to miss")
+check(ag.FINDING_TIERS.get("robots-wildcard-exempt") == "CONFIRMED",
+      "the exemption is Google's documented behaviour, an observation about the file")
+
 if not failures:
     residue.close_case("agent_surface behaviour")
 residue.report()

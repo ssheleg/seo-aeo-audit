@@ -58,6 +58,7 @@ label attached to the number in the report.
 | Clicks on a link **inside** the AI summary | ~1% of sessions | 2025 study |
 | Users who, with an AI Overview present, still click **a traditional organic result** to verify | 80% | 2025 study (Kevin Indig, cited by SEJ) |
 | Click loss of the **first organic result** when an AI Overview is present (same position, relative) | −58% | 2026 (Ahrefs) |
+| Position-1 CTR when an AI Overview is present, second source | typically reduced by on the order of half, varying by month, device and intent | Advanced Web Ranking's monthly US CTR study, page dated 2026-10-19 ([ctrstudy](https://www.advancedwebranking.com/ctrstudy), `STUDY`, observational vendor dataset, never a fixed forecast) |
 | Share of AI-answer links coming from the organic top-10 | 38%, down from 76% in mid-2025 (Semrush); Ahrefs reports the same 38% for Google AI citations specifically | 2026 |
 
 Read them together: on the sessions that do produce a click, the traditional
@@ -104,6 +105,7 @@ evidence that traffic will or will not move.
 | Classic SEO signals explaining ChatGPT recommendation variance | 15–20% (each factor R² ≈ 5–6%) | 29,562 domains / 105k prompts |
 | Brand named in answer → cited | 53.1% vs 10.6% when not named | 541,213 answers / 20 brands / 6 platforms |
 | Own "best [category]" page cited → brand excluded from the recommendation | 69% | 100 B2B prompts, 3 checkpoints |
+| Cited URLs an API proxy recovers | Google Search plus the OpenAI Responses API recovered only 28.3% and 26.2% of the URLs ChatGPT cited (two model versions) | preprint, submitted 2026-10-11 ([arXiv 2610.15382](https://arxiv.org/html/2610.15382), `STUDY`) |
 | Retrieved-but-uncited rate | Perplexity ~76%; ChatGPT cites 61% | 9,886 answers |
 | Citation persistence | ~1 in 4 pages cited once only; appearance ~every third day; longest streak 52 days | same |
 | Reddit share of LLM citations | ~40% overall (Semrush, 2026) — **volatile by construction**: ChatGPT's Reddit share fell ~60% → 10% in six weeks after one retrieval-logic change, and bulk auto-translated Reddit content was demoted after the May/June 2026 updates (algorithm-updates.md, threats-and-defense.md I1). Re-measure before quoting; never size a plan on the 40% | 2026 (Semrush); volatility observed 2026, demotion reported 2026-07 |

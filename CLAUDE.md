@@ -7,7 +7,7 @@ clone: an agent invoked in a fresh checkout was told none of it.
 ## What this is
 
 `seo-aeo-audit` is an **agent skill**, not an application. The deliverable is
-knowledge plus seven standard-library scripts, shipped to several agent channels at
+knowledge plus nine standard-library scripts, shipped to several agent channels at
 once. So the failure modes are documentation failure modes: a claim that is wrong, a
 count that has drifted, a pointer into empty space, a tool whose silence reads as a
 measurement.
@@ -24,7 +24,8 @@ bash scripts/check-docs.sh
 
 That script is the whole gate — `test/validate.py`, `test/plant_guard_test.py`,
 `test/test_page_audit.py`, `test/test_url_inspection.py`, `test/test_collectors.py`,
-`test/test_agent_surface.py`, `test/test_output_contracts.py`,
+`test/test_agent_surface.py`, `test/test_ai_panel.py`, `test/test_bwt.py`,
+`test/test_output_contracts.py`,
 `test/test_installer.py` and `test/residue_test.py`. CI runs the same set
 plus a negative self-test per guard. The count is deliberately not written down here:
 it had four homes and went stale in three of them the first time a test file was

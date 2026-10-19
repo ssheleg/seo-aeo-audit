@@ -73,6 +73,7 @@ run it on a representative URL per template, not on a single page.
 python3 "$SKILL_DIR/scripts/page_audit.py" --url https://example.com/pricing --format markdown
 python3 "$SKILL_DIR/scripts/page_audit.py" --file ./saved.html --base-url https://example.com/pricing
 python3 "$SKILL_DIR/scripts/page_audit.py" --url-list urls.txt --format json > audit.json
+python3 "$SKILL_DIR/scripts/page_audit.py" --url https://example.com/pricing --cache-parity
 ```
 
 `--format json` emits an **array**, one object per page, even for a single URL —
@@ -221,6 +222,42 @@ measures the connection, not the site.
 
 ---
 
+## bwt_pull.py
+
+`scripts/bwt_pull.py` reads the two Bing Webmaster API reports documented for
+search traffic, GetQueryStats and GetPageStats, for one verified site. Rows arrive
+per date: impressions and clicks are summed per key, CTR is computed from the sums
+and position is impression-weighted, and the report says so. Bing updates both
+weekly. The credential never touches the command line: the API key goes in on
+stdin with `--key-stdin` (sent as the documented `apikey` parameter and redacted
+from every printed error) or an OAuth access token with `--token-stdin` (a Bearer
+header). A failed call names its gate: `login`, `scope`, `network` or `http`. An
+empty report exits 1 and says NOTHING MEASURED. The AI Performance report has no
+documented API method; its manual export is rung-2 evidence (tooling.md).
+
+```bash
+<print-secret> | python3 "$SKILL_DIR/scripts/bwt_pull.py" --site https://example.com/ --key-stdin
+<print-token> | python3 "$SKILL_DIR/scripts/bwt_pull.py" --site https://example.com/ --token-stdin --report query --format json
+```
+
+## ai_panel.py
+
+`scripts/ai_panel.py` scores saved answer-engine captures and fetches nothing. One
+JSON record per answer (prompt id, engine, mode, account state, locale, date,
+`source` = `ui-capture` or `api-proxy`, answer text, cited URLs, optional
+`recommended` label). Per cell it reports mention, top-3 mention (by first
+appearance among `--brand` and `--competitor` names), recommendation (from the
+label; unlabelled runs counted apart), citation (a cited host under `--domain`)
+and the mean pairwise Jaccard of cited URLs. Counts print as k/n with a Wilson
+95% interval and the caveat that runs are not independent. A cell below three runs
+on two distinct days is `insufficient-sample`: counts, no rate. `api-proxy` cells
+are scored apart and carry the under-coverage caveat (aeo-geo.md F5). A record
+with no `source` label is rejected, never guessed.
+
+```bash
+python3 "$SKILL_DIR/scripts/ai_panel.py" --captures panel.json --brand Acme --domain acme.com --competitor Globex
+```
+
 ## Every payload names the run that produced it
 
 All seven scripts stamp their output with a **producer block** — `skill` (the tool
@@ -246,8 +283,9 @@ Three consequences worth knowing before you paste a payload into a report:
 
 ## The inventory, and the four traps that decide whether a finding is real
 
-**The seven bundled scripts** — `preflight.py`, `gsc_pull.py`, `page_audit.py`,
-`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py`, `agent_surface.py` —
+**The nine bundled scripts** (`preflight.py`, `gsc_pull.py`, `page_audit.py`,
+`url_inspection.py`, `sitemap_audit.py`, `psi_pull.py`, `agent_surface.py`,
+`bwt_pull.py`, `ai_panel.py`)
 collect the mechanical half of every track. Read `references/scripts.md` for
 invocation, flags, quotas and the per-script limits.
 
