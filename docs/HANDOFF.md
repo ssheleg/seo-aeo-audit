@@ -1,3 +1,24 @@
+## Brief mode, poisoned-SERP guard, per-URL sitemap truth: 0.28.0 candidate (2026-10-19)
+
+Branch `feat/brief-mode-0.28`. Objective: wave 3 part 1 of the 2026-10-19 SEO plan.
+Done: brief mode (`references/build-time.md` N1 to N19 with resolving Verified-by
+links, `templates/brief.template.md`, SKILL.md Step 0, landing readiness linking
+super-ux's readiness check by URL); the poisoned-SERP guard in measurement.md J2 and
+tooling.md; `page_audit.py` `challenge-page` (fixture `test/fixtures/serp-challenge.html`);
+`gsc_pull.py` `report-stale`; `sitemap_audit.py` `--sample`, `--robots`, nested index and
+batch `lastmod`; pagination rules in technical-checks.md A3; baseline rows (engine host
+and locale, direct baseline, index-mass ratio, analytics coverage of orders, `tool-zero`);
+evals s04, s05, q13, q14. Factual sentences use only the wave 1 primary-source wording.
+Decision recorded in `DECISIONS.md` (2026-10-19). Version 0.27.0 to 0.28.0 in the
+manifests, SKILL-CARD and the seven script constants; ledger section and retro stamp.
+
+Checks run: `bash scripts/check-docs.sh` and `npm run test:all` (results in the PR).
+Brief-guard plants and the three behaviour plants were watched failing by name.
+
+Open: part 2 is board row B-38. The coordinator owns review, merge, tag, publication
+and the umbrella pin; the hub's routing (brief entry, B-08) and task-pipeline's
+spec link belong to their owners. Next task: review the PR, then the family release.
+
 ## WebKit (Safari) first for rendering checks — 0.27.0 candidate (2026-10-16)
 
 Branch `docs/safari-first` (family iteration ITER-1016, REQ R13): `references/tooling.md`

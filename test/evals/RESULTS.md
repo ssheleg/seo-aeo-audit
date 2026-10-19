@@ -12,6 +12,11 @@ model quality, and nothing here is run by CI.
 | 2026-08-31 | 0.25.8 (tree at release) | claude-haiku | 5/6 / 5/6 (positives 6/6, negatives 4/6) | s01 4/4 (one with caveat) · s02 4/4 · s03 3/4 | the ssheleg family, 28 skills (see Method) | q08 and q12 false-triggered: an implementation request ("исправь canonical tags…") and a definitional question both routed to the skill. s03 L2 failed: the surfaces were split but discovery-vs-cheaper-serving was never articulated |
 | 2026-08-31 | 0.25.8 (tree at release) | claude-sonnet | 6/6 / 6/6 (positives 6/6, negatives 6/6) | s01 4/4 · s02 4/4 · s03 4/4 | the ssheleg family, 28 skills (see Method) | the s01 probe was severed from this run by a harness spend-limit pause, completed anyway, and its result arrived by relay — scored from that delivered result, not from a transcript this run read itself (preflight 3/8 sources with GSC 403 and PSI 429 named in the opening; indexation marked UNKNOWN after two Bing timeouts — "tool failure is not a clean result"; zero-schema confirmed against raw HTML before being reported; a next action, no score). s03 verbatim hit: a Markdown twin "can help an agent that has already arrived read you cheaply — a serving decision measured in tokens, not a citation lever" |
 
+**Not yet executed:** scenarios `s04` (tracker-reported decline, the poisoned-SERP
+guard) and `s05` (a landing page not built yet, brief mode) and trigger cases `q13`
+and `q14` were added in 0.28.0 and have no model run. They are authored, not
+measured.
+
 ## Method — how this run was executed, and its limits
 
 - **Trigger cases**: one FRESH general-purpose subagent per query per model

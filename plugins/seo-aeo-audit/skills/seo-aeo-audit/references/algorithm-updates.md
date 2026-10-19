@@ -2,7 +2,7 @@
 
 **Sources last re-fetched: 2026-10-09** (official ranking incident feed; older
 policy rows retain their original evidence and are not newly certified).
-**Newest row in this file: 2026-10-08.**
+**Newest row in this file: 2026-10-18.**
 
 ## Contents
 
@@ -93,6 +93,7 @@ reported 2026-07-09).
 | Publishing platforms shipped AI-text policies: Habr banned AI-generated posts; Substack shipped a Pangram-based AI detector | 2026-06-17 / 2026-07-22 | Scaled AI content now carries a distribution and reputation cost outside Google — surface it when a client proposes generation at volume (myths.md). |
 | **EU DMA:** Google is under a standing fine exposure for self-preferencing, and must share anonymized search-query data with competing services **from 2027** | reported 2026-07 (mandate effective 2027) | Two audit consequences, both forward-looking (`HYPOTHESIS` — announced obligation, no measurable surface yet). (a) Remedies that change SERP composition land inside a measurement window, so an EU-market before/after needs the regulatory date noted next to the update dates. (b) Query data reaching third parties from 2027 changes what keyword tools can see in the EU — do not lock a multi-year measurement plan to a single vendor's EU volume estimates (measurement.md). France's ~450 publishers being paid for AI-answer content sits on the same axis (row above). |
 | Google's scraping suit against **SerpApi** dismissed | reported 2026-07 | Rank-tracking supply is a live legal question, not settled infrastructure. Record the collection method and provider with every position series and keep a first-party fallback (measurement.md). |
+| Rank trackers reported receiving Google results that differ from what people see (poisoned SERPs); DataForSEO and Ahrefs datasets named as affected | 2026-09 → reported 2026-10-18 | `FIELD` (practitioner and vendor reports, figures in benchmarks.md). Any automated position series spanning this window passes the poisoned-SERP guard before it supports a finding (measurement.md J2); a series that fails it is `UNUSABLE`, not a ranking change. |
 
 ## How to use the timeline in an audit
 

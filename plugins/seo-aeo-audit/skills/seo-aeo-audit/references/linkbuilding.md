@@ -30,9 +30,12 @@ candidate rows live in the same file and must never be confused for each other.
 | `gsc-current` | Search Console served this page for this query in the window | real numbers |
 | `gsc-historic-<window>` | Measured, but from an earlier window — a page's proven ceiling, not its current state | real numbers, window named |
 | `product-candidate` | Derived from what the site sells. Nobody has confirmed anyone searches it | **blank — never zero, never estimated** |
+| `tool-zero` | A keyword tool returned **0 searches** for the phrase. Zero from a panel is not a measurement of no demand: thin panels round small demand down to nothing | **blank**, with the tool and date named; demand evidence comes from internal site search, GSC impressions and support questions |
 
 Blank, not zero. A `0` reads as "measured, no volume"; blank reads as
-"unmeasured", which is the truth. If a spreadsheet sorts candidates to the
+"unmeasured", which is the truth. The same holds when a tool itself printed the
+`0`: that row is `tool-zero`, its volume cell stays blank, and the zero is never
+copied into the CSV. If a spreadsheet sorts candidates to the
 bottom because their volume cell is empty, that is the correct behavior.
 
 Say in the brief, in the partner's own words, that candidate rows need volume

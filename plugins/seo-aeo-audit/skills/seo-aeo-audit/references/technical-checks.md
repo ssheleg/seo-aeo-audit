@@ -297,9 +297,13 @@ growth-plays L2 defers to this section for it: a 50k-page store went from 8k ind
 - Tier 1 must index: live products, key service pages, conversion core, brand and
   commercial pages.
 - Tier 2 should index: supporting content, clusters, category pages.
-- Tier 3 block: filter combinations, pagination, internal search results,
-  archives, facet parameter combinations — **not** tracking parameters, which are
-  a different case ("Tracking parameters are not facets" below).
+- Tier 3 block: filter combinations, internal search results, archives, facet
+  parameter combinations — **not** tracking parameters, which are a different case
+  ("Tracking parameters are not facets" below), and **not** the pagination
+  sequence itself, which stays crawlable and self-canonical (A3, Pagination). The
+  case this list comes from blocked pagination; Google's pagination guide gives
+  each page its own canonical and mentions `noindex` and `robots.txt` only for
+  filtered and re-sorted variants of a list.
 - Tier 4 hard block: admin, cart, thin duplicates.
 
 Score each template on business value, search value and user value; if all three
@@ -311,8 +315,9 @@ new URLs, and drop-out rate, reviewed monthly (`FIELD` — same case).
 
 1. Faceted navigation and parameter explosion (one category × filters = thousands
    of crawlable URLs).
-2. Pagination explosion (`?page=847`) — cap it, consolidate with View-All where
-   sensible, canonicalize empty pages.
+2. Pagination explosion (`?page=847`) — cap it where the items run out and
+   canonicalize empty pages; the real pages of the sequence stay crawlable and
+   self-canonical (A3, Pagination).
 3. Duplicate variants: session IDs, print versions, HTTP/HTTPS, www/non-www —
    plus tracking parameters, the one entry here that is usually already solved by
    a canonical. Read "Tracking parameters are not facets" below before spending a
@@ -617,6 +622,25 @@ happened.
 **Limits:** 50,000 URLs and 50MB uncompressed per file; split into an index past
 either. Gzip is accepted and the 50MB limit applies to the *uncompressed* size.
 
+**An index lists sitemaps, never other indexes.** A sitemap index file can't list
+other sitemap index files, only sitemap files; Search Console reports this as
+"Nested sitemap indexes" (`CONFIRMED`,
+[Sitemaps report help](https://support.google.com/webmasters/answer/7451001)).
+
+**Every listed URL is a promise.** Google will attempt to crawl sitemap URLs exactly
+as listed, so a listed URL that redirects, errors, carries `noindex` or
+canonicalises elsewhere contradicts the sitemap (`CONFIRMED`,
+[build a sitemap](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap)).
+`sitemap_audit.py --sample N` fetches a bounded sample of listed URLs and reports
+each of those four per URL, flags a nested index and a batch-stamped `lastmod`,
+and `--robots` probes every `Sitemap:` line in `robots.txt` (scripts.md).
+
+**"Couldn't fetch" has a non-technical branch, and it comes last.** Google's help
+lists low crawl demand for the sitemap, which rises with content quality, as one
+cause of "Couldn't fetch" (`CONFIRMED`, same Sitemaps report help). Reach for it only
+after the protocol, the status code, `robots.txt` and the transport are clean; before
+that, it is an excuse for a defect nobody looked for.
+
 **Submission:** reference it from `robots.txt` with an absolute URL
 (`Sitemap: https://example.com/sitemap.xml`) — that is the discovery path that
 works for every engine, including the ones with no console. Cross-domain
@@ -654,7 +678,10 @@ when it has an observable impact.
 
 **Sitemaps**
 - Submitted in Search Console and referenced from `robots.txt`.
-- Contains only valid, canonical, indexable URLs that return 200.
+- Contains only valid, canonical, indexable URLs that return 200 (sample them:
+  `sitemap_audit.py --sample N` reports redirect, error status, `noindex` and a
+  foreign canonical per listed URL); no index lists another index; `lastmod` is
+  not one batch stamp; every `Sitemap:` line in `robots.txt` serves.
 - Does not contain URLs you deliberately keep out of the index.
 - Under 50MB / 50,000 URLs per file.
 
@@ -662,7 +689,25 @@ when it has an observable impact.
 - Meta directives set deliberately per template — and the header-level ones too
   (`X-Robots-Tag`, `Link: rel="canonical"`), including on PDFs and images.
 - Pagination / load-more / infinite scroll implemented crawlably (`rel=next|prev`
-  is no longer supported — do not "fix" it back in).
+  is no longer supported — do not "fix" it back in). **Pagination**, checked as
+  four rules (`CONFIRMED` for the first three, from
+  [Google's pagination documentation](https://developers.google.com/search/docs/specialty/ecommerce/pagination-and-incremental-page-loading),
+  last updated 2025-12-10, read 2026-10-19):
+  - page 2 and later carry a **self-referencing canonical**; the first page is
+    never the canonical of the whole sequence ("give each page its own canonical
+    URL");
+  - each page links to the next with a plain `<a href>`;
+  - no page number lives in a URL fragment (`#page=2`): Google ignores URL
+    fragments, so the whole sequence collapses into one URL, and Google no longer
+    uses `rel=next`/`rel=prev`;
+  - the sequence is never `noindex`ed or blocked in `robots.txt`. This rule is
+    practitioner advice, not Google's: it cuts crawl paths to items linked only
+    from deep pages, and Google's pagination guide does not state it (`FIELD`; the
+    guide mentions `noindex` and `robots.txt` only for filtered and re-sorted
+    variants of a list). The measurement below settles it per site.
+  **Measure it** by diffing two crawls of the same start URLs, one following
+  pagination and one excluding the pagination pattern: the items reachable only in
+  the first are what a blocked or fragment-based sequence costs.
 - Faceted URLs are noindexed or isolated (facets vs filters, see above).
 - JavaScript renders for Googlebot; no console errors blocking content.
 - Important content is not inside iframes or dead embeds.

@@ -5,21 +5,24 @@
 | Field | Value |
 |---|---|
 | Pack and skill | `seo-aeo-audit` |
-| Version | `0.27.0` |
+| Version | `0.28.0` |
 | License | MIT |
 | Source | https://github.com/ssheleg/seo-aeo-audit |
 
 ## Job and boundary
 
 Audit a public website for search and answer-engine visibility, prove findings
-with observed evidence and produce a prioritized plan. The skill does not write
-the content, implement fixes, buy links or mutate a live search property.
+with observed evidence and produce a prioritized plan, or brief a site before it is
+built with build-time decisions each linked to the audit check that verifies it. The
+skill does not write the content, build the pages, implement fixes, buy links or
+mutate a live search property.
 
 ## Inputs and outputs
 
 Inputs may include a live site, repository, crawl export, analytics, logs and
 connected search tools. Missing access is reported. Outputs are dated audit,
-plan and experiment documents; a link-building brief is optional.
+plan and experiment documents; a link-building brief is optional. Brief mode
+writes one dated build-time brief instead.
 
 ## Runtime and trust
 

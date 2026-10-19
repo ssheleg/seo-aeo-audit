@@ -16,6 +16,7 @@ duplicated into commit messages or the changelog — those reference it.
 | Planned collector requested/returned/dropped semantics | `docs/contracts/collector-coverage.md` | B-9 remains open until all collector outputs migrate; this is distinct from audit-track coverage and is not a claim of current uniform emission |
 | The audit doctrine (non-negotiables) | `plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` | `cursor/rules/*.mdc` **and** `plugins/*/commands/*.md` each carry a full copy for a different consumer — both count-checked by `validate.py`, neither summarized. The command was the unguarded third channel: it restated two and read as the list |
 | Intended diagnostic per helper mutation | `.github/workflows/validate.yml` literal `plantq` calls | `test/plant_attribution.py` reads calls via `test/negatives.py:parse_steps`; structural gate checks declarations; audit regression preserves the original identity set and replays the anchor-liveness counterexample. No second needle map |
+| The build-time brief rows (brief mode) | the `## N<k>.` sections of `references/build-time.md`, each with a **Verified by** link into the audit section that checks it | `templates/brief.template.md` (one row per section) and its embedded copy in `deliverable-templates.md`, plus the number-word in `REFERENCE_INDEX.md`. `validate.py` resolves every Verified-by anchor, compares the row set and the count. A brief row restates no doctrine: the section it links to is the home |
 | The myth count | the rows of `references/myths.md` | four prose homes — README twice, SKILL.md, the Cursor rule — plus the size of the two short lists. `validate.py` reads every one; it used to read one, and was green while three were wrong |
 | The play count | the rows of `references/growth-plays.md` | README's knowledge table — checked |
 | The Prowl provider-tool count | `references/prowl-mcp.md` | `tooling.md` and README quote it — all three compared |
@@ -57,6 +58,7 @@ the reason no check can.
 
 | Change | Obliges | Enforced by |
 |---|---|---|
+| Add, remove or renumber a build-time row | the brief skeleton row (both copies), the REFERENCE_INDEX count, and a **Verified by** link whose anchor resolves in another reference | `validate.py` brief guard; CI plants a dead anchor, a missing row and a drifted count |
 | Add or edit a non-negotiable in SKILL.md | the same rule in `cursor/rules/seo-aeo-audit.mdc` | `validate.py` compares the counts between channels |
 | Add a bundled script | compile + stdlib checks; a behaviour test; a CI step; README and SKILL.md usage | `validate.py` discovers `scripts/*.py`, so the first two are automatic; the CI step and the prose are **review** — no check can tell a documented script from an undocumented one without parsing prose |
 | Add a reference file | `REQUIRED_REFERENCES`, the SKILL.md reference list, the counts in README and CONTRIBUTING | `validate.py` fails on a missing reference **and** on any of the five prose counts disagreeing with the tuple, in words or digits. `v0.12.0` added a reference and left all five stale, which is what promoted this from *review* |

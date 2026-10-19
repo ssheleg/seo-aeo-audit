@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1">
+<title>https://www.google.com/search?q=example+query</title>
+</head>
+<body style="font-family: arial, sans-serif">
+<!-- Test fixture: a search engine "unusual traffic" interstitial, served with HTTP 200.
+     It carries no organic results block. A rank collector that receives this has no
+     positions to read: the query is missing data for that date, never rank 0. -->
+<div style="max-width:400px;">
+<hr noshade size="1" style="color:#ccc; background-color:#ccc;"><br>
+<form id="captcha-form" action="/sorry/index" method="post">
+<div id="recaptcha" class="g-recaptcha" data-sitekey="fixture-not-a-key"></div>
+<input type="hidden" name="q" value="fixture">
+<input type="hidden" name="continue" value="https://www.google.com/search?q=example+query">
+</form>
+<hr noshade size="1" style="color:#ccc; background-color:#ccc;">
+<div style="font-size:13px;">
+<b>About this page</b><br><br>
+Our systems have detected unusual traffic from your computer network. This page checks
+to see if it's really you sending the requests, and not a robot.
+<br><br>
+IP address: 192.0.2.1<br>Time: 2026-10-19T00:00:00Z<br>URL: https://www.google.com/search?q=example+query<br>
+</div>
+</div>
+</body>
+</html>

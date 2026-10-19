@@ -8,7 +8,8 @@
       "q03",
       "q07",
       "q08",
-      "q09"
+      "q09",
+      "q13"
     ],
     "validation": [
       "q04",
@@ -16,7 +17,8 @@
       "q06",
       "q10",
       "q11",
-      "q12"
+      "q12",
+      "q14"
     ]
   },
   "queries": [
@@ -103,7 +105,20 @@
       "query": "Explain the difference between SEO and AEO",
       "should_trigger": false,
       "why": "informational request, no site is being audited"
+    },
+    {
+      "id": "q13",
+      "lang": "ru",
+      "query": "сделай SEO-бриф до запуска сайта: мы только начинаем делать лендинг",
+      "should_trigger": true,
+      "why": "brief mode for a site not yet built"
+    },
+    {
+      "id": "q14",
+      "lang": "en",
+      "query": "Write the hero headline and FAQ copy for our new invoicing landing page",
+      "should_trigger": false,
+      "why": "writing the copy is copywriting's job; brief mode never writes content"
     }
   ]
 }
-

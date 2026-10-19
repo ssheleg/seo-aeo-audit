@@ -18,6 +18,18 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.28.0 candidate: brief mode, poisoned-SERP guard, per-URL sitemap truth (2026-10-19)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Brief rows link to the audit section that verifies them (build-time.md N1 to N19, the skeleton, the REFERENCE_INDEX count) | `test/validate.py` brief guard; three CI plants (dead anchor, missing skeleton row, drifted count) run through `test/negatives.py` | **planted** |
+| A challenge page is one `challenge-page` finding and nothing else | `test/test_page_audit.py` on `test/fixtures/serp-challenge.html`, plus a long page with a CAPTCHA form that must not fire; watched failing with the check disabled (4 false findings appeared: canonical, h1, low text, description) | **planted** |
+| GSC missing or frozen tail prints `report-stale` and withholds a collapse in the window | `test/test_collectors.py` fixtures (last 4 days empty, 4 frozen days, a tiny property that must stay fresh); CI plant disables the missing-tail branch | **planted** |
+| Sitemap per-URL sample, nested index, batch `lastmod`, robots `Sitemap:` line | `test/test_collectors.py` loopback site: 11 listed URLs, one each of redirect, 404, foreign canonical, two noindex (meta and header), a nested index, a 404 robots sitemap; CI plant disables nested-index detection | **planted** (loopback only) |
+| Doctrine: poisoned-SERP guard, pagination rules, baseline rows, `tool-zero` | Wording for factual sentences taken from the wave 1 primary-source table; Google pagination guide and Sitemaps help read 2026-10-19 | text only |
+| Brief mode and the guard in real agent runs (eval s04, s05, q13, q14) | No model run | never |
+| Per-URL sampling against a real production site | No live run | never |
+
 ## v0.27.0 candidate — WebKit (Safari) first for rendering checks (2026-10-16)
 
 | What changes | Evidence | State |
@@ -502,7 +514,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-one releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-two releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

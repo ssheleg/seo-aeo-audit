@@ -1,6 +1,6 @@
 ---
 name: seo-aeo-audit
-description: Use when auditing a website for search and answer-engine visibility, diagnosing traffic or ranking loss, planning what to change, or extracting link-building targets and keywords - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга", "link building brief" / "бриф для линкбилдера". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content value, extractability/AEO, entity consensus, experience, risk, measurement) and outputs findings, a change plan, and a link-building brief with keyword CSV.
+description: Use when auditing a live site for search and answer-engine visibility, diagnosing traffic or ranking loss, planning changes, extracting link-building keywords, or briefing a site before it is built - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга", "SEO brief before launch" / "SEO-бриф до запуска сайта". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content, AEO, entity, experience, risk, measurement) and outputs findings, a change plan, a link-building CSV, or a build-time brief.
 license: MIT
 compatibility: Needs network access to fetch the audited site, its robots, sitemaps and SERPs. Bundled scripts need python3 (stdlib only, nothing to pip install). Optional, degraded-without - Google Search Console and PageSpeed Insights credentials (their absence is reported as an evidence gap, never silently) and the Prowl MCP server for bulk third-party data. Read-only toward the audited site. Optional sibling - super-ux, whose ai-tells.md drives the E4b naturalness pass; in-text fallback when absent.
 ---
@@ -12,8 +12,9 @@ a prioritized plan of changes** that covers classic search (Google, Yandex, Bing
 and answer engines (AI Overviews / AI Mode, ChatGPT, Perplexity, Claude, Copilot,
 Gemini, Alice AI).
 
-Not this skill's job: writing the content, building the pages, buying links. It
-ends at a verified diagnosis and an executable plan.
+Scope: **audit a live site, or brief a site before it is built; never write the
+content or build the pages** (or buy links). It ends at a verified diagnosis and an
+executable plan, or at a brief.
 
 ## Non-negotiables
 
@@ -59,6 +60,10 @@ ends at a verified diagnosis and an executable plan.
 
 Inspect first, then act. In order:
 
+0. **Audit or brief.** Nothing live yet (a new site, section or landing page)
+   gets a **brief**: follow [build-time.md](references/build-time.md), write
+   `docs/seo/brief-<YYYY-MM-DD>.md`, stop. No findings, no myth item. A live site
+   with a planned section takes both.
 1. Read `docs/seo/` (or the path the user names). If a previous audit exists,
    this run is a **re-audit**: diff against it and lead with what changed.
 2. Establish what you can reach — live site, staging, `robots.txt`, `sitemap.xml`,
@@ -108,6 +113,10 @@ Record, with dates, so every later claim can be measured against it:
 
 - organic clicks / impressions / avg position per country and device, 12 months
   (GSC + Bing), and the drop or plateau window if there is one;
+- the [J3b baselines](references/measurement.md#j3b-the-kpi-set-has-moved):
+  referrals per engine host and locale, direct / no-referrer beside branded search
+  (before any AEO change), the index-mass ratio per template, the share of backend
+  orders analytics sees; a missing Bing verification or IndexNow key is a data gap;
 - indexed vs published URL counts per template (`site:` is a smell test, GSC
   Pages report is the number);
 - top-20 revenue or conversion pages and their current positions;
@@ -129,8 +138,10 @@ decline, and those need opposite plans.
 
 If the site claims a traffic drop, **first separate reporting failure from
 ranking failure**: a frozen GSC report pins clicks at one date while a real hit
-keeps producing fresh declining points. Cross-check GA4 sessions, server logs and
-an independent rank tracker before diagnosing an algorithmic cause.
+keeps producing fresh declining points (`gsc_pull.py` prints `report-stale`).
+Cross-check GA4 sessions, server logs and an independent rank tracker that passed
+the [poisoned-SERP guard](references/measurement.md#the-poisoned-serp-guard) before
+diagnosing an algorithmic cause.
 
 ## Step 2 — The ten tracks
 
@@ -151,23 +162,13 @@ Run every track in scope. Each has its own file with the concrete checks, the
 | J | Measurement | Will anyone be able to tell if the plan worked? | [measurement.md](references/measurement.md) |
 | K | Agent surface | Can a machine discover, authenticate and transact here? | [agent-readiness.md](references/agent-readiness.md) |
 
-**Track K is conditional.** Run it when the site sells something an agent could
-plausibly buy, call or automate; skip it for a content site with no programmable
-surface. It carries a rule the other ten do not need — **presence is `CONFIRMED`,
-effect is mostly `HYPOTHESIS`** — so most of it belongs in Experiments until
-first-party logs show agent traffic. When to run it, its cheapest check, and why a
-third-party "agent-readiness score" is a checklist generator rather than a target:
-[agent-readiness.md](references/agent-readiness.md).
+**Track K is conditional**: run it when the site sells something an agent could
+buy, call or automate. **Presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**,
+so most of it lands in Experiments ([agent-readiness.md](references/agent-readiness.md)).
 
-**Discover is not one of the ten tracks, and it is not part of track A.** It has
-its own ranking pass, its own freshness curve, and three checks of three
-different strengths — automatic eligibility, the `max-image-preview:large`/AMP
-large-preview *permission*, and the 1200px image *recommendation*; none of them
-is a render gate, and a missing tag never makes a page "confirmed ineligible".
-A site where Discover is a material traffic source needs
-[discover.md](references/discover.md) run as an eleventh pass — and a site
-where it is not can skip it entirely. Check the GSC Discover report before
-deciding.
+**Discover is not one of the ten tracks, and not part of track A.** Where the GSC
+Discover report shows it is a material source, run [discover.md](references/discover.md)
+as an eleventh pass; a missing tag never makes a page "confirmed ineligible".
 
 **Before any decline diagnosis**, run the date-alignment and update-response
 protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —

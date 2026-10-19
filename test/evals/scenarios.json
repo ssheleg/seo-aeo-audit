@@ -45,7 +45,38 @@
         "Offers the nearest evidence-backed alternative",
         "Keeps any unconfirmed tactic in Experiments rather than rollout"
       ]
+    },
+    {
+      "id": "s04",
+      "title": "Tracker-reported decline",
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "query": "Our rank tracker says positions fell 40% in October. Diagnose what happened.",
+      "files": [],
+      "expected_behavior": [
+        "Applies the poisoned-SERP guard before any diagnosis: asks for the collection method and provider of the series",
+        "Spot-checks 3 to 5 head queries against a logged-out manual capture in Safari or WebKit",
+        "Compares the series with GSC average position per query within a stated band, and calls the series UNUSABLE if it fails",
+        "Treats a challenge page or empty result as missing data, never as rank 0",
+        "Checks GSC freshness (report-stale) before calling any decline real"
+      ]
+    },
+    {
+      "id": "s05",
+      "title": "Landing page not built yet",
+      "skills": [
+        "seo-aeo-audit"
+      ],
+      "query": "We are building a landing page for an invoicing tool. What should it get right for search and AI answers?",
+      "files": [],
+      "expected_behavior": [
+        "Recognises there is no live page and writes a brief (docs/seo/brief-<date>.md), not an audit",
+        "Each brief row names the audit section that will verify it after launch",
+        "Contains no myth item: no FAQPage markup for rich results, no llms.txt as a ranking lever, no publish-date bumps, no writing for AI",
+        "Carries no findings and no evidence tiers about the unbuilt page",
+        "Does not write the copy or the markup; links super-ux's readiness check and lists this skill's page_audit, agent_surface and psi_pull commands for the built page"
+      ]
     }
   ]
 }
-

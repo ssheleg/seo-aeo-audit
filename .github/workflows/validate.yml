@@ -459,6 +459,25 @@ jobs:
             echo "OK: auditor tests catch a broken check"
           fi
 
+      - name: Negative self-test (challenge page, stale GSC tail and sitemap promises must stay detected)
+        run: |
+          set -eu
+          S=plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts
+          for case in challenge stale sitemap; do
+            rm -rf /tmp/brief-neg-copy /tmp/brief-neg-residue && cp -R . /tmp/brief-neg-copy && mkdir -p /tmp/brief-neg-residue
+            case "$case" in
+              challenge) f=page_audit.py; old='CHALLENGE_MAX_WORDS = 300'; new='CHALLENGE_MAX_WORDS = 0'; suite=test/test_page_audit.py ;;
+              stale) f=gsc_pull.py; old='    if missing > tolerance:'; new='    if False:'; suite=test/test_collectors.py ;;
+              sitemap) f=sitemap_audit.py; old='        if maps and source in children:'; new='        if False:'; suite=test/test_collectors.py ;;
+            esac
+            python3 test/plant_edit.py sub "/tmp/brief-neg-copy/$S/$f" "$old" "$new"
+            if TMPDIR=/tmp/brief-neg-residue python3 "/tmp/brief-neg-copy/$suite"; then
+              echo "ERROR: $suite passed with the $case check disabled"
+              exit 1
+            fi
+            echo "OK: $suite catches a disabled $case check"
+          done
+
       - name: Negative self-test (renamed heading must break the auditor's anchors)
         run: |
           set -eu
@@ -691,6 +710,15 @@ jobs:
             python3 test/plant_edit.py resub docs/evidence/retro.md '\*\*[0-9]{4}-[0-9]{2}-[0-9]{2} \(`v[0-9.]+`\)\*\*\s*$' '**2026-08-20 (`v0.14.1`)**'
           plantq "the prune log's instruction count drifting from the headings" 'last prune entry says the list stands at' \
             python3 test/plant_edit.py sub docs/evidence/retro.md 'so the list stands at **ten** — exactly the cap' 'so the list stands at **eleven** — one over the cap'
+
+          # Brief mode (0.28.0): a brief row is only worth its pointer to the audit
+          # check that verifies it. Three ways the pointer set rots, each named.
+          plantq "a brief row whose only audit link has a dead anchor" 'brief row has no resolving link to an audit section' \
+            python3 test/plant_edit.py sub "$S/references/build-time.md" '(technical-checks.md#a2-indexation-economics)' '(technical-checks.md#a2-no-such-section)'
+          plantq "a brief skeleton missing a build-time row" 'do not match build-time.md' \
+            python3 test/plant_edit.py sub templates/brief.template.md '| N19 native HTML and CSS first | | | build-time.md N19 · technical-checks.md A1 |' '| | | | |'
+          plantq "the brief row count drifting in REFERENCE_INDEX" 'build-time decisions; build-time.md has' \
+            python3 test/plant_edit.py sub "$S/REFERENCE_INDEX.md" 'nineteen build-time decisions' 'eighteen build-time decisions'
 
       - name: Negative self-tests for the provenance behaviour contracts
         run: |

@@ -17,6 +17,8 @@ import json
 import os
 import subprocess
 import sys
+import threading
+import http.server
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -307,6 +309,143 @@ check("5000" in _text and "row" in _text.lower(),
 check("4" in _text and "noise" in _text.lower(),
       "the rows dropped as scraper noise must be counted, not silently removed")
 
+# ── gsc_pull: a stale tail is not a decline (A6) ─────────────────────────────
+# The API omits dates with no data, so a report that stopped moving ends early,
+# and a frozen one repeats a value pair. Both print `report-stale` and withhold a
+# collapse that falls inside the stale window.
+from datetime import date as _date, timedelta as _td
+_end = _date(2026, 10, 15)
+def _series(n_days, last_empty, value=500.0):
+    rows = []
+    for k in range(n_days):
+        d = _end - _td(days=n_days - 1 - k)
+        if k >= n_days - last_empty:
+            continue  # the API returns no row for a day without data
+        rows.append({"keys": [d.isoformat()], "clicks": 20.0 + (k % 7), "impressions": value + (k % 5)})
+    return rows
+_stale = gsc.freshness(_series(40, 4), _end.isoformat())
+check(_stale["status"] == "report-stale" and _stale["missing_tail_days"] == 4,
+      f"the last 4 days empty must be report-stale, got {_stale}")
+_fresh = gsc.freshness(_series(40, 0), _end.isoformat())
+check(_fresh["status"] == "fresh" and _fresh["missing_tail_days"] == 0, f"a full tail is fresh: {_fresh}")
+check(gsc.freshness(_series(40, 1), _end.isoformat())["status"] == "fresh",
+      "one missing day is inside the tolerance, not a stale report")
+_frozen = _series(40, 0)
+for r in _frozen[-4:]:
+    r["clicks"], r["impressions"] = 31.0, 777.0
+_fz = gsc.freshness(_frozen, _end.isoformat())
+check(_fz["status"] == "report-stale" and _fz["frozen_tail_days"] == 4,
+      f"four identical final days must read as a frozen report: {_fz}")
+_tiny = _series(40, 0)
+for r in _tiny[-5:]:
+    r["clicks"], r["impressions"] = 0.0, 1.0
+check(gsc.freshness(_tiny, _end.isoformat())["status"] == "fresh",
+      "a tiny property repeating one impression is not a frozen report")
+# the decline inside the stale window is withheld, not reported
+_cl = {"before": "2026-10-10", "after": "2026-10-11", "drop": 0.95}
+_kept, _held = gsc.withhold_stale_decline(_cl, _stale)
+check(_kept is None and _held == _cl, "a collapse inside the stale window must be withheld")
+_kept2, _ = gsc.withhold_stale_decline(_cl, _fresh)
+check(_kept2 == _cl, "a fresh report keeps its collapse finding")
+_stale_report = dict(_report, freshness=_stale, cliff=None, cliff_withheld=_cl)
+_st = gsc.render_text(_stale_report)
+check("report-stale" in _st, "the text report must print report-stale")
+check("no collapse detected" not in _st and "WITHHELD" in _st,
+      "a withheld collapse must not read as 'no collapse detected'")
+
+# ── sitemap_audit: per-URL truth on a loopback site (A15) ─────────────────────
+class _SiteHandler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+    def _send(self, status, body=b"", ctype="text/html; charset=utf-8", extra=()):
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        for k, v in extra:
+            self.send_header(k, v)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+    def do_GET(self):
+        base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        page = lambda canon, extra_head="": (f"<html><head><title>t</title><link rel='canonical' href='{canon}'>{extra_head}</head><body><p>hello</p></body></html>").encode()
+        stamp = "2026-10-01T00:00:00+00:00"
+        urlset = lambda paths: ("<?xml version='1.0'?><urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>" + "".join(f"<url><loc>{base}{p}</loc><lastmod>{stamp}</lastmod></url>" for p in paths) + "</urlset>").encode()
+        index = lambda paths: ("<?xml version='1.0'?><sitemapindex xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>" + "".join(f"<sitemap><loc>{base}{p}</loc></sitemap>" for p in paths) + "</sitemapindex>").encode()
+        routes = {
+            "/robots.txt": (200, f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap_index.xml\nSitemap: {base}/missing.xml\n".encode(), "text/plain"),
+            "/sitemap_index.xml": (200, index(["/sub_index.xml", "/pages.xml"]), "application/xml"),
+            "/sub_index.xml": (200, index(["/pages2.xml"]), "application/xml"),
+            "/pages.xml": (200, urlset(["/ok", "/noindex", "/canon", "/redirect", "/gone", "/hdr-noindex", "/ok2", "/ok3", "/ok4", "/ok5"]), "application/xml"),
+            "/pages2.xml": (200, urlset(["/ok6"]), "application/xml"),
+        }
+        path = self.path
+        if path in routes:
+            status, body, ctype = routes[path]
+            return self._send(status, body, ctype)
+        if path == "/redirect":
+            return self._send(301, b"", extra=[("Location", base + "/ok")])
+        if path == "/gone":
+            return self._send(404, b"gone")
+        if path == "/noindex":
+            return self._send(200, page(base + path, "<meta name='robots' content='noindex, follow'>"))
+        if path == "/hdr-noindex":
+            return self._send(200, page(base + path), extra=[("X-Robots-Tag", "noindex")])
+        if path == "/canon":
+            return self._send(200, page(base + "/ok"))
+        if path.startswith("/ok"):
+            return self._send(200, page(base + path))
+        return self._send(404, b"no")
+
+_srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _SiteHandler)
+threading.Thread(target=_srv.serve_forever, daemon=True).start()
+_base = f"http://127.0.0.1:{_srv.server_address[1]}"
+try:
+    _run = subprocess.run([sys.executable, os.path.join(SCRIPTS, "sitemap_audit.py"),
+                           "--robots", _base + "/robots.txt", "--sample", "20",
+                           "--sample-delay", "0", "--format", "json"],
+                          capture_output=True, text=True, timeout=120)
+    _sj = json.loads(_run.stdout)
+    _fc = {f["code"]: f["message"] for f in _sj["findings"]}
+    check(_sj["analysis"]["urls_total"] == 11, f"robots-declared sitemaps must be traversed: {_sj['analysis']['urls_total']}")
+    check("sitemap-nested-index" in _fc and "sub_index.xml" in _fc["sitemap-nested-index"],
+          f"an index listed by an index must be flagged: {sorted(_fc)}")
+    check("sitemap-lastmod-batch" in _fc, f"one lastmod on every entry is a batch stamp: {sorted(_fc)}")
+    check("sitemap-robots-unserved" in _fc and "missing.xml" in _fc["sitemap-robots-unserved"],
+          f"a robots Sitemap line answering 404 must be flagged: {sorted(_fc)}")
+    check("sitemap-url-redirects" in _fc and _fc["sitemap-url-redirects"].startswith("1 of 11"),
+          f"the listed redirect must be counted: {_fc.get('sitemap-url-redirects')}")
+    check("sitemap-url-error-status" in _fc and "/gone" in _fc["sitemap-url-error-status"],
+          f"the listed 404 must be counted: {_fc.get('sitemap-url-error-status')}")
+    check("sitemap-url-noindex" in _fc and _fc["sitemap-url-noindex"].startswith("2 of 11"),
+          f"meta and header noindex must both count: {_fc.get('sitemap-url-noindex')}")
+    check("sitemap-url-foreign-canonical" in _fc and "/canon" in _fc["sitemap-url-foreign-canonical"]
+          and _fc["sitemap-url-foreign-canonical"].startswith("1 of 11"),
+          f"only the canonicalised URL is foreign: {_fc.get('sitemap-url-foreign-canonical')}")
+    check(_sj["sample_coverage"]["returned"] == 11 and _sj["sample_coverage"]["state"] == "complete",
+          f"every sampled URL answered: {_sj['sample_coverage']}")
+    check(_run.returncode == 0, f"findings are not collection failures: exit {_run.returncode} {_run.stderr[-300:]}")
+    _md = subprocess.run([sys.executable, os.path.join(SCRIPTS, "sitemap_audit.py"),
+                          "--url", _base + "/sitemap_index.xml", "--sample", "3", "--sample-delay", "0"],
+                         capture_output=True, text=True, timeout=120).stdout
+    check("Listed URLs, sampled" in _md and "sample_bound" in _md,
+          "markdown must show the sample and that it was bounded")
+    # an unfetchable sampled URL is unfetched, never a status finding
+    _dead = sm.check_url("http://127.0.0.1:9/never")
+    check(_dead["status"] is None and _dead["error"], f"a transport failure is an error, not a status: {_dead}")
+    _a = sm.analyze(["http://127.0.0.1:9/never"])
+    _a["url_checks"] = [_dead]
+    check(not [f for f in sm.findings(_a) if f["code"].startswith("sitemap-url-")],
+          "an unfetched sampled URL must support no finding")
+finally:
+    _srv.shutdown()
+    _srv.server_close()
+check(sm.lastmod_profile(["2026-01-0%d" % (i % 9 + 1) for i in range(20)])["batch_stamped"] is False,
+      "varied lastmod values are not a batch stamp")
+check(sm.lastmod_profile(["2026-10-01"] * 5)["batch_stamped"] is False,
+      "below the entry floor nothing is claimed")
+check(sm.pick_sample(["https://e.com/a/1/", "https://e.com/a/2/", "https://e.com/b/x/"], 2)
+      == ["https://e.com/a/1/", "https://e.com/b/x/"], "the sample spreads across template families first")
+
 if not failures:
     residue.close_case("collector behaviour")
 residue.report()
@@ -318,4 +457,5 @@ if failures:
     sys.exit(1)
 print("PASS: collector behavior (psi field/lab separation, CLS rescale, absent-CrUX "
       "honesty, sitemap template families, orphan refusal, sitemap cap in the report, "
-      "preflight/psi absent-metrics agreement, gsc text parity with json)")
+      "preflight/psi absent-metrics agreement, gsc text parity with json, gsc report-stale, "
+      "sitemap per-URL sample, nested index, lastmod batch, robots sitemap lines)")

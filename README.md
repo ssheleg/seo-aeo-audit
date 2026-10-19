@@ -150,7 +150,7 @@ already refuses a score out of 100.
 
 ## What knowledge is packed inside
 
-Twenty-five reference contracts ship *inside* the skill, so they travel to every
+Twenty-six reference contracts ship *inside* the skill, so they travel to every
 agent, not just Claude Code. This is the substance:
 
 | Area | What it holds | Why it is worth having |
@@ -169,6 +169,7 @@ agent, not just Claude Code. This is the substance:
 | **Benchmarks** | Dated figures for surface reach, click economics, citation mechanics, read budget, content correlations, operational targets and industry context | Lets the report size an opportunity with numbers instead of adjectives |
 | **Link building** | Target selection, both collection modes (Search Console reachable or not), anchor discipline, the exclusions a brief must name, and the CSV column contract | Turns the audit into a brief a contractor can execute without misreading an assumption as a measurement |
 | **Bulk market data** | The Prowl MCP as a rung-5 source — ~448 provider tools behind one pay-per-call endpoint, routed by track, with measured per-call costs and the operating gotchas | Gives a no-seat audit a second independent index, which is what makes a demand finding hold up |
+| **Build-time brief** | Brief mode for a site, section or landing page that is not live yet: nineteen build-time decisions (URL plan, one question per page, served HTML, schema for visible facts, crawler policy, honest dates, measurement at launch, regional engines and more), each linked to the audit section that verifies it after launch, plus landing readiness commands | The audit becomes the acceptance test of the brief, so a new site is built to pass it instead of audited after shipping |
 | **Method** | Evidence tiers, experiment design, the myth guard, check → tool routing with DevTools recipes, and the deliverable templates | Keeps two different runs of the audit comparable |
 
 ### Data freshness
@@ -177,8 +178,8 @@ agent, not just Claude Code. This is the substance:
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~6,200 non-blank lines** of distilled reference
-  material across the twenty-five contracts, rounded to the nearest hundred and
+  decide whether to trust the rest. **~6,600 non-blank lines** of distilled reference
+  material across the twenty-six contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were
   last re-fetched and what its newest row is.
@@ -362,7 +363,7 @@ plugins/seo-aeo-audit/
   ├── commands/seo-aeo-audit.md      slash command
   └── skills/seo-aeo-audit/
       ├── SKILL.md                   the procedure
-      ├── references/*.md            25 contract files (shipped on every channel)
+      ├── references/*.md            26 contract files (shipped on every channel)
       └── scripts/                   7 stdlib-only scripts: page_audit, gsc_pull,
                                      url_inspection, psi_pull, sitemap_audit, preflight,
                                      agent_surface

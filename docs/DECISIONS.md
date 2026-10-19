@@ -207,3 +207,23 @@ hooks and MCP config — confirmed against the plugins reference before it was r
 shipping channels are not Claude Code plugins and would have received the literal
 string, which fails in a way that looks like the skill is broken rather than
 unresolved.
+
+## 2026-10-19: The skill briefs a site before it is built, and stays out of building it
+
+**Decision.** Widen the scope to "audit a live site, or brief a site before it is
+built; never write the content or build the pages". Brief mode is one reference,
+`references/build-time.md`, whose every row is the inverse of an existing audit check
+and links to it; one skeleton writes `docs/seo/brief-<date>.md`. A brief carries no
+findings, no tiers and no myth item.
+
+**Why.** Build-time search doctrine had no home: a six-line router rule in no pack,
+and fragments in three sibling skills that did not reference each other. Giving it to
+this skill keeps one home for search facts, and makes the audit the acceptance test
+of the brief, because every row already has an audit section with evidence and tiers.
+
+**Alternatives rejected.** A design-time reference owned by a writing, design or
+delivery skill (it would split search facts across owners with no evidence tiers);
+a new family member (a ninth router owner for one reference, duplicating tiers and
+myths). The description budget forbids growth, so the description was rewritten at
+a lower length rather than extended.
+

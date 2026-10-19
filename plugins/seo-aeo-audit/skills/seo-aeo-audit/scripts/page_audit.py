@@ -34,6 +34,11 @@ Network behavior: plain GETs to the URLs you pass, http(s) only, no cookies or
 credentials, redirects off http(s) refused, non-HTML content types refused,
 response capped by --max-bytes. It writes nothing and phones nothing home.
 
+A short body that is a bot challenge or interstitial (a CDN "Just a moment", a
+CAPTCHA wall, a search engine's "unusual traffic" page) is reported as one
+`challenge-page` finding and nothing else: it is missing data, not a page with no
+title, no schema and no words, and a saved SERP capture of one is not a position.
+
 Every finding carries an evidence tier as well as a severity, because SKILL.md
 non-negotiable #2 makes the tier the confidence multiplier in
 `priority = (impact x confidence) / effort`. Severity says how loud a finding is;
@@ -73,7 +78,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all seven.
-SKILL_VERSION = "0.27.0"
+SKILL_VERSION = "0.28.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -321,8 +326,21 @@ COMPLETENESS_DEPENDENT = frozenset({
     # survive truncation, because a count of three found is still three found.
     "faq-unpaired", "faq-schema-orphan", "faq-schema-partial", "faq-schema-unreadable",
 })
+# A bot challenge or interstitial served with HTTP 200 is not the page: a CDN's
+# "Just a moment", a CAPTCHA wall, a search engine's "unusual traffic" page. Read
+# as the page, it fabricates title-missing, thin-content and no-schema findings
+# (and, from a SERP capture, a position of zero). Markers are deliberately narrow
+# and only count on a short body, because a long page that embeds a CAPTCHA in its
+# contact form is still a page.
+CHALLENGE_RE = re.compile(
+    r"<title>\s*(?:just a moment|attention required|access denied|verifying you are human|"
+    r"are you a robot)|cdn-cgi/challenge-platform|_cf_chl_opt|cf-chl-|"
+    r"detected unusual traffic from your computer network|action=[\"']?/sorry/index",
+    re.I)
+CHALLENGE_MAX_WORDS = 300
 # One home for the severity -> tier mapping, so the two never drift apart.
 FINDING_TIERS = {
+    "challenge-page": "CONFIRMED",
     "noindex": "CONFIRMED",
     "refresh-noindex": "CONFIRMED",
     "canonical-attrs": "CONFIRMED",
@@ -921,6 +939,7 @@ def analyze(html: str, url: str, headers: dict | None = None,
         # counts or fails to find something is unreliable when this is true, so it
         # travels with the numbers rather than in a log line nobody kept.
         "truncated": bool(truncated),
+        "challenge": bool(words < CHALLENGE_MAX_WORDS and CHALLENGE_RE.search(html)),
         "title": doc.title,
         "title_len": len(doc.title or ""),
         "meta_description_len": len(doc.meta_description or ""),
@@ -1005,6 +1024,18 @@ def findings(r: dict) -> list[dict]:
     def add(sev, code, msg, ref):
         out.append({"severity": sev, "code": code, "message": msg, "reference": ref,
                     "tier": FINDING_TIERS.get(code, "HYPOTHESIS")})
+
+    if r.get("challenge"):
+        # Nothing else is reported: every other check would describe the challenge,
+        # not the page. Missing data is reported as missing, never as a zero.
+        add("high", "challenge-page",
+            "the response is a bot challenge or interstitial served in place of the page "
+            "(a CDN challenge, a CAPTCHA wall or an 'unusual traffic' page), so nothing "
+            "here describes the page and no other finding, count or absence is reported. "
+            "It is missing data: fetch the URL with each bot user agent and compare status "
+            "and byte size against the browser fetch, or read it through URL Inspection",
+            "technical-checks.md#a1-crawl-access-and-rendering")
+        return out
 
     if r.get("truncated"):
         add("high", "truncated-read",
@@ -1303,6 +1334,11 @@ def to_markdown(results: list[dict]) -> str:
             lines.append("")
             continue
         rb = r["read_budget"]
+        if r.get("challenge"):
+            lines.append(
+                "- ⚠ **challenge page**: the response is a bot challenge or interstitial, not "
+                "the page. Nothing below describes the page; treat it as missing data."
+            )
         if r.get("truncated"):
             lines.append(
                 "- ⚠ **truncated read**: the response was cut off by `--max-bytes`, so every "
@@ -1416,6 +1452,7 @@ def main(argv: list[str]) -> int:
     prov = provenance("page_audit.py", argv, scope)
     errors = sum("error" in r for r in results)
     incomplete = sum(bool(r.get("truncated")) for r in results if "error" not in r)
+    challenged = sum(bool(r.get("challenge")) and not r.get("truncated") for r in results if "error" not in r)
     reasons = []
     resolution_errors = sum(row.get("record_type") == "input_error" for row in results)
     if resolution_errors:
@@ -1424,12 +1461,14 @@ def main(argv: list[str]) -> int:
         reasons.append({"code": "input_failed", "detail": f"{errors - resolution_errors} fetched input(s) could not be read or analyzed; see result errors."})
     if incomplete:
         reasons.append({"code": "incomplete_body", "detail": f"{incomplete} body/bodies were capped or incompletely decoded; fragment observations are not complete page totals."})
+    if challenged:
+        reasons.append({"code": "challenge_page", "detail": f"{challenged} body/bodies were a bot challenge or interstitial, not the page; they are missing data and support no finding."})
     if unknown_input:
         reasons.append({"code": "input_population_unknown", "detail": "Unreadable input list may contain additional entries; requested/dropped are unknown."})
     coverage = collector_coverage(
         "local_file" if args.file else "input_url_entry",
-        "This invocation's input entries (duplicates retained); returned counts complete readable HTML bodies, including empty bodies. Does not cover JavaScript rendering or sitewide discovery.",
-        requested, attempted, len(results) - errors - incomplete, None if unknown_input else 0, reasons)
+        "This invocation's input entries (duplicates retained); returned counts complete readable HTML bodies, including empty bodies, and excludes bot challenge pages. Does not cover JavaScript rendering or sitewide discovery.",
+        requested, attempted, len(results) - errors - incomplete - challenged, None if unknown_input else 0, reasons)
     if args.format == "json":
         for r in results:
             r["producer"] = prov

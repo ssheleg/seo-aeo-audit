@@ -29,6 +29,12 @@ Usage:
   gsc_pull.py --site https://example.com/ --days 90 --format json
   gsc_pull.py --list --format json        # explicit one-operation property listing
 
+Freshness: it finds the last date that actually carries data. A tail of missing
+days beyond the reporting lag, or a frozen tail repeating one value pair, prints
+`report-stale` (JSON `freshness.status`), and a collapse falling inside that window
+is withheld (`cliff_withheld`) rather than reported. A stale report does not change
+the exit status: the rows it did return are still measured.
+
 What it cannot give you: Manual Actions, Security Issues and the Index Coverage
 report are web-UI only, at every scope. An unexplained cliff needs a human to
 open that page.
@@ -74,7 +80,7 @@ from datetime import date, timedelta
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all seven.
-SKILL_VERSION = "0.27.0"
+SKILL_VERSION = "0.28.0"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -335,6 +341,14 @@ API = "https://searchconsole.googleapis.com/webmasters/v3"
 # Search Console lags roughly two days. Asking for today returns a partial tail
 # that reads as a drop — the easiest way to invent a collapse that is not there.
 REPORTING_LAG_DAYS = 2
+# The lag is not fixed. Days the window asked for beyond the last date that carries
+# data are tolerated up to this many; more is a stale report, not a fall.
+STALE_TOLERANCE_DAYS = 1
+# A frozen tail repeats one (clicks, impressions) pair. Tiny properties repeat small
+# numbers by chance, so only a pair at or above this many impressions, repeated on
+# at least FROZEN_MIN_DAYS consecutive final days, counts as frozen.
+FROZEN_MIN_IMPRESSIONS = 20
+FROZEN_MIN_DAYS = 3
 
 
 # ── auth ─────────────────────────────────────────────────────────────────────
@@ -743,6 +757,61 @@ def find_cliff(rows: list[dict], min_drop: float = 0.9, min_baseline: float = 50
     return None
 
 
+def freshness(rows: list[dict], window_end: str,
+              tolerance: int = STALE_TOLERANCE_DAYS) -> dict:
+    """Is the tail of the date series data, or a report that stopped moving?
+
+    Two shapes read as a decline and are not one. A **missing tail**: the API omits
+    dates it has no data for, so a report that stopped updating simply ends early.
+    A **frozen tail**: the same clicks and impressions repeated day after day. Either
+    prints `report-stale`, and a decline finding inside the stale window is withheld.
+    The API cannot tell a stale report from a real fall to zero; GA4 and server logs
+    can, which is the cross-check measurement.md J2 asks for.
+    """
+    end = date.fromisoformat(window_end)
+    daily = sorted((r for r in rows if r.get("impressions", 0) > 0 or r.get("clicks", 0) > 0),
+                   key=lambda r: r["keys"][0])
+    out = {"status": "fresh", "window_end": window_end, "last_data_date": None,
+           "missing_tail_days": None, "frozen_tail_days": 0, "stale_from": None,
+           "tolerance_days": tolerance}
+    if not daily:
+        out.update(status="unavailable", why="no date rows carry data; freshness was not assessed")
+        return out
+    last = date.fromisoformat(daily[-1]["keys"][0])
+    missing = max(0, (end - last).days)
+    out.update(last_data_date=last.isoformat(), missing_tail_days=missing)
+    pair = lambda r: (r.get("clicks"), r.get("impressions"))  # noqa: E731
+    run = 1
+    for prev, cur in zip(reversed(daily[:-1]), reversed(daily[1:])):
+        if (pair(prev) == pair(cur) and cur.get("impressions", 0) >= FROZEN_MIN_IMPRESSIONS
+                and (date.fromisoformat(cur["keys"][0]) - date.fromisoformat(prev["keys"][0])).days == 1):
+            run += 1
+        else:
+            break
+    frozen = run if run >= FROZEN_MIN_DAYS else 0
+    out["frozen_tail_days"] = frozen
+    if missing > tolerance:
+        # The last day that carries data is inside the stale window too: a report
+        # that stopped mid-day leaves a partial final point, which reads as a drop.
+        out.update(status="report-stale", stale_from=last.isoformat(),
+                   why=f"the last date carrying data is {last.isoformat()}, {missing} day(s) before "
+                       f"the window end {window_end} (tolerance {tolerance})")
+    elif frozen:
+        first_frozen = date.fromisoformat(daily[-frozen]["keys"][0])
+        out.update(status="report-stale", stale_from=first_frozen.isoformat(),
+                   why=f"the last {frozen} dates repeat one value pair {pair(daily[-1])}: a frozen report")
+    return out
+
+
+def withhold_stale_decline(cliff: dict | None, fresh: dict) -> tuple[dict | None, dict | None]:
+    """A decline whose fall lands in a stale tail is not a finding yet."""
+    if not cliff or fresh.get("status") != "report-stale" or not fresh.get("stale_from"):
+        return cliff, None
+    if cliff["after"] >= fresh["stale_from"] or cliff["before"] >= fresh["stale_from"]:
+        return None, cliff
+    return cliff, None
+
+
 CLIFF_SENSITIVITY = (
     "the detector reports only a drop of >=90% against the previous 7-day mean that "
     "then held for 14 days. A 60% drop that held is real and invisible here — read the "
@@ -820,6 +889,22 @@ def render_text(report: dict) -> str:
         out.append(f"  ! {dropped} row(s) removed as scraper/operator noise "
                    f"(quoted strings, raw URLs, `-site:`) before every number above")
 
+    fresh = report.get("freshness") or {}
+    if fresh.get("status") == "report-stale":
+        out += ["", f"report-stale: {fresh.get('why')}.",
+                f"  No decline finding is drawn for {fresh.get('stale_from')} -> {fresh.get('window_end')} "
+                "until the report moves again;",
+                "  the API cannot tell a stale report from a real fall to zero. Cross-check GA4 and "
+                "server logs (measurement.md J2)."]
+        withheld = report.get("cliff_withheld")
+        if withheld:
+            out.append(f"  WITHHELD: a collapse {withheld['before']} -> {withheld['after']} falls in that "
+                       "window and is not reported as one.")
+    elif fresh.get("status") == "fresh":
+        out += ["", f"freshness: last date with data {fresh.get('last_data_date')}, window end "
+                f"{fresh.get('window_end')}, fresh within {fresh.get('tolerance_days')} day(s)"]
+    elif fresh:
+        out += ["", f"freshness: UNAVAILABLE: {fresh.get('why')}"]
     cliff = report.get("cliff")
     out.append("")
     if cliff:
@@ -829,6 +914,8 @@ def render_text(report: dict) -> str:
         out += ["  A cliff that holds is site-level, not an algorithmic update. Check which",
                 "  URLs ranked before it and whether they still resolve. Manual Actions and",
                 "  Index Coverage are web-UI only — the API cannot clear them."]
+    elif report.get("cliff_withheld"):
+        out.append("collapse NOT ASSESSED for the stale window: withheld while the report is stale (report-stale above)")
     elif unavailable("date") or "cliff" in failed_derivations:
         out.append("UNAVAILABLE — date inputs or aggregate computation unavailable; collapse was not assessed")
     else:
@@ -1033,6 +1120,9 @@ def main(argv: list[str]) -> int:
         ("branded_split", "query", lambda: derive_branded_split(queries, [t.strip() for t in (args.brand_terms or "").split(",") if t.strip()])),
     ):
         derived[name] = derive(name, dimension, operation)
+    fresh = freshness(daily, end) if observations["date"].get("analyzed") is not None else {
+        "status": "unavailable", "window_end": end, "why": "date rows unavailable; freshness was not assessed"}
+    derived["cliff"], cliff_withheld = withhold_stale_decline(derived.get("cliff"), fresh)
 
     report = {
         "producer": provenance(
@@ -1045,6 +1135,8 @@ def main(argv: list[str]) -> int:
         "recent_window": {"start": start_recent, "end": end},
         "history_window": {"start": start_hist, "end": end},
         **derived,
+        "freshness": fresh,
+        "cliff_withheld": cliff_withheld,
         "derivation_errors": derivation_errors,
         "top_queries": sorted(queries, key=lambda r: -r["impressions"])[:100],
         "top_pages": sorted(pages, key=lambda r: -r["clicks"])[:100],
