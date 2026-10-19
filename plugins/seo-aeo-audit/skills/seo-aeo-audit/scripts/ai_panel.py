@@ -255,8 +255,8 @@ INTERVAL_METHOD = ("Wilson score interval, 95%, treating runs as independent dra
                    "uncertainty is wider than printed")
 PROXY_CAVEAT = ("api-proxy cells under-cover UI citations: a preprint (arXiv 2610.15382, "
                 "STUDY) found Google Search plus the OpenAI Responses API recovered only "
-                "28.3% and 26.2% of the URLs ChatGPT cited (two model versions). Read an "
-                "api-proxy citation rate as a floor on what the UI cites, never as the UI")
+                "28.3% and 26.2% of the URLs ChatGPT cited (two model versions). Never read an "
+                "api-proxy citation rate as a measurement of the UI")
 
 
 def wilson(k: int, n: int) -> list[float] | None:
