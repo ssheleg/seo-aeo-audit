@@ -7,11 +7,19 @@ an agent cannot know to open a file about a trap it has not hit yet.
 
 ## Contents
 
+- [Test the access, do not assume it](#test-the-access-do-not-assume-it)
 - [What it probes](#what-it-probes)
 - [The gates, and which screen each one sends you to](#the-gates-and-which-screen-each-one-sends-you-to)
 - [Why a green preflight is not a covered step](#why-a-green-preflight-is-not-a-covered-step)
 - [Seeding the report's coverage table](#seeding-the-reports-coverage-table)
 - [Seeding the report's provenance block](#seeding-the-reports-provenance-block)
+
+## Test the access, do not assume it
+
+Moved from `SKILL.md` Step 0 on 2026-10-20. A connected server is not a working
+one: tiers gate endpoints and tokens carry narrower scopes than the dashboard
+suggests. Probe the one call each source is there for, and record what came back.
+*"Connected but returns `Insufficient plan`"* is a finding the next audit needs.
 
 ## What it probes
 

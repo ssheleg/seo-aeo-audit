@@ -1,3 +1,16 @@
+## Short description, triggers in the body: 0.30.0 (2026-10-20)
+
+Branch `desc-budget-1020`. The description went from 956 to 418 characters and the
+command from 129 to 86, because the operator's skill listing was full and 81 skills
+showed no description. Removed trigger phrases live verbatim under `## Triggers` in
+SKILL.md. To keep the body inside 4,750 tokens, Step 0's access-testing paragraph moved
+to `references/preflight.md` and the `llms.txt` boundary paragraph became a pointer to
+`references/myths.md`. Version 0.29.0 to 0.30.0 in the manifests, SKILL-CARD and the
+nine script constants. Gate: `bash scripts/check-docs.sh` alone, exit 0.
+
+Next task: none here; the hub re-pins 0.30.0 in its own change. Note for whoever
+edits the body next: it is at 4,745 of 4,750 tokens, so the next section is a split.
+
 ## AI answer panel, Bing Webmaster instrument, freshness loop: 0.29.0 (2026-10-19)
 
 Branch `feat/0.29-freshness-instruments`. Objective: wave 3 part 2 of the 2026-10-19

@@ -18,6 +18,16 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.30.0 candidate: short description, triggers in the body (2026-10-20)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Description 956 to 418 characters, command 129 to 86 | `bash scripts/check-docs.sh` exit 0 (canon: `Use when`, Russian phrases, quoted scalar carrying `: `) | test-only |
+| Hub words still in SKILL.md | the sshlg-skills `lib/triggers.js` `seo-llmo` route read by a scratch check: 10 words, 0 missing; every quoted phrase after `Triggers:` reaches `seo-llmo` | observed on candidate source |
+| Body budget | tiktoken cl100k_base 4,745 tokens, inside the 4,750 house limit (pinned auditor `5ca5c36`: 0 GAP; 4,750 measured GAP first) | measured |
+| Whether a host now shows the description | no listing re-measured after install | never |
+
+
 ## v0.29.0 candidate: AI answer panel, Bing Webmaster instrument, freshness loop (2026-10-19)
 
 | What changes | Evidence | State |
@@ -526,7 +536,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-three releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-four releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

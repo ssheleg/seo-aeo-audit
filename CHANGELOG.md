@@ -1,3 +1,21 @@
+## v0.30.0: a short description, triggers in the body
+
+- **The skill description is a router of 418 characters** (was 956). The
+  operator's Claude Code skill listing measured 29,995 of about 30,000
+  characters for 134 skills, and 81 skills showed no description; a plugin
+  skill cannot be hidden, so length is the only lever. One "Use when"
+  sentence, four trigger phrases the family hook routes, a "Not for" boundary
+  naming `copywriting`, and the refusal phrase. It is a single-quoted scalar so
+  `Triggers:` takes a colon rather than a spaced hyphen.
+- **The removed trigger phrases moved verbatim** into a `## Triggers` section of
+  the SKILL.md body.
+- **The `/seo-aeo-audit` command carries one sentence** (86 characters, was 129).
+- **The body stays inside the 4,750-token house limit** (4,748 before, 4,745
+  after): the access-testing paragraph of Step 0 moved to
+  `references/preflight.md` *Test the access, do not assume it*, the `llms.txt`
+  boundary paragraph became a pointer to the section of `references/myths.md`
+  that already carries it, and two sentences were tightened.
+
 ## v0.29.0: AI answer panel, Bing Webmaster instrument, freshness loop
 
 - **`scripts/ai_panel.py`** (new, stdlib, fetches nothing) scores saved answer-engine
