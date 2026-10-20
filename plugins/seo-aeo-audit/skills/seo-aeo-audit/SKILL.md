@@ -1,6 +1,6 @@
 ---
 name: seo-aeo-audit
-description: Use when auditing a live site for search and answer-engine visibility, diagnosing traffic or ranking loss, planning changes, extracting link-building keywords, or briefing a site before it is built - "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop" / "почему упал трафик", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга", "SEO brief before launch" / "SEO-бриф до запуска сайта". Runs ten evidence-based tracks (access, canonicalization, architecture, intent, content, AEO, entity, experience, risk, measurement) and outputs findings, a change plan, a link-building CSV, or a build-time brief.
+description: 'Use when auditing a live site for search and answer-engine visibility, diagnosing a traffic or ranking drop, or briefing a site before it is built. Triggers: "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "почему упал трафик", "SEO brief before launch" / "SEO-бриф до запуска сайта". Not for logged-in panels or writing the copy (copywriting). Refusal phrase "no SEO" / «без SEO».'
 license: MIT
 compatibility: Needs network access to fetch the audited site, its robots, sitemaps and SERPs. Bundled scripts need python3 (stdlib only, nothing to pip install). Optional, degraded-without - Google Search Console and PageSpeed Insights credentials (their absence is reported as an evidence gap, never silently) and the Prowl MCP server for bulk third-party data. Read-only toward the audited site. Optional sibling - super-ux, whose ai-tells.md drives the E4b naturalness pass; in-text fallback when absent.
 ---
@@ -69,11 +69,8 @@ Inspect first, then act. In order:
    Search Console / Bing / analytics, a crawl export, server logs, and any MCP
    connected ([Prowl](references/prowl-mcp.md) covers bulk competitive and demand
    data without a per-vendor seat).
-   **Test the access, do not assume it.** A connected server is not a working one:
-   tiers gate endpoints and tokens carry narrower scopes than the dashboard
-   suggests. Probe the one call each source is there for, and record what came
-   back — *"connected but returns `Insufficient plan`"* is a finding the next
-   audit needs.
+   **Test the access, do not assume it**
+   ([preflight.md](references/preflight.md#test-the-access-do-not-assume-it)).
 3. Pick the scope with the user **only if the answer changes the work**: whole
    site, one template, one question, or a **link-building extraction** — which is
    a deliverable rather than a diagnosis, works with or without Search Console,
@@ -161,12 +158,12 @@ Run every track in scope. Each has its own file with the concrete checks, the
 | J | Measurement | Will anyone be able to tell if the plan worked? | [measurement.md](references/measurement.md) |
 | K | Agent surface | Can a machine discover, authenticate and transact here? | [agent-readiness.md](references/agent-readiness.md) |
 
-**Track K is conditional**: run it when the site sells something an agent could
-buy, call or automate. **Presence is `CONFIRMED`, effect is mostly `HYPOTHESIS`**,
-so most of it lands in Experiments ([agent-readiness.md](references/agent-readiness.md)).
+**Track K is conditional** (a site an agent could buy from, call or automate).
+**Presence is `CONFIRMED`, effect mostly `HYPOTHESIS`**, so most of it lands in
+Experiments ([agent-readiness.md](references/agent-readiness.md)).
 
-**Discover is not one of the ten tracks, and not part of track A**: of its three
-checks, none of them is a render gate. Where the GSC Discover report shows it is a material
+**Discover is not one of the ten tracks, and not part of track A**: of its checks,
+none of them is a render gate. Where the GSC Discover report shows it is a material
 source, run [discover.md](references/discover.md) as an eleventh pass.
 
 **Before any decline diagnosis**, run the date-alignment and update-response
@@ -279,8 +276,6 @@ ask first:
   single audit. Required as soon as the plan has an Experiments bucket, which
   anything below `CONFIRMED` puts there.
 
-The field list for each is in the skeletons, which is the point of having them.
-
 Executive summary rules: 5 bullets maximum, the top three blockers, the expected
 size of the prize, and the one thing that must happen first. Write for a
 technically literate non-specialist; expand jargon on first use.
@@ -317,12 +312,12 @@ answering a tactic question that is not on this short list.
 When the user asks for one of these, say plainly what the evidence shows, offer
 the nearest thing that does work, and move on.
 
-**Two of them have a narrow non-myth use, and confusing the two is how the myth
-gets re-sold.** `llms.txt` and Markdown twins do not help a page get **found**;
-they can help an agent that has **already arrived** read the site cheaply, which
-is a serving decision rather than a ranking one. The boundary and its conditions:
-[agent-readiness.md](references/agent-readiness.md) K3. Anything sold as "publish
-Markdown to rank in AI" is still the myth.
+`llms.txt` and Markdown twins serve agents, never rankings:
+[myths.md](references/myths.md), *The boundary two of these have*.
+
+## Triggers
+
+"AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга".
 
 ## Reference index
 

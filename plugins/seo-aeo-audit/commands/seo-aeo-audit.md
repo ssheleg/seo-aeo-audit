@@ -1,5 +1,5 @@
 ---
-description: Audit a live site for search + answer-engine visibility and produce a prioritized change plan, or brief a site before it is built
+description: Audit a live site for search and AI-answer visibility, or brief one before it is built
 argument-hint: '[site URL or scope, e.g. "example.com" | "traffic dropped in May" | "/blog only" | "brief: landing page for X"]'
 ---
 
