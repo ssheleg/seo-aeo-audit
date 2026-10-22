@@ -10,6 +10,10 @@ auditor decides what is real. Two rules before anything else:
 - [Browser engine — WebKit (Safari) first](#browser-engine--webkit-safari-first)
 - [Chrome DevTools recipes worth memorising](#chrome-devtools-recipes-worth-memorising)
 - [Where the automation stops](#where-the-automation-stops)
+- [Property instrument registry](#property-instrument-registry)
+- [The checkup by occasion](#the-checkup-by-occasion)
+- [UI-only steps, and how an agent takes one](#ui-only-steps-and-how-an-agent-takes-one)
+- [Field notes from one property (October 2026)](#field-notes-from-one-property-october-2026)
 
 
 1. **A flag is not a finding.** Many tool "issues" are irrelevant on a given
@@ -217,3 +221,125 @@ Performance Insights are Chrome tools and are reported as Chromium readings.
   provable. Keep it survivable: named ranges instead of cell references, few
   formulas rather than chained ones, conditional formatting to make the outliers
   visible before anyone reads a number.
+
+## Property instrument registry
+
+A checkup forgets what it does not list. Before the first audit of a property, write its
+registry once, **in the property's own repository**, and make every later checkup walk it:
+one row per instrument, with how it is reached and what it is there to answer. The audit
+then reports each row as run, unreachable (and why), or not connected, never as silence.
+Findings stay in the dated audit; the registry holds only access and purpose.
+
+| Column | What goes in it |
+|---|---|
+| Instrument | the console, API, script or log, by its own name |
+| Access | the route an agent takes: an API script, an MCP tool, a UI in a named browser session, a CLI |
+| Credential | the vault **name** of the key or token, never its value; "operator session" for a UI |
+| Rung | the ladder rung above, which caps the tier of anything it shows |
+| Answers | the one question this instrument is there for |
+| Evidence | the file and line, command or dated report that shows it was reached |
+
+The rows to try on any property, so none is skipped for want of remembering it:
+
+| Area | Rows |
+|---|---|
+| Google Search Console | Search Analytics API (`gsc_pull.py`); URL Inspection API (`url_inspection.py`); Sitemaps API (`sitemap_audit.py`); UI-only pages: Manual actions, Security issues, Live test, Request indexing; Pages report export |
+| Bing Webmaster Tools | API (`bwt_pull.py` after `preflight.py --bing-site`); UI: AI Performance report, site verification or import from Search Console |
+| Yandex Webmaster | UI; API behind an OAuth consent the property owner grants once |
+| Verification | how each engine verified the property (DNS, file, meta tag, import), so a removed tag is not mistaken for lost access |
+| Analytics | GA4 Data API and Admin API; GA4 Admin UI for key events and the Search Console link; Yandex Metrica goals; any first-party event sink |
+| Server-side counts | one count per money step, recorded by the server, with no consent dependency |
+| Answer engines | the prompt set per engine you can reach (`ai_panel.py` over saved captures; a SERP API for AI Mode) |
+| Agent surface | `robots.txt`, `llms.txt`, Markdown variants via `Accept: text/markdown`, machine-readable pricing, `agent_surface.py` |
+| Indexing push | IndexNow key file and the endpoints that accepted it |
+| Performance | PSI and CrUX (`psi_pull.py`), Lighthouse, field RUM if any, the project's own byte budgets |
+| Crawl and render | a full sitemap sweep with redirects not followed; WebKit render first; the project's own production readback scripts |
+| Logs and errors | host access and router logs, a long-retention log drain, error tracking |
+
+## The checkup by occasion
+
+A registry answers *what exists*; the occasion decides *what runs now*. Each step names its
+instrument; a step whose instrument is unreachable is reported as not done, with the reason.
+
+**A new site, before launch.**
+
+1. Search Console domain property by DNS; a quota project with the Search Console API enabled; `preflight.py` green.
+2. Bing Webmaster by import from Search Console; its API key in the vault; `preflight.py --bing-site` green.
+3. Yandex Webmaster and Metrica verified; Metrica goals created **before** the code calls `reachGoal`; the OAuth consent asked for on day one, because it is the step that waits on a person.
+4. GA4 key events, the Search Console link, custom dimensions applied from a registry in code.
+5. An IndexNow key file; a `robots.txt` that opens what should be crawled; `llms.txt` and Markdown variants only with content that is true.
+6. A server-side count for every money step, so a consent banner cannot hide the funnel.
+7. Production readback checks wired into the release script, so each release re-reads what earlier ones promised.
+
+**Every release.** The project's gates and CI on the exact commit; the production readback;
+a grep of the server-rendered HTML, per locale, for every string the release promised and every
+string it removed; a render of the touched pages; host logs read for personal data and for the
+request id.
+
+**Weekly.** Search Analytics with brand and non-brand split; Bing traffic and crawl stats;
+analytics channels; the server-side funnel; unresolved errors.
+
+**Monthly, or after a content or catalog change.** The full sitemap sweep; URL Inspection on a
+random sample and on every URL whose indexing was requested; the Pages report export; Yandex
+duplicates; the answer-engine prompt set; Lighthouse on the heaviest templates; an IndexNow push
+after a large URL change.
+
+**Dated readings** (an experiment's read date, a re-inspection 14 days after a request) are not a
+cadence: they live on the project's board with their date.
+
+## UI-only steps, and how an agent takes one
+
+Some first-party answers and actions have no API. URL Inspection's API reports only the
+indexed version: *"Presently only the status of the version in the Google index is available;
+you cannot test the indexability of a live URL"* (`CONFIRMED`,
+[urlInspection.index.inspect](https://developers.google.com/webmaster-tools/v1/urlInspection.index/inspect),
+read 2026-10-23), and it has no method that requests indexing. The Indexing API covers only
+pages with JobPosting or BroadcastEvent embedded in a VideoObject (`CONFIRMED`, above). So
+Request indexing, Live test, Manual actions and Security issues are Search Console UI, and so are
+Bing's AI Performance report and, until its OAuth consent exists, everything in Yandex.
+
+Requesting indexing changes the property's crawl queue, so it stays behind the access rule in
+`SKILL.md`: only with the operator's go in this session. With the go, an agent can take the step
+in the operator's signed-in browser without a person clicking, and one property did it for six
+URLs in October 2026 (`FIELD`). The way that held:
+
+1. **Open a window of your own** and act on it by its id, never by its index: another session
+   driving the same browser moves the front window, and an action by index then lands in the
+   wrong window (this happened once, on another organisation's tab; nothing was written there).
+2. **Re-read the window's URL before every input**, and stop if it is not the console.
+3. **Stop when someone else is using the screen**: a person at the keyboard or another session
+   in the same browser. The step waits; it is never forced.
+4. Submit the URL in the console's inspection field, wait for the panel, press Request indexing,
+   and **read the confirmation back** ("URL was added to a priority crawl queue"). Inspection
+   panels can stack in the page, so confirm that exactly one request button exists and that it
+   belongs to the URL just inspected before reporting the request as made.
+5. Close the window, record each URL with its status before the request (discovered, unknown,
+   soft 404) and the date, and put a re-inspection 14 days later on the board.
+
+## Field notes from one property (October 2026)
+
+One multilingual storefront on a hosted platform behind a CDN. Every note is `FIELD`: one site,
+no control. Each is worth checking for on the next property, not assuming.
+
+- **A CDN served the old `robots.txt` for 24 hours** after the origin changed it. Read it again
+  through the CDN the next day before calling the change live.
+- **IndexNow's shared endpoint answered 403** to a key that Bing (200) and Yandex (202) accepted
+  directly, the same day. Submit to the engines' own endpoints and record each status.
+- **Bing's clicks ran about 15 times the analytics sessions** from Bing, and its click count
+  includes bots it does not filter. Compare trends between the two, never totals.
+- **Analytics behind a consent banner saw about one Google click in five.** Money steps were
+  read from a server-side count instead, which needs no consent and stores no personal data.
+- **PageSpeed Insights answered 429** (daily quota, no key) on three audit days. Field data was
+  then a gap, written as such, never as a pass.
+- **A banned-phrase grep over server HTML matched a quoted customer review.** Read the element a
+  hit sits in before calling it a claim of the site.
+- **A local build without its data source rendered no prices**, so every price check against it
+  passed vacuously. A content check needs the data the page is built from.
+- **A machine under load failed browser checks** for reasons outside the site: one cold
+  `hydrated=false` in four runs at a load average of twice the core count. Re-run before it is a
+  finding, and refuse lab measurements on an oversubscribed machine.
+- **Router logs kept identifiers in URL paths** that the log drain's redactor did not mask,
+  because it looked for the international `+` form only. Read a sample of the host's own router
+  lines, not only the application's, when a check asks whether logs carry personal data.
+- **A Metrica goal missing from the UI drops `reachGoal` without an error.** Create goals before
+  the code that reaches them ships.
