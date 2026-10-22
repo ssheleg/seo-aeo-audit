@@ -1,7 +1,8 @@
 ## 0.30.0 pinned; the next change needs a split (2026-10-22)
 
 - **State.** seo-aeo-audit 0.30.0 is pinned by the hub. The SKILL body sits at 4,745 of its 4,750-token limit, so the next addition first moves a section into a reference.
-- **Next task.** G7 of the hub's M2 plan (`ssheleg/sshlg-skills` `docs/runs/2026-10-22-m2-subscription-growth-plan.md`) (wave 2): AI citation sources beyond the own site and LLM referrals as a channel, after splitting the body.
+- **G7 measured as covered (2026-10-22).** The M2 plan's G7 asked for AI citation sources beyond the own site and LLM referrals as a channel. Both are already here: `references/demand-and-conversion.md:113` and `:116`, `references/measurement.md:30-33`, `references/aeo-geo.md:93-106`, `references/entity-and-brand.md:283-287`. No change is owed; the attribution half moves to super-ux.
+- **Next task.** B-11 (priority 5.0, the board's highest): `agent_traffic.py`, which counts AI and agent user agents in a server-log export and drops spoofers by forward-confirmed reverse DNS. Any body addition still starts with a split.
 
 ## Short description, triggers in the body: 0.30.0 (2026-10-20)
 
