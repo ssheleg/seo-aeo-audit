@@ -1,3 +1,8 @@
+## 0.30.0 pinned; the next change needs a split (2026-10-22)
+
+- **State.** seo-aeo-audit 0.30.0 is pinned by the hub. The SKILL body sits at 4,745 of its 4,750-token limit, so the next addition first moves a section into a reference.
+- **Next task.** G7 of the hub's M2 plan (`ssheleg/sshlg-skills` `docs/runs/2026-10-22-m2-subscription-growth-plan.md`) (wave 2): AI citation sources beyond the own site and LLM referrals as a channel, after splitting the body.
+
 ## Short description, triggers in the body: 0.30.0 (2026-10-20)
 
 Branch `desc-budget-1020`. The description went from 956 to 418 characters and the
