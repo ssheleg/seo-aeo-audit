@@ -1,3 +1,11 @@
+## A URL Inspection run outlives its token: 0.31.1 (2026-10-23)
+
+- **Done.** Issue #56: `url_inspection.py` re-mints the ADC token before 50 minutes and once on
+  HTTP 401, retrying that URL once; tests in `test/test_url_inspection.py`; `SECURITY.md` I/O count
+  43 to 45; the family member gate (`test/family_gate.py`) runs in `npm run test:audit`.
+- **Next task.** After merge: tag `v0.31.1`, watch the release, then the sshlg-skills pin bump;
+  then B-11.
+
 ## Instruments, checkup by occasion, indexing as an experiment: 0.31.0 (2026-10-23)
 
 - **State.** 0.31.0 ships #50 to #54, all in `references/tooling.md` plus one row in `references/benchmarks.md`: the property instrument registry, the checkup by occasion with an indexing push run as an experiment, UI-only steps and how an agent takes one, paid indexers and index checkers (doctrine, the owner-access rule, provider sheets for three APIs, the ledger), ten FIELD notes. The SKILL body is unchanged (4,745 of 4,750 tokens). Version 0.30.0 to 0.31.0 in the manifests, SKILL-CARD and the nine script constants; CHANGELOG, verification and the retro stamp in the same change.

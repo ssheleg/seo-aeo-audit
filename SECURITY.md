@@ -123,13 +123,13 @@ grep -rnE "urlopen|build_opener|opener\.open|subprocess\.|socket|os\.environ|os\
   plugins/seo-aeo-audit/skills/seo-aeo-audit/scripts/
 ```
 
-The second command prints **43 lines and that is all of it**, and it breaks down
+The second command prints **45 lines and that is all of it**, and it breaks down
 exactly:
 
 | lines | what they are |
 |---|---|
 | 16 | `urllib` — 6 `urlopen` call lines, 3 `build_opener` construction lines and 3 `opener.open` request lines for the page scheme guard, the agent-surface redirect trace and the sitemap per-URL sample. The other 4 are 2 import lines and 2 comments. Building an opener does not itself issue a request |
-| 11 | the three `subprocess.run` blocks that call `gcloud`, with timeout/error branches and bootstrap containment — 4 lines each in `gsc_pull.py` and `url_inspection.py`, 3 in `preflight.py`. These are grep matches, not eleven credential requests |
+| 13 | the three `subprocess.run` blocks that call `gcloud`, with timeout/error branches and bootstrap containment — 4 lines in `gsc_pull.py`, 6 in `url_inspection.py` (two more catch the timeout when it re-mints its token), 3 in `preflight.py`. These are grep matches, not thirteen credential requests |
 | 9 | `os.environ` — **one line per script**: each one reads the three variables above in a single loop over `PRODUCER_ENV` (`preflight.py:166-168`), so nine scripts give nine lines. Three fields per script would be 27 |
 | 7 | `open()` calls that open a **file**, every one of them a file you named yourself on the command line (`--file`, `--url-list`, `--urls-file`, `--openapi-file`, `--captures`). Three additional lines match `\bopen\(` — `opener.open` — and are counted in the `urllib` row above, which is why the four rows sum to 43 and a per-pattern sum gives 46 |
 

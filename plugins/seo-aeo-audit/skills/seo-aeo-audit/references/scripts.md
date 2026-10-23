@@ -441,6 +441,9 @@ not observed pages; use coverage rather than array length as the denominator.
 Local HTML open/decode failure counts one attempted local file. PSI preserves
 duplicates, while URL Inspection deduplicates before its cap. Missing ADC excludes
 known selected inputs before attempt and never turns unknown provider rows into zero.
+URL Inspection re-mints its ADC token before it is 50 minutes old and once on an HTTP
+401, then retries that URL once, so a run longer than the token's hour keeps answering; a
+re-mint that fails fails that row with its reason, not the run.
 
 Property listing is explicit and accepts JSON:
 

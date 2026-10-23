@@ -1,5 +1,10 @@
-## Unreleased
+## v0.31.1: a URL Inspection run outlives its token
 
+- `scripts/url_inspection.py` re-mints its ADC access token before it is 50 minutes old and
+  once on an HTTP 401, then retries that URL once (issue #56: a 1,682-URL run answered 401 from
+  row 524 on). A re-mint that fails fails that row with its reason, not the run; a malformed
+  provider payload still reaches the parser. `test/test_url_inspection.py`: six new cases.
+  `SECURITY.md` counts the two new timeout catches (43 to 45 I/O lines).
 - `test/family_gate.py`, the family's canonical member gate (hub B-108, B-109): the board
   parses (every row as wide as its header, no id twice) and `release.yml` keeps the tag-ancestry
   check (`fetch-depth: 0`, `git merge-base --is-ancestor`), each watched failing on a plant by
