@@ -13,6 +13,7 @@ auditor decides what is real. Two rules before anything else:
 - [Property instrument registry](#property-instrument-registry)
 - [The checkup by occasion](#the-checkup-by-occasion)
 - [UI-only steps, and how an agent takes one](#ui-only-steps-and-how-an-agent-takes-one)
+- [Paid indexers and index checkers](#paid-indexers-and-index-checkers)
 - [Field notes from one property (October 2026)](#field-notes-from-one-property-october-2026)
 
 
@@ -251,7 +252,7 @@ The rows to try on any property, so none is skipped for want of remembering it:
 | Server-side counts | one count per money step, recorded by the server, with no consent dependency |
 | Answer engines | the prompt set per engine you can reach (`ai_panel.py` over saved captures; a SERP API for AI Mode) |
 | Agent surface | `robots.txt`, `llms.txt`, Markdown variants via `Accept: text/markdown`, machine-readable pricing, `agent_surface.py` |
-| Indexing push | IndexNow key file and the endpoints that accepted it |
+| Indexing push | IndexNow key file and the endpoints that accepted it; any paid indexer or index checker the operator holds an account with, by its vault name (below) |
 | Performance | PSI and CrUX (`psi_pull.py`), Lighthouse, field RUM if any, the project's own byte budgets |
 | Crawl and render | a full sitemap sweep with redirects not followed; WebKit render first; the project's own production readback scripts |
 | Logs and errors | host access and router logs, a long-retention log drain, error tracking |
@@ -315,6 +316,42 @@ URLs in October 2026 (`FIELD`). The way that held:
    belongs to the URL just inspected before reporting the request as made.
 5. Close the window, record each URL with its status before the request (discovered, unknown,
    soft 404) and the date, and put a re-inspection 14 days later on the board.
+
+## Paid indexers and index checkers
+
+The doctrine stands as written: an indexer can only force a crawl, and the quality gate that
+follows decides inclusion (technical-checks.md, myths.md). These services sell **two different
+jobs**, and only one of them is an audit instrument.
+
+**The checker is an instrument.** It answers "is this URL in the index" per URL, in bulk, and for
+engines with no per-URL API an agent can call. It earns its place when the URLs to check exceed
+the URL Inspection quota (benchmarks.md, *Operational benchmarks*): a sitemap of several thousand
+URLs cannot be inspected through Google's API in a day. Its method is never published, so its
+answer is `HYPOTHESIS` until it agrees with URL Inspection on a sample that holds both indexed and
+unindexed URLs; record the agreement rate beside the result, and keep an answer of "unknown" as
+missing data, never as "not indexed".
+
+**The indexer is a paid push, and it acts on the property.** It spends money, so it runs only with
+the operator's go, and only after the free levers: one internal link from a page crawled daily,
+the sitemap, IndexNow, Request indexing (*UI-only steps*, above). Then:
+
+1. Feed it only URLs verified **absent** from the index. A URL already indexed counts as a success
+   and inflates the rate (myths.md).
+2. Hold out a random share of the cohort as a control, and compare the indexed share of both at a
+   fixed day (7 and 14), measured by URL Inspection, not by the vendor's report.
+3. Prefer billing per indexed URL where it is offered, and still re-verify: the vendor's "indexed"
+   is its own checker's verdict.
+4. A service that does not disclose how it causes the crawl may use link networks, which the
+   spam-network row of the field test in myths.md scored lowest; treat its effect on the property
+   as unknown (`HYPOTHESIS`) and say so in the report.
+
+Two services, as their API pages described them on 2026-10-23 (`CONFIRMED` for the API contract
+only; nothing here measures their effect):
+
+| Service | Jobs and engines | Billing | Status semantics | Access |
+|---|---|---|---|---|
+| SpeedyIndex | indexer for Google (also a drip-feed variant) and Yandex; checker for Google, Bing and Yandex; a backlink checker | tokens bought in packages; an indexer task can be billed per indexed URL (`pay_per_indexed`) | a task is complete when every URL was sent; with per-indexed billing the final count arrives later, so wait for the result flag, then read the full report (indexed and unindexed lists with titles) | REST v2, key in the `Authorization` header; base `https://api.speedyindex.com` |
+| seoindex.link | indexer for Google; checker for Google | a fixed price per submitted link for indexing and a lower one per checked link, charged on acceptance; a batch the balance cannot cover is refused whole; unresolved checks are refunded | an indexing request ends at `submitted`, which means sent, not indexed; a check returns 1, 0 or null, and the vendor itself says null is not "not indexed" | REST v1, bearer key issued by a Telegram bot; mechanism not disclosed |
 
 ## Field notes from one property (October 2026)
 

@@ -174,6 +174,7 @@ implying one.
 | TTFB | <200ms optimal, <500ms acceptable | practitioner convention, **undated** — a place to measure, not an engine threshold |
 | Server error rate | <0.5% | practitioner convention, **undated** |
 | Duplicate-group persistence after a fix | up to 2 weeks | Google canonicalization docs, 2026-07-10 (algorithm-updates.md) — `CONFIRMED` |
+| URL Inspection API quota | 2,000 calls per site per day and 600 per minute; 10,000,000 per day and 15,000 per minute per Cloud project | [Search Console API usage limits](https://developers.google.com/webmaster-tools/limits), read 2026-10-23, `CONFIRMED`. A sitemap larger than the daily figure cannot be inspected in one day (tooling.md, *Paid indexers and index checkers*) |
 | Out-of-stock crawl deprioritization | 100+ days after the directive is removed | technical-checks.md A2, `FIELD`, Jul 2026 |
 | "Discovered – not indexed" push success | No general success-rate or deadline target established | Earlier 70–80% / 72h claim came from **undated field reports without an inspectable sample or primary receipt**; not an acceptance threshold. Use technical-checks.md A2 and the bounded hypothesis in growth-plays L10. |
 | Migration traffic loss | ~30% average; ~8% with a disciplined protocol; 67% in the documented failure | technical-checks.md Migrations, `FIELD`; the 67% case is the news-network move of Jan 2022 |
