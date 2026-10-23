@@ -1,3 +1,8 @@
+## Instruments, checkup by occasion, indexing as an experiment: 0.31.0 (2026-10-23)
+
+- **State.** 0.31.0 ships #50 to #54, all in `references/tooling.md` plus one row in `references/benchmarks.md`: the property instrument registry, the checkup by occasion with an indexing push run as an experiment, UI-only steps and how an agent takes one, paid indexers and index checkers (doctrine, the owner-access rule, provider sheets for three APIs, the ledger), ten FIELD notes. The SKILL body is unchanged (4,745 of 4,750 tokens). Version 0.30.0 to 0.31.0 in the manifests, SKILL-CARD and the nine script constants; CHANGELOG, verification and the retro stamp in the same change.
+- **Next task.** The hub re-pins 0.31.0 in `sshlg-skills/skills.json`. Then B-11 as before. The first indexing cohort's readings (day 7 and 14 from 2026-10-23) are the evidence the `verification.md` row "yields a verdict" waits on.
+
 ## 0.30.0 pinned; the next change needs a split (2026-10-22)
 
 - **State.** seo-aeo-audit 0.30.0 is pinned by the hub. The SKILL body sits at 4,745 of its 4,750-token limit, so the next addition first moves a section into a reference.

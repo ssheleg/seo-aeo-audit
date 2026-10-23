@@ -5,6 +5,26 @@
   check (`fetch-depth: 0`, `git merge-base --is-ancestor`), each watched failing on a plant by
   `--self-test`. Wired into the gate; a byte-for-byte copy of the hub's `member-gate/family_gate.py`.
 
+## v0.31.0: the property's instruments, the checkup by occasion, and indexing as an experiment
+
+- **Property instrument registry** (`references/tooling.md`): the table an audit writes once per
+  property, in the property's own repository (instrument, access, credential by vault name, rung,
+  answers, evidence), and the rows to try on any property, so a checkup walks a list instead of a
+  memory (#50).
+- **The checkup by occasion**: a new site before launch in seven steps, every release, weekly,
+  monthly, dated readings on the board (#50), and **an indexing push** as its own occasion, run as an
+  experiment: inspect, plan only absent and allowed URLs with a seeded held-out control, push per
+  engine with a ledger, read both arms by URL Inspection at day 7 and 14 (#53).
+- **UI-only steps, and how an agent takes one**: the URL Inspection API's own limit quoted, the
+  Indexing API scope, and a five-step way to request indexing in the operator's signed-in browser
+  behind the access rule (#50).
+- **Paid indexers and index checkers**: the checker is an instrument (`HYPOTHESIS` until it agrees
+  with URL Inspection on a sample), the indexer a paid push that acts on the property; never grant an
+  indexer owner access to the property (#51, #52); provider sheets for SpeedyIndex v2, seoindex.link
+  v1 and 2index.ninja v1 as documented on 2026-10-23, and the ledger a push leaves (#54).
+- **`benchmarks.md`** gains the URL Inspection quota from Google's usage-limits page (#51).
+- Ten `FIELD` notes from one property in October 2026 (#50). No property is named.
+
 ## v0.30.0: a short description, triggers in the body
 
 - **The skill description is a router of 418 characters** (was 956). The

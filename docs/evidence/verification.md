@@ -18,6 +18,15 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.31.0 candidate: instruments, checkup by occasion, indexing as an experiment (2026-10-23)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Four sections in `tooling.md` (registry, occasions, UI-only steps, field notes) and three on indexing (#50 to #54) | `bash scripts/check-docs.sh` exit 0 on each PR and on this candidate; CI `validate` and `House skill audit` green on #50 to #54 | test-only |
+| The Request indexing recipe holds on a real property | six URLs requested and confirmed by the console's dialog on 2026-10-22 and 10-23 | observed once |
+| The indexing experiment protocol yields a verdict | first cohort pushed 2026-10-23; readings due at day 7 and 14 | never |
+| URL Inspection quota figure | Google usage-limits page read 2026-10-23 | documented |
+
 ## v0.30.0 candidate: short description, triggers in the body (2026-10-20)
 
 | What changes | Evidence | State |
@@ -536,7 +545,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-four releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-five releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
