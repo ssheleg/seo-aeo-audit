@@ -1,3 +1,8 @@
+## v0.31.2: the member gate declares its shared mechanism
+
+- `test/family_gate.py` opens with `# shared-mechanism: family-gate`, as the hub's
+  cross-repository check requires of every copy of a shared mechanism. No behaviour change.
+
 ## v0.31.1: a URL Inspection run outlives its token
 
 - `scripts/url_inspection.py` re-mints its ADC access token before it is 50 minutes old and
