@@ -379,6 +379,75 @@ only; nothing here measures their effect):
 | seoindex.link | indexer for Google; checker for Google | a fixed price per submitted link for indexing and a lower one per checked link, charged on acceptance; a batch the balance cannot cover is refused whole; unresolved checks are refunded | an indexing request ends at `submitted`, which means sent, not indexed; a check returns 1, 0 or null, and the vendor itself says null is not "not indexed" | REST v1, bearer key issued by a Telegram bot; mechanism not disclosed |
 | 2index.ninja | indexer for Google, Yandex and Bing (an instant mode for Google), also from a watched sitemap; checker for Google only, per region | a plan with an expiry date plus tokens, charged when a link is queued; tokens come back only for links still in the queue; an automatic check after sending costs extra | a link's send status (`Sent`, `In the queue`, `Error sending` and others) is reported apart from `google_indexed`; a batch with one invalid link is refused whole | REST v1, bearer token from the account page; a `google_access_granted` flag on submissions, described only as Google account access granted |
 
+### Provider sheets
+
+What each API documented on 2026-10-23, so an agent can call it without reading the vendor's page
+again. `CONFIRMED` for the contract as written by the vendor, nothing more: none of these numbers is a
+measured indexing rate. Re-read the vendor page before a run that spends; prices and modes move.
+
+**SpeedyIndex**, REST v2, base `https://api.speedyindex.com`.
+
+| Item | Value |
+|---|---|
+| Auth | header `Authorization: <key>` (no `Bearer`); `Content-Type: application/json` on POST |
+| Answer envelope | every response carries `code`: 0 success, 1 insufficient balance or not found, 2 validation error, 3 rate limit or server error; HTTP 401, 402, 413, 429 |
+| Rate limit | 120 requests per minute per IP |
+| Balance | `GET /v2/account` returns `balance.tokens`, `balance.indexer` (credits), `balance.checker` (credits); free to call |
+| Create | `POST /v2/task/{google,yandex,bing}/{indexer,checker}/create` with `urls` (max 10,000) and an optional `title`; Bing is checker only |
+| Google indexer | only `pay_per_indexed: true` is available: 100 tokens a URL charged at creation, refunded in full for URLs not indexed after 7 days |
+| Yandex indexer | per-indexed always on: indexer credits first (1 a URL), then 20 tokens a URL, refunded in full for URLs not indexed after 15 days |
+| Drip feed | Google indexer only: `drip_feed: true`, `drip_feed_days` 2 to 30, at least as many URLs as days, equal daily batches |
+| Status | `POST .../status` with `task_id` or `task_ids` (max 1,000): `size`, `processed_count`, `indexed_count`, `is_completed`; per-indexed tasks add `status`, `tokens_charged`, `tokens_refunded`, `check_after` |
+| Completion trap | `is_completed` means every URL was sent; on a per-indexed task the final `indexed_count` arrives after `check_after`, so read the report then |
+| Reports | `POST .../report` (URL lists) and `.../fullreport` (indexed URLs with titles; unindexed with `error_code`) |
+| List | `GET .../list/{page}`, 1,000 tasks a page, newest first; Google filters `standard`, `pay_per_indexed`, `drip_feed` |
+| Single URL | `POST /v2/{google,yandex}/url` with `url` and optional `pay_per_indexed`; code 3 is a daily limit or a failed task, refunded |
+| Backlink checker | `POST /v2/task/backlink/checker/create` with donor `urls` (max 10,000) and `target_domains` (max 50); report paginated (max 100) with HTTP status, Moz DA and spam score, target links |
+| Packages | $5 = 5,000 tokens, $20 = 30,000, $50 = 120,000, $100 = 250,000, $250 = 700,000, $500 = 1,500,000; PayPal adds 10 percent |
+
+**seoindex.link**, REST v1, base `https://seoindex.link/api/v1`.
+
+| Item | Value |
+|---|---|
+| Auth | `Authorization: Bearer <key>` or `X-API-Key: <key>`; the key comes from a Telegram bot, and regenerating it kills the old one at once |
+| Index | `POST /index` with `urls` (array or newline text, up to 200,000, duplicates merged); 202 with `id`, `charged_usd`, `balance_usd`; Google only |
+| Status | `GET /status?id=`: `queued`, `processing`, `submitted` (sent, not indexed) or `failed` (refunded) |
+| Check | `POST /check`, then `/check-status?id=` and `/check-results?id=` (cursor `after_id`, `limit` up to 10,000, filter `all`, `indexed`, `not_indexed`, `unknown`); `is_indexed` 1, 0 or null, and null is not "not indexed" |
+| Billing | $0.01 a link to index, $0.002 a link to check, charged on acceptance; a batch the balance cannot cover is refused whole (402, nothing charged); unresolved checks refunded |
+| Errors | 400 no valid URLs, 401 key, 402 balance, 404 unknown id, 405 method, 413 over 200,000 |
+| Mechanism | not disclosed; no indexing-rate claim |
+
+**2index.ninja**, REST v1, base `https://2index.ninja/api/v1/`.
+
+| Item | Value |
+|---|---|
+| Auth | `Authorization: Bearer <token>` from the account page; send a `User-Agent`, some hosts answer 403 without one |
+| Add | `POST link/add_simple` with `links` (array or newline text), optional `project_name` (default `default`), engine flags `google`, `yandex`, `bing` (booleans, at least one), `google_access_granted` (keep false) |
+| Projects | `POST project` (`type` `indexing` or `indexing_check`, `website`, speed, `instant_indexing`, `check_links`, `geo_target_id`, default 2840, the US); `GET project/{id}` returns sent, queued, indexed and not-indexed counts with download URLs |
+| Sitemap | `POST sitemap/add` with `watch` to keep sending new URLs from a sitemap |
+| Resend | `POST link/resent_notindexed_links/{project_id}` with `max_attempts` 1 to 10 |
+| Checker | Google only, per region |
+| Billing | a plan with an expiry date plus tokens, charged when a link is queued; tokens return only for links still queued; an automatic check after sending costs extra; instant mode has its own rate |
+| Traps | one invalid link refuses the whole batch; error shapes vary (array, object or string); a project id may come back as a number or a string |
+| Mechanism | not disclosed; the `google_access_granted` flag asks for access to the Google account |
+
+### The ledger
+
+A push leaves one file per provider and engine beside its plan, and nothing in it is secret:
+
+| Field | What it holds |
+|---|---|
+| plan | the path of the plan: label, property, seed, control share, counts by class, the treatment and control lists |
+| provider, engine | which service and which engine received the treatment |
+| sent_at | when |
+| tasks | per request: the provider's task or project id (or none, when refused), the HTTP status, the provider's answer as returned, the URL count |
+| snapshots | each status read: when, and what the provider answered per task |
+| readings | each verdict: the day, URL Inspection counts for both arms, the difference, and the provider's tokens charged and refunded |
+
+The verdict line of a run reads: treatment indexed `a` of `n`, control indexed `b` of `m`, difference in
+percentage points, tokens charged and refunded, and the date. Below three properties or one cohort it is
+`FIELD`.
+
 ## Field notes from one property (October 2026)
 
 One multilingual storefront on a hosted platform behind a CDN. Every note is `FIELD`: one site,
