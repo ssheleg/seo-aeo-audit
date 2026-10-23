@@ -18,6 +18,10 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.31.3 candidate: the member gate declares its divergence too (2026-10-24)
+
+Evidence: `bash scripts/check-docs.sh` and `npm run test:audit` exit 0 on the candidate tree.
+
 ## v0.31.2 candidate: the member gate declares its shared mechanism (2026-10-24)
 
 Evidence: `bash scripts/check-docs.sh` and `npm run test:audit` exit 0 on the candidate tree.
@@ -556,7 +560,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-seven releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-eight releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
