@@ -18,6 +18,13 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.31.1 candidate: a URL Inspection run outlives its token (2026-10-23)
+
+`scripts/url_inspection.py` re-mints its token on age and on a 401 (issue #56). Evidence:
+`test/test_url_inspection.py` (six new cases: reuse, age, one retry on 401, a second 401 fails
+the row, a failed re-mint keeps the 401, a non-object payload passes to the parser), and
+`bash scripts/check-docs.sh` exit 0 on the candidate tree.
+
 ## v0.31.0 candidate: instruments, checkup by occasion, indexing as an experiment (2026-10-23)
 
 | What changes | Evidence | State |
@@ -545,7 +552,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-five releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-six releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

@@ -61,7 +61,7 @@ import urllib.request
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all nine.
-SKILL_VERSION = "0.31.0"
+SKILL_VERSION = "0.31.1"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -222,6 +222,52 @@ def inspect(site: str, url: str, token: str, quota_project: str | None) -> dict:
 
 
 MAX_RESPONSE_BYTES = 8_000_000  # raw and decoded JSON response bytes
+
+# An ADC access token lives about an hour; one URL takes a few seconds, so a run of more
+# than roughly 600 URLs outlived its token and every later row answered HTTP 401 (issue #56,
+# 2026-10-23: rows 524 to 1,681 of 1,682). The token is re-minted before it gets this old,
+# and a 401 re-mints once and retries that URL once.
+TOKEN_MAX_AGE = 50 * 60
+
+
+class Tokens:
+    """The run's access token, re-minted when it is older than TOKEN_MAX_AGE or on demand."""
+
+    def __init__(self, mint=None, clock=None):
+        self._mint = mint or access_token
+        self._clock = clock or time.monotonic
+        self._token, self._at = None, None
+
+    def get(self) -> str:
+        if self._token is None or self._clock() - self._at > TOKEN_MAX_AGE:
+            self.refresh()
+        return self._token
+
+    def refresh(self) -> str:
+        self._token, self._at = self._mint(), self._clock()
+        return self._token
+
+
+def inspect_fresh(site: str, url: str, tokens: Tokens, quota_project: str | None,
+                  inspect_fn=None) -> dict:
+    """`inspect` with a token that is never stale: on HTTP 401, re-mint once and retry once.
+    A re-mint that fails leaves the row's 401 as it was; a second 401 fails the row."""
+    call = inspect_fn or inspect
+    try:
+        token = tokens.get()
+    except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
+        return {"_error": "ADC token re-mint failed after it aged out; this URL was not inspected"}
+    raw = call(site, url, token, quota_project)
+    # A malformed provider payload (a list, a string) is the parser's to report, not a 401.
+    if not isinstance(raw, dict) or not str(raw.get("_error", "")).startswith("HTTP 401"):
+        return raw
+    try:
+        token = tokens.refresh()
+    except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
+        return raw
+    if not isinstance(token, str) or not token.strip():
+        return raw
+    return call(site, url, token, quota_project)
 
 
 # BEGIN BOUNDED TRANSPORT
@@ -640,10 +686,10 @@ def main(argv: list[str]) -> int:
         print(f"note: {dropped} URL(s) beyond --max-urls={args.max_urls} were not "
               f"inspected", file=sys.stderr)
 
-    token, credential_error = None, None
+    tokens, credential_error = Tokens(), None
     if batch:
         try:
-            token = access_token()
+            token = tokens.get()
             if not isinstance(token, str) or not token.strip():
                 credential_error = "ADC returned no usable token; selected URLs were not attempted."
         except (SystemExit, OSError, UnicodeError, subprocess.TimeoutExpired):
@@ -656,7 +702,7 @@ def main(argv: list[str]) -> int:
         if i:
             time.sleep(MIN_INTERVAL)
         attempted += 1
-        row = parse(inspect(args.site, u, token, args.quota_project), u)
+        row = parse(inspect_fresh(args.site, u, tokens, args.quota_project), u)
         row["findings"] = findings(row)
         rows.append(row)
     excluded = dropped + (len(batch) if credential_error else 0)

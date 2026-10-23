@@ -141,6 +141,72 @@ check("never-crawled" not in _ecodes,
 check("no-index-status" in _ecodes,
       "an empty inspectionResult must say the response carried no index status")
 
+# ── issue #56: an ADC token lives about an hour; a long run must not outlive it ──
+# Observed 2026-10-23: 1,682 URLs, rows 524 onward all answered HTTP 401. The token is
+# re-minted when it is older than TOKEN_MAX_AGE, and a 401 re-mints once and retries once.
+class _Clock:
+    def __init__(self):
+        self.t = 0.0
+    def __call__(self):
+        return self.t
+
+_minted = []
+def _mint():
+    _minted.append(len(_minted) + 1)
+    return "tok%d" % len(_minted)
+
+_clock = _Clock()
+_tokens = ui.Tokens(mint=_mint, clock=_clock)
+check(_tokens.get() == "tok1" and _tokens.get() == "tok1", "a fresh token is reused")
+_clock.t = ui.TOKEN_MAX_AGE + 1
+check(_tokens.get() == "tok2", "a token older than TOKEN_MAX_AGE is re-minted before use")
+
+_calls = []
+def _inspect_401_once(site, url, token, qp):
+    _calls.append(token)
+    return {"_error": "HTTP 401: Request had invalid authentication credentials"} if len(_calls) == 1 else result(verdict="PASS")
+_minted.clear(); _calls.clear()
+_t = ui.Tokens(mint=_mint, clock=_Clock())
+_raw = ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=_inspect_401_once)
+check("_error" not in _raw and _calls == ["tok1", "tok2"], f"a 401 re-mints once and retries with the new token: {_calls}")
+
+def _inspect_always_401(site, url, token, qp):
+    _calls.append(token)
+    return {"_error": "HTTP 401: still invalid"}
+_minted.clear(); _calls.clear()
+_t = ui.Tokens(mint=_mint, clock=_Clock())
+_raw = ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=_inspect_always_401)
+check(_raw.get("_error", "").startswith("HTTP 401") and len(_calls) == 2, f"a second 401 fails the row, no loop: {_calls}")
+
+def _inspect_403(site, url, token, qp):
+    _calls.append(token)
+    return {"_error": "403 - scope missing"}
+_minted.clear(); _calls.clear()
+_t = ui.Tokens(mint=_mint, clock=_Clock())
+ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=_inspect_403)
+check(_calls == ["tok1"] and _minted == [1], "a non-401 error does not re-mint")
+
+def _mint_fails_after_first():
+    if _minted:
+        raise SystemExit("ADC token acquisition failed")
+    _minted.append(1)
+    return "tok1"
+_minted.clear(); _calls.clear()
+_t = ui.Tokens(mint=_mint_fails_after_first, clock=_Clock())
+_raw = ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=_inspect_always_401)
+check(_raw.get("_error", "").startswith("HTTP 401") and _calls == ["tok1"], "a re-mint that fails keeps the row's 401, said as it was")
+
+_c = _Clock(); _minted.clear(); _calls.clear()
+_t = ui.Tokens(mint=_mint_fails_after_first, clock=_c)
+ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=_inspect_403)
+_c.t = ui.TOKEN_MAX_AGE + 1
+_raw = ui.inspect_fresh("sc-domain:e.com", "https://e.com/b", _t, None, inspect_fn=_inspect_403)
+check("re-mint failed" in _raw.get("_error", "") and len(_calls) == 1, "an aged-out token whose re-mint fails fails the row, not the run")
+
+_t = ui.Tokens(mint=_mint, clock=_Clock())
+check(ui.inspect_fresh("sc-domain:e.com", "https://e.com/a", _t, None, inspect_fn=lambda *a: []) == [],
+      "a malformed (non-object) payload passes through to the parser, not read as a 401")
+
 if not failures:
     residue.close_case("url_inspection behaviour")
 residue.report()
