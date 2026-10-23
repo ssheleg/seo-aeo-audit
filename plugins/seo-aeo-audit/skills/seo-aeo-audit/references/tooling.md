@@ -333,7 +333,13 @@ missing data, never as "not indexed".
 
 **The indexer is a paid push, and it acts on the property.** It spends money, so it runs only with
 the operator's go, and only after the free levers: one internal link from a page crawled daily,
-the sitemap, IndexNow, Request indexing (*UI-only steps*, above). Then:
+the sitemap, IndexNow, Request indexing (*UI-only steps*, above). **Never grant an indexer owner access to the property.** A service that asks for access to the
+Search Console account or property (one of the three below has a flag for it) can act as the owner
+and read the property's data, and how it uses that access is not published (`HYPOTHESIS` for the
+use, `CONFIRMED` for the flag). If the operator grants it anyway, it goes into the property's
+instrument registry as an access grant, with the date and who can revoke it.
+
+Then:
 
 1. Feed it only URLs verified **absent** from the index. A URL already indexed counts as a success
    and inflates the rate (myths.md).
@@ -345,13 +351,14 @@ the sitemap, IndexNow, Request indexing (*UI-only steps*, above). Then:
    spam-network row of the field test in myths.md scored lowest; treat its effect on the property
    as unknown (`HYPOTHESIS`) and say so in the report.
 
-Two services, as their API pages described them on 2026-10-23 (`CONFIRMED` for the API contract
+Three services, as their API pages described them on 2026-10-23 (`CONFIRMED` for the API contract
 only; nothing here measures their effect):
 
 | Service | Jobs and engines | Billing | Status semantics | Access |
 |---|---|---|---|---|
 | SpeedyIndex | indexer for Google (also a drip-feed variant) and Yandex; checker for Google, Bing and Yandex; a backlink checker | tokens bought in packages; an indexer task can be billed per indexed URL (`pay_per_indexed`) | a task is complete when every URL was sent; with per-indexed billing the final count arrives later, so wait for the result flag, then read the full report (indexed and unindexed lists with titles) | REST v2, key in the `Authorization` header; base `https://api.speedyindex.com` |
 | seoindex.link | indexer for Google; checker for Google | a fixed price per submitted link for indexing and a lower one per checked link, charged on acceptance; a batch the balance cannot cover is refused whole; unresolved checks are refunded | an indexing request ends at `submitted`, which means sent, not indexed; a check returns 1, 0 or null, and the vendor itself says null is not "not indexed" | REST v1, bearer key issued by a Telegram bot; mechanism not disclosed |
+| 2index.ninja | indexer for Google, Yandex and Bing (an instant mode for Google), also from a watched sitemap; checker for Google only, per region | a plan with an expiry date plus tokens, charged when a link is queued; tokens come back only for links still in the queue; an automatic check after sending costs extra | a link's send status (`Sent`, `In the queue`, `Error sending` and others) is reported apart from `google_indexed`; a batch with one invalid link is refused whole | REST v1, bearer token from the account page; a `google_access_granted` flag on submissions, described only as Google account access granted |
 
 ## Field notes from one property (October 2026)
 
