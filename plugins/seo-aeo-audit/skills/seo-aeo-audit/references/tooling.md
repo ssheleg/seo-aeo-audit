@@ -285,6 +285,25 @@ random sample and on every URL whose indexing was requested; the Pages report ex
 duplicates; the answer-engine prompt set; Lighthouse on the heaviest templates; an IndexNow push
 after a large URL change.
 
+**An indexing push** (new pages, a new site, or pages Google discovered and left out) runs as an
+experiment, never as a blast:
+
+1. **Inspect** every candidate with `url_inspection.py`. Its per-property quota (benchmarks.md)
+   covers a young site whole; on a large one, inspect the templates that earn money first.
+2. **Plan**: keep only URLs reported absent and allowed (no `noindex`, not blocked by robots);
+   an indexed URL is never paid for, and a row with no index status is missing data. Split the
+   rest into a treatment and a held-out control by a seeded hash (10 to 50 percent), so a re-run
+   never moves a URL between arms.
+3. **Push** the treatment through the provider the operator chose (*Paid indexers and index
+   checkers*, below), per engine, preferring per-indexed billing; record task ids and the
+   provider's answers in a ledger beside the plan, never the key.
+4. **Read** both arms with URL Inspection at day 7 and day 14 (Yandex: its own console at day 15).
+   The effect is the treatment's indexed share minus the control's, with both counts; the
+   provider's own report is not the verdict.
+
+Free levers go first and are not part of the experiment's cost: one internal link from a page
+crawled daily, the sitemap, IndexNow, Request indexing for a handful of URLs.
+
 **Dated readings** (an experiment's read date, a re-inspection 14 days after a request) are not a
 cadence: they live on the project's board with their date.
 
