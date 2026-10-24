@@ -18,6 +18,13 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.32.0 candidate: playbooks, procedures run on a live property (2026-10-24)
+
+| What changes | Evidence | State |
+|---|---|---|
+| `references/playbooks.md`, PB1 to PB10, wired as the twenty-seventh reference (#62) | `bash scripts/check-docs.sh` exit 0 on #62 and on this candidate; CI `validate` and `House skill audit` green on #62 | test-only |
+| The playbooks' run lines are what the runs observed | counts copied from the 2026-10-23/24 run on one property and one network; PB1 readings due at day 7 and 14 | observed once |
+
 ## v0.31.3 candidate: the member gate declares its divergence too (2026-10-24)
 
 Evidence: `bash scripts/check-docs.sh` and `npm run test:audit` exit 0 on the candidate tree.
@@ -560,7 +567,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the forty-eight releases at or above `v0.13.0` have no section
+**Sixteen** of the forty-nine releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

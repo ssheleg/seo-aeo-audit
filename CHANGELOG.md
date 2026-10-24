@@ -1,3 +1,17 @@
+## v0.32.0: playbooks, procedures run on a live property
+
+- **`references/playbooks.md`** (new, the twenty-seventh reference): ten procedures an agent ran on
+  a live property and a nine-site network in October 2026, each with When to use, Steps, Verify,
+  Measure and improve, and Fails when, plus dated run lines with both counts of every comparison:
+  PB1 an indexing push with a held-out control, PB2 IndexNow on every verified release, PB3 Baidu
+  for Chinese pages, PB4 Request indexing, PB5 a full showcase over a dynamic catalog, PB6
+  problem-intent pages, PB7 an unmeasured-claims sweep, PB8 localizing for a non-Google engine,
+  PB9 grammatical case in templates, PB10 a network of satellite sites. Doctrine stays in
+  `tooling.md` and is linked (#62). No property is named.
+- Wired into `REQUIRED_REFERENCES` and `REFERENCE_INDEX.md`; README and CONTRIBUTING count
+  twenty-seven references and README ~7,300 reference lines; a DOCMAP row, a CONTRIBUTING routing
+  row and one pointer in `tooling.md` (#62).
+
 ## v0.31.3: the member gate declares its divergence too
 
 - `test/family_gate.py` adds `# diverges: none` under `# shared-mechanism: family-gate`; the hub's
