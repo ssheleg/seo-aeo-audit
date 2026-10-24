@@ -501,9 +501,11 @@ through the UI.
 2. List the sites the account holds (`GetUserSites`) and add the missing ones
    (`AddSite`).
 3. Verify each added host. Adding is not verifying: a host stays unverified until one
-   of Bing's methods passes. The meta-tag and `BingSiteAuth.xml` file methods can be
-   served by the host and checked through the API (`VerifySite`); the "Import from
-   Search Console" method asks for Google consent in the browser, a human step.
+   of Bing's methods passes. The API returns no verification code: the meta-tag and
+   `BingSiteAuth.xml` methods need the account's code, read once from the Webmaster UI,
+   after which every host can serve it and `VerifySite` checks it through the API. The
+   "Import from Search Console" method asks for a Google consent in the browser. Either
+   way one person step stays; take it once for the whole network.
 4. Submit each verified host's sitemap and record it in the property instrument
    registry ([tooling.md](tooling.md#property-instrument-registry)).
 
@@ -515,8 +517,7 @@ the IndexNow notices of PB2.
 Runs so far:
 
 - 2026-10-24, a nine-site network: six hosts already verified; three added through the
-  API and left unverified, waiting on the consent step. The file method, which the
-  hosts can serve, has not been run yet.
+  API and left unverified: the API gave no code, and neither route was taken yet.
 
-**Fails when.** A host added through the API is counted as verified, or the consent
-route is taken where the file route needs no person.
+**Fails when.** A host added through the API is counted as verified, or the person step
+is taken per host when one read of the account's code serves the whole network.
