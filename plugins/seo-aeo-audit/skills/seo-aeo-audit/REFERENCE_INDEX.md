@@ -26,6 +26,8 @@ completeness) · [discover.md](references/discover.md) (its own surface, its own
 [evidence-tiers.md](references/evidence-tiers.md) (the tiers, and how they gate a
 recommendation) · [tooling.md](references/tooling.md) (check → tool) ·
 [experiments.md](references/experiments.md) (anything below `CONFIRMED`) ·
+[playbooks.md](references/playbooks.md) (procedures run on a live property, with how to
+verify each and what its runs observed) ·
 [myths.md](references/myths.md) · [benchmarks.md](references/benchmarks.md) (dated 2026
 numbers) · [algorithm-updates.md](references/algorithm-updates.md) (dated timeline) ·
 [prowl-mcp.md](references/prowl-mcp.md) (bulk data through one MCP endpoint) ·
