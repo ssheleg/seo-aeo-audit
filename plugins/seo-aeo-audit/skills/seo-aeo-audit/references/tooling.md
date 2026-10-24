@@ -304,6 +304,9 @@ experiment, never as a blast:
 Free levers go first and are not part of the experiment's cost: one internal link from a page
 crawled daily, the sitemap, IndexNow, Request indexing for a handful of URLs.
 
+Each occasion that has been run on a live property has a playbook with its command shapes,
+its read-back and the traps a run hit: [playbooks.md](playbooks.md).
+
 **Dated readings** (an experiment's read date, a re-inspection 14 days after a request) are not a
 cadence: they live on the project's board with their date.
 

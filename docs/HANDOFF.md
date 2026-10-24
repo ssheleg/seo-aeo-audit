@@ -1,3 +1,13 @@
+## Playbooks: procedures run on a live property (2026-10-24, unreleased)
+
+- **Done.** `references/playbooks.md`, ten playbooks (PB1 to PB10) from the 2026-10-23/24 run on
+  one property and one nine-site network, each with When to use, Steps, Verify, Measure and
+  improve, Fails when. Wired into `REQUIRED_REFERENCES`, `REFERENCE_INDEX.md`, the reference counts
+  in README and CONTRIBUTING (twenty-seven), a DOCMAP row and one pointer in `tooling.md`. No
+  property is named. Ids are `PB<n>` because `P1` to `P4` are taken in `growth-plays.md`.
+- **Open.** PB1 readings at day 7 and day 14 of each cohort append a run line to PB1 and PB10.
+- **Next task.** The next release carries playbooks.md (version bump, CHANGELOG); then B-11.
+
 ## The member gate declares its divergence too: 0.31.3 (2026-10-24)
 
 - **Done.** `test/family_gate.py` carries both declaration lines.

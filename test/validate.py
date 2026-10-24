@@ -53,6 +53,7 @@ REQUIRED_REFERENCES = (
     "preflight.md",
     "scripts.md",
     "build-time.md",
+    "playbooks.md",
 )
 errors = []
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time. This skill is mostly **knowledge** — twenty-six
+Thanks for taking the time. This skill is mostly **knowledge** — twenty-seven
 reference contracts plus a small standard-library auditor. That shapes what a
 good contribution looks like here.
 
@@ -76,7 +76,7 @@ python3 test/test_installer.py
 python3 test/residue_test.py
 ```
 
-`validate.py` checks structure, the four-way version sync, that all twenty-six
+`validate.py` checks structure, the four-way version sync, that all twenty-seven
 references exist and every relative link resolves, that the templates embedded in
 `deliverable-templates.md` match the root copies, and that every bundled script is
 standard-library only. It also reconciles the facts this repo keeps duplicating:
@@ -247,6 +247,7 @@ npx --yes sshlg-skills@latest list   # the new number must appear here
 | A tactic worth trying | `growth-plays.md`, with a tier and an effort estimate |
 | A tactic with counter-evidence | `myths.md`, with the counter-evidence |
 | A Google update | `algorithm-updates.md`, with start and completion dates |
+| A procedure run on a live property, or a new run of one | `playbooks.md`: the five parts, a dated run line with both counts, the property never named; doctrine stays in `tooling.md` and is linked |
 | Auditor behavior | the script in `skills/*/scripts/` **and** a fixture-backed test (`test_page_audit.py` for the page auditor, `test_url_inspection.py` for the index checker, `test_collectors.py` for psi / sitemap / gsc / preflight, `test_agent_surface.py` for the agent surface) |
 
 Adding a reference file means wiring it into `SKILL.md` and into
