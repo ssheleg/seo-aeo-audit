@@ -1,3 +1,12 @@
+## v0.32.1: playbooks grow, PB11 and PB12
+
+- **`references/playbooks.md`**: PB5 gains the hub-showcase step (every item, in stock first with
+  live prices, every other one marked "check availability" as a live check) with a dated run and its
+  traps; **PB11** (new) reads page speed per template from a keyed PageSpeed Insights call, lab LCP
+  element apart from field data; **PB12** (new) adds a network's hosts to Bing Webmaster through the
+  API and keeps adding apart from verifying (the API gives no verification code). Each carries a
+  dated run (#64). README reference lines ~7,400.
+
 ## v0.32.0: playbooks, procedures run on a live property
 
 - **`references/playbooks.md`** (new, the twenty-seventh reference): ten procedures an agent ran on
