@@ -9,7 +9,7 @@
   and returned **47 line items**.
 - **Why this document exists:** this is the **third** orank scan the skill has
   reproduced ([agent-readiness-gap](2026-08-14-agent-readiness-gap.md) on
-  `sms-activate.app`, [privateclawd](2026-08-14-privateclawd-orank-validation.md)
+  a client site, [privateclawd](2026-08-14-privateclawd-orank-validation.md)
   on `privateclawd.com`). The first two produced track K and v0.19.0. This one is
   the first where **track K did most of the work by itself** — and that is what
   makes its residue interesting. Eight things the scan needed, the skill could not

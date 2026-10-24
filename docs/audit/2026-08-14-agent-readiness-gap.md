@@ -2,7 +2,7 @@
 
 - **Date:** 2026-08-14
 - **Trigger:** an external agent-readiness scanner (ora.ai / "orank") graded
-  `sms-activate.app` **50/100 (C)** across four layers — Discovery 1/17, Access
+  a client site **50/100 (C)** across four layers — Discovery 1/17, Access
   41/60, Usability 39/67, Payments 0/0 — and returned 58 line items.
 - **Why this document exists:** the site had already been audited by this skill
   twice (`docs/seo/audit-2026-07-28.md`, `audit-2026-08-07.md` in that project).
@@ -129,8 +129,8 @@ being accepted. Four did not survive, and each failure mode is now a rule in K7.
 
 | Grader said | Reproduced result | What it means for the skill |
 |---|---|---|
-| "No `sameAs` entity linking in JSON-LD — agents cannot disambiguate your brand" | `sameAs` **is present**, with exactly one target (`https://t.me/PrivatePhoneBot`) | The finding was right about the *consequence* and wrong about the *fact*. A report that misstates the observable loses the argument with the engineer who checks it. `agent_surface.py` reports the count and the targets, so "thin" and "absent" are different findings |
-| "No extended schema types found — AI can only answer basic questions" | The **homepage** carries `Organization`/`WebSite`/`WebApplication`/`AggregateOffer`. `/numbers/whatsapp/canada` carries `Product`, `Brand`, `Offer`, `FAQPage`, `HowTo`, `BreadcrumbList`; `/pricing` carries `Service` + `OfferCatalog` | **One url is not a site.** This is the single most common false finding a grader produces, and it is now a blind-spot line printed in every `agent_surface.py` report plus a `--page` flag |
+| "No `sameAs` entity linking in JSON-LD — agents cannot disambiguate your brand" | `sameAs` **is present**, with exactly one target (the brand's own chat bot) | The finding was right about the *consequence* and wrong about the *fact*. A report that misstates the observable loses the argument with the engineer who checks it. `agent_surface.py` reports the count and the targets, so "thin" and "absent" are different findings |
+| "No extended schema types found — AI can only answer basic questions" | The **homepage** carries `Organization`/`WebSite`/`WebApplication`/`AggregateOffer`. A product page carries `Product`, `Brand`, `Offer`, `FAQPage`, `HowTo`, `BreadcrumbList`; `/pricing` carries `Service` + `OfferCatalog` | **One url is not a site.** This is the single most common false finding a grader produces, and it is now a blind-spot line printed in every `agent_surface.py` report plus a `--page` flag |
 | "`?mode=agent` returns the same content as the homepage" | True in substance — but a naive byte comparison says they *differ*, because the CSP nonce is per-request | A diff is not a comparison. The script compares body length with a tolerance and says what it compared |
 | "Consider blocking training-only crawlers (CCBot, ByteSpider) to earn full credit" | `robots.txt` explicitly **allows** CCBot | Not a defect. Whether to feed training corpora is a business decision about the company's content, and a scanner that awards points for one answer is scoring a preference. K2a states it as a decision with a trade-off, and the script reports the question as *answered* whichever way it was answered |
 
