@@ -1,3 +1,10 @@
+## 0.32.2 (2026-10-24): 0.32.1 under an annotated tag
+
+- **Done.** `v0.32.1` was pushed lightweight and the release refused it before publishing; rules
+  forbid deleting a pushed tag, so 0.32.2 carries the same content. Tag releases with `git tag -a`.
+- **Next task.** After merge: annotated tag `v0.32.2`, watch the release, then the sshlg-skills pin
+  bump; then B-11.
+
 ## Playbooks grow: 0.32.1 (2026-10-24)
 
 - **Done.** 0.32.1 ships #64 (PB5 hub step, PB11, PB12). Version 0.32.0 to 0.32.1 in the
