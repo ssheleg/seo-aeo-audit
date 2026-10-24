@@ -29,6 +29,8 @@ such and dated; it says what the API accepts, never what it achieves.
 - [PB8. Localizing for a non-Google engine](#pb8-localizing-for-a-non-google-engine)
 - [PB9. Grammatical case in templates](#pb9-grammatical-case-in-templates)
 - [PB10. A network of satellite sites](#pb10-a-network-of-satellite-sites)
+- [PB11. Page speed from a keyed PageSpeed Insights call](#pb11-page-speed-from-a-keyed-pagespeed-insights-call)
+- [PB12. Bing Webmaster across a network](#pb12-bing-webmaster-across-a-network)
 
 ## How a playbook is written and grown
 
@@ -263,7 +265,13 @@ for an item is tempted to disappear when its stock does.
    watch for the item's return and another channel to convert.
 3. **No invented values.** A price or count the snapshot lacks is omitted, never
    filled, and a test holds it.
-4. **Keep combination pages under a quality rule.** Programmatic product by country
+4. **Show every item on the hub lists.** A hub that lists items (a directory, a
+   "numbers by country" showcase) lists all of them: those in stock first with live
+   prices, every other one marked "check availability", and that mark is an action, a
+   live check of that item. Its empty answer still converts: a watch for the item's
+   return and the other channel. A full list is never folded away by default or cut to
+   the first few in stock.
+5. **Keep combination pages under a quality rule.** Programmatic product by country
    pages are a different class: near-duplicates in the hundreds of thousands caused
    an index collapse on one site. They stay behind an explicit index policy (the
    pre-publish gate is growth-plays.md G13).
@@ -279,9 +287,16 @@ Runs so far:
 
 - 2026-10-23/24, one property: country URLs in the sitemap went from 1,152 to 1,791.
   Indexed share due at the next inspection.
+- 2026-10-24, the same property: two hub showcases went from at most 8 countries in
+  stock to all 199 (in stock first, the rest with a live check), in the client and the
+  server HTML; the directory's full list, folded by default, opens on arrival. The buy
+  dialog's empty answer, a dead end before, now offers a watch and the bot.
 
 **Fails when.** A page is hidden for being out of stock, a missing price is filled with
-a default, or the full-showcase rule is applied to programmatic combinations.
+a default, or the full-showcase rule is applied to programmatic combinations. A hub
+showcase cut to the first few items in stock, a full list folded by default, a server
+copy of the hub that cuts the list the client shows in full, or a heading that says
+"available" over a list that also holds items out of stock.
 
 ## PB6. Problem-intent pages for an error message
 
@@ -438,3 +453,70 @@ Runs so far:
 
 **Fails when.** A host shares a key file or a property with another, or the network's
 control arm is mixed with a single property's.
+
+## PB11. Page speed from a keyed PageSpeed Insights call
+
+**When to use.** A template's speed has to be read per page type, in the lab and in
+the field, before and after a change. Not for a one-off look: the web UI answers that.
+
+**Steps.**
+
+1. Create an API key restricted to the PageSpeed Insights API in a cloud project the
+   operator owns, and keep it in the secret vault; an unkeyed call is throttled.
+2. Call the documented endpoint (`pagespeedonline/v5/runPagespeed`) with
+   `strategy=mobile` for one URL per template (home, a listing, an article, an entity
+   page), the key passed from the vault, never on the command line.
+3. Read three things apart: the lab Largest Contentful Paint and its element
+   (`largest-contentful-paint-element`), the field data (`loadingExperience`: LCP, INP,
+   TTFB at the 75th percentile), and the unused-JavaScript audit.
+4. Fix the cause the lab names. When the LCP element is the first image of a listing,
+   load it eagerly with `fetchpriority="high"` and keep the rest lazy.
+
+**Verify.** The same call after the release, on the same URL and strategy, with the lab
+LCP and its element before and after side by side.
+
+**Measure and improve.** Field data moves over the 28-day window it is computed on; read
+it again a month after the release.
+
+Runs so far:
+
+- 2026-10-24, one property: unkeyed calls answered 429; a restricted key fixed it. The
+  blog listing's lab LCP was 7.2 s and its element the first cover, loaded lazily; the
+  fix shipped the same day, its readback is due after the release. Field data for the
+  origin: LCP 3.2 s, INP 409 ms, TTFB 1.56 s. The error-tracking chunk carried 129 KiB
+  of unused JavaScript.
+
+**Fails when.** The call has no key (429), the lab number is read as the field one, or
+React 18 receives `fetchPriority` in camel case: it logs an unknown-prop warning, so
+the attribute goes in lower case.
+
+## PB12. Bing Webmaster across a network
+
+**When to use.** Several hosts need Bing Webmaster and the network outgrows clicking
+through the UI.
+
+**Steps.**
+
+1. Use the Bing Webmaster API key of the account that owns the network, from the vault.
+2. List the sites the account holds (`GetUserSites`) and add the missing ones
+   (`AddSite`).
+3. Verify each added host. Adding is not verifying: a host stays unverified until one
+   of Bing's methods passes. The meta-tag and `BingSiteAuth.xml` file methods can be
+   served by the host and checked through the API (`VerifySite`); the "Import from
+   Search Console" method asks for Google consent in the browser, a human step.
+4. Submit each verified host's sitemap and record it in the property instrument
+   registry ([tooling.md](tooling.md#property-instrument-registry)).
+
+**Verify.** `GetUserSites` lists every host with `IsVerified: true`.
+
+**Measure and improve.** Indexed pages per host in Bing at the next PB1 reading, beside
+the IndexNow notices of PB2.
+
+Runs so far:
+
+- 2026-10-24, a nine-site network: six hosts already verified; three added through the
+  API and left unverified, waiting on the consent step. The file method, which the
+  hosts can serve, has not been run yet.
+
+**Fails when.** A host added through the API is counted as verified, or the consent
+route is taken where the file route needs no person.
