@@ -18,6 +18,12 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.32.2 candidate: 0.32.1 under an annotated tag (2026-10-24)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Version constants only; content identical to 0.32.1 | release run 40066321159 refused `v0.32.1`: "v0.32.1 is a commit, not an annotated tag object"; publish skipped | observed |
+
 ## v0.32.1 candidate: playbooks grow, PB11 and PB12 (2026-10-24)
 
 | What changes | Evidence | State |
@@ -574,7 +580,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the fifty releases at or above `v0.13.0` have no section
+**Sixteen** of the fifty-one releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

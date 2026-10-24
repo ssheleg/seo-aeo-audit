@@ -1,3 +1,10 @@
+## v0.32.2: 0.32.1 republished under an annotated tag
+
+- The `v0.32.1` tag was pushed lightweight; the release workflow refused it before publishing
+  anything ("The tag must be annotated"), and the repository's rules keep a pushed tag. 0.32.2
+  ships the same content as 0.32.1 under an annotated tag. `v0.32.1` stays as an unpublished
+  lightweight tag.
+
 ## v0.32.1: playbooks grow, PB11 and PB12
 
 - **`references/playbooks.md`**: PB5 gains the hub-showcase step (every item, in stock first with
