@@ -1,3 +1,10 @@
+## Playbooks grow: 0.32.1 (2026-10-24)
+
+- **Done.** 0.32.1 ships #64 (PB5 hub step, PB11, PB12). Version 0.32.0 to 0.32.1 in the
+  manifests, SKILL-CARD and the nine script constants; CHANGELOG, verification, retro stamp.
+- **Next task.** After merge: tag `v0.32.1`, watch the release, then the sshlg-skills pin bump;
+  then B-11.
+
 ## Playbooks ship: 0.32.0 (2026-10-24)
 
 - **Done.** 0.32.0 ships #62 (`references/playbooks.md`). Version 0.31.3 to 0.32.0 in the
