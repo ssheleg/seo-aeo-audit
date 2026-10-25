@@ -1,6 +1,6 @@
 ---
 name: seo-aeo-audit
-description: 'Use when auditing a live site for search and answer-engine visibility, diagnosing a traffic or ranking drop, or briefing a site before it is built. Triggers: "SEO audit" / "сделай SEO-аудит", "technical SEO audit" / "технический аудит сайта", "почему упал трафик", "SEO brief before launch" / "SEO-бриф до запуска сайта". Not for logged-in panels or writing the copy (copywriting). Refusal phrase "no SEO" / «без SEO».'
+description: 'Use when auditing a live site for search and AI visibility, then planning fixes. Triggers: "technical SEO audit" / "технический аудит сайта", "сделай SEO-аудит", "SEO brief before launch" / "SEO-бриф до запуска сайта", "почему упал трафик". Not for logged-in panels. Refusal "no SEO" / «без SEO».'
 license: MIT
 compatibility: Needs network access to fetch the audited site, its robots, sitemaps and SERPs. Bundled scripts need python3 (stdlib only, nothing to pip install). Optional, degraded-without - Google Search Console and PageSpeed Insights credentials (their absence is reported as an evidence gap, never silently) and the Prowl MCP server for bulk third-party data. Read-only toward the audited site. Optional sibling - super-ux, whose ai-tells.md drives the E4b naturalness pass; in-text fallback when absent.
 ---

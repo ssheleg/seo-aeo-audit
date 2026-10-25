@@ -1,3 +1,12 @@
+## v0.32.3: descriptions within a 300-character budget
+
+- **Description within a 300-character budget** (hub board row B-255 (a)): Claude Code lists every
+  skill's description in one ~30,000-character budget, and on the operator's machine the listing
+  stood at 51,178. The description falls from 420 to 298 characters (hub measure) and carries the
+  routed phrases the body did not ("technical SEO audit" / "технический аудит сайта", "SEO brief
+  before launch" / "SEO-бриф до запуска сайта"), so `## Triggers` and the body stay as they were
+  (4,745 tokens, inside the house audit's 4,750 working limit).
+
 ## v0.32.2: 0.32.1 republished under an annotated tag
 
 - The `v0.32.1` tag was pushed lightweight; the release workflow refused it before publishing
