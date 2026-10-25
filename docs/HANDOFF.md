@@ -1,3 +1,14 @@
+## v0.32.3: descriptions within a 300-character budget (2026-10-25)
+
+- **Done.** Every skill description in this member is at or under 300 characters (hub measure:
+  whitespace collapsed, front matter only), per hub board row B-255 (a); the words a description
+  dropped live in its `## Triggers`. Before/after figures are in CHANGELOG.md. Checked: the
+  repository gate, and in the sshlg-skills worktree `node test/route_coverage.js` (125 named, 0
+  spoke where silence was right, unchanged), `node test/triggers_test.js` (70 OK) and
+  `node test/advertised_check.js` for this member.
+- **Next task.** After merge: tag `v0.32.3`, watch the release, then the sshlg-skills pin bump; then
+  the highest open board row.
+
 ## 0.32.2 (2026-10-24): 0.32.1 under an annotated tag
 
 - **Done.** `v0.32.1` was pushed lightweight and the release refused it before publishing; rules
