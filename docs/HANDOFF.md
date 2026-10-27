@@ -1,3 +1,14 @@
+## v0.32.4: routed trigger phrases for indexing and schema markup (2026-10-27)
+
+- **Done.** Hub board row B-84: `## Triggers` in SKILL.md now advertises "page not indexed" /
+  "страница не в индексе" / "не индексируется" and "schema markup" / "разметка schema", so the hub
+  may route «страница не индексируется» and «добавь schema markup» here. The description is
+  unchanged. To keep the body inside 4,750 tokens, Step 0's "No such file or directory" paragraph
+  moved to `references/scripts.md`; the body measures 4,733. Trigger evals `q15` to `q17` added
+  (authored, not run). Checked: `bash scripts/check-docs.sh`.
+- **Next task.** After merge: annotated tag `v0.32.4` through the hub's `scripts/release-member.js`,
+  watch the release, then the hub adds the phrases to the `seo-llmo` route and bumps the pin.
+
 ## v0.32.3: descriptions within a 300-character budget (2026-10-25)
 
 - **Done.** Every skill description in this member is at or under 300 characters (hub measure:

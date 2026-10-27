@@ -18,6 +18,14 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.32.4 candidate: routed trigger phrases for indexing and schema markup (2026-10-27)
+
+| What changes | Evidence | State |
+|---|---|---|
+| `## Triggers` advertises "page not indexed", "страница не в индексе", "не индексируется", "schema markup", "разметка schema" | `grep -c` on SKILL.md; the hub's `node test/advertised_check.js --member seo-aeo-audit` reads the same file | test-only |
+| Body stays inside the house limit after the additions | `test/validate.py` measures 4,733 tokens (tiktoken cl100k_base) against 4,750 | observed |
+| Trigger evals `q15` to `q17` | `python3 test/evals_validate.py` validates the cases; no model run yet | never |
+
 ## v0.32.3 candidate: descriptions within a 300-character budget (2026-10-25)
 
 descriptions within a 300-character budget. Evidence: the repository gate exits 0 on the candidate tree; the PR CI run
@@ -585,7 +593,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the fifty-two releases at or above `v0.13.0` have no section
+**Sixteen** of the fifty-three releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

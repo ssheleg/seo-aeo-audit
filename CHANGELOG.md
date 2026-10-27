@@ -1,3 +1,16 @@
+## v0.32.4: routed trigger phrases for indexing and schema markup
+
+- **Two routed prompts reach this skill** (hub board row B-84): the hub's route table may only carry
+  a phrase the owning member advertises, and «добавь schema markup» and «страница не индексируется»
+  matched nothing here («проверь индексацию» cannot reach «индексируется»). `## Triggers` in
+  SKILL.md now carries "page not indexed" / "страница не в индексе" / "не индексируется" and
+  "schema markup" / "разметка schema". The description is unchanged (296 characters, hub measure).
+- **Room in the body for them.** The body stood at 4,745 of the house audit's 4,750 working limit,
+  so Step 0's "No such file or directory" paragraph moved to `references/scripts.md`
+  (*When the scripts cannot be reached*) and Step 0 keeps a two-line pointer. Body after the
+  change: 4,733 tokens (tiktoken cl100k_base).
+- **Trigger evals** `q15` to `q17` cover the three new phrasings; authored, not yet run.
+
 ## v0.32.3: descriptions within a 300-character budget
 
 - **Description within a 300-character budget** (hub board row B-255 (a)): Claude Code lists every
