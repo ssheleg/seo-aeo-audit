@@ -9,7 +9,8 @@
       "q07",
       "q08",
       "q09",
-      "q13"
+      "q13",
+      "q15"
     ],
     "validation": [
       "q04",
@@ -18,7 +19,9 @@
       "q10",
       "q11",
       "q12",
-      "q14"
+      "q14",
+      "q16",
+      "q17"
     ]
   },
   "queries": [
@@ -119,6 +122,27 @@
       "query": "Write the hero headline and FAQ copy for our new invoicing landing page",
       "should_trigger": false,
       "why": "writing the copy is copywriting's job; brief mode never writes content"
+    },
+    {
+      "id": "q15",
+      "lang": "ru",
+      "query": "добавь schema markup на страницы товаров",
+      "should_trigger": true,
+      "why": "structured data: which markup a page needs and whether it renders (tracks A and F)"
+    },
+    {
+      "id": "q16",
+      "lang": "ru",
+      "query": "страница не индексируется, разберись почему",
+      "should_trigger": true,
+      "why": "indexation diagnosis, track A"
+    },
+    {
+      "id": "q17",
+      "lang": "en",
+      "query": "Our pricing page is not indexed in Google, find out why",
+      "should_trigger": true,
+      "why": "page not indexed: the index's own answer via URL Inspection"
     }
   ]
 }

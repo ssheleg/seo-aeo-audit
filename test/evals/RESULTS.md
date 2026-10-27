@@ -19,6 +19,9 @@ measured.
 Scenarios `s06` (one AI transcript is an insufficient sample) and `s07` (author
 personas refused), and the placebo-control line added to `s02`, arrived in 0.29.0
 and are likewise authored, not measured.
+Trigger cases `q15` to `q17` (schema markup, a page not indexed, in Russian and
+English) arrived in 0.32.4 with the routed phrases and are likewise authored, not
+measured.
 
 ## Method — how this run was executed, and its limits
 

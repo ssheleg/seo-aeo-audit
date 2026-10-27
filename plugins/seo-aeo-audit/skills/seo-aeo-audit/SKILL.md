@@ -93,11 +93,8 @@ Resolve `$SKILL_DIR` and confirm it before relying on it —
 directory this file sits in anywhere else; [scripts.md](references/scripts.md)
 has both forms and every invocation.
 
-**`No such file or directory` is not a missing feature and not a reason to proceed
-quietly.** It means the instruments are unreachable, so every check they would have
-made drops to the bottom rung of the evidence ladder — and a rung caps a tier. Say
-so in the three-line status: an audit that silently becomes a manual one has
-changed what its conclusions are worth (non-negotiable #6).
+**`No such file or directory` means the instruments are unreachable**: say so in the
+three-line status ([scripts.md](references/scripts.md#when-the-scripts-cannot-be-reached)).
 
 Access rules: read-only by default. Never submit forms, request indexing,
 disavow links, or change a live property without explicit approval in this
@@ -317,7 +314,7 @@ the nearest thing that does work, and move on.
 
 ## Triggers
 
-"AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга".
+"AEO audit" / "аудит по SEO и AEO", "AI visibility audit", "why did my traffic drop", "why am I not ranking" / "почему нет позиций", "why doesn't ChatGPT cite us" / "почему нас не цитирует ChatGPT", "indexing issues" / "проверь индексацию", "page not indexed" / "страница не в индексе" / "не индексируется", "schema markup" / "разметка schema", "SEO change plan" / "план правок по SEO", "google core update" / "апдейт гугла", "keywords for linkbuilding" / "ключи для линкбилдинга".
 
 ## Reference index
 

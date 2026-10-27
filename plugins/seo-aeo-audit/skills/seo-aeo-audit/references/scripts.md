@@ -5,6 +5,15 @@ script here is stdlib-only. Paths are written against `$SKILL_DIR`, which
 `SKILL.md` resolves once before the first command — without it none of them
 run.
 
+## When the scripts cannot be reached
+
+`No such file or directory` is not a missing feature and not a reason to proceed
+quietly. It means the instruments are unreachable, so every check they would have
+made drops to the bottom rung of the evidence ladder, and a rung caps a tier. Say
+so in the three-line status: an audit that silently becomes a manual one has
+changed what its conclusions are worth (non-negotiable #6). Moved here from
+`SKILL.md` Step 0 in 0.32.4 to make room for routed trigger phrases.
+
 ## Contents
 
 - [gsc_pull.py](#gsc_pullpy) — Search Console: queries, pages, cannibalization, the CTR curve
