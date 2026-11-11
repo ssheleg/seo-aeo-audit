@@ -12,6 +12,7 @@ auditor decides what is real. Two rules before anything else:
 - [Where the automation stops](#where-the-automation-stops)
 - [Property instrument registry](#property-instrument-registry)
 - [The checkup by occasion](#the-checkup-by-occasion)
+- [A standing indexing route](#a-standing-indexing-route)
 - [UI-only steps, and how an agent takes one](#ui-only-steps-and-how-an-agent-takes-one)
 - [Paid indexers and index checkers](#paid-indexers-and-index-checkers)
 - [Field notes from one property (October 2026)](#field-notes-from-one-property-october-2026)
@@ -84,7 +85,7 @@ to run that cross-check when you have no second seat.
 | Site speed — field | CrUX / GSC CWV report / RUM | Lab numbers rank nothing |
 | Site speed — diagnosis | DevTools Performance + Lighthouse | The stated Chromium exception: both are Chrome tools. Check the same template in WebKit too (Safari Web Inspector's Timelines) before calling a speed problem universal. See the recipes below |
 | Field + lab in one call, scriptable | PageSpeed Insights API (`pagespeedonline/v5/runPagespeed`, key optional) via `scripts/psi_pull.py` | Returns CrUX field data (`loadingExperience`, `originLoadingExperience`) **and** the Lighthouse lab run (`lighthouseResult`). Report the field percentiles; the lab score explains them, it does not replace them |
-| Lighthouse categories other than performance | `chrome-devtools` MCP `lighthouse_audit` | The stated Chromium exception — Lighthouse runs only in Chrome. Covers SEO, accessibility, best practices **and agentic browsing** — the last is the surface where `llms.txt` is actually checked (myths.md). It **excludes performance**: for that, start a trace instead, or use the PSI row above |
+| Lighthouse categories other than performance | The Lighthouse CLI: `npx lighthouse <url> --chrome-flags="--headless=new --user-data-dir=<temp>"`, in the agent's own temporary profile, closed after the run; or the `chrome-devtools` MCP `lighthouse_audit` where the host enables it | The stated Chromium exception: Lighthouse runs only in Chrome. Covers SEO, accessibility, best practices **and agentic browsing**; the last is the surface where `llms.txt` is actually checked (myths.md). It **excludes performance**: for that, start a trace instead, or use the PSI row above |
 | Independent rank verification, and what the SERP actually contains | `searchapi:google_rank_tracking` — up to 100 results per query with position, title, URL and snippet, localized via `gl` / `location` | One collector, subject to the poisoned-SERP guard ([measurement.md](measurement.md#the-poisoned-serp-guard)): from September 2026 on, a series counts only with its collection method recorded, a 3 to 5 query spot check against a logged-out WebKit capture, and agreement with GSC average position within a stated band, else it is `UNUSABLE`. A challenge page (HTTP 200, no organic block) is missing data, never rank 0. Once the guard passes, SERP **composition** is an observation for track D; an index's position estimate never is |
 | Structured data | Rich Results Test + `scripts/page_audit.py` | Validation ≠ eligibility (technical-checks.md B) |
 | Internal link equity | Crawl (internal PageRank) + backlink data | Overlay revenue to find the mismatch |
@@ -121,7 +122,7 @@ works there is the stricter claim — and iOS Safari is the audience CrUX cannot
 
 **Chromium is a stated fallback, never the default.** Use it when the task needs
 Chrome itself and say which and why: a Chrome-only API, a CDP trace, the
-`chrome-devtools` MCP, and the measurement tools that are **Chromium by
+`chrome-devtools` MCP or the Lighthouse CLI, and the measurement tools that are **Chromium by
 definition** — Lighthouse, PageSpeed Insights (its lab run is Lighthouse) and
 CrUX (field data from Chrome users only). Those stay in this skill as the
 **stated Chromium exception**; they are not replaced and not re-labelled as
@@ -294,21 +295,39 @@ experiment, never as a blast:
    an indexed URL is never paid for, and a row with no index status is missing data. Split the
    rest into a treatment and a held-out control by a seeded hash (10 to 50 percent), so a re-run
    never moves a URL between arms.
-3. **Push** the treatment through the provider the operator chose (*Paid indexers and index
-   checkers*, below), per engine, preferring per-indexed billing; record task ids and the
+3. **Push** the treatment through the provider a standing indexing route names or the operator
+   chose (*A standing indexing route* and *Paid indexers and index checkers*, below), per engine, preferring per-indexed billing; record task ids and the
    provider's answers in a ledger beside the plan, never the key.
 4. **Read** both arms with URL Inspection at day 7 and day 14 (Yandex: its own console at day 15).
    The effect is the treatment's indexed share minus the control's, with both counts; the
    provider's own report is not the verdict.
 
-Free levers go first and are not part of the experiment's cost: one internal link from a page
-crawled daily, the sitemap, IndexNow, Request indexing for a handful of URLs.
+Free levers go first, unless a standing indexing route sets another order, and are not part of
+the experiment's cost: one internal link from a page crawled daily, the sitemap, IndexNow,
+Request indexing for a handful of URLs.
 
 Each occasion that has been run on a live property has a playbook with its command shapes,
 its read-back and the traps a run hit: [playbooks.md](playbooks.md).
 
 **Dated readings** (an experiment's read date, a re-inspection 14 days after a request) are not a
 cadence: they live on the project's board with their date.
+
+## A standing indexing route
+
+Requesting indexing by any route (a paid indexer's API, IndexNow, Search Console) acts on the
+property, so it sits behind the access rule in `SKILL.md`. **A standing indexing route recorded
+in the host's instructions** (the agent's instruction file or a project rule) **counts as that
+approval and sets the provider order.** Follow it as written, with its own checks and limits. One
+host records, for example: the SpeedyIndex API first, after confirming its key slot exists and
+`GET /v2/account` shows enough `balance.tokens` for the batch (*Provider sheets*, below);
+IndexNow and Search Console as the fallback when the key or the balance is missing; only URLs
+that answer 200 and are listed in the sitemap. A route approves spending the balance it names,
+never buying more: a top-up stays the operator's.
+
+**Without a recorded route, the current rule holds**: the operator's go in this session, and the
+free levers before any paid push. Either way the push keeps its shape (inspect first, a held-out
+control, a ledger), and Search Console's Request indexing stays the fallback
+([playbooks.md](playbooks.md#pb4-request-indexing-in-search-console)).
 
 ## UI-only steps, and how an agent takes one
 
@@ -322,7 +341,8 @@ Request indexing, Live test, Manual actions and Security issues are Search Conso
 Bing's AI Performance report and, until its OAuth consent exists, everything in Yandex.
 
 Requesting indexing changes the property's crawl queue, so it stays behind the access rule in
-`SKILL.md`: only with the operator's go in this session. With the go, an agent can take the step
+`SKILL.md`: only with the operator's go in this session or under a standing indexing route
+(above). With that approval, an agent can take the step
 in the operator's signed-in browser without a person clicking, and one property did it for six
 URLs in October 2026 (`FIELD`). The way that held:
 
@@ -354,7 +374,8 @@ unindexed URLs; record the agreement rate beside the result, and keep an answer 
 missing data, never as "not indexed".
 
 **The indexer is a paid push, and it acts on the property.** It spends money, so it runs only with
-the operator's go, and only after the free levers: one internal link from a page crawled daily,
+the operator's go or under a standing indexing route that names it, and, unless that route
+sets another order, only after the free levers: one internal link from a page crawled daily,
 the sitemap, IndexNow, Request indexing (*UI-only steps*, above). **Never grant an indexer owner access to the property.** A service that asks for access to the
 Search Console account or property (one of the three below has a flag for it) can act as the owner
 and read the property's data, and how it uses that access is not published (`HYPOTHESIS` for the
@@ -396,6 +417,7 @@ measured indexing rate. Re-read the vendor page before a run that spends; prices
 | Answer envelope | every response carries `code`: 0 success, 1 insufficient balance or not found, 2 validation error, 3 rate limit or server error; HTTP 401, 402, 413, 429 |
 | Rate limit | 120 requests per minute per IP |
 | Balance | `GET /v2/account` returns `balance.tokens`, `balance.indexer` (credits), `balance.checker` (credits); free to call |
+| Before a run | confirm the key slot exists and call `GET /v2/account`: the batch needs 100 tokens a Google URL. No key or too few tokens falls back along the route (*A standing indexing route*, above), never to a purchase |
 | Create | `POST /v2/task/{google,yandex,bing}/{indexer,checker}/create` with `urls` (max 10,000) and an optional `title`; Bing is checker only |
 | Google indexer | only `pay_per_indexed: true` is available: 100 tokens a URL charged at creation, refunded in full for URLs not indexed after 7 days |
 | Yandex indexer | per-indexed always on: indexer credits first (1 a URL), then 20 tokens a URL, refunded in full for URLs not indexed after 15 days |

@@ -1,3 +1,13 @@
+## v0.32.5: family audit fixes (2026-11-11)
+
+- **Done.** Audit findings SE1 to SE10 of the 2026-11-11 family audit (CHANGELOG has each). The
+  rule for a standing indexing route lives in `references/tooling.md` (*A standing indexing
+  route*). Checked: `npm run test:all`.
+- **Open.** `package.json` and `plugin.json` descriptions still say "ten tracks" (eleven with K);
+  left because a manifest description change needs the hub's routed-triggers check.
+- **Next task.** After merge: annotated tag `v0.32.5` through the hub's
+  `scripts/release-member.js`, watch the release, then the hub bumps the pin.
+
 ## v0.32.4: routed trigger phrases for indexing and schema markup (2026-10-27)
 
 - **Done.** Hub board row B-84: `## Triggers` in SKILL.md now advertises "page not indexed" /

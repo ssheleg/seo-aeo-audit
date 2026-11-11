@@ -224,7 +224,9 @@ Runs so far:
 
 ## PB4. Request indexing in Search Console
 
-**When to use.** A handful of URLs that matter now, after the free levers. The URL
+**When to use.** A handful of URLs that matter now, after the free levers, or as the
+fallback when a standing indexing route puts an API first and its key or balance is missing
+([tooling.md](tooling.md#a-standing-indexing-route)). The URL
 Inspection API cannot request indexing; it is a UI step, and the way an agent takes it
 behind the access rule is in
 [tooling.md](tooling.md#ui-only-steps-and-how-an-agent-takes-one). This playbook adds

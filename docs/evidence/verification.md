@@ -18,6 +18,15 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.32.5 candidate: family audit fixes (2026-11-11)
+
+| What changes | Evidence | State |
+|---|---|---|
+| A standing indexing route counts as the approval and sets the provider order | `test/audit_regressions/fix-se-05.01.py` failed 4 of 4 on the origin/main tree, passes on the candidate; its mutation case refuses each dropped point | planted |
+| The Lighthouse row has a CLI route | `test/audit_regressions/safari-first.py` failed its routing case on the origin/main tree, passes on the candidate | planted |
+| FAQPage, AMP and Google I/O 2026 rows carry dated primary sources | Search Central changelog and Google's I/O post read 2026-11-11 | observed |
+| Body stays inside the house limit | `test/validate.py` measures 4,739 tokens against 4,750 | observed |
+
 ## v0.32.4 candidate: routed trigger phrases for indexing and schema markup (2026-10-27)
 
 | What changes | Evidence | State |
@@ -593,7 +602,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the fifty-three releases at or above `v0.13.0` have no section
+**Sixteen** of the fifty-four releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

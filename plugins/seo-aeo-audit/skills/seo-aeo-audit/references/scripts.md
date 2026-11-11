@@ -5,6 +5,18 @@ script here is stdlib-only. Paths are written against `$SKILL_DIR`, which
 `SKILL.md` resolves once before the first command — without it none of them
 run.
 
+## Resolving `$SKILL_DIR`
+
+Both forms, then one check before the first command:
+
+```bash
+# Claude Code plugin
+SKILL_DIR="${CLAUDE_PLUGIN_ROOT}/skills/seo-aeo-audit"
+# anywhere else: the directory SKILL.md sits in
+SKILL_DIR="/path/to/seo-aeo-audit"
+test -f "$SKILL_DIR/scripts/preflight.py" && echo "SKILL_DIR ok"
+```
+
 ## When the scripts cannot be reached
 
 `No such file or directory` is not a missing feature and not a reason to proceed
@@ -16,12 +28,16 @@ changed what its conclusions are worth (non-negotiable #6). Moved here from
 
 ## Contents
 
+- [Resolving `$SKILL_DIR`](#resolving-skill_dir)
+- [When the scripts cannot be reached](#when-the-scripts-cannot-be-reached)
 - [gsc_pull.py](#gsc_pullpy) — Search Console: queries, pages, cannibalization, the CTR curve
 - [page_audit.py](#page_auditpy) — per-page mechanical evidence for tracks A, B, C, F
 - [url_inspection.py](#url_inspectionpy) — the index's own answers, so a finding is CONFIRMED
 - [sitemap_audit.py](#sitemap_auditpy) — declared URLs clustered into template families
 - [psi_pull.py](#psi_pullpy) — field and lab, kept apart on purpose
 - [agent_surface.py](#agent_surfacepy) — track K: what a machine finds when it arrives alone
+- [bwt_pull.py](#bwt_pullpy): Bing Webmaster: query and page stats for one verified site
+- [ai_panel.py](#ai_panelpy): scores saved answer-engine captures, fetches nothing
 - [Every payload names the run that produced it](#every-payload-names-the-run-that-produced-it)
 
 ## gsc_pull.py

@@ -98,7 +98,9 @@ three-line status ([scripts.md](references/scripts.md#when-the-scripts-cannot-be
 
 Access rules: read-only by default. Never submit forms, request indexing,
 disavow links, or change a live property without explicit approval in this
-session; those are outward-facing actions.
+session; those are outward-facing actions. A standing indexing route recorded in
+the host's instructions is that approval for indexing and sets the provider
+order ([tooling.md](references/tooling.md#a-standing-indexing-route)).
 
 ## Step 1 — Baseline before opinions
 
@@ -136,7 +138,7 @@ Cross-check GA4 sessions, server logs and an independent rank tracker that passe
 the [poisoned-SERP guard](references/measurement.md#the-poisoned-serp-guard) before
 diagnosing an algorithmic cause.
 
-## Step 2 — The ten tracks
+## Step 2: the eleven tracks
 
 Run every track in scope. Each has its own file with the concrete checks, the
 2026-current gotchas, and the evidence to capture.
@@ -159,9 +161,9 @@ Run every track in scope. Each has its own file with the concrete checks, the
 **Presence is `CONFIRMED`, effect mostly `HYPOTHESIS`**, so most of it lands in
 Experiments ([agent-readiness.md](references/agent-readiness.md)).
 
-**Discover is not one of the ten tracks, and not part of track A**: of its checks,
-none of them is a render gate. Where the GSC Discover report shows it is a material
-source, run [discover.md](references/discover.md) as an eleventh pass.
+**Discover is not a track, nor part of track A** (of its checks, none of them is a
+render gate): where the GSC Discover report shows it is a material source, run
+[discover.md](references/discover.md) as an extra pass.
 
 **Before any decline diagnosis**, run the date-alignment and update-response
 protocol in [references/algorithm-updates.md](references/algorithm-updates.md) —
@@ -201,10 +203,9 @@ severity does not — are in [scripts.md](references/scripts.md).
 
 ## Step 3 — Triage
 
-**First, check the tracks against each other.** Ten tracks produce ten sets of
-findings that never saw one another, and the plan treats them as one answer — a
-convergence that trusts its inputs because they arrived. Sorting an unranked list
-is not the same as noticing that two of its rows cannot both be done.
+**First, check the tracks against each other.** Eleven tracks produce eleven sets
+of findings that never saw one another, and the plan treats them as one answer: a
+convergence that trusts its inputs because they arrived.
 
 Four things to look for, before any score is computed:
 
@@ -261,8 +262,7 @@ Group the output into four buckets, in this order:
 
 Write these files, seeded from the skeletons in
 [references/deliverable-templates.md](references/deliverable-templates.md).
-Never overwrite an existing audit or plan silently — write a new dated file, or
-ask first:
+Never overwrite an existing audit or plan silently: write a new dated file.
 
 - `docs/seo/audit-<YYYY-MM-DD>.md` — findings, each carrying its **evidence rung**,
   which is the source the observation came from and caps its tier

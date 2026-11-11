@@ -1,4 +1,4 @@
-# Experiment record — {{SITE}}
+# Experiment record: {{SITE}}
 
 One row per test. Never delete a row: a reverted test is evidence too, and the
 next audit needs to know it was tried.
@@ -12,5 +12,5 @@ next audit needs to know it was tried.
 `invalidated (update / seasonality / instrumentation)`.
 
 **Invalidation check before reading any row:** did the run overlap a core or spam
-update? Date-align against `algorithm-updates.md` — a test through a rollout is
+update? Date-align against `algorithm-updates.md`: a test through a rollout is
 invalidated, not inconclusive.

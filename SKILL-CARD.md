@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Pack and skill | `seo-aeo-audit` |
-| Version | `0.32.4` |
+| Version | `0.32.5` |
 | License | MIT |
 | Source | https://github.com/ssheleg/seo-aeo-audit |
 
@@ -28,7 +28,8 @@ writes one dated build-time brief instead.
 
 Access is read-only by default. Requesting indexing, disavowing links, submitting
 forms or changing a live property requires explicit approval in the current
-session. Bundled Python scripts use only the access the operator provides and
+session; for indexing, a standing route recorded in the host's instructions is
+that approval and sets the provider order. Bundled Python scripts use only the access the operator provides and
 state their blind spots.
 
 ## Distribution
