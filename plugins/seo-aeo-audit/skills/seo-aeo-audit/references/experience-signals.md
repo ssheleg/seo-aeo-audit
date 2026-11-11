@@ -136,6 +136,9 @@ explain an ad-heavy template's field numbers; never as a pass/fail band.
 
 ## H4. Core Web Vitals — triage order that actually works
 
+This track diagnoses and ranks speed; fixing it (the code change, a performance budget) goes to
+the family's [sheleg-dev frontend-performance](https://github.com/ssheleg/sheleg-dev/blob/main/plugins/sheleg-dev/skills/frontend-performance/SKILL.md) skill.
+
 1. **TTFB** — the page is blank until then; fix with caching (query, page, code).
 2. **Clear the LCP path** of everything less important than the LCP element:
    icons, third-party scripts, below-fold images, secondary fonts.

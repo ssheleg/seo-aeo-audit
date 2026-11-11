@@ -86,6 +86,10 @@ def t_routing_marks_chromium_rows():
     for check in ("Site speed — diagnosis",
                   "Lighthouse categories other than performance"):
         assert "stated Chromium exception" in rows[check], f"{check} not marked"
+    lighthouse = rows["Lighthouse categories other than performance"]
+    for needle in ('npx lighthouse <url> --chrome-flags="--headless=new --user-data-dir=<temp>"',
+                   "temporary profile", "closed after the run"):
+        assert needle in lighthouse, f"the Lighthouse row has no CLI route: {needle!r}"
     evidence = rows["Evidence capture for the report"]
     assert evidence.index("WebKit") < evidence.index("DevTools"), \
         "evidence capture does not put WebKit first"
@@ -132,7 +136,7 @@ def t_dropped_points_are_refused():
 case("tooling.md carries the WebKit-first engine section", t_tooling_has_engine_section)
 case("the contents list names it", t_contents_lists_engine_section)
 case("ladder rung 6 names Safari Web Inspector", t_ladder_rung_six_names_webkit)
-case("Chromium-only routing rows are marked; evidence capture is WebKit first",
+case("Chromium-only routing rows are marked, Lighthouse has a CLI route; evidence capture is WebKit first",
      t_routing_marks_chromium_rows)
 case("the DevTools recipes say they are Chromium and name the Safari route",
      t_recipes_marked_as_chromium)

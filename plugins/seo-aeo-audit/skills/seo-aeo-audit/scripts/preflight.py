@@ -105,7 +105,7 @@ import urllib.request
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all nine.
-SKILL_VERSION = "0.32.4"
+SKILL_VERSION = "0.32.5"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -187,7 +187,7 @@ def provenance_md(prov: dict) -> str:
     them. A provenance block a human never reads is a provenance block that does
     not exist.
     """
-    lines = ["## Provenance — the execution that produced this", "",
+    lines = ["## Provenance: the execution that produced this", "",
              PROVENANCE_HEADER, "|---|---|"]
     for f in PRODUCER_FIELDS:
         v = prov.get(f, "")
@@ -905,7 +905,7 @@ def render_coverage(seed: list[dict]) -> str:
     lines = [
         "## Track coverage",
         "",
-        f"Status is a closed vocabulary — {vocab}. Any status but `observed` or "
+        f"Status is a closed vocabulary: {vocab}. Any status but `observed` or "
         f"`unlooked` owes a reason in Notes. A row left as seeded reads `unlooked`, "
         f"which is what a track nobody ran actually is.",
         "",
@@ -1010,11 +1010,11 @@ def validate_coverage(text: str) -> list[str]:
 # wrong, it is true about the site it observed, and it stays. Re-auditing writes a new
 # dated file — `deliverable-templates.md` already forbids overwriting one.
 INVALIDATORS = (
-    ("site", "the audited pages, their markup, `robots.txt` or the sitemap changed — "
+    ("site", "the audited pages, their markup, `robots.txt` or the sitemap changed: "
              "every page-level finding is about the bytes that were fetched"),
     ("index", "the engine re-crawled or re-ranked: its own state moved even though the "
               "site did not, and coverage, canonical choice and position all rest on it"),
-    ("instrument", "this skill, its probes or its access changed — a later version "
+    ("instrument", "this skill, its probes or its access changed: a later version "
                    "looks in places this run did not, and a lost credential turns an "
                    "`observed` track into `blocked-by`"),
     ("policy", "a core or AI-surface update changed the rules the evidence was read "
@@ -1042,7 +1042,7 @@ def render_provenance(prov: dict) -> str:
     nothing about what expires it leaves a reader to assume it is still true.
     """
     lines = [
-        "## Provenance — what produced this, and what expires it",
+        "## Provenance: what produced this, and what expires it",
         "",
         "Computed, never typed. Every field prints even when it cannot be resolved:",
         "",
@@ -1059,10 +1059,10 @@ def render_provenance(prov: dict) -> str:
     lines += [
         "",
         f"`{'` · `'.join(e[0] for e in PRODUCER_ENV)}` are the harness's to export and "
-        f"say so by name when unset. A field is never deleted and never guessed — "
+        f"say so by name when unset. A field is never deleted and never guessed, "
         f"`model` least of all, because naming the wrong id is worse than saying nothing.",
         "",
-        "**What invalidates this report.** An overtaken audit is not wrong — it is true "
+        "**What invalidates this report.** An overtaken audit is not wrong: it is true "
         "about the site it observed, and it stays. Re-auditing writes a new dated file "
         "and names which row below applies.",
         "",

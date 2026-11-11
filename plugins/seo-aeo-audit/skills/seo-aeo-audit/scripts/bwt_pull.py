@@ -70,7 +70,7 @@ import urllib.request
 # (`bin/seo-aeo-audit.js` copies `scripts/` alone into `~/.claude/skills/`). The
 # doctrine behind the field set lives above this block in preflight.py. Never edit
 # one copy — the guard fails all nine.
-SKILL_VERSION = "0.32.4"
+SKILL_VERSION = "0.32.5"
 
 # The fields no python process can establish, with the variable that would supply
 # each. They print by NAME on every run, because a field that vanishes when
@@ -152,7 +152,7 @@ def provenance_md(prov: dict) -> str:
     them. A provenance block a human never reads is a provenance block that does
     not exist.
     """
-    lines = ["## Provenance — the execution that produced this", "",
+    lines = ["## Provenance: the execution that produced this", "",
              PROVENANCE_HEADER, "|---|---|"]
     for f in PRODUCER_FIELDS:
         v = prov.get(f, "")

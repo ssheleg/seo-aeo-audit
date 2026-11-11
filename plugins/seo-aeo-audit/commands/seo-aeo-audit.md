@@ -32,7 +32,7 @@ Follow the skill exactly.
    recorded and never ranks. Group into Blockers / Leaks / Gains / Experiments.
 5. Write `docs/seo/audit-<date>.md` and `docs/seo/plan-<date>.md`, plus
    `docs/seo/experiments.md` if the plan has an Experiments bucket. **Never overwrite
-   an existing audit or plan silently** — write a new dated file, or ask first.
+   an existing audit or plan silently**: write a new dated file.
 6. Finish with exactly one recommended next action.
 
 ## The eight non-negotiables apply in full

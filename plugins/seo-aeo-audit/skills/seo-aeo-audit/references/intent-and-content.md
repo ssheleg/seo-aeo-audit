@@ -317,7 +317,7 @@ It still belongs in the audit, for three mechanisms that are real:
    result. This one is mechanical and belongs in `onpage-checks.md` (O1).
 
 **The rules themselves are not forked here.** They live in super-ux's
-`ai-tells.md` as `AT-01`..`AT-15` with severity grades, a density threshold, a
+`ai-tells.md` as numbered `AT-` rules (the catalogue holds the current range) with severity grades, a density threshold, a
 change-rate guard and a semantic-preservation checklist, and its `brand_lint.py`
 turns three of them into deterministic checks (`B060` vocabulary, `B062` the
 rhetorical dash, `B063` the full-stopped title). A second copy of a marker list

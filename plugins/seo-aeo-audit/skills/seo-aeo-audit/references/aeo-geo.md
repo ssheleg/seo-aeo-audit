@@ -483,7 +483,7 @@ honest about here, because this is where audits oversell:
 
 - **The `FAQPage` rich result is gone.** Google restricted it in August 2023 to
   well-known authoritative government and health sites, then discontinued
-  FAQPage/Question/Answer rich results outright — see the first row of myths.md,
+  FAQPage/Question/Answer rich results outright; see the FAQPage row of myths.md,
   which is the canonical statement of this in the skill. The SERP payoff is zero,
   for every site. What remains is entity clarity and the non-Google answer engines
   that parse schema, which is why `faq-schema-absent` is a **low** severity: it is

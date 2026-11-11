@@ -1,3 +1,37 @@
+## v0.32.5: family audit fixes (2026-11-11 audit)
+
+- **A standing indexing route is the approval** (SE1): `references/tooling.md` gains *A standing
+  indexing route*, the rule's one home. A route recorded in the host's instructions counts as the
+  approval for indexing and sets the provider order (for example a paid indexer's API first after a
+  key and balance check, IndexNow and Search Console as the fallback, only URLs answering 200 and
+  in the sitemap); without one, the per-session rule holds. SKILL.md, SKILL-CARD.md, the indexing
+  push, the UI-only steps, the paid-indexer paragraph and PB4 (now the fallback) point at it; the
+  SpeedyIndex sheet gains a *Before a run* row. Test: `test/audit_regressions/fix-se-05.01.py`.
+- **myths.md: URL Inspection verifies, it does not request** (SE2): the indexing-service row now
+  says IndexNow plus the chosen indexing route, verified with the URL Inspection API.
+- **Lighthouse without the chrome-devtools MCP** (SE3): the routing row names the Lighthouse CLI
+  (`npx lighthouse <url> --chrome-flags="--headless=new --user-data-dir=<temp>"`, the agent's own
+  temporary profile, closed after) and keeps the MCP where a host enables it.
+  `test/audit_regressions/safari-first.py` pins the CLI route.
+- **Track counts are true** (SE4): Step 2 names eleven tracks (K conditional); Discover is an extra
+  pass, not an eleventh track; triage says eleven sets of findings.
+- **Pointers fixed** (SE5, SE6): intent-and-content.md refers to the `ai-tells.md` catalogue
+  without a fixed `AT-` range; aeo-geo.md points at the FAQPage row of myths.md (it was "the first
+  row"); scripts.md gains *Resolving `$SKILL_DIR`* with both forms, and its Contents lists
+  `bwt_pull.py` and `ai_panel.py`.
+- **Speed fixes hand off** (SE7): experience-signals.md H4 sends fixing speed to sheleg-dev
+  `frontend-performance`.
+- **No "or ask first"** (SE8): an existing audit or plan is never overwritten; a new dated file is
+  written (SKILL.md, deliverable-templates.md, the command file).
+- **Report skeletons without em dashes** (SE9): the three templates, their embedded copies and the
+  report sections the scripts print (coverage, provenance, invalidators) use colons and commas.
+- **Dated sources** (SE10): the FAQPage and AMP rows of myths.md cite the Search Central changelog
+  (entries of 2026-05-08, 2026-06-15 and 2026-07-01) and the Google I/O 2026 row of
+  algorithm-updates.md cites Google's post of 2026-05-19, each checked 2026-11-11.
+- **The update timeline is not refreshed in this release**: audit fixes only, so its newest row
+  stays 2026-10-18; the next content release refreshes it.
+- SKILL.md body: 4,739 tokens (tiktoken cl100k_base), inside the 4,750 working limit.
+
 ## v0.32.4: routed trigger phrases for indexing and schema markup
 
 - **Two routed prompts reach this skill** (hub board row B-84): the hub's route table may only carry
