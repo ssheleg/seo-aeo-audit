@@ -374,6 +374,7 @@ not need stays, marked `n/a` with a reason.
 | N17 regional engines | | | build-time.md N17 · measurement.md J1 |
 | N18 per-fact provenance, honest localization | | | build-time.md N18 · technical-checks.md B2 |
 | N19 native HTML and CSS first | | | build-time.md N19 · technical-checks.md A1 |
+| N20 plan from the final product | | | build-time.md N20 · intent-and-content.md E7 |
 
 ## Do not build
 

@@ -1,3 +1,18 @@
+## v0.33.0: the site describes the final product (2026-11-19)
+
+- **Done.** Board message 2d5071e2 (the maintainer's rule of 2026-11-19, relayed for every project
+  and skill): `references/intent-and-content.md` E7 is the rule's home (a claim the build cannot
+  back yet is not a finding; a missing compliance record beside the page is), and
+  `references/build-time.md` N20 is its brief row. DECISIONS.md records why. SKILL.md is
+  unchanged (body at 4,739 tokens, house limit 4,750). Checked: `bash scripts/check-docs.sh`
+  exit 0 on the branch.
+- **Open.** Merge, tag and npm publish were not done: the branch was written by an unattended
+  board run, which stops before publication. E7 has never run on a real site (`never` in
+  verification.md).
+- **Next task.** Review and merge the branch `feat/final-product-site-rule`, then annotated tag
+  `v0.33.0` through the hub's `scripts/release-member.js`, watch the release, then the hub bumps
+  the pin.
+
 ## v0.32.5: family audit fixes (2026-11-11)
 
 - **Done.** Audit findings SE1 to SE10 of the 2026-11-11 family audit (CHANGELOG has each). The

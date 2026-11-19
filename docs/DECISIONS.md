@@ -249,3 +249,25 @@ single-run verdict.
 `psi_pull.py` has (the PSI key is optional and low-risk; a Bing key reads a whole
 account's sites); scraping the AI Performance report (no documented API method, and
 scraping an authenticated interface is not a measurement this skill can repeat).
+
+## 2026-11-19: The site describes the final product, and the audit checks the compliance record instead of the claim
+
+**Decision.** Both modes plan and judge a product's public pages against its target
+state (vision, spec, end of roadmap), not the current build. A claim the build cannot
+back yet is not a finding; the audit checks that a compliance record sits beside the
+page (not shipped yet, applicable store, advertising and search rules with sources,
+the risk, a softer variant) and reports its absence. Only the owner's explicit word
+for one project reverses it. Homes: `references/intent-and-content.md` E7 (the rule)
+and `references/build-time.md` N20 (the brief row).
+
+**Why.** The maintainer's rule of 2026-11-19, relayed to this project on the board
+for every project and skill: a site written from the current build is rewritten at
+every release, which is wasted work and, for search, a repeated migration risk.
+Compliance belongs beside the page as metadata so the owner decides publication with
+it, not inside the audit as a demand to cut.
+
+**Alternatives rejected.** Keeping unbacked claims as findings with a "remove" action
+(it contradicts the rule and makes the audit decide publication); dropping the check
+entirely (the misleading-functionality policy and store rules still apply, and an
+owner without the record decides blind). Measured facts about the present stay under
+N18 and G1, because a target state is a product decision and a number is not.

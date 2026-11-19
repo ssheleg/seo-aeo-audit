@@ -34,6 +34,7 @@ components, and it does not choose the price or the positioning.
 - [N17. Regional engines at launch](#n17-regional-engines-at-launch)
 - [N18. Per-fact provenance and honest localization](#n18-per-fact-provenance-and-honest-localization)
 - [N19. Native HTML and CSS before JavaScript](#n19-native-html-and-css-before-javascript)
+- [N20. Plan from the final product](#n20-plan-from-the-final-product)
 - [Landing readiness](#landing-readiness)
 
 ## When a brief, and what it produces
@@ -248,6 +249,18 @@ page does not need to show its content.
 
 **Verified by:** [technical-checks.md](technical-checks.md#a1-crawl-access-and-rendering)
 and [aeo-geo.md](aeo-geo.md#f3-extractability--the-part-most-audits-skip).
+
+## N20. Plan from the final product
+
+**Decide:** the page set, the URL plan, the headings and the claims are planned from
+the product's target state (vision, spec, end of roadmap), not from the current
+build, so the site is not rewritten at every release. Each claim the build cannot
+back yet stays on the page and gets a compliance record beside it: not shipped yet,
+which store, advertising or search rules may apply, the risk and a softer variant.
+Only the owner's explicit word for the project plans from the current build instead.
+
+**Verified by:** [intent-and-content.md](intent-and-content.md#e7-the-site-describes-the-final-product)
+and [ranking-model.md](ranking-model.md#content-includes-layout-and-function-not-only-text).
 
 ## Landing readiness
 

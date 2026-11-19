@@ -750,7 +750,7 @@ jobs:
           plantq "a brief skeleton missing a build-time row" 'do not match build-time.md' \
             python3 test/plant_edit.py sub templates/brief.template.md '| N19 native HTML and CSS first | | | build-time.md N19 · technical-checks.md A1 |' '| | | | |'
           plantq "the brief row count drifting in REFERENCE_INDEX" 'build-time decisions; build-time.md has' \
-            python3 test/plant_edit.py sub "$S/REFERENCE_INDEX.md" 'nineteen build-time decisions' 'eighteen build-time decisions'
+            python3 test/plant_edit.py sub "$S/REFERENCE_INDEX.md" 'twenty build-time decisions' 'nineteen build-time decisions'
 
       - name: Negative self-tests for the provenance behaviour contracts
         run: |

@@ -12,6 +12,7 @@
 - [E4. Patterns that now hurt](#e4-patterns-that-now-hurt)
 - [E4b. Register, and what it is not evidence of](#e4b-register-and-what-it-is-not-evidence-of)
 - [E5. Freshness is relative, not calendar-based](#e5-freshness-is-relative-not-calendar-based)
+- [E7. The site describes the final product](#e7-the-site-describes-the-final-product)
 - [Evidence to capture for D/E](#evidence-to-capture-for-de)
 
 ## D1. Intent match is a page-type decision, not a keyword decision
@@ -415,6 +416,41 @@ presence converts loyal readers into ignored customers; and a comment system
 pitched as an SEO play ships as a stripped MVP, gets ignored, and dies — the same
 project framed as community or support work attracts the people who can actually
 keep it alive.
+
+## E7. The site describes the final product
+
+A site, a landing page or a public page of a product is planned and judged against
+the product's **target state** (its vision, its spec, the end of its roadmap), not
+against the build that exists today. A site written from the current build has to be
+rewritten at every release, and each rewrite is a migration risk (URLs, titles,
+entity facts) for no search benefit. Only the owner's explicit word for one project
+reverses this (maintainer decision, 2026-11-19, DECISIONS.md).
+
+**In an audit.** A claim the current build or beta cannot back yet (a feature, a
+platform, a flow that is planned) is **not a finding**, and the plan never asks to
+remove, hide or soften it. The audit checks something else: that a **compliance
+record** sits beside the page (a file next to the page's source, or the project's
+release or roadmap record the page links to) and names, per such claim:
+
+- that it is not shipped yet, and where the target state is written down;
+- which store, advertising or search-engine rules may apply, with their source
+  (Google's spam policy on misleading functionality, read in
+  [ranking-model.md](ranking-model.md#content-includes-layout-and-function-not-only-text), is the search-side one: a page promising a
+  tool has to deliver one);
+- the risk, and a softer variant that would pass (a "coming" label, another
+  wording, another surface), so the owner decides publication with it in hand.
+
+A missing record is the finding: `CONFIRMED` that the record is absent (observed in
+the repository or on the site), with the claims it should cover listed. Its action
+is "write the record", never "cut the claim". Publishing the page is the owner's
+decision, not the audit's.
+
+**What it does not cover.** Facts measured about the present (a price, a user count,
+a rating, a review, a benchmark) keep the provenance rule of build-time.md N18 and
+the consistency checks of entity-and-brand.md G1: a target state is a product
+decision, a measured number is not. Non-negotiable #5 is unchanged: a planned
+feature on the page is not cloaking, but a page that shows engines one product and
+people another still is.
 
 ## Evidence to capture for D/E
 

@@ -1,3 +1,16 @@
+## v0.33.0: the site describes the final product (2026-11-19)
+
+- **Plan and judge pages against the product's target state** (maintainer decision 2026-11-19,
+  DECISIONS.md): `references/intent-and-content.md` gains E7, the rule's one home. A claim the
+  current build cannot back yet is not a finding and the plan never asks to remove it; the audit
+  checks that a compliance record sits beside the page (not shipped yet, which store, advertising
+  or search rules may apply with their source, the risk, a softer variant). A missing record is
+  the finding, and its action is to write the record. Measured facts keep N18 and G1.
+- **Brief row N20, plan from the final product**: `references/build-time.md` gains N20 (verified
+  by E7 and the misleading-functionality paragraph of ranking-model.md); the brief skeleton
+  (both copies) gains its row and REFERENCE_INDEX says twenty build-time decisions. SKILL.md is
+  unchanged (its body sits at the house limit): E7 is reached through the D/E track row.
+
 ## v0.32.5: family audit fixes (2026-11-11 audit)
 
 - **A standing indexing route is the approval** (SE1): `references/tooling.md` gains *A standing

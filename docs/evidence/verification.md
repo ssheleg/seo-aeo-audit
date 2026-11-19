@@ -18,6 +18,14 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.33.0 candidate: the site describes the final product (2026-11-19)
+
+| What changes | Evidence | State |
+|---|---|---|
+| E7: a claim the build cannot back yet is not a finding; a missing compliance record is | doctrine only; no audit has run it on a real site yet | never |
+| N20 brief row, its skeleton rows and the twenty count | `test/validate.py` brief guard passes on the candidate; the CI plant on REFERENCE_INDEX now substitutes the twenty-count literal | test-only |
+| SKILL.md body unchanged, so inside the house limit; E7 is reached through the D/E track row and N20 through brief mode | `git diff origin/main -- plugins/seo-aeo-audit/skills/seo-aeo-audit/SKILL.md` is empty | observed |
+
 ## v0.32.5 candidate: family audit fixes (2026-11-11)
 
 | What changes | Evidence | State |
@@ -602,7 +610,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the fifty-four releases at or above `v0.13.0` have no section
+**Sixteen** of the fifty-five releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,
