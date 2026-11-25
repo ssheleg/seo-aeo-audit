@@ -8,8 +8,14 @@
   owner's personal skills that touch SEO were not inventoried from this machine. B-41.
 - **Next task.** After merge: annotated tag `v0.33.0` through the hub's
   `scripts/release-member.js`, watch the release, the hub bumps the pin, then
-  `npx --yes sshlg-skills@latest update` on the machines. Hand-offs to seo-content-agent and
-  nicegram-app-web are listed at the end of the research report.
+  `npx --yes sshlg-skills@latest update` on the machines. The notes for seo-content-agent and
+  nicegram-app-web and the two feed URLs for Research Agent (both checked 200) are in
+  `docs/handoffs/2026-11-25-google-update-rollout.md`; studio-agent posts them on the board.
+- **Studio session 54 (2026-11-25).** Before merge: the v0.33.0 run stamp in
+  `docs/evidence/retro.md` sat inside the v0.32.5 stamp's bold markers, so the run-stamp
+  negative self-test could not plant (`npm run test:all` failed). Fixed. Locally the
+  body-budget self-test needs `tiktoken` (CI installs it); without it that one plant reads as a
+  broken guard.
 
 ## v0.32.5: family audit fixes (2026-11-11)
 
