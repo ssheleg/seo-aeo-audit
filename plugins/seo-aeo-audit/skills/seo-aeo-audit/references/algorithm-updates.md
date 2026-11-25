@@ -1,9 +1,10 @@
 # Google update timeline — and how to keep it current
 
-**Sources last re-fetched: 2026-10-19** (official ranking incident feed, no ranking
-incident newer than the September 2026 spam update; older policy rows retain their
-original evidence and are not newly certified).
-**Newest row in this file: 2026-10-18.**
+**Sources last re-fetched: 2026-11-25** (official ranking incident feed: the November
+2026 core update complete, the December 2026 core update preannounced and not started;
+the five Search Central pages of 2026-11-24 read in full; older policy rows retain
+their original evidence and are not newly certified).
+**Newest row in this file: 2026-11-24.**
 
 ## Contents
 
@@ -36,6 +37,8 @@ below is dated so a traffic curve can be aligned against it.
 
 | Update | Rollout start | Complete | Type | What it means for an audit |
 |---|---|---|---|---|
+| December 2026 core update | not started (preannounced 2026-11-24, "scheduled to be released in December 2026") | not yet | Core | Official feed: preannounced 2026-11-24 15:02 UTC, the first core update Google announced before rollout under its advance-notice commitment (platform row below). Stated focus: ranking for longer and more complex questions, and personalized results for people with personalization on. Record the pre-announcement date with the start and end once they exist. |
+| November 2026 core update | 2026-11-10 | 2026-11-24 | Core | Official feed: 18:06 UTC start, 14:03 UTC end. Google's own floor is a week of data after completion, so an after-window starts no earlier than 1 December 2026, and the December core update may land inside it: split the windows before attributing. |
 | September 2026 spam update | 2026-09-24 | 2026-10-08 | Spam | Official feed: 16:15 UTC start, 08:00 UTC end. Align affected cohorts to this window; completion alone does not explain a site's recovery. |
 | August 2026 spam update | 2026-08-18 | 2026-08-21 | Spam | Official feed: 16:27 UTC start, 08:49 UTC end. Keep this window separate from September. |
 | June 2026 spam update | 2026-06-24 | 2026-06-26 | Spam | Fast, global. Spam actions and core-update recovery are **separate systems** — a domain hit here does not recover at the next core update (82% stayed blocked in the March-2026 study). |
@@ -102,6 +105,11 @@ reported 2026-07-09).
 | Google supports a recommended `creator` (or `author`) property, Person or Organization, on VideoObject; Clip and BroadcastEvent do not list it | 2026-09-24 | `CONFIRMED` ([video structured data](https://developers.google.com/search/docs/appearance/structured-data/video)). Check it on VideoObject nodes only; it is not a finding on Clip or BroadcastEvent. |
 | Google documented a UGC Fresh Data Program | 2026-10-08 | `CONFIRMED` ([program page](https://developers.google.com/search/docs/appearance/ugc-fresh-data-program)). Only the documentation entry is dated here; read the eligibility text before describing how the program works. |
 | AI Mode and AI Overviews to show inline links higher up in responses more frequently | 2026-10-15 | `CONFIRMED` ([Google blog](https://blog.google/products-and-platforms/products/search/updates-ai-mode-overviews-explore-web/)). AI-surface clicks and citations measured across this date are two regimes; split any before/after at it. |
+| Google added a ranking hub to Search Central and commits to notice before significant ranking changes (broad updates such as core updates) and actionable policy changes, published as pre-announcements, start dates and completion notices on the Search Status Dashboard; for changes where UK users may see a significant shift, advance notice follows the CMA's fair ranking conduct requirement | 2026-11-24 | `CONFIRMED` ([stay informed](https://developers.google.com/search/docs/ranking/stay-informed), [ranking hub](https://developers.google.com/search/docs/ranking)). A core update now has three dates: pre-announcement, start, completion. The notice periods are not on Google's page; the 30 and 15 business-day figures circulate from the CMA decision and are `FIELD` until read there. Google's analysis floor on the same page: completion plus at least a week of data. |
+| Google documents a Search Console feedback route for dashboard-listed updates (the update named as a hashtag, for example `#NovemberCoreUpdate2026`) and a UK CMA indexing appeal for sites manually excluded as a whole, open from 17 December 2026 | 2026-11-24 | `CONFIRMED` ([submit feedback](https://developers.google.com/search/docs/ranking/submit-feedback)). Feedback is reviewed in aggregate and "doesn't result in manual ranking adjustments for individual URLs": a plan may list it as an action, never as a recovery lever. |
+| Google's ranking principles page: all result types, AI Overviews included, are evaluated on one utility criterion; no manual ranking adjustments except legal obligations and Content Policies | 2026-11-24 | `CONFIRMED` ([principles](https://developers.google.com/search/docs/ranking/principles-for-ranking-results)). No new lever; it backs the rule that classic ranking is the prerequisite for AI surfaces (aeo-geo.md F4). |
+| Google documents its generative AI controls: training and grounding are separate uses, managed by the Search generative AI control (Search Console), `Google-Extended` (training and grounding of non-Search products), `GoogleOther`, snippet controls and `noindex`; support for the shared training token `__usage_ai-training` is planned for early 2027 | 2026-11-24 | `CONFIRMED` for the five controls ([generative AI controls](https://developers.google.com/search/docs/fundamentals/gen-ai-controls)); `HYPOTHESIS` for the token until it ships ([announcement, 2026-10-30](https://developers.google.com/search/blog/2026/10/ai-training-control)): a disallow under it will read as a Google-Extended disallow unless Google-Extended is named. Crawler table: agent-readiness.md K2a. |
+| Google documents how AI Overviews and AI Mode select and link sources: ranked results, query fan-out, corroboration; a supporting link needs an indexed, snippet-eligible page on a site included in Search generative AI features | 2026-11-24 | `CONFIRMED` ([attribution and factuality](https://developers.google.com/search/docs/fundamentals/gen-ai-attribution-factuality)). `nosnippet` and the Search Console setting each remove a page from citation; Google also says to avoid changing a page's date unless the content substantially changed (aeo-geo.md F3). |
 | Google removed an outdated form from its Indexing API quota documentation; the API is still documented only for pages with JobPosting or BroadcastEvent embedded in a VideoObject | 2026-10-16 | `CONFIRMED` ([documentation updates](https://developers.google.com/search/updates)). The scope did not widen: the Indexing API is not an indexing lever for other page types (technical-checks.md). |
 | Page-indexing data for part of June 2026 is missing in Search Console, and a Google employee said provisionally that indexing data is not back-filled; Google published no official notice | 2026-06 (reported 2026-09-11) | `FIELD` ([secondary report](https://www.seroundtable.com/google-search-console-indexing-report-missing-data-42073.html)). A page-indexing trend that crosses June 2026 has a hole, not a drop. |
 | Chrome publishes experimental CrUX ad metrics (Ad Count, Ad Density, Ad Weight: CPU, Ad Weight: Network) that Google lists as page-experience diagnostics, not as Core Web Vitals and without thresholds | undated (Chrome documentation) | `CONFIRMED` ([Chrome ads docs](https://developer.chrome.com/docs/ads)). A diagnostic, never a pass/fail band or a ranking claim (experience-signals.md). |
@@ -139,9 +147,13 @@ reported 2026-07-09).
 
 ## Protocol when a new update is announced
 
-1. Record the exact start/end timestamps from the Search Status Dashboard.
+1. Record the pre-announcement date (Google now preannounces significant ranking
+   changes on the Search Status Dashboard, since 2026-11-24) and the exact start/end
+   timestamps. A pre-announcement is a planning anchor, not evidence of movement.
 2. Freeze a before/after export: GSC by page, query, country, device — 28 days
-   either side, plus the same period last year for seasonality.
+   either side, plus the same period last year for seasonality. The after-window
+   starts no earlier than a week past completion: Google's own floor ("plus at least
+   a week of post-rollout data", ranking/stay-informed).
 3. Segment by template and intent class, not sitewide.
 4. Pull the same window for a competitor set, so a market-wide shift is not read
    as a site-specific hit.
@@ -176,7 +188,10 @@ left this file ten dated events behind in eleven days in October 2026.
 Each refresh:
 
 
-1. Fetch the SEJ history page and the Search Status Dashboard.
+1. Fetch the SEJ history page and the Search Status Dashboard (its
+   [Atom feed](https://status.search.google.com/en/feed.atom) carries
+   pre-announcements as well as rollouts) and the documentation changelog
+   ([RSS](https://developers.google.com/search/updates/search_docs_updates.rss)).
 2. Append every new update to the table with **start date, end date, type** and a
    one-line audit implication. Never delete old rows — decline analysis needs
    history.

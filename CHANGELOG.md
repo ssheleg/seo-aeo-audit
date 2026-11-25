@@ -1,3 +1,27 @@
+## v0.33.0: Google's ranking hub and generative AI controls (2026-11-24 documentation)
+
+- **Research** (board request d0bb8efc, owner's order of 2026-11-24):
+  `docs/research/2026-11-25-google-search-docs-ranking-and-gen-ai.md` reads the five Search Central
+  pages Google published on 2026-11-24 (ranking hub with principles, stay-informed and feedback
+  pages; generative AI controls; attribution and factuality), the Search Status Dashboard and the
+  2026-10-30 post on the shared AI-training token, each with its quote.
+- **Timeline** (`references/algorithm-updates.md`): November 2026 core update (2026-11-10 to
+  2026-11-24, official feed) and the preannounced December 2026 core update; five platform rows
+  dated 2026-11-24; the update protocol records the pre-announcement and starts the after-window
+  no earlier than a week past completion (Google's own floor); the refresh protocol reads the
+  dashboard's Atom feed and the documentation changelog RSS. Stamps: re-fetched 2026-11-25,
+  newest row 2026-11-24.
+- **Crawler table corrected** (`references/agent-readiness.md` K2a): `Google-Extended` is training
+  and non-Search grounding, per Google's controls page (it was listed as grounding only);
+  `GoogleOther` and the announced `__usage_ai-training` token (`HYPOTHESIS` until it ships, early
+  2027) get rows.
+- **AI-answer checks** (`references/aeo-geo.md` F3): the five generative AI controls recorded one
+  row each against Google's goal table; a supporting link needs an indexed, snippet-eligible page
+  on a site included in Search generative AI features; a date bumped without a content change is a
+  finding.
+- README: re-fetch stamp 2026-11-25, reference lines ~7,500. Backlog B-41: classify the shared
+  token in `agent_surface.py` once Google ships it.
+
 ## v0.32.5: family audit fixes (2026-11-11 audit)
 
 - **A standing indexing route is the approval** (SE1): `references/tooling.md` gains *A standing

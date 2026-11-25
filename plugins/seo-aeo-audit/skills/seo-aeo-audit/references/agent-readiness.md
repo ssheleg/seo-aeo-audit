@@ -109,7 +109,9 @@ shape of the names and got three of them wrong:
 |---|---|---|
 | Answer-engine retrieval | `OAI-SearchBot`, `ChatGPT-User`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User`, `meta-webindexer` | The site stops appearing in that engine's answers. Perplexity states it plainly: allow `PerplexityBot` "to ensure your site appears in search results". Meta documents `meta-webindexer` for Meta AI search, citing and linking content (verified 2026-10-19) |
 | Training-corpus collection | `GPTBot`, `ClaudeBot`, `CCBot`, `Bytespider` | Nothing in retrieval. OpenAI documents `GPTBot` as crawling "content that may be used in training our generative AI foundation models"; Anthropic documents `ClaudeBot` as "collecting web content that could potentially contribute to their training" |
-| Model grounding | `Google-Extended`, `Applebot-Extended` | Gemini / Vertex AI grounding and Apple's model training. **Not Google Search and not AI Overviews** — those are Googlebot's, and Googlebot cannot be split by purpose at all (technical-checks.md) |
+| Model training and non-Search grounding | `Google-Extended`, `Applebot-Extended` | Google documents `Google-Extended` as limiting how content is used "to train and ground certain commercially available generative AI products and services" (Gemini app and the like), "not used as a ranking signal in Search" (`CONFIRMED`, [generative AI controls](https://developers.google.com/search/docs/fundamentals/gen-ai-controls), 2026-11-24); `Applebot-Extended` is Apple's model-training control. **Not Google Search and not AI Overviews or AI Mode**: those are Googlebot's, Googlebot cannot be split by purpose (technical-checks.md), and their only switch is the Search generative AI control in Search Console (aeo-geo.md F3) |
+| Generic non-Search fetching (Google) | `GoogleOther` | Google's generic crawler for non-Search uses such as one-off research and development crawls, blocked "without affecting Search" (`CONFIRMED`, same page). A block is a block, never a retrieval or ranking loss |
+| Shared AI-training preference (announced) | `__usage_ai-training` | The IETF AIPREF policy token. Google "intends to support" it "in early 2027" (`HYPOTHESIS` until it ships, [announcement 2026-10-30](https://developers.google.com/search/blog/2026/10/ai-training-control)): a disallow under it will read as a Google-Extended disallow **unless Google-Extended is named explicitly**, and other providers may honour it. Today report the group as present and inert; once it ships, read it together with any `Google-Extended` group before stating the site's training position |
 | Ad-page validation | `OAI-AdsBot` | Not retrieval, and OpenAI states no robots.txt behaviour for it where it states one for `OAI-SearchBot` and `GPTBot` — so a block is reported as a block, never as a retrieval loss. It still costs something concrete: OpenAI documents it as validating "the safety of web pages submitted as ads on ChatGPT", so a site running ChatGPT ads behind a blanket `OAI-*` or managed-bot block has its ad landing pages fail validation while every other report reads clean (verified 2026-08-16) |
 | Dual-purpose and user-requested (Meta) | `meta-externalagent`, `meta-externalfetcher` | Meta documents `meta-externalagent` for training foundation models or indexing for products, so a block is reported as a block, never priced as one purpose; `meta-externalfetcher` may bypass robots.txt for user-requested fetches, so robots.txt does not decide it (`CONFIRMED`, [Meta web crawlers](https://developers.facebook.com/docs/sharing/webmasters/web-crawlers/), verified 2026-10-19) |
 | Ads quality check | `AdsBot-Google`, `AdsBot-Google-Mobile` | They ignore the global `User-agent: *` group, so they obey only robots.txt rules that name them (`CONFIRMED`, [Google special-case crawlers](https://developers.google.com/crawling/docs/crawlers-fetchers/google-special-case-crawlers)). A `*` disallow does not reach them; `agent_surface.py` reports `robots-wildcard-exempt` when it applies |
@@ -119,14 +121,17 @@ shape of the names and got three of them wrong:
 One descriptive study ([arXiv 2604.27790](https://arxiv.org/html/2604.27790v1),
 `STUDY`) found sites blocking Google-Extended less likely to be retrieved by AI
 Overviews; Google documents that Google-Extended does not affect inclusion or
-ranking in Search, and its documentation governs. Record the study beside a
+ranking in Search ("not used as a ranking signal in Search and doesn't affect a
+site's inclusion in Search", restated on the 2026-11-24 controls page), and its
+documentation governs. Record the study beside a
 Google-Extended block; do not reverse the block on its strength.
 
 **Three corrections this table carries, and the reason it is worth reading twice.**
 `GPTBot` and `ClaudeBot` are training crawlers, not retrieval ones — their
 retrieval siblings are `OAI-SearchBot`/`ChatGPT-User` and
 `Claude-SearchBot`/`Claude-User`, and OpenAI states outright that "each setting is
-independent of the others". `Google-Extended` is neither. Getting these wrong in
+independent of the others". `Google-Extended` is neither: it is a training and
+non-Search grounding control, and it never decides AI Overviews. Getting these wrong in
 either direction produces a confident false finding: call a training block a lost
 citation and the report demands a business reversal for nothing; call a retrieval
 block a training decision and the site stays out of an engine's answers while the

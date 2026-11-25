@@ -175,11 +175,11 @@ agent, not just Claude Code. This is the substance:
 
 ### Data freshness
 
-- **Sources last re-fetched 2026-10-19**. This refresh covers official ranking dates; older policy rows are not newly certified. That date has one home —
+- **Sources last re-fetched 2026-11-25**. This refresh covers official ranking dates and the Search Central pages of 2026-11-24; older policy rows are not newly certified. That date has one home —
   `references/algorithm-updates.md` — and the gate holds this line equal to it, because
   this bullet said "Verified as of 2026-08-10" for six days after the corpus was
   refreshed, and a staleness claim that is itself stale is the number a reader uses to
-  decide whether to trust the rest. **~7,400 non-blank lines** of distilled reference
+  decide whether to trust the rest. **~7,500 non-blank lines** of distilled reference
   material across the twenty-seven contracts, rounded to the nearest hundred and
   recomputed by `python3 test/validate.py` on every run. The update timeline covers
   March 2025 → July 2026, and carries two dates of its own — when the sources were

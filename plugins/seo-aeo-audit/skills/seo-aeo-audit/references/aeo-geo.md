@@ -169,6 +169,26 @@ Google AIO simultaneously. **There is no single AI-visibility metric.**
 - **Preview controls gate everything.** `nosnippet`, `data-nosnippet`,
   `max-snippet` limits and paywalls decide what an engine may quote — audit them
   before concluding a page "is not cited".
+- **Google's five generative AI controls, one row each in the report**
+  (`CONFIRMED`, [generative AI controls](https://developers.google.com/search/docs/fundamentals/gen-ai-controls),
+  2026-11-24). Google separates *training* from *grounding* and manages them
+  independently: the Search generative AI control (Search Console: grounding and
+  display in AI Overviews, AI Mode and Discover; not training, not a ranking
+  signal), `Google-Extended` (robots.txt: training and grounding of non-Search
+  products), `GoogleOther` (robots.txt: non-Search fetching), snippet controls
+  (`nosnippet` and `max-snippet` also keep a page out of AI Overviews and AI Mode
+  as a direct input) and `noindex`. Record each as read, then state the goal the
+  combination serves using Google's goal table; a combination that serves no stated
+  goal is the finding. The shared `__usage_ai-training` token is planned for early
+  2027 (agent-readiness.md K2a).
+- **A supporting link has three gates** (`CONFIRMED`,
+  [attribution and factuality](https://developers.google.com/search/docs/fundamentals/gen-ai-attribution-factuality),
+  2026-11-24): the page is indexed, it is eligible for a snippet, and the site is
+  included in Search generative AI features in Search Console. Google builds the
+  answer from ranked results plus related searches ("query fan-out") and links the
+  pages that corroborate it. The same page says to avoid changing a page's date
+  unless the content substantially changed: a template that bumps `dateModified`
+  or the visible date without a content change is a finding, not a freshness play.
 
 ## F4. Per-engine mechanics worth auditing separately
 
