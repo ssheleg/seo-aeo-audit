@@ -18,6 +18,14 @@ A green check nobody has watched fail is `test-only` at best. That is the rule
 standing instruction #2 encodes, written down as a column.
 
 
+## v0.33.0 candidate: Google's ranking hub and generative AI controls (2026-11-25)
+
+| What changes | Evidence | State |
+|---|---|---|
+| Five 2026-11-24 Search Central pages, the December core update pre-announcement and the November core update dates are quoted from the primary source | Pages fetched as HTML 2026-11-25 00:30 to 00:45 UTC, each "Last updated 2026-11-24 UTC"; `incidents.json` read the same pass; quotes in the research report | observed |
+| CMA notice periods (30 and 15 business days) | Read only in Search Engine Journal; the CMA PDF was not parsed on this machine | never |
+| The timeline's newest-row and tier-word guards hold on the new rows | `python3 test/validate.py` PASS on the candidate | test-only |
+
 ## v0.32.5 candidate: family audit fixes (2026-11-11)
 
 | What changes | Evidence | State |
@@ -602,7 +610,7 @@ replace. Releases from v0.13.0 forward get a row each.
 ## Releases at or above the floor with no section here
 
 That policy was a sentence with nothing reading it, and the sentence lost.
-**Sixteen** of the fifty-four releases at or above `v0.13.0` have no section
+**Sixteen** of the fifty-five releases at or above `v0.13.0` have no section
 above — declared here and
 counted by `test/validate.py` against `CHANGELOG.md`, rather than absent and invisible.
 They are **not** backfilled: writing them now would be writing them from the changelog,

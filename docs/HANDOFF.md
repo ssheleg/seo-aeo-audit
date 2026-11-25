@@ -1,3 +1,22 @@
+## v0.33.0: Google's ranking hub and generative AI controls (2026-11-25)
+
+- **Done.** Board request d0bb8efc (owner's order of 2026-11-24, relayed by the Fabric CEO):
+  research of the 2026-11-24 Search Central update in
+  `docs/research/2026-11-25-google-search-docs-ranking-and-gen-ai.md`; the timeline, crawler table
+  and AI-answer checks updated (CHANGELOG has each). Checked: `bash scripts/check-docs.sh`.
+- **Open.** The CMA notice periods are `FIELD` until the CMA PDF is read with a PDF text tool. The
+  owner's personal skills that touch SEO were not inventoried from this machine. B-41.
+- **Next task.** After merge: annotated tag `v0.33.0` through the hub's
+  `scripts/release-member.js`, watch the release, the hub bumps the pin, then
+  `npx --yes sshlg-skills@latest update` on the machines. The notes for seo-content-agent and
+  nicegram-app-web and the two feed URLs for Research Agent (both checked 200) are in
+  `docs/handoffs/2026-11-25-google-update-rollout.md`; studio-agent posts them on the board.
+- **Studio session 54 (2026-11-25).** Before merge: the v0.33.0 run stamp in
+  `docs/evidence/retro.md` sat inside the v0.32.5 stamp's bold markers, so the run-stamp
+  negative self-test could not plant (`npm run test:all` failed). Fixed. Locally the
+  body-budget self-test needs `tiktoken` (CI installs it); without it that one plant reads as a
+  broken guard.
+
 ## v0.32.5: family audit fixes (2026-11-11)
 
 - **Done.** Audit findings SE1 to SE10 of the 2026-11-11 family audit (CHANGELOG has each). The
