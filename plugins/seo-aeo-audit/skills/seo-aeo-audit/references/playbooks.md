@@ -413,7 +413,7 @@ with grammatical case.
 
 **Steps.**
 
-1. Find templates that put a name after a preposition: "номера из {country}" breaks,
+1. Find templates that put a name after a preposition: «номера из {country}» breaks,
    because names are stored in the nominative and the preposition needs the genitive.
 2. Rewrite as "{country}: ..." or another form that needs no inflection.
 3. Test each locale's rendered string, not the template.

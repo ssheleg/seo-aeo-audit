@@ -2,7 +2,7 @@
   "name": "@ssheleg/seo-aeo-audit",
   "version": "0.33.0",
   "scripts": {
-    "test": "bash scripts/check-docs.sh && npm run test:audit",
+    "test": "python3 tools/lang/cyrillic_scan.py check . && bash scripts/check-docs.sh && npm run test:audit",
     "test:negatives": "python3 test/negatives.py",
     "test:all": "bash scripts/check-docs.sh && python3 test/negatives.py && npm run test:audit",
     "test:audit": "for t in test/audit_regressions/*.py; do python3 \"$t\" || exit 1; done"
